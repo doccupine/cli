@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { program } from "commander";
 import chokidar from "chokidar";
 import fs from "fs-extra";
@@ -5,6 +7,7 @@ import path from "path";
 import matter from "gray-matter";
 import chalk from "chalk";
 import prompts from "prompts";
+import { gitignoreTemplate } from "./templates/gitignore.js";
 import { homeTemplate } from "./templates/home.js";
 import { notFoundTemplate } from "./templates/not-found.js";
 import { layoutTemplate } from "./templates/layout.js";
@@ -63,6 +66,7 @@ class MDXToNextJSGenerator {
 
   async createNextJSStructure() {
     const structure = {
+      ".gitignore": this.generateGitIgnore(),
       "package.json": this.generatePackageJson(),
       "next.config.ts": this.generateNextConfig(),
       "tsconfig.json": this.generateTSConfig(),
@@ -298,6 +302,10 @@ export default function Home() {
       indexContent,
       "utf8",
     );
+  }
+
+  generateGitIgnore(): string {
+    return gitignoreTemplate;
   }
 
   // Configuration file generators

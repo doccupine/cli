@@ -1,6 +1,6 @@
 {
   "name": "doccupine",
-  "version": "0.0.1",
+  "version": "0.0.1-1",
   "description": "CLI tool to watch MDX files and generate Next.js beautiful documentation pages automatically",
   "main": "dist/index.js",
   "bin": {
