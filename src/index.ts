@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { program } from "commander";
-import chokidar from "chokidar";
+import chokidar, { FSWatcher } from "chokidar";
 import fs from "fs-extra";
 import path from "path";
 import matter from "gray-matter";
@@ -36,7 +36,7 @@ interface MDXFile {
 class MDXToNextJSGenerator {
   private watchDir: string;
   private outputDir: string;
-  private watcher: chokidar.FSWatcher | null = null;
+  private watcher: FSWatcher | null = null;
 
   constructor(watchDir: string, outputDir: string) {
     this.watchDir = path.resolve(watchDir);
@@ -106,9 +106,11 @@ class MDXToNextJSGenerator {
     });
 
     this.watcher
-      .on("add", (filePath) => this.handleFileChange("added", filePath))
-      .on("change", (filePath) => this.handleFileChange("changed", filePath))
-      .on("unlink", (filePath) => this.handleFileDelete(filePath));
+      .on("add", (filePath: string) => this.handleFileChange("added", filePath))
+      .on("change", (filePath: string) =>
+        this.handleFileChange("changed", filePath),
+      )
+      .on("unlink", (filePath: string) => this.handleFileDelete(filePath));
   }
 
   async handleFileChange(action: string, filePath: string) {

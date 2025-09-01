@@ -12,17 +12,12 @@ Doccupine is built on open standards, enabling customization and extensibility f
 
 To get started with Doccupine, make sure you have [Node.js](https://nodejs.org) and npm installed on your machine. Then, follow these steps:
 
-- **Install Doccupine CLI:**
+- **Run Doccupine CLI:**
 
-~~~bash
-npm install -g doccupine-beta
-~~~
-
-- **Create a new Doccupine project:**
 Create a new directory for your project and navigate to it in your terminal. Run the following command to create a new Doccupine project:
 
 ~~~bash
-doccupine-beta
+npx doccupine
 ~~~
 
 Once you run the command, Doccupine will ask you to select a directory to store your MDX files. Choose the directory where you want to create your documentation files.
@@ -33,7 +28,7 @@ This will start the development server on port 3000. Open your browser and navig
 - **Generate the website:**
 
 ~~~bash
-doccupine build
+npx doccupine build
 ~~~
 
 This will generate the build files for your documentation website without starting the development server. You can then deploy the generated files to a hosting service of your choice.
