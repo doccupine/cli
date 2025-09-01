@@ -183,7 +183,7 @@ function Code({ code, language = "javascript", ...props }: CodeProps) {
         <Dot />
         <Dot />
       </TopBar>
-      <Body dangerouslySetInnerHTML={{ __html: highlightedCode }} {...props} language={language} />
+      <Body dangerouslySetInnerHTML={{ __html: highlightedCode }} {...props} />
     </CodeWrapper>
   );
 }

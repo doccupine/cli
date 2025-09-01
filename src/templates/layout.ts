@@ -42,7 +42,7 @@ export default async function RootLayout({
   },
 ];
 
-  const pages = ${JSON.stringify(pages, null, 2)};
+  const pages: any = ${JSON.stringify(pages, null, 2)};
   const result = transformPagesToGroupedStructure(pages);
   const defaultResults = transformPagesToGroupedStructure(defaultPages);
 
