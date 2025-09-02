@@ -1,0 +1,1 @@
+export declare const nextConfigTemplate = "import type { NextConfig } from \"next\";\n\nconst nextConfig: NextConfig = {\n  compiler: {\n    styledComponents: true,\n  },\n  transpilePackages: [\"lucide-react\"],\n};\n\nexport default nextConfig;\n";

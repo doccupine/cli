@@ -8,6 +8,9 @@ import matter from "gray-matter";
 import chalk from "chalk";
 import prompts from "prompts";
 import { gitignoreTemplate } from "./templates/gitignore.js";
+import { packageJsonTemplate } from "./templates/package.js";
+import { nextConfigTemplate } from "./templates/next.config.js";
+import { tsconfigTemplate } from "./templates/tsconfig.js";
 import { homeTemplate } from "./templates/home.js";
 import { notFoundTemplate } from "./templates/not-found.js";
 import { layoutTemplate } from "./templates/layout.js";
@@ -310,96 +313,16 @@ export default function Home() {
     return gitignoreTemplate;
   }
 
-  // Configuration file generators
   generatePackageJson(): string {
-    return JSON.stringify(
-      {
-        name: "doccupine",
-        version: "0.1.0",
-        private: true,
-        scripts: {
-          dev: "next dev",
-          build: "next build",
-          start: "next start",
-          lint: "next lint",
-        },
-        dependencies: {
-          next: "15.5.2",
-          react: "19.1.1",
-          "react-dom": "19.1.1",
-        },
-        devDependencies: {
-          "@types/node": "^24",
-          "@types/react": "^19",
-          "@types/react-dom": "^19",
-          "cherry-styled-components": "^0.1.0-43",
-          eslint: "^9",
-          "eslint-config-next": "15.5.2",
-          "lucide-react": "^0.542.0",
-          polished: "^4.3.1",
-          prettier: "^3.6.2",
-          "react-markdown": "^10.1.0",
-          "rehype-highlight": "^7.0.2",
-          "rehype-parse": "^9.0.1",
-          "rehype-stringify": "^10.0.1",
-          "remark-gfm": "^4.0.1",
-          "styled-components": "^6.1.19",
-          typescript: "^5",
-        },
-      },
-      null,
-      2,
-    );
+    return packageJsonTemplate;
   }
 
   generateNextConfig(): string {
-    return `import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  compiler: {
-    styledComponents: true,
-  },
-  transpilePackages: ["lucide-react"],
-};
-
-export default nextConfig;
-`;
+    return nextConfigTemplate;
   }
 
   generateTSConfig(): string {
-    return JSON.stringify(
-      {
-        compilerOptions: {
-          target: "es5",
-          lib: ["dom", "dom.iterable", "es6"],
-          allowJs: true,
-          skipLibCheck: true,
-          strict: true,
-          noEmit: true,
-          esModuleInterop: true,
-          module: "esnext",
-          moduleResolution: "bundler",
-          resolveJsonModule: true,
-          isolatedModules: true,
-          jsx: "preserve",
-          incremental: true,
-          plugins: [{ name: "next" }],
-          baseUrl: ".",
-          paths: {
-            "@/*": ["./*"],
-          },
-        },
-        include: [
-          "next-env.d.ts",
-          "**/*.ts",
-          "**/*.tsx",
-          ".next/types/**/*.ts",
-        ],
-        exclude: ["node_modules"],
-      },
-      null,
-      2,
-    );
+    return tsconfigTemplate;
   }
 
   async generateRootLayout(): Promise<string> {
