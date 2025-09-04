@@ -37,12 +37,9 @@ class MDXToNextJSGenerator {
     }
     async init() {
         console.log(chalk.blue("🚀 Initializing MDX to Next.js generator..."));
-        // Ensure directories exist
         await fs.ensureDir(this.watchDir);
         await fs.ensureDir(this.outputDir);
-        // Create initial Next.js structure
         await this.createNextJSStructure();
-        // Process existing files
         await this.processAllMDXFiles();
         console.log(chalk.green("✅ Initial setup complete!"));
         console.log(chalk.cyan("💡 To start the Next.js dev server:"));
@@ -81,15 +78,36 @@ class MDXToNextJSGenerator {
     }
     async startWatching() {
         console.log(chalk.yellow(`👀 Watching for changes in: ${this.watchDir}`));
-        this.watcher = chokidar.watch("**/*.mdx", {
-            cwd: this.watchDir,
+        this.watcher = chokidar.watch(this.watchDir, {
             persistent: true,
-            ignoreInitial: false,
+            ignoreInitial: true,
+            ignored: (filePath, stats) => {
+                const isFile = stats?.isFile() ?? path.extname(filePath) !== "";
+                if (isFile && !filePath.endsWith(".mdx")) {
+                    return true;
+                }
+                return false;
+            },
         });
         this.watcher
-            .on("add", (filePath) => this.handleFileChange("added", filePath))
-            .on("change", (filePath) => this.handleFileChange("changed", filePath))
-            .on("unlink", (filePath) => this.handleFileDelete(filePath));
+            .on("add", (filePath) => {
+            const relativePath = path.relative(this.watchDir, filePath);
+            this.handleFileChange("added", relativePath);
+        })
+            .on("change", (filePath) => {
+            const relativePath = path.relative(this.watchDir, filePath);
+            this.handleFileChange("changed", relativePath);
+        })
+            .on("unlink", (filePath) => {
+            const relativePath = path.relative(this.watchDir, filePath);
+            this.handleFileDelete(relativePath);
+        })
+            .on("ready", () => {
+            console.log(chalk.green("📁 Initial scan complete. Ready for changes..."));
+        })
+            .on("error", (error) => {
+            console.error(chalk.red("❌ Watcher error:"), error);
+        });
     }
     async handleFileChange(action, filePath) {
         console.log(chalk.cyan(`📝 File ${action}: ${filePath}`));
@@ -336,14 +354,13 @@ export default function Home() {
     generateOrderNavItems() {
         return orderNavItemsTemplate;
     }
-    stop() {
+    async stop() {
         if (this.watcher) {
-            this.watcher.close();
+            await this.watcher.close();
             console.log(chalk.yellow("👋 Stopped watching for changes"));
         }
     }
 }
-// CLI Commands
 program
     .name("doccupine")
     .description("Watch MDX files and generate Next.js documentation pages automatically")
@@ -376,7 +393,6 @@ program
     let devServer = null;
     console.log(chalk.blue("📦 Installing dependencies..."));
     const { spawn } = await import("child_process");
-    // Install dependencies first
     const install = spawn("npm", ["install"], {
         cwd: outputDir,
         stdio: "pipe",
@@ -393,7 +409,6 @@ program
         });
         install.on("error", reject);
     });
-    // Start dev server
     console.log(chalk.blue(`🚀 Starting Next.js dev server on port ${options.port}...`));
     devServer = spawn("npm", ["run", "dev", "--", "--port", options.port], {
         cwd: outputDir,
@@ -404,7 +419,6 @@ program
         if (output.includes("Ready") || output.includes("started")) {
             console.log(chalk.green(`🌐 Next.js ready at http://localhost:${options.port}`));
         }
-        // Filter out noisy Next.js logs, show important ones
         if (output.includes("compiled") ||
             output.includes("error") ||
             output.includes("Ready")) {
@@ -420,10 +434,9 @@ program
         console.error(chalk.red("❌ Error starting dev server:"), error);
     });
     await generator.startWatching();
-    // Handle graceful shutdown
-    process.on("SIGINT", () => {
+    process.on("SIGINT", async () => {
         console.log(chalk.yellow("\n🛑 Shutting down..."));
-        generator.stop();
+        await generator.stop();
         if (devServer) {
             devServer.kill();
         }
