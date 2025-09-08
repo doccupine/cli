@@ -1,7 +1,12 @@
-export const homeTemplate = `import { Metadata } from "next";
-import { Docs } from "@/components/Docs";
-
-const content = \`# Welcome to Doccupine
+export const homeMdxTemplate = `---
+title: "Home"
+description: "This is my first Doccupine project"
+date: "2025-01-15"
+category: "General"
+categoryOrder: 0
+order: 0
+---
+# Welcome to Doccupine
 
 Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease. Using Doccupine, you simply create your documentation in MDX files with traditional Markdown syntax, Doccupine monitors your changes automatically generating a beautiful, modern documentation website.
 
@@ -44,14 +49,6 @@ This will generate the build files for your documentation website without starti
 Start documenting your project by creating a new **index.mdx** file in the choosen MDX directory. You can use the following template as a starting point:
 
 ~~~text
----
-title: "Home"
-description: "This is my first Doccupine project"
-date: "2025-01-15"
-category: "General"
-categoryOrder: 0
-order: 0
----
 
 # Home
 
@@ -59,16 +56,4 @@ This is some **markdown** content with MDX support.
 ~~~
 
 In your MDX directory, you can structure your content using folders and files. Doccupine will automatically generate a navigation menu based on the configured categories and order.
-\`;
-
-export const metadata: Metadata = {
-  title: 'Welcome to Doccupine',
-  description: 'Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease.',
-};
-
-export default function Page() {
-  return (
-    <Docs content={content} />
-  );
-}
 `;

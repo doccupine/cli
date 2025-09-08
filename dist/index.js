@@ -10,7 +10,6 @@ import { gitignoreTemplate } from "./templates/gitignore.js";
 import { packageJsonTemplate } from "./templates/package.js";
 import { nextConfigTemplate } from "./templates/next.config.js";
 import { tsconfigTemplate } from "./templates/tsconfig.js";
-import { homeTemplate } from "./templates/home.js";
 import { notFoundTemplate } from "./templates/not-found.js";
 import { layoutTemplate } from "./templates/layout.js";
 import { themeTemplate } from "./templates/theme.js";
@@ -27,6 +26,75 @@ import { clickOutsideTemplate } from "./templates/components/ClickOutside.js";
 import { docsTemplate } from "./templates/components/Docs.js";
 import { orderNavItemsTemplate } from "./templates/utils/orderNavItems.js";
 import { sideBarTemplate } from "./templates/components/SideBar.js";
+import { homeMdxTemplate } from "./templates/home.mdx.js";
+import { commandsMdxTemplate } from "./templates/commands.mdx.js";
+class ConfigManager {
+    configPath;
+    constructor(configPath = "doccupine.json") {
+        this.configPath = path.resolve(process.cwd(), configPath);
+    }
+    async loadConfig() {
+        try {
+            if (await fs.pathExists(this.configPath)) {
+                const configContent = await fs.readFile(this.configPath, "utf8");
+                const config = JSON.parse(configContent);
+                console.log(chalk.blue("📄 Using existing configuration from doccupine.json"));
+                return config;
+            }
+        }
+        catch (error) {
+            console.warn(chalk.yellow("⚠️ Error reading config file, will create new one"));
+        }
+        return null;
+    }
+    async saveConfig(config) {
+        try {
+            await fs.writeFile(this.configPath, JSON.stringify(config, null, 2), "utf8");
+            console.log(chalk.green("💾 Configuration saved to doccupine.json"));
+        }
+        catch (error) {
+            console.error(chalk.red("❌ Error saving config file:"), error);
+        }
+    }
+    async promptForConfig(existingConfig) {
+        const questions = [
+            {
+                type: "text",
+                name: "watchDir",
+                message: "Enter directory to watch for MDX files:",
+                initial: existingConfig?.watchDir || "docs",
+            },
+            {
+                type: "text",
+                name: "outputDir",
+                message: "Enter output directory for Next.js app:",
+                initial: existingConfig?.outputDir || "nextjs-app",
+            },
+        ];
+        const { watchDir, outputDir } = (await prompts(questions));
+        return {
+            watchDir: path.resolve(process.cwd(), watchDir),
+            outputDir: path.resolve(process.cwd(), outputDir),
+            port: existingConfig?.port || "3000",
+        };
+    }
+    async getConfig(options = {}) {
+        let config = null;
+        if (!options.reset) {
+            config = await this.loadConfig();
+        }
+        if (!config || options.reset) {
+            console.log(chalk.blue("🔧 Setting up Doccupine configuration..."));
+            config = await this.promptForConfig(config || {});
+            await this.saveConfig(config);
+        }
+        if (options.port) {
+            config.port = options.port;
+            await this.saveConfig(config);
+        }
+        return config;
+    }
+}
 class MDXToNextJSGenerator {
     watchDir;
     outputDir;
@@ -40,6 +108,7 @@ class MDXToNextJSGenerator {
         await fs.ensureDir(this.watchDir);
         await fs.ensureDir(this.outputDir);
         await this.createNextJSStructure();
+        await this.createStartingDocs();
         await this.processAllMDXFiles();
         console.log(chalk.green("✅ Initial setup complete!"));
         console.log(chalk.cyan("💡 To start the Next.js dev server:"));
@@ -53,7 +122,6 @@ class MDXToNextJSGenerator {
             "next.config.ts": this.generateNextConfig(),
             "tsconfig.json": this.generateTSConfig(),
             "app/layout.tsx": await this.generateRootLayout(),
-            "app/page.tsx": this.generateHomePage(),
             "app/not-found.tsx": this.generateNotFoundPage(),
             "app/theme.ts": this.generateTheme(),
             "components/layout/Icon.tsx": this.generateIcon(),
@@ -74,6 +142,20 @@ class MDXToNextJSGenerator {
             const fullPath = path.join(this.outputDir, filePath);
             await fs.ensureDir(path.dirname(fullPath));
             await fs.writeFile(fullPath, String(content), "utf8");
+        }
+    }
+    async createStartingDocs() {
+        const structure = {
+            "index.mdx": this.generateHomeMdx(),
+            "commands.mdx": this.generateCommandsMdx(),
+        };
+        const indexMdxExists = await fs.pathExists(path.join(this.watchDir, "index.mdx"));
+        if (!indexMdxExists) {
+            for (const [filePath, content] of Object.entries(structure)) {
+                const fullPath = path.join(this.watchDir, filePath);
+                await fs.ensureDir(path.dirname(fullPath));
+                await fs.writeFile(fullPath, String(content), "utf8");
+            }
         }
     }
     async startWatching() {
@@ -218,6 +300,12 @@ const content = \`${mdxFile.content.replace(/`/g, "\\`")}\`;
 export const metadata: Metadata = {
   title: '${mdxFile.frontmatter.title || "Generated with Doccupine"}',
   description: '${mdxFile.frontmatter.description || "Automatically generated from MDX files using Doccupine"}',
+  icons: '${mdxFile.frontmatter.icon || ""}',
+  openGraph: {
+    title: '${mdxFile.frontmatter.title || "Generated with Doccupine"}',
+    description: '${mdxFile.frontmatter.description || "Automatically generated from MDX files using Doccupine"}',
+    images: '${mdxFile.frontmatter.image || ""}',
+  }
 };
 
 export default function Page() {
@@ -245,6 +333,8 @@ export default function Page() {
                     description: frontmatter.description || "",
                     categoryOrder: frontmatter.categoryOrder || 0,
                     order: frontmatter.order || 0,
+                    icon: frontmatter.icon || "",
+                    image: frontmatter.image || "",
                 };
             }
         }
@@ -257,6 +347,12 @@ ${indexMDX
             ? `export const metadata: Metadata = {
   title: '${indexMDX.title}',
   description: '${indexMDX.description}',
+  icons: '${indexMDX.icon}',
+    openGraph: {
+      title: '${indexMDX.title}',
+      description: '${indexMDX.description}',
+      images: '${indexMDX.image}',
+    }
 };`
             : `export const metadata: Metadata = {
   title: 'Generated with Doccupine',
@@ -306,8 +402,11 @@ export default function Home() {
         const layoutContent = await this.generateRootLayout();
         await fs.writeFile(path.join(this.outputDir, "app", "layout.tsx"), layoutContent, "utf8");
     }
-    generateHomePage() {
-        return homeTemplate;
+    generateHomeMdx() {
+        return homeMdxTemplate;
+    }
+    generateCommandsMdx() {
+        return commandsMdxTemplate;
     }
     generateNotFoundPage() {
         return notFoundTemplate;
@@ -370,31 +469,20 @@ program
     .description("Watch a directory for MDX changes and generate Next.js app")
     .option("--port <port>", "Port for Next.js dev server", "3000")
     .option("--verbose", "Show verbose output")
+    .option("--reset", "Reset configuration and prompt for new directories")
     .action(async (options) => {
-    const questions = [
-        {
-            type: "text",
-            name: "watchDir",
-            message: "Enter directory to watch for MDX files:",
-            initial: "docs",
-        },
-        {
-            type: "text",
-            name: "outputDir",
-            message: "Enter output directory for Next.js app:",
-            initial: "nextjs-app",
-        },
-    ];
-    const { watchDir: watchDirInput, outputDir: outputDirInput } = (await prompts(questions));
-    const watchDir = path.resolve(process.cwd(), watchDirInput);
-    const outputDir = path.resolve(process.cwd(), outputDirInput);
-    const generator = new MDXToNextJSGenerator(watchDir, outputDir);
+    const configManager = new ConfigManager();
+    const config = await configManager.getConfig({
+        reset: options.reset,
+        port: options.port,
+    });
+    const generator = new MDXToNextJSGenerator(config.watchDir, config.outputDir);
     await generator.init();
     let devServer = null;
     console.log(chalk.blue("📦 Installing dependencies..."));
     const { spawn } = await import("child_process");
     const install = spawn("npm", ["install"], {
-        cwd: outputDir,
+        cwd: config.outputDir,
         stdio: "pipe",
     });
     await new Promise((resolve, reject) => {
@@ -409,15 +497,15 @@ program
         });
         install.on("error", reject);
     });
-    console.log(chalk.blue(`🚀 Starting Next.js dev server on port ${options.port}...`));
-    devServer = spawn("npm", ["run", "dev", "--", "--port", options.port], {
-        cwd: outputDir,
+    console.log(chalk.blue(`🚀 Starting Next.js dev server on port ${config.port}...`));
+    devServer = spawn("npm", ["run", "dev", "--", "--port", config.port], {
+        cwd: config.outputDir,
         stdio: ["ignore", "pipe", "pipe"],
     });
     devServer.stdout.on("data", (data) => {
         const output = data.toString();
         if (output.includes("Ready") || output.includes("started")) {
-            console.log(chalk.green(`🌐 Next.js ready at http://localhost:${options.port}`));
+            console.log(chalk.green(`🌐 Next.js ready at http://localhost:${config.port}`));
         }
         if (output.includes("compiled") ||
             output.includes("error") ||
@@ -443,34 +531,47 @@ program
         process.exit(0);
     });
     console.log(chalk.green("🎉 Generator is running! Press Ctrl+C to stop."));
-    if (options.dev) {
-        console.log(chalk.cyan(`📝 Edit your MDX files in: ${watchDir}`));
-        console.log(chalk.cyan(`🌐 View changes at: http://localhost:${options.port}`));
-    }
+    console.log(chalk.cyan(`📝 Edit your MDX files in: ${config.watchDir}`));
+    console.log(chalk.cyan(`🌐 View changes at: http://localhost:${config.port}`));
 });
 program
     .command("build")
     .description("One-time build of Next.js app from MDX files")
-    .action(async () => {
-    const questions = [
-        {
-            type: "text",
-            name: "watchDir",
-            message: "Enter directory to watch for MDX files:",
-            initial: "docs",
-        },
-        {
-            type: "text",
-            name: "outputDir",
-            message: "Enter output directory for Next.js app:",
-            initial: "nextjs-app",
-        },
-    ];
-    const { watchDir: watchDirInput, outputDir: outputDirInput } = (await prompts(questions));
-    const watchDir = path.resolve(process.cwd(), watchDirInput);
-    const outputDir = path.resolve(process.cwd(), outputDirInput);
-    const generator = new MDXToNextJSGenerator(watchDir, outputDir);
+    .option("--reset", "Reset configuration and prompt for new directories")
+    .action(async (options) => {
+    const configManager = new ConfigManager();
+    const config = await configManager.getConfig({
+        reset: options.reset,
+    });
+    const generator = new MDXToNextJSGenerator(config.watchDir, config.outputDir);
     await generator.init();
     console.log(chalk.green("🎉 Build complete!"));
+});
+program
+    .command("config")
+    .description("Show or reset configuration")
+    .option("--show", "Show current configuration")
+    .option("--reset", "Reset configuration")
+    .action(async (options) => {
+    const configManager = new ConfigManager();
+    if (options.show) {
+        const config = await configManager.loadConfig();
+        if (config) {
+            console.log(chalk.blue("📄 Current configuration:"));
+            console.log(chalk.white("Watch Directory:"), chalk.cyan(path.relative(process.cwd(), config.watchDir)));
+            console.log(chalk.white("Output Directory:"), chalk.cyan(path.relative(process.cwd(), config.outputDir)));
+            console.log(chalk.white("Port:"), chalk.cyan(config.port || "3000"));
+        }
+        else {
+            console.log(chalk.yellow("⚠️ No configuration file found"));
+        }
+    }
+    else if (options.reset) {
+        await configManager.getConfig({ reset: true });
+        console.log(chalk.green("✅ Configuration reset"));
+    }
+    else {
+        console.log(chalk.blue("Use --show to display configuration or --reset to reset it"));
+    }
 });
 program.parse();
