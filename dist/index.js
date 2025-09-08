@@ -298,13 +298,13 @@ import { Docs } from "@/components/Docs";
 const content = \`${mdxFile.content.replace(/`/g, "\\`")}\`;
 
 export const metadata: Metadata = {
-  title: '${mdxFile.frontmatter.title || "Generated with Doccupine"}',
-  description: '${mdxFile.frontmatter.description || "Automatically generated from MDX files using Doccupine"}',
-  icons: '${mdxFile.frontmatter.icon || ""}',
+  title: "${mdxFile.frontmatter.title || "Generated with Doccupine"}",
+  description: "${mdxFile.frontmatter.description || "Automatically generated from MDX files using Doccupine"}",
+  icons: "${mdxFile.frontmatter.icon || "https://doccupine.com/favicon.ico"}",
   openGraph: {
-    title: '${mdxFile.frontmatter.title || "Generated with Doccupine"}',
-    description: '${mdxFile.frontmatter.description || "Automatically generated from MDX files using Doccupine"}',
-    images: '${mdxFile.frontmatter.image || ""}',
+    title: "${mdxFile.frontmatter.title || "Generated with Doccupine"}",
+    description: "${mdxFile.frontmatter.description || "Automatically generated from MDX files using Doccupine"}",
+    images: "${mdxFile.frontmatter.image || "https://doccupine.com/preview.png"}",
   }
 };
 
@@ -333,8 +333,8 @@ export default function Page() {
                     description: frontmatter.description || "",
                     categoryOrder: frontmatter.categoryOrder || 0,
                     order: frontmatter.order || 0,
-                    icon: frontmatter.icon || "",
-                    image: frontmatter.image || "",
+                    icon: frontmatter.icon || "https://doccupine.com/favicon.ico",
+                    image: frontmatter.image || "https://doccupine.com/preview.png",
                 };
             }
         }
@@ -345,18 +345,24 @@ ${indexMDX ? `const indexContent = \`${indexMDX.content.replace(/`/g, "\\`")}\`;
 
 ${indexMDX
             ? `export const metadata: Metadata = {
-  title: '${indexMDX.title}',
-  description: '${indexMDX.description}',
-  icons: '${indexMDX.icon}',
-    openGraph: {
-      title: '${indexMDX.title}',
-      description: '${indexMDX.description}',
-      images: '${indexMDX.image}',
-    }
+  title: "${indexMDX.title}",
+  description: "${indexMDX.description}",
+  icons: "${indexMDX.icon}",
+  openGraph: {
+    title: "${indexMDX.title}",
+    description: "${indexMDX.description}",
+    images: "${indexMDX.image}",
+  }
 };`
             : `export const metadata: Metadata = {
-  title: 'Generated with Doccupine',
-  description: 'Automatically generated from MDX files using Doccupine',
+  title: "Generated with Doccupine",
+  description: "Automatically generated from MDX files using Doccupine",
+  icons: "https://doccupine.com/favicon.ico",
+  openGraph: {
+    title: "Generated with Doccupine",
+    description: "Automatically generated from MDX files using Doccupine",
+    images: "https://doccupine.com/preview.png",
+  }
 };`} 
 
 export default function Home() {
@@ -463,7 +469,7 @@ export default function Home() {
 program
     .name("doccupine")
     .description("Watch MDX files and generate Next.js documentation pages automatically")
-    .version("0.0.5");
+    .version("0.0.6");
 program
     .command("watch", { isDefault: true })
     .description("Watch a directory for MDX changes and generate Next.js app")
