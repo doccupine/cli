@@ -469,7 +469,7 @@ export default function Home() {
 program
     .name("doccupine")
     .description("Watch MDX files and generate Next.js documentation pages automatically")
-    .version("0.0.6");
+    .version("0.0.8");
 program
     .command("watch", { isDefault: true })
     .description("Watch a directory for MDX changes and generate Next.js app")
