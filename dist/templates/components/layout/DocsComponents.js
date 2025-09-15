@@ -20,21 +20,23 @@ const StyledDocsWrapper = styled.div<{ theme: Theme }>\`
 \`;
 
 const StyledDocsSidebar = styled.div<{ theme: Theme }>\`
-  position: sticky;
-  top: 90px;
-  min-width: 200px;
-  float: left;
-  z-index: 999;
-
-  \${mq("lg")} {
-    z-index: 2;
-  }
+  clear: both;
 \`;
 
 const StyledDocsContainer = styled.div<{ theme: Theme }>\`
   position: relative;
   padding: 0;
   width: 100%;
+  \${({ theme }) => styledText(theme)};
+
+  \${mq("lg")} {
+    padding-left: 230px;
+    padding-right: 32px;
+  }
+
+  & p {
+    color: \${({ theme }) => theme.colors.grayDark};
+  }
 
   & pre {
     max-width: 100%;
@@ -88,7 +90,6 @@ const StyledDocsContainer = styled.div<{ theme: Theme }>\`
       position: relative;
       padding: 0;
       counter-increment: item;
-      padding: 0;
       margin: 0;
       \${({ theme }) => styledText(theme)};
 
@@ -110,6 +111,12 @@ export const StyledMarkdownContainer = styled.div\`
   gap: 20px;
   flex-wrap: wrap;
   flex: 1;
+  max-width: 640px;
+  margin: auto;
+
+  \${mq("lg")} {
+    padding-bottom: 110px;
+  }
 \`;
 
 interface Props {
@@ -122,7 +129,6 @@ export const StyledSidebar = styled.nav<Props>\`
   overflow-y: auto;
   max-height: calc(100svh - 70px);
   width: 100%;
-  background: \${({ theme }) => theme.colors.light};
   z-index: 99;
   top: 70px;
   height: 100%;
@@ -132,25 +138,20 @@ export const StyledSidebar = styled.nav<Props>\`
   transition: all 0.3s ease;
   transform: translateY(30px);
   left: 0;
+  background: \${({ theme }) => theme.colors.light};
 
   \${mq("lg")} {
+    max-height: 100svh;
     width: 220px;
     left: 20px;
     background: transparent;
-    padding: 20px 20px 20px 0;
+    padding: 90px 40px 40px;
     opacity: 1;
     pointer-events: all;
     transform: translateY(0);
-  }
-
-  \${mq("xl")} {
-    width: 220px;
-    left: calc(50% - 610px);
-  }
-
-  \${mq("xxl")} {
-    width: 220px;
-    left: calc(50% - 690px);
+    background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.1)};
+    top: 0;
+    width: 320px;
   }
 
   \${({ $isActive }) =>
@@ -160,6 +161,43 @@ export const StyledSidebar = styled.nav<Props>\`
       opacity: 1;
       pointer-events: all;
     \`}
+\`;
+
+export const StyledIndexSidebar = styled.ul<{ theme: Theme }>\`
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 320px;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 1;
+  padding: 40px;
+  background: \${({ theme }) => theme.colors.light};
+  border-left: solid 1px \${({ theme }) => theme.colors.grayLight};
+
+  \${mq("lg")} {
+    display: block;
+  }
+
+  & li {
+    padding: 5px 0;
+
+    & a {
+      \${({ theme }) => styledText(theme)};
+      color: \${({ theme }) => theme.colors.primary};
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+
+      &:hover {
+        color: \${({ theme }) => theme.colors.primaryDark};
+      }
+    }
+  }
 \`;
 
 export const StyledSidebarList = styled.ul\`
