@@ -1,6 +1,6 @@
 # Welcome to Doccupine
 
-Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease. Using Doccupine, you simply create your documentation in MDX files with traditional Markdown syntax, Doccupine monitors your changes automatically generating a beautiful, modern documentation website.
+[Doccupine](https://doccupine.com) is a free and open-source document management system that allows you to store, organize, and share your documentation with ease. Using Doccupine, you simply create your documentation in MDX files with traditional Markdown syntax, Doccupine monitors your changes automatically generating a beautiful, modern documentation website.
 
 ## Open Source and Extensible
 
