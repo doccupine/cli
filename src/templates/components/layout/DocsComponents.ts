@@ -30,8 +30,8 @@ const StyledDocsContainer = styled.div<{ theme: Theme }>\`
   \${({ theme }) => styledText(theme)};
 
   \${mq("lg")} {
-    padding-left: 230px;
-    padding-right: 32px;
+    padding-left: 320px;
+    padding-right: 320px;
   }
 
   & p {
@@ -40,10 +40,6 @@ const StyledDocsContainer = styled.div<{ theme: Theme }>\`
 
   & pre {
     max-width: 100%;
-  }
-
-  \${mq("lg")} {
-    padding-left: 230px;
   }
 
   & ul {
@@ -143,7 +139,6 @@ export const StyledSidebar = styled.nav<Props>\`
   \${mq("lg")} {
     max-height: 100svh;
     width: 220px;
-    left: 20px;
     background: transparent;
     padding: 90px 40px 40px;
     opacity: 1;
