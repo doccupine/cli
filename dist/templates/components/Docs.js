@@ -1,5 +1,5 @@
 export const docsTemplate = `"use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Flex, Space } from "cherry-styled-components/src/lib";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -8,8 +8,9 @@ import {
   DocsContainer,
   StyledMarkdownContainer,
   StyledIndexSidebar,
+  StyledIndexSidebarLink,
+  StyledIndexSidebarLabel,
 } from "@/components/layout/DocsComponents";
-import { StyledText } from "@/components/layout/Typography";
 
 interface DocsProps {
   content: string;
@@ -44,9 +45,96 @@ function extractHeadings(content: string): Heading[] {
 
   return headings;
 }
+
+function useActiveHeading(headings: Heading[]): string {
+  const [activeId, setActiveId] = useState<string>("");
+
+  const handleScroll = useCallback(() => {
+    if (headings.length === 0) return;
+
+    const headingElements = headings
+      .map((heading) => document.getElementById(heading.id))
+      .filter(Boolean);
+
+    if (headingElements.length === 0) return;
+
+    const windowHeight = window.innerHeight;
+
+    const visibleHeadings = headingElements.filter((element) => {
+      if (!element) return false;
+
+      const rect = element.getBoundingClientRect();
+      const elementTop = rect.top;
+      const elementBottom = rect.bottom;
+
+      return elementTop < windowHeight && elementBottom > -50;
+    });
+
+    if (visibleHeadings.length > 0) {
+      let closestHeading = visibleHeadings[0];
+      let closestDistance = Math.abs(
+        closestHeading!.getBoundingClientRect().top,
+      );
+
+      for (const heading of visibleHeadings) {
+        if (!heading) continue;
+        const distance = Math.abs(heading.getBoundingClientRect().top);
+        if (
+          distance < closestDistance &&
+          heading.getBoundingClientRect().top <= windowHeight * 0.3
+        ) {
+          closestDistance = distance;
+          closestHeading = heading;
+        }
+      }
+
+      setActiveId(closestHeading!.id);
+      return;
+    }
+
+    let currentActiveId = headings[0].id;
+
+    for (const element of headingElements) {
+      if (!element) continue;
+
+      const rect = element.getBoundingClientRect();
+      if (rect.top <= 0) {
+        currentActiveId = element.id;
+      } else {
+        break;
+      }
+    }
+
+    setActiveId(currentActiveId);
+  }, [headings]);
+
+  useEffect(() => {
+    if (headings.length === 0) return;
+
+    handleScroll();
+
+    let timeoutId: NodeJS.Timeout;
+    const throttledHandleScroll = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(handleScroll, 50);
+    };
+
+    window.addEventListener("scroll", throttledHandleScroll);
+    window.addEventListener("resize", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", throttledHandleScroll);
+      window.removeEventListener("resize", handleScroll);
+      clearTimeout(timeoutId);
+    };
+  }, [handleScroll, headings]);
+
+  return activeId;
+}
   
 function Docs({ content }: DocsProps) {
   const [headings, setHeadings] = useState<Heading[]>([]);
+  const activeHeadingId = useActiveHeading(headings);
 
   useEffect(() => {
     if (content) {
@@ -54,6 +142,16 @@ function Docs({ content }: DocsProps) {
       setHeadings(extractedHeadings);
     }
   }, [content]);
+
+  const handleHeadingClick = (headingId: string) => {
+    const element = document.getElementById(headingId);
+    if (element) {
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  };
 
   return (
     <>
@@ -139,20 +237,27 @@ function Docs({ content }: DocsProps) {
       <StyledIndexSidebar>
         {headings?.length > 0 && (
           <>
-            <StyledText>On this page</StyledText>
+            <StyledIndexSidebarLabel>On this page</StyledIndexSidebarLabel>
             <Space $size={20} />
           </>
         )}
         {headings.map((heading, index) => (
           <li
             key={index}
-            style={
-              {
-                // paddingLeft: \`\${(heading.level - 1) * 16}px\`,
-              }
-            }
+            style={{
+              paddingLeft: \`\${(heading.level - 1) * 16}px\`,
+            }}
           >
-            <a href={\`#\${heading.id}\`}>{heading.text}</a>
+            <StyledIndexSidebarLink
+              href={\`#\${heading.id}\`}
+              onClick={(e) => {
+                e.preventDefault();
+                handleHeadingClick(heading.id);
+              }}
+              $isActive={activeHeadingId === heading.id}
+            >
+              {heading.text}
+            </StyledIndexSidebarLink>
           </li>
         ))}
       </StyledIndexSidebar>

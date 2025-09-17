@@ -593,7 +593,7 @@ program
   .description(
     "Watch MDX files and generate Next.js documentation pages automatically",
   )
-  .version("0.0.8");
+  .version("0.0.9");
 
 program
   .command("watch", { isDefault: true })
