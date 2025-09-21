@@ -3,7 +3,9 @@ import { useEffect, useState, useCallback } from "react";
 import { Flex, Space } from "cherry-styled-components/src/lib";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 import { Code } from "@/components/layout/Code";
+import { Card, CardProps } from "@/components/layout/Card";
 import { 
   DocsContainer,
   StyledMarkdownContainer,
@@ -15,7 +17,6 @@ import {
 interface DocsProps {
   content: string;
 }
-
 
 interface Heading {
   id: string;
@@ -131,6 +132,18 @@ function useActiveHeading(headings: Heading[]): string {
 
   return activeId;
 }
+
+const defaultComponents = {
+  Card: ({
+    title,
+    icon,
+    children,
+  }: CardProps) => (
+    <Card title={title} icon={icon}>
+      {children}
+    </Card>
+  ),
+};
   
 function Docs({ content }: DocsProps) {
   const [headings, setHeadings] = useState<Heading[]>([]);
@@ -161,6 +174,7 @@ function Docs({ content }: DocsProps) {
           {content && (
             <Markdown
               remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeRaw]}
               components={{
                 code(props) {
                   const { children, className, node, ...rest } = props;
@@ -226,6 +240,11 @@ function Docs({ content }: DocsProps) {
                     </h6>
                   );
                 },
+                ...Object.fromEntries(
+                  Object.entries(defaultComponents).map(
+                    ([name, Component]) => [name.toLowerCase(), Component],
+                  ),
+                ),
               }}
             >
               {content}

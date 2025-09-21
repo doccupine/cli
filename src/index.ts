@@ -22,6 +22,7 @@ import { footerTemplate } from "./templates/components/layout/Footer.js";
 import { themeToggleTemplate } from "./templates/components/layout/ThemeToggle.js";
 import { sharedStyledTemplate } from "./templates/components/layout/SharedStyles.js";
 import { codeTemplate } from "./templates/components/layout/Code.js";
+import { cardTemplate } from "./templates/components/layout/Card.js";
 import { docsComponentsTemplate } from "./templates/components/layout/DocsComponents.js";
 import { clickOutsideTemplate } from "./templates/components/ClickOutside.js";
 import { docsTemplate } from "./templates/components/Docs.js";
@@ -179,6 +180,7 @@ class MDXToNextJSGenerator {
       "components/layout/ThemeToggle.tsx": this.generateThemeToggle(),
       "components/layout/SharedStyled.ts": this.generateSharedStyled(),
       "components/layout/Code.tsx": this.generateCode(),
+      "components/layout/Card.tsx": this.generateCard(),
       "components/layout/DocsComponents.tsx": this.generateDocsComponents(),
       "components/ClickOutside.ts": this.generateClickOutside(),
       "components/Docs.tsx": this.generateDocs(),
@@ -562,6 +564,10 @@ export default function Home() {
 
   generateCode(): string {
     return codeTemplate;
+  }
+
+  generateCard(): string {
+    return cardTemplate;
   }
 
   generateDocsComponents(): string {

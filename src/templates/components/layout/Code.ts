@@ -1,5 +1,4 @@
 export const codeTemplate = `"use client";
-"use client";
 import styled from "styled-components";
 import { Theme, styledCode } from "cherry-styled-components/src/lib";
 import { rgba } from "polished";
