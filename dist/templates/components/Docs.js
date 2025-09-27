@@ -6,6 +6,14 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import { Code } from "@/components/layout/Code";
 import { Card, CardProps } from "@/components/layout/Card";
+import { Accordion, AccordionProps } from "@/components/layout/Accordion";
+import {
+  Tabs,
+  TabContent,
+  TabsProps,
+  TabContentProps,
+} from "@/components/layout/Tabs";
+import { Callout, CalloutProps } from "@/components/layout/Callout";
 import { 
   DocsContainer,
   StyledMarkdownContainer,
@@ -134,14 +142,20 @@ function useActiveHeading(headings: Heading[]): string {
 }
 
 const defaultComponents = {
-  Card: ({
-    title,
-    icon,
-    children,
-  }: CardProps) => (
+  Card: ({ title, icon, children }: CardProps) => (
     <Card title={title} icon={icon}>
       {children}
     </Card>
+  ),
+  Accordion: ({ title, children }: AccordionProps) => (
+    <Accordion title={title}>{children}</Accordion>
+  ),
+  Tabs: ({ children }: TabsProps) => <Tabs>{children}</Tabs>,
+  TabContent: ({ children, title }: TabContentProps) => (
+    <TabContent title={title}>{children}</TabContent>
+  ),
+  Callout: ({ children, type }: CalloutProps) => (
+    <Callout type={type}>{children}</Callout>
   ),
 };
   

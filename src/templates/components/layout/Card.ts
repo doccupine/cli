@@ -8,12 +8,14 @@ const StyledCard = styled.div<{ theme: Theme }>\`
   border: solid 1px \${({ theme }) => theme.colors.grayLight};
   border-radius: \${({ theme }) => theme.spacing.radius.lg};
   padding: 20px;
-  margin: 20px 0;
+  margin: 0;
   \${({ theme }) => styledText(theme)}
+  color: \${({ theme }) => theme.colors.grayDark};
 \`;
 
 const StyledCardTitle = styled.h3<{ theme: Theme }>\`
   margin: 5px 0;
+  color: \${({ theme }) => theme.colors.dark};
   \${({ theme }) => styledText(theme)};
 \`;
 

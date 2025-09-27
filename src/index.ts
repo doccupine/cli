@@ -21,9 +21,13 @@ import { headerTemplate } from "./templates/components/layout/Header.js";
 import { footerTemplate } from "./templates/components/layout/Footer.js";
 import { themeToggleTemplate } from "./templates/components/layout/ThemeToggle.js";
 import { sharedStyledTemplate } from "./templates/components/layout/SharedStyles.js";
+import { accordionTemplate } from "./templates/components/layout/Accordion.js";
+import { calloutTemplate } from "./templates/components/layout/Callout.js";
 import { codeTemplate } from "./templates/components/layout/Code.js";
 import { cardTemplate } from "./templates/components/layout/Card.js";
+import { tabsTemplate } from "./templates/components/layout/Tabs.js";
 import { docsComponentsTemplate } from "./templates/components/layout/DocsComponents.js";
+import { renderMarkdownTemplate } from "./templates/components/layout/RenderMarkdown.js";
 import { clickOutsideTemplate } from "./templates/components/ClickOutside.js";
 import { docsTemplate } from "./templates/components/Docs.js";
 import { orderNavItemsTemplate } from "./templates/utils/orderNavItems.js";
@@ -179,9 +183,13 @@ class MDXToNextJSGenerator {
       "components/layout/Footer.tsx": this.generateFooter(),
       "components/layout/ThemeToggle.tsx": this.generateThemeToggle(),
       "components/layout/SharedStyled.ts": this.generateSharedStyled(),
+      "components/layout/Accordion.tsx": this.generateAccordion(),
+      "components/layout/Callout.tsx": this.generateCallout(),
       "components/layout/Code.tsx": this.generateCode(),
       "components/layout/Card.tsx": this.generateCard(),
+      "components/layout/Tabs.tsx": this.generateTabs(),
       "components/layout/DocsComponents.tsx": this.generateDocsComponents(),
+      "components/layout/RenderMarkdown.tsx": this.generateRenderMarkdown(),
       "components/ClickOutside.ts": this.generateClickOutside(),
       "components/Docs.tsx": this.generateDocs(),
       "components/SideBar.tsx": this.generateSideBar(),
@@ -562,6 +570,14 @@ export default function Home() {
     return sharedStyledTemplate;
   }
 
+  generateAccordion(): string {
+    return accordionTemplate;
+  }
+
+  generateCallout(): string {
+    return calloutTemplate;
+  }
+
   generateCode(): string {
     return codeTemplate;
   }
@@ -570,8 +586,16 @@ export default function Home() {
     return cardTemplate;
   }
 
+  generateTabs(): string {
+    return tabsTemplate;
+  }
+
   generateDocsComponents(): string {
     return docsComponentsTemplate;
+  }
+
+  generateRenderMarkdown(): string {
+    return renderMarkdownTemplate;
   }
 
   generateDocs(): string {

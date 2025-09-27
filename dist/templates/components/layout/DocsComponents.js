@@ -100,6 +100,17 @@ const StyledDocsContainer = styled.div<{ theme: Theme }>\`
       }
     }
   }
+
+  & img {
+    max-width: 100%;
+  }
+
+  & code:not([class]) {
+    background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.2)};
+    color: \${({ theme }) => theme.colors.dark};
+    padding: 2px 4px;
+    border-radius: \${({ theme }) => theme.spacing.radius.xs};
+  }
 \`;
 
 export const StyledMarkdownContainer = styled.div\`
@@ -110,10 +121,6 @@ export const StyledMarkdownContainer = styled.div\`
   flex: 1;
   max-width: 640px;
   margin: auto;
-
-  \${mq("lg")} {
-    padding-bottom: 110px;
-  }
 \`;
 
 interface Props {
