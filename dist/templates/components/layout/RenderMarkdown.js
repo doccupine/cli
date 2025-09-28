@@ -1,36 +1,8 @@
 export const renderMarkdownTemplate = `import React from "react";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
-import { Code } from "@/components/layout/Code";
-import { Card, CardProps } from "@/components/layout/Card";
-import { Accordion, AccordionProps } from "@/components/layout/Accordion";
-import {
-  Tabs,
-  TabsProps,
-  TabContent,
-  TabContentProps,
-} from "@/components/layout/Tabs";
-import { Callout, CalloutProps } from "@/components/layout/Callout";
 import { StyledMarkdownContainer } from "@/components/layout/DocsComponents";
-
-const defaultComponents = {
-  Card: ({ title, icon, children }: CardProps) => (
-    <Card title={title} icon={icon}>
-      {children}
-    </Card>
-  ),
-  Accordion: ({ title, children }: AccordionProps) => (
-    <Accordion title={title}>{children}</Accordion>
-  ),
-  Tabs: ({ children }: TabsProps) => <Tabs>{children}</Tabs>,
-  TabContent: ({ children, title }: TabContentProps) => (
-    <TabContent title={title}>{children}</TabContent>
-  ),
-  Callout: ({ children, type }: CalloutProps) => (
-    <Callout type={type}>{children}</Callout>
-  ),
-};
+import { MDXRemote } from "next-mdx-remote/rsc";
+import remarkGfm from "remark-gfm";
+import { useMDXComponents } from "@/components/MDXComponents";
 
 function extractAllTextFromChildren(children: React.ReactNode): string {
   if (children == null) return "";
@@ -51,42 +23,36 @@ function extractAllTextFromChildren(children: React.ReactNode): string {
   return "";
 }
 
+function normalizeMarkdownSpacing(input: string): string {
+  return (
+    input
+      // Ensure a blank line before headings
+      .replace(/([^\\n])(#[\\s]+)/g, '$1\\n\\n$2')
+
+      // Ensure a blank line before fenced code blocks
+      .replace(/([^\\n])(~~~|\`\`\`)/g, '$1\\n\\n$2')
+
+      // Ensure a blank line before images/links if they start a line
+      .replace(/([^\\n])(!\\[)/g, '$1\\n\\n$2')
+  );
+}
+
 function RenderMarkdown({ children }: { children: React.ReactNode }) {
   const childrenAsString = extractAllTextFromChildren(children);
-  console.log(childrenAsString);
+  const normalizedChildren = normalizeMarkdownSpacing(childrenAsString);
+  const components = useMDXComponents({});
 
   return (
     <StyledMarkdownContainer>
-      <Markdown
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeRaw]}
-        components={{
-          code(props) {
-            const { children, className, node, ...rest } = props;
-            const match = /language-(\\w+)/.exec(className || "");
-            return match ? (
-              <Code
-                {...rest}
-                className={className}
-                code={String(children).replace(/\\n$/, "")}
-                language={match[1]}
-              />
-            ) : (
-              <code {...rest} className={className}>
-                {children}
-              </code>
-            );
+      <MDXRemote
+        source={normalizedChildren}
+        options={{
+          mdxOptions: {
+            remarkPlugins: [remarkGfm],
           },
-          ...Object.fromEntries(
-            Object.entries(defaultComponents).map(([name, Component]) => [
-              name.toLowerCase(),
-              Component,
-            ]),
-          ),
         }}
-      >
-        {childrenAsString}
-      </Markdown>
+        components={components}
+      />
     </StyledMarkdownContainer>
   );
 }

@@ -158,7 +158,17 @@ const Body = styled.div<{ theme: Theme }>\`
   }
 \`;
 
+const escapeHtml = (unsafe: string): string => {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+};
+
 const highlightCode = (code: string, language: string): string => {
+  const escapedCode = escapeHtml(code);
   const result = unified()
     .use(rehypeParse, { fragment: true })
     .use(rehypeHighlight, {
@@ -167,7 +177,7 @@ const highlightCode = (code: string, language: string): string => {
     })
     .use(rehypeStringify)
     .processSync(
-      \`<pre><code class="language-\${language}">\${code}</code></pre>\`,
+      \`<pre><code class="language-\${language}">\${escapedCode}</code></pre>\`,
     );
 
   return String(result);

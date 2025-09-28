@@ -27,9 +27,10 @@ import { codeTemplate } from "./templates/components/layout/Code.js";
 import { cardTemplate } from "./templates/components/layout/Card.js";
 import { tabsTemplate } from "./templates/components/layout/Tabs.js";
 import { docsComponentsTemplate } from "./templates/components/layout/DocsComponents.js";
-import { renderMarkdownTemplate } from "./templates/components/layout/RenderMarkdown.js";
 import { clickOutsideTemplate } from "./templates/components/ClickOutside.js";
 import { docsTemplate } from "./templates/components/Docs.js";
+import { docsSideBarTemplate } from "./templates/components/DocsSideBar.js";
+import { mdxComponentsTemplate } from "./templates/components/MDXComponents.js";
 import { orderNavItemsTemplate } from "./templates/utils/orderNavItems.js";
 import { sideBarTemplate } from "./templates/components/SideBar.js";
 import { homeMdxTemplate } from "./templates/home.mdx.js";
@@ -189,9 +190,10 @@ class MDXToNextJSGenerator {
       "components/layout/Card.tsx": this.generateCard(),
       "components/layout/Tabs.tsx": this.generateTabs(),
       "components/layout/DocsComponents.tsx": this.generateDocsComponents(),
-      "components/layout/RenderMarkdown.tsx": this.generateRenderMarkdown(),
       "components/ClickOutside.ts": this.generateClickOutside(),
       "components/Docs.tsx": this.generateDocs(),
+      "components/DocsSideBar.tsx": this.generateDocsSideBar(),
+      "components/MDXComponents.tsx": this.generateMDXComponents(),
       "components/SideBar.tsx": this.generateSideBar(),
       "utils/orderNavItems.ts": this.generateOrderNavItems(),
     };
@@ -594,12 +596,16 @@ export default function Home() {
     return docsComponentsTemplate;
   }
 
-  generateRenderMarkdown(): string {
-    return renderMarkdownTemplate;
-  }
-
   generateDocs(): string {
     return docsTemplate;
+  }
+
+  generateDocsSideBar(): string {
+    return docsSideBarTemplate;
+  }
+
+  generateMDXComponents(): string {
+    return mdxComponentsTemplate;
   }
 
   generateSideBar(): string {

@@ -3,7 +3,6 @@ import { useState } from "react";
 import styled, { css } from "styled-components";
 import { styledText, Theme } from "cherry-styled-components/src/lib";
 import { Icon } from "@/components/layout/Icon";
-import { RenderMarkdown } from "@/components/layout/RenderMarkdown";
 
 const StyledAccordion = styled.div<{ theme: Theme }>\`
   background: \${({ theme }) => theme.colors.light};
@@ -77,7 +76,7 @@ function Accordion({ children, title }: AccordionProps) {
         {title} <Icon name="ChevronDown" />
       </StyledAccordionTitle>
       <StyledAccordionContent $isOpen={isOpen}>
-        <RenderMarkdown>{children}</RenderMarkdown>
+        {children}
       </StyledAccordionContent>
     </StyledAccordion>
   );

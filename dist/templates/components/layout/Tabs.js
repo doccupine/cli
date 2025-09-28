@@ -4,7 +4,6 @@ import { styledText } from "cherry-styled-components/src/lib";
 import { rgba } from "polished";
 import React, { useState, ReactNode } from "react";
 import styled, { css } from "styled-components";
-import { RenderMarkdown } from "@/components/layout/RenderMarkdown";
 
 export interface TabContentProps {
   title: string;
@@ -115,7 +114,7 @@ const Tabs: React.FC<TabsProps> = ({ children }) => {
       </TabsList>
 
       <TabPanel>
-        <RenderMarkdown>{tabs[activeTab]?.props.children}</RenderMarkdown>
+        {tabs[activeTab]?.props.children}
       </TabPanel>
     </TabsContainer>
   );
