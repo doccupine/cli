@@ -10,7 +10,7 @@ order: 1
 
 In this page, you can find all the commands available in Doccupine CLI.
 
-- **Run Doccupine CLI:**
+## Run Doccupine CLI
 
 Create a new directory for your project and navigate to it in your terminal. Run the following command to create a new Doccupine project:
 
@@ -23,7 +23,7 @@ After selecting the directory, Doccupine will ask you to enter the name of the d
 
 This will start the development server on port 3000. Open your browser and navigate to http://localhost:3000 to view your documentation.
 
-- **Generate the website:**
+## Generate the website
 
 ~~~bash
 npx doccupine build
@@ -31,7 +31,7 @@ npx doccupine build
 
 This will generate the build files for your documentation website without starting the development server. You can then deploy the generated files to a hosting service of your choice.
 
-- **Show current configuration:**
+## Show current configuration
 
 ~~~bash
 npx doccupine config --show
@@ -39,7 +39,7 @@ npx doccupine config --show
 
 This will show the current configuration for Doccupine.
 
-- **Reset configuration:**
+## Reset configuration
 
 ~~~bash
 npx doccupine config --reset

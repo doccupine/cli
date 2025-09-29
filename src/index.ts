@@ -35,6 +35,11 @@ import { orderNavItemsTemplate } from "./templates/utils/orderNavItems.js";
 import { sideBarTemplate } from "./templates/components/SideBar.js";
 import { homeMdxTemplate } from "./templates/home.mdx.js";
 import { commandsMdxTemplate } from "./templates/commands.mdx.js";
+import { accordionMdxTemplate } from "./templates/accordion.mdx.js";
+import { calloutsMdxTemplate } from "./templates/callouts.mdx.js";
+import { cardsMdxTemplate } from "./templates/cards.mdx.js";
+import { tabsMdxTemplate } from "./templates/tabs.mdx.js";
+import { textMdxTemplate } from "./templates/text.mdx.js";
 
 interface MDXFile {
   path: string;
@@ -209,6 +214,11 @@ class MDXToNextJSGenerator {
     const structure = {
       "index.mdx": this.generateHomeMdx(),
       "commands.mdx": this.generateCommandsMdx(),
+      "accordion.mdx": this.generateAccordionMdx(),
+      "callouts.mdx": this.generateCalloutsMdx(),
+      "cards.mdx": this.generateCardsMdx(),
+      "tabs.mdx": this.generateTabsMdx(),
+      "text.mdx": this.generateTextMdx(),
     };
 
     const indexMdxExists = await fs.pathExists(
@@ -532,6 +542,26 @@ export default function Home() {
     return commandsMdxTemplate;
   }
 
+  generateAccordionMdx(): string {
+    return accordionMdxTemplate;
+  }
+
+  generateCalloutsMdx(): string {
+    return calloutsMdxTemplate;
+  }
+
+  generateCardsMdx(): string {
+    return cardsMdxTemplate;
+  }
+
+  generateTabsMdx(): string {
+    return tabsMdxTemplate;
+  }
+
+  generateTextMdx(): string {
+    return textMdxTemplate;
+  }
+
   generateNotFoundPage(): string {
     return notFoundTemplate;
   }
@@ -629,7 +659,7 @@ program
   .description(
     "Watch MDX files and generate Next.js documentation pages automatically",
   )
-  .version("0.0.9");
+  .version("0.0.10");
 
 program
   .command("watch", { isDefault: true })

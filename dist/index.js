@@ -34,6 +34,11 @@ import { orderNavItemsTemplate } from "./templates/utils/orderNavItems.js";
 import { sideBarTemplate } from "./templates/components/SideBar.js";
 import { homeMdxTemplate } from "./templates/home.mdx.js";
 import { commandsMdxTemplate } from "./templates/commands.mdx.js";
+import { accordionMdxTemplate } from "./templates/accordion.mdx.js";
+import { calloutsMdxTemplate } from "./templates/callouts.mdx.js";
+import { cardsMdxTemplate } from "./templates/cards.mdx.js";
+import { tabsMdxTemplate } from "./templates/tabs.mdx.js";
+import { textMdxTemplate } from "./templates/text.mdx.js";
 class ConfigManager {
     configPath;
     constructor(configPath = "doccupine.json") {
@@ -160,6 +165,11 @@ class MDXToNextJSGenerator {
         const structure = {
             "index.mdx": this.generateHomeMdx(),
             "commands.mdx": this.generateCommandsMdx(),
+            "accordion.mdx": this.generateAccordionMdx(),
+            "callouts.mdx": this.generateCalloutsMdx(),
+            "cards.mdx": this.generateCardsMdx(),
+            "tabs.mdx": this.generateTabsMdx(),
+            "text.mdx": this.generateTextMdx(),
         };
         const indexMdxExists = await fs.pathExists(path.join(this.watchDir, "index.mdx"));
         if (!indexMdxExists) {
@@ -426,6 +436,21 @@ export default function Home() {
     generateCommandsMdx() {
         return commandsMdxTemplate;
     }
+    generateAccordionMdx() {
+        return accordionMdxTemplate;
+    }
+    generateCalloutsMdx() {
+        return calloutsMdxTemplate;
+    }
+    generateCardsMdx() {
+        return cardsMdxTemplate;
+    }
+    generateTabsMdx() {
+        return tabsMdxTemplate;
+    }
+    generateTextMdx() {
+        return textMdxTemplate;
+    }
     generateNotFoundPage() {
         return notFoundTemplate;
     }
@@ -499,7 +524,7 @@ export default function Home() {
 program
     .name("doccupine")
     .description("Watch MDX files and generate Next.js documentation pages automatically")
-    .version("0.0.9");
+    .version("0.0.10");
 program
     .command("watch", { isDefault: true })
     .description("Watch a directory for MDX changes and generate Next.js app")
