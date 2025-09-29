@@ -73,8 +73,7 @@ Point to external pages by including full URLs:
 Blockquotes are used to visually highlight key information, quotations, or examples.
 
 ### Single line blockquotes
-Prefix text with \` >
-  \` for a single-line blockquote:
+Prefix text with \`>\` for a single-line blockquote:
 
 \`\`\`text
 > Highlighted message or quote
