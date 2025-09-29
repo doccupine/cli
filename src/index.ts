@@ -38,6 +38,7 @@ import { commandsMdxTemplate } from "./templates/commands.mdx.js";
 import { accordionMdxTemplate } from "./templates/accordion.mdx.js";
 import { calloutsMdxTemplate } from "./templates/callouts.mdx.js";
 import { cardsMdxTemplate } from "./templates/cards.mdx.js";
+import { codeMdxTemplate } from "./templates/code.mdx.js";
 import { tabsMdxTemplate } from "./templates/tabs.mdx.js";
 import { textMdxTemplate } from "./templates/text.mdx.js";
 
@@ -217,6 +218,7 @@ class MDXToNextJSGenerator {
       "accordion.mdx": this.generateAccordionMdx(),
       "callouts.mdx": this.generateCalloutsMdx(),
       "cards.mdx": this.generateCardsMdx(),
+      "code.mdx": this.generateCodeMdx(),
       "tabs.mdx": this.generateTabsMdx(),
       "text.mdx": this.generateTextMdx(),
     };
@@ -552,6 +554,10 @@ export default function Home() {
 
   generateCardsMdx(): string {
     return cardsMdxTemplate;
+  }
+
+  generateCodeMdx(): string {
+    return codeMdxTemplate;
   }
 
   generateTabsMdx(): string {
