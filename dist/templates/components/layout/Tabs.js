@@ -72,11 +72,16 @@ const TabButton = styled.button<{ theme: Theme; $isActive?: boolean }>\`
 const TabPanel = styled.div<{ theme: Theme }>\`
   background-color: \${({ theme }) => theme.colors.light};
   padding: 20px;
-  border-radius: 0 0 \${({ theme }) => theme.spacing.radius.lg};
+  border-radius: 0 0 \${({ theme }) => theme.spacing.radius.lg} \${({ theme }) => theme.spacing.radius.lg};
   color: \${({ theme }) => theme.colors.grayDark};
   \${({ theme }) => styledText(theme)}
   border: solid 1px \${({ theme }) => theme.colors.grayLight};
   border-top: none;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex-wrap: wrap;
+  flex: 1;
 \`;
 
 const TabContent: React.FC<TabContentProps> = ({ children }) => {

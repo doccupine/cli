@@ -1,6 +1,6 @@
 export const calloutTemplate = `"use client";
 import { Theme } from "@/app/theme";
-import { styledText } from "cherry-styled-components/src/lib";
+import { styledSmall } from "cherry-styled-components/src/lib";
 import styled, { css } from "styled-components";
 import { Icon, IconProps } from "@/components/layout/Icon";
 
@@ -12,12 +12,14 @@ const StyledCallout = styled.div<{ theme: Theme; $type?: CalloutType }>\`
   border-radius: \${({ theme }) => theme.spacing.radius.lg};
   padding: 20px;
   margin: 0;
-  \${({ theme }) => styledText(theme)}
+  \${({ theme }) => styledSmall(theme)}
   color: \${({ theme }) => theme.colors.grayDark};
+  display: flex;
 
   & svg {
     vertical-align: middle;
-    margin-right: 5px;
+    min-width: min-content;
+    margin: 3px 10px 0 0;
   }
 
   \${({ theme, $type }) =>

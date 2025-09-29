@@ -53,6 +53,11 @@ const StyledAccordionContent = styled.div<{ theme: Theme; $isOpen: boolean }>\`
   height: 0;
   overflow: clip;
   transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex-wrap: wrap;
+  flex: 1;
 
   \${({ $isOpen }) =>
     $isOpen &&
