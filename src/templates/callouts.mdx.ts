@@ -4,7 +4,7 @@ description: "Doccupine CLI commands"
 date: "2025-01-15"
 category: "Components"
 categoryOrder: 1
-order: 6
+order: 7
 ---
 # Callouts
 Make your content stand out by using callouts for extra emphasis.

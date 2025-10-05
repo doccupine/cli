@@ -4,7 +4,7 @@ description: "Doccupine CLI commands"
 date: "2025-01-15"
 category: "Components"
 categoryOrder: 1
-order: 4
+order: 5
 ---
 # Tabs
 Use the Tabs component to display different content sections in a switchable panel layout.

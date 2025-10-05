@@ -11,10 +11,6 @@ const StyledAccordion = styled.div<{ theme: Theme }>\`
   padding: 20px;
   margin: 0;
   \${({ theme }) => styledText(theme)}
-
-  &:root {
-    interpolate-size: allow-keywords;
-  }
 \`;
 
 const StyledAccordionTitle = styled.h3<{ theme: Theme; $isOpen: boolean }>\`

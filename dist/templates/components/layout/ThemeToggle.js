@@ -1,8 +1,9 @@
 export const themeToggleTemplate = `"use client";
 import React, { useContext, useEffect, useState } from "react";
-import { Theme, resetButton, ThemeContext } from "cherry-styled-components/src/lib";
+import { Theme, resetButton } from "cherry-styled-components/src/lib";
 import styled, { css, useTheme } from "styled-components";
 import { useSearchParams } from "next/navigation";
+import { ThemeContext } from "@/components/layout/CherryThemeProvider";
 import { theme as themeLight, themeDark } from "@/app/theme";
 import { Icon } from "@/components/layout/Icon";
 

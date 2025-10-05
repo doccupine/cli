@@ -5,9 +5,9 @@ import { Inter } from "next/font/google";
 import { 
   Container,
   StyledComponentsRegistry,
-  CherryThemeProvider 
 } from "cherry-styled-components/src/lib";
 import { theme, themeDark } from "@/app/theme";
+import { CherryThemeProvider } from "@/components/layout/CherryThemeProvider";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { DocsWrapper } from "@/components/layout/DocsComponents";

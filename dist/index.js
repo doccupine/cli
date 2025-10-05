@@ -18,12 +18,16 @@ import { pictogramsTemplate } from "./templates/components/layout/Pictograms.js"
 import { typographyTemplate } from "./templates/components/layout/Typography.js";
 import { headerTemplate } from "./templates/components/layout/Header.js";
 import { footerTemplate } from "./templates/components/layout/Footer.js";
+import { globalStylesTemplate } from "./templates/components/layout/GlobalStyles.js";
 import { themeToggleTemplate } from "./templates/components/layout/ThemeToggle.js";
 import { sharedStyledTemplate } from "./templates/components/layout/SharedStyles.js";
 import { accordionTemplate } from "./templates/components/layout/Accordion.js";
 import { calloutTemplate } from "./templates/components/layout/Callout.js";
 import { codeTemplate } from "./templates/components/layout/Code.js";
+import { columnsTemplate } from "./templates/components/layout/Columns.js";
 import { cardTemplate } from "./templates/components/layout/Card.js";
+import { fieldTemplate } from "./templates/components/layout/Field.js";
+import { cherryThemeProviderTemplate } from "./templates/components/layout/CherryThemeProvider.js";
 import { tabsTemplate } from "./templates/components/layout/Tabs.js";
 import { docsComponentsTemplate } from "./templates/components/layout/DocsComponents.js";
 import { clickOutsideTemplate } from "./templates/components/ClickOutside.js";
@@ -40,6 +44,10 @@ import { cardsMdxTemplate } from "./templates/cards.mdx.js";
 import { codeMdxTemplate } from "./templates/code.mdx.js";
 import { tabsMdxTemplate } from "./templates/tabs.mdx.js";
 import { textMdxTemplate } from "./templates/text.mdx.js";
+import { listTableMdxTemplate } from "./templates/list-table.mdx.js";
+import { imageEmbedsMdxTemplate } from "./templates/image-embeds.mdx.js";
+import { iconsMdxTemplate } from "./templates/icons.mdx.js";
+import { fieldsMdxTemplate } from "./templates/fields.mdx.js";
 class ConfigManager {
     configPath;
     constructor(configPath = "doccupine.json") {
@@ -141,12 +149,16 @@ class MDXToNextJSGenerator {
             "components/layout/Typography.ts": this.generateTypography(),
             "components/layout/Header.tsx": this.generateHeader(),
             "components/layout/Footer.tsx": this.generateFooter(),
+            "components/layout/GlobalStyles.ts": this.generateGlobalStyles(),
             "components/layout/ThemeToggle.tsx": this.generateThemeToggle(),
             "components/layout/SharedStyled.ts": this.generateSharedStyled(),
             "components/layout/Accordion.tsx": this.generateAccordion(),
             "components/layout/Callout.tsx": this.generateCallout(),
             "components/layout/Code.tsx": this.generateCode(),
+            "components/layout/Columns.tsx": this.generateColumns(),
             "components/layout/Card.tsx": this.generateCard(),
+            "components/layout/Field.tsx": this.generateField(),
+            "components/layout/CherryThemeProvider.tsx": this.generateCherryThemeProvider(),
             "components/layout/Tabs.tsx": this.generateTabs(),
             "components/layout/DocsComponents.tsx": this.generateDocsComponents(),
             "components/ClickOutside.ts": this.generateClickOutside(),
@@ -172,6 +184,10 @@ class MDXToNextJSGenerator {
             "code.mdx": this.generateCodeMdx(),
             "tabs.mdx": this.generateTabsMdx(),
             "text.mdx": this.generateTextMdx(),
+            "list-table.mdx": this.generateListTableMdx(),
+            "image-embeds.mdx": this.generateImageEmbedsMdx(),
+            "icons.mdx": this.generateIconsMdx(),
+            "fields.mdx": this.generateFieldsMdx(),
         };
         const indexMdxExists = await fs.pathExists(path.join(this.watchDir, "index.mdx"));
         if (!indexMdxExists) {
@@ -456,6 +472,18 @@ export default function Home() {
     generateTextMdx() {
         return textMdxTemplate;
     }
+    generateListTableMdx() {
+        return listTableMdxTemplate;
+    }
+    generateImageEmbedsMdx() {
+        return imageEmbedsMdxTemplate;
+    }
+    generateIconsMdx() {
+        return iconsMdxTemplate;
+    }
+    generateFieldsMdx() {
+        return fieldsMdxTemplate;
+    }
     generateNotFoundPage() {
         return notFoundTemplate;
     }
@@ -480,6 +508,9 @@ export default function Home() {
     generateFooter() {
         return footerTemplate;
     }
+    generateGlobalStyles() {
+        return globalStylesTemplate;
+    }
     generateThemeToggle() {
         return themeToggleTemplate;
     }
@@ -495,8 +526,17 @@ export default function Home() {
     generateCode() {
         return codeTemplate;
     }
+    generateColumns() {
+        return columnsTemplate;
+    }
     generateCard() {
         return cardTemplate;
+    }
+    generateField() {
+        return fieldTemplate;
+    }
+    generateCherryThemeProvider() {
+        return cherryThemeProviderTemplate;
     }
     generateTabs() {
         return tabsTemplate;

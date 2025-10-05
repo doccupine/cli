@@ -5,13 +5,17 @@ import { Card } from "@/components/layout/Card";
 import { Accordion } from "@/components/layout/Accordion";
 import { Tabs, TabContent } from "@/components/layout/Tabs";
 import { Callout } from "@/components/layout/Callout";
+import { Icon } from "@/components/layout/Icon";
+import { Columns } from "@/components/layout/Columns";
+import { Field } from "@/components/layout/Field";
 
 function extractAllTextFromChildren(children: React.ReactNode): string {
   if (children == null) return "";
   if (typeof children === "string") return children;
   if (typeof children === "number") return String(children);
   if (typeof children === "boolean") return "";
-  if (Array.isArray(children)) return children.map(extractAllTextFromChildren).join("");
+  if (Array.isArray(children))
+    return children.map(extractAllTextFromChildren).join("");
   if (React.isValidElement(children)) {
     const element = children as React.ReactElement<any>;
     return extractAllTextFromChildren(element.props.children);
@@ -20,17 +24,26 @@ function extractAllTextFromChildren(children: React.ReactNode): string {
 }
 
 function generateId(text: string): string {
-  return text.toLowerCase().replace(/[^\\w\\s-]/g, "").replace(/\\s+/g, "-").trim();
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .trim();
 }
 
 // Map <pre><code class="language-xyz"> to our <Code /> component
 function Pre(props: any) {
-  const child = React.Children.only(props.children) as React.ReactElement<any> | null;
+  const child = React.Children.only(
+    props.children,
+  ) as React.ReactElement<any> | null;
   if (child && child.type === "code") {
     const className = child.props.className || "";
-    const match = /language-(\\w+)/.exec(className);
+    const match = /language-(\w+)/.exec(className);
     const language = match ? match[1] : undefined;
-    const code = typeof child.props.children === "string" ? child.props.children.replace(/\\n$/, "") : String(child.props.children ?? "");
+    const code =
+      typeof child.props.children === "string"
+        ? child.props.children.replace(/\n$/, "")
+        : String(child.props.children ?? "");
     if (language) {
       return (
         <CodeBlock className={className} code={code} language={language} />
@@ -101,7 +114,9 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     Tabs,
     TabContent,
     Callout,
-
+    Icon,
+    Columns,
+    Field,
     ...components,
   };
 }`;

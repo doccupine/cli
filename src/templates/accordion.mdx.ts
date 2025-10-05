@@ -4,7 +4,7 @@ description: "Doccupine CLI commands"
 date: "2025-01-15"
 category: "Components"
 categoryOrder: 1
-order: 3
+order: 4
 ---
 # Accordion
 Interactive panels for toggling visibility of content.

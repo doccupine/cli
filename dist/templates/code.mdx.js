@@ -4,7 +4,7 @@ description: "Doccupine CLI commands"
 date: "2025-01-15"
 category: "Components"
 categoryOrder: 1
-order: 2
+order: 3
 ---
 # Code
 Learn how to display inline code and code blocks in documentation.

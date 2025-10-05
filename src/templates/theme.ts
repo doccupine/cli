@@ -92,7 +92,7 @@ export const shadowsDark: Shadows = {
 export const fonts: Fonts = {
   text: "Inter",
   head: "Inter",
-  mono: "Roboto Mono",
+  mono: "Roboto Mono, monospace",
 };
 
 export const fontSizes: FontSizes = {

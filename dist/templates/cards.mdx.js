@@ -4,7 +4,7 @@ description: "Doccupine CLI commands"
 date: "2025-01-15"
 category: "Components"
 categoryOrder: 1
-order: 5
+order: 6
 ---
 # Cards
 Duplicate a page or section with ease, then emphasize important information or links using customizable layouts and icons.

@@ -27,7 +27,11 @@ const StyledCallout = styled.div<{ theme: Theme; $type?: CalloutType }>\`
     css\`
       border-color: \${theme.isDark ? "#0ea5e94d" : "#0ea5e933"};
       background: \${theme.isDark ? "#0ea5e91a" : "#f0f9ff80"};
-      color: \${theme.isDark ? "#bae6fd" : "#0c4a6e"};
+
+      & svg,
+      & p {
+        color: \${theme.isDark ? "#bae6fd" : "#0c4a6e"};
+      }
     \`}
 
   \${({ theme, $type }) =>
@@ -35,7 +39,11 @@ const StyledCallout = styled.div<{ theme: Theme; $type?: CalloutType }>\`
     css\`
       border-color: \${theme.isDark ? "#71717a4d" : "#71717a33"};
       background: \${theme.isDark ? "#71717a1a" : "#fafafa80"};
-      color: \${theme.isDark ? "#e4e4e7" : "#18181b"};
+
+      & svg,
+      & p {
+        color: \${theme.isDark ? "#e4e4e7" : "#18181b"};
+      }
     \`}
 
   \${({ theme, $type }) =>
@@ -43,7 +51,11 @@ const StyledCallout = styled.div<{ theme: Theme; $type?: CalloutType }>\`
     css\`
       border-color: \${theme.isDark ? "#f59e0b4d" : "#f59e0b33"};
       background: \${theme.isDark ? "#f59e0b1a" : "#fffbeb80"};
-      color: \${theme.isDark ? "#fde68a" : "#78350f"};
+
+      & svg,
+      & p {
+        color: \${theme.isDark ? "#fde68a" : "#78350f"};
+      }
     \`}
 
   \${({ theme, $type }) =>
@@ -51,7 +63,11 @@ const StyledCallout = styled.div<{ theme: Theme; $type?: CalloutType }>\`
     css\`
       border-color: \${theme.isDark ? "#ef44444d" : "#ef444433"};
       background: \${theme.isDark ? "#ef44441a" : "#fef2f280"};
+
+      & svg,
+      & p {
       color: \${theme.isDark ? "#fecaca" : "#7f1d1d"};
+      }
     \`}
 
   \${({ theme, $type }) =>
@@ -59,7 +75,11 @@ const StyledCallout = styled.div<{ theme: Theme; $type?: CalloutType }>\`
     css\`
       border-color: \${theme.isDark ? "#10b9814d" : "#10b98133"};
       background: \${theme.isDark ? "#10b9811a" : "#ecfdf580"};
-      color: \${theme.isDark ? "#a7f3d0" : "#064e3b"};
+
+      & svg,
+      & p {
+        color: \${theme.isDark ? "#a7f3d0" : "#064e3b"};
+      }
     \`}
 \`;
 
