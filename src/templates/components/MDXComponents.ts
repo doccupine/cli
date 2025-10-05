@@ -26,8 +26,8 @@ function extractAllTextFromChildren(children: React.ReactNode): string {
 function generateId(text: string): string {
   return text
     .toLowerCase()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-")
+    .replace(/[^\\w\\s-]/g, "")
+    .replace(/\\s+/g, "-")
     .trim();
 }
 
@@ -38,11 +38,11 @@ function Pre(props: any) {
   ) as React.ReactElement<any> | null;
   if (child && child.type === "code") {
     const className = child.props.className || "";
-    const match = /language-(\w+)/.exec(className);
+    const match = /language-(\\w+)/.exec(className);
     const language = match ? match[1] : undefined;
     const code =
       typeof child.props.children === "string"
-        ? child.props.children.replace(/\n$/, "")
+        ? child.props.children.replace(/\\n$/, "")
         : String(child.props.children ?? "");
     if (language) {
       return (
