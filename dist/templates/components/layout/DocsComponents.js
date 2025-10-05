@@ -139,6 +139,10 @@ const StyledDocsContainer = styled.div<{ theme: Theme }>\`
       \${({ theme }) => styledSmall(theme)};
     }
   }
+
+  & .lucide {
+    color: \${({ theme }) => theme.colors.primary};
+  }
 \`;
 
 export const StyledMarkdownContainer = styled.div\`
