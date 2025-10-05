@@ -101,8 +101,11 @@ const StyledDocsContainer = styled.div<{ theme: Theme }>\`
     }
   }
 
-  & img {
+  & img,
+  & video,
+  & iframe {
     max-width: 100%;
+    border-radius: \${({ theme }) => theme.spacing.radius.lg};
   }
 
   & code:not([class]) {
@@ -142,6 +145,11 @@ const StyledDocsContainer = styled.div<{ theme: Theme }>\`
 
   & .lucide {
     color: \${({ theme }) => theme.colors.primary};
+  }
+
+  & .aspect-video {
+    aspect-ratio: 16 / 9;
+    border-radius: \${({ theme }) => theme.spacing.radius.lg};
   }
 \`;
 
