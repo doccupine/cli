@@ -345,14 +345,13 @@ export const metadata: Metadata = {
     title: "${mdxFile.frontmatter.title || "Generated with Doccupine"}",
     description: "${mdxFile.frontmatter.description || "Automatically generated from MDX files using Doccupine"}",
     images: "${mdxFile.frontmatter.image || "https://doccupine.com/preview.png"}",
-  }
+  },
 };
 
 export default function Page() {
-  return (
-    <Docs content={content} />
-  );
-}`;
+  return <Docs content={content} />;
+}
+`;
         const pagePath = path.join(this.outputDir, "app", mdxFile.slug, "page.tsx");
         await fs.ensureDir(path.dirname(pagePath));
         await fs.writeFile(pagePath, pageContent, "utf8");
@@ -392,7 +391,7 @@ ${indexMDX
     title: "${indexMDX.title}",
     description: "${indexMDX.description}",
     images: "${indexMDX.image}",
-  }
+  },
 };`
             : `export const metadata: Metadata = {
   title: "Generated with Doccupine",
@@ -402,14 +401,13 @@ ${indexMDX
     title: "Generated with Doccupine",
     description: "Automatically generated from MDX files using Doccupine",
     images: "https://doccupine.com/preview.png",
-  }
-};`} 
+  },
+};`}
 
 export default function Home() {
-  return (
-    <Docs content={indexContent} />
-  );
-}`;
+  return <Docs content={indexContent} />;
+}
+`;
         await fs.writeFile(path.join(this.outputDir, "app", "page.tsx"), indexContent, "utf8");
     }
     generateGitIgnore() {
