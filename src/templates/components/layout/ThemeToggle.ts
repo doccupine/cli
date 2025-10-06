@@ -27,7 +27,7 @@ const StyledThemeToggle = styled.button<{ theme: Theme; $hidden?: boolean }>\`
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.3)};
+    background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.2)};
     transition: all 0.3s ease;
     z-index: 1;
     \${({ theme }) =>
@@ -51,6 +51,10 @@ const StyledThemeToggle = styled.button<{ theme: Theme; $hidden?: boolean }>\`
     transition: all 0.3s ease;
     position: relative;
     z-index: 2;
+  }
+
+  & .lucide-sun {
+    transform: translateX(1px);
   }
 
   & svg[stroke] {
@@ -109,8 +113,8 @@ function ToggleTheme({ $hidden }: { $hidden?: boolean }) {
       $hidden={$hidden}
       aria-label="Toggle Theme"
     >
-      <Icon name="MoonStar" className="dark" />
       <Icon name="Sun" className="light" />
+      <Icon name="MoonStar" className="dark" />
     </StyledThemeToggle>
   );
 }
