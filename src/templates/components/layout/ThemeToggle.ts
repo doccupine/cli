@@ -3,19 +3,39 @@ import React, { useContext, useEffect, useState } from "react";
 import { Theme, resetButton } from "cherry-styled-components/src/lib";
 import styled, { css, useTheme } from "styled-components";
 import { useSearchParams } from "next/navigation";
+import { rgba } from "polished";
 import { ThemeContext } from "@/components/layout/CherryThemeProvider";
 import { theme as themeLight, themeDark } from "@/app/theme";
 import { Icon } from "@/components/layout/Icon";
 
 const StyledThemeToggle = styled.button<{ theme: Theme; $hidden?: boolean }>\`
   \${resetButton}
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
+  width: 56px;
+  height: 30px;
+  border-radius: 30px;
   display: flex;
   position: relative;
   margin: auto 0;
   transform: scale(1);
+  background: \${({ theme }) => theme.colors.light};
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.3)};
+    transition: all 0.3s ease;
+    z-index: 1;
+    \${({ theme }) =>
+      theme.isDark &&
+      css\`
+        transform: translateX(27px);
+      \`}
+  }
 
   \${({ $hidden }) =>
     $hidden &&
@@ -24,29 +44,13 @@ const StyledThemeToggle = styled.button<{ theme: Theme; $hidden?: boolean }>\`
     \`}
 
   & svg {
-    width: 100%;
-    height: 100%;
+    width: 16px;
+    height: 16px;
     object-fit: contain;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) translateY(0);
     margin: auto;
     transition: all 0.3s ease;
-
-    &.lucide-sun {
-      \${({ theme }) =>
-        theme.isDark &&
-        \`opacity: 0;
-			transform: translate(-50%, -50%) translateY(10px);\`}
-    }
-
-    &.lucide-moon-star {
-      \${({ theme }) =>
-        !theme.isDark &&
-        \`opacity: 0;
-			transform: translate(-50%, -50%) translateY(10px);\`}
-    }
+    position: relative;
+    z-index: 2;
   }
 
   & svg[stroke] {
