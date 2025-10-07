@@ -17,6 +17,7 @@ import { themeTemplate } from "./templates/theme.js";
 import { iconTemplate } from "./templates/components/layout/Icon.js";
 import { pictogramsTemplate } from "./templates/components/layout/Pictograms.js";
 import { typographyTemplate } from "./templates/components/layout/Typography.js";
+import { updateTemplate } from "./templates/components/layout/Update.js";
 import { headerTemplate } from "./templates/components/layout/Header.js";
 import { footerTemplate } from "./templates/components/layout/Footer.js";
 import { globalStylesTemplate } from "./templates/components/layout/GlobalStyles.js";
@@ -49,6 +50,7 @@ import { listTableMdxTemplate } from "./templates/list-table.mdx.js";
 import { imageEmbedsMdxTemplate } from "./templates/image-embeds.mdx.js";
 import { iconsMdxTemplate } from "./templates/icons.mdx.js";
 import { fieldsMdxTemplate } from "./templates/fields.mdx.js";
+import { updateMdxTemplate } from "./templates/update.mdx.js";
 
 interface MDXFile {
   path: string;
@@ -194,6 +196,7 @@ class MDXToNextJSGenerator {
       "components/layout/Icon.tsx": this.generateIcon(),
       "components/layout/Pictograms.tsx": this.generatePictograms(),
       "components/layout/Typography.ts": this.generateTypography(),
+      "components/layout/Update.ts": this.generateUpdate(),
       "components/layout/Header.tsx": this.generateHeader(),
       "components/layout/Footer.tsx": this.generateFooter(),
       "components/layout/GlobalStyles.ts": this.generateGlobalStyles(),
@@ -238,6 +241,7 @@ class MDXToNextJSGenerator {
       "image-embeds.mdx": this.generateImageEmbedsMdx(),
       "icons.mdx": this.generateIconsMdx(),
       "fields.mdx": this.generateFieldsMdx(),
+      "update.mdx": this.generateUpdateMdx(),
     };
 
     const indexMdxExists = await fs.pathExists(
@@ -599,6 +603,10 @@ export default function Home() {
     return fieldsMdxTemplate;
   }
 
+  generateUpdateMdx(): string {
+    return updateMdxTemplate;
+  }
+
   generateNotFoundPage(): string {
     return notFoundTemplate;
   }
@@ -621,6 +629,10 @@ export default function Home() {
 
   generateTypography(): string {
     return typographyTemplate;
+  }
+
+  generateUpdate(): string {
+    return updateTemplate;
   }
 
   generateHeader(): string {
