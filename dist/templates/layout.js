@@ -11,6 +11,7 @@ import { Header } from "@/components/layout/Header";
 import { DocsWrapper } from "@/components/layout/DocsComponents";
 import { SideBar } from "@/components/SideBar";
 import { transformPagesToGroupedStructure } from "@/utils/orderNavItems";
+import navigation from "@/navigation.json";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -41,7 +42,9 @@ export default async function RootLayout({
 ];
 
   const pages: any = ${JSON.stringify(pages, null, 2)};
-  const result = transformPagesToGroupedStructure(pages);
+  const result = navigation.length
+    ? navigation
+    : transformPagesToGroupedStructure(pages);
   const defaultResults = transformPagesToGroupedStructure(defaultPages);
 
   return (

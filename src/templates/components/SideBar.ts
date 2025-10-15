@@ -10,7 +10,7 @@ import {
   StyledStrong,
   StyledSidebarListItemLink,
   StyleMobileBar,
-  StyledMobileBurger
+  StyledMobileBurger,
 } from "@/components/layout/DocsComponents";
 
 type NavItem = {
@@ -41,36 +41,34 @@ function SideBar({ result }: SideBarProps) {
       </StyleMobileBar>
 
       <StyledSidebar $isActive={isMobileMenuOpen}>
-        {result && result.map((item: any, index: number) => {
-          return (
-            <StyledSidebarList key={index}>
-              <StyledSidebarListItem>
-                <StyledStrong>{item.label}</StyledStrong>{" "}
-              </StyledSidebarListItem>
-              <li>
+        {result &&
+          result.map((item: any, index: number) => {
+            return (
+              <StyledSidebarList key={index}>
+                <StyledSidebarListItem>
+                  <StyledStrong>{item.label}</StyledStrong>{" "}
+                </StyledSidebarListItem>
+                <li>
+                  <Space $size={20} />
+                </li>
+                {item.links &&
+                  item.links.map((link: any, indexChild: number) => {
+                    return (
+                      <StyledSidebarListItem key={indexChild}>
+                        <StyledSidebarListItemLink
+                          href={\`/\${link.slug}\`}
+                          $isActive={pathname === \`/\${link.slug}\`}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          {link.title}
+                        </StyledSidebarListItemLink>
+                      </StyledSidebarListItem>
+                    );
+                  })}
                 <Space $size={20} />
-              </li>
-              {item.links &&
-                item.links.map((link: any, indexChild: number) => {
-                  return (
-                    <StyledSidebarListItem key={indexChild}>
-                      <StyledSidebarListItemLink
-                        href={\`/\${link.slug}\`}
-                        $isActive={
-                          pathname ===
-                          \`/\${link.slug}\`
-                        }
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        {link.title}
-                      </StyledSidebarListItemLink>
-                    </StyledSidebarListItem>
-                  );
-                })}
-              <Space $size={20} />
-            </StyledSidebarList>
-          );
-        })}
+              </StyledSidebarList>
+            );
+          })}
       </StyledSidebar>
     </DocsSidebar>
   );

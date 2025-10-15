@@ -159,11 +159,15 @@ class ConfigManager {
 class MDXToNextJSGenerator {
   private watchDir: string;
   private outputDir: string;
+  private rootDir: string;
   private watcher: FSWatcher | null = null;
+  private configWatcher: FSWatcher | null = null;
+  private configFiles = ["theme.json", "navigation.json", "config.json"];
 
   constructor(watchDir: string, outputDir: string) {
     this.watchDir = path.resolve(watchDir);
     this.outputDir = path.resolve(outputDir);
+    this.rootDir = process.cwd();
   }
 
   async init() {
@@ -174,6 +178,7 @@ class MDXToNextJSGenerator {
 
     await this.createNextJSStructure();
     await this.createStartingDocs();
+    await this.copyCustomConfigFiles();
     await this.processAllMDXFiles();
 
     console.log(chalk.green("✅ Initial setup complete!"));
@@ -184,8 +189,64 @@ class MDXToNextJSGenerator {
     console.log(chalk.white("   npm install && npm run dev"));
   }
 
+  async copyCustomConfigFiles() {
+    console.log(
+      chalk.blue(`🔍 Checking for config files in: ${this.watchDir}`),
+    );
+
+    for (const configFile of this.configFiles) {
+      const sourcePath = path.join(this.rootDir, configFile);
+      const destPath = path.join(this.outputDir, configFile);
+
+      console.log(chalk.gray(`  Checking ${configFile}...`));
+
+      if (await fs.pathExists(sourcePath)) {
+        await fs.copy(sourcePath, destPath);
+        console.log(chalk.green(`  ✓ Copied ${configFile} to Next.js app`));
+      } else {
+        console.log(chalk.gray(`  ✗ ${configFile} not found, skipping`));
+      }
+    }
+  }
+
+  async handleConfigFileChange(filePath: string) {
+    const fileName = path.basename(filePath);
+
+    if (this.configFiles.includes(fileName)) {
+      const sourcePath = path.join(this.rootDir, fileName);
+      const destPath = path.join(this.outputDir, fileName);
+
+      try {
+        await fs.copy(sourcePath, destPath);
+        console.log(chalk.green(`📋 Updated ${fileName} in Next.js app`));
+      } catch (error) {
+        console.error(chalk.red(`❌ Error copying ${fileName}:`), error);
+      }
+    }
+  }
+
+  async handleConfigFileDelete(filePath: string) {
+    const fileName = path.basename(filePath);
+
+    if (this.configFiles.includes(fileName)) {
+      const destPath = path.join(this.outputDir, fileName);
+
+      try {
+        if (await fs.pathExists(destPath)) {
+          await fs.remove(destPath);
+          console.log(chalk.yellow(`🗑️ Removed ${fileName} from Next.js app`));
+        }
+      } catch (error) {
+        console.error(chalk.red(`❌ Error removing ${fileName}:`), error);
+      }
+    }
+  }
+
   async createNextJSStructure() {
     const structure = {
+      "theme.json": this.generateThemeConfig(),
+      "navigation.json": this.generateNavigationConfig(),
+      "config.json": this.generateConfig(),
       ".gitignore": this.generateGitIgnore(),
       "package.json": this.generatePackageJson(),
       "next.config.ts": this.generateNextConfig(),
@@ -265,6 +326,12 @@ class MDXToNextJSGenerator {
       ignoreInitial: true,
       ignored: (filePath: string, stats?: fs.Stats) => {
         const isFile = stats?.isFile() ?? path.extname(filePath) !== "";
+        const fileName = path.basename(filePath);
+
+        if (this.configFiles.includes(fileName)) {
+          return true;
+        }
+
         if (isFile && !filePath.endsWith(".mdx")) {
           return true;
         }
@@ -292,6 +359,36 @@ class MDXToNextJSGenerator {
       })
       .on("error", (error: any) => {
         console.error(chalk.red("❌ Watcher error:"), error);
+      });
+
+    const configPaths = this.configFiles.map((f) => path.join(this.rootDir, f));
+
+    this.configWatcher = chokidar.watch(configPaths, {
+      persistent: true,
+      ignoreInitial: true,
+    });
+
+    this.configWatcher
+      .on("add", (filePath: string) => {
+        console.log(
+          chalk.cyan(`📝 Config file added: ${path.basename(filePath)}`),
+        );
+        this.handleConfigFileChange(filePath);
+      })
+      .on("change", (filePath: string) => {
+        console.log(
+          chalk.cyan(`📝 Config file changed: ${path.basename(filePath)}`),
+        );
+        this.handleConfigFileChange(filePath);
+      })
+      .on("unlink", (filePath: string) => {
+        console.log(
+          chalk.red(`🗑️ Config file deleted: ${path.basename(filePath)}`),
+        );
+        this.handleConfigFileDelete(filePath);
+      })
+      .on("error", (error: any) => {
+        console.error(chalk.red("❌ Config watcher error:"), error);
       });
   }
 
@@ -417,17 +514,18 @@ class MDXToNextJSGenerator {
 
     const pageContent = `import { Metadata } from "next";
 import { Docs } from "@/components/Docs";
+import config from "@/config.json";
 
 const content = \`${mdxFile.content.replace(/`/g, "\\`")}\`;
 
 export const metadata: Metadata = {
-  title: "${mdxFile.frontmatter.title || "Generated with Doccupine"}",
-  description: "${mdxFile.frontmatter.description || "Automatically generated from MDX files using Doccupine"}",
-  icons: "${mdxFile.frontmatter.icon || "https://doccupine.com/favicon.ico"}",
+  title: \`${mdxFile.frontmatter.title || "Generated with Doccupine"} \${config.name ? "- " + config.name : "- Doccupine"}\`,
+  description: \`${mdxFile.frontmatter.description ? mdxFile.frontmatter.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
+  icons: \`${mdxFile.frontmatter.icon ? mdxFile.frontmatter.icon : "\${config.icon || 'https://doccupine.com/favicon.ico'}"}\`,
   openGraph: {
-    title: "${mdxFile.frontmatter.title || "Generated with Doccupine"}",
-    description: "${mdxFile.frontmatter.description || "Automatically generated from MDX files using Doccupine"}",
-    images: "${mdxFile.frontmatter.image || "https://doccupine.com/preview.png"}",
+    title: \`${mdxFile.frontmatter.title || "Generated with Doccupine"} \${config.name ? "- " + config.name : "- Doccupine"}\`,
+    description: \`${mdxFile.frontmatter.description ? mdxFile.frontmatter.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
+    images: \`${mdxFile.frontmatter.image ? mdxFile.frontmatter.image : "\${config.preview || 'https://doccupine.com/preview.png'}"}\`,
   },
 };
 
@@ -467,28 +565,29 @@ export default function Page() {
 
     const indexContent = `import { Metadata } from "next";
 import { Docs } from "@/components/Docs";
+import config from "@/config.json";
 
 ${indexMDX ? `const indexContent = \`${indexMDX.content.replace(/`/g, "\\`")}\`;` : `const indexContent = null;`}
 
 ${
   indexMDX
     ? `export const metadata: Metadata = {
-  title: "${indexMDX.title}",
-  description: "${indexMDX.description}",
-  icons: "${indexMDX.icon}",
+  title: \`\${config.name ? config.name + " -" : "Doccupine -"} ${indexMDX.title}\`,
+  description: \`${indexMDX.description ? indexMDX.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
+  icons: \`${indexMDX.icon ? indexMDX.icon : "\${config.icon || 'https://doccupine.com/favicon.ico'}"}\`,
   openGraph: {
-    title: "${indexMDX.title}",
-    description: "${indexMDX.description}",
-    images: "${indexMDX.image}",
+    title: \`\${config.name ? config.name + " -" : "Doccupine -"} ${indexMDX.title}\`,
+    description: \`${indexMDX.description ? indexMDX.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
+    images: \`${indexMDX.image ? indexMDX.image : "\${config.preview || 'https://doccupine.com/preview.png'}"}\`,
   },
 };`
     : `export const metadata: Metadata = {
-  title: "Generated with Doccupine",
-  description: "Automatically generated from MDX files using Doccupine",
+  title: "Doccupine",
+  description: "Generated with Doccupine",
   icons: "https://doccupine.com/favicon.ico",
   openGraph: {
-    title: "Generated with Doccupine",
-    description: "Automatically generated from MDX files using Doccupine",
+    title: "Doccupine",
+    description: "Generated with Doccupine",
     images: "https://doccupine.com/preview.png",
   },
 };`
@@ -504,6 +603,18 @@ export default function Home() {
       indexContent,
       "utf8",
     );
+  }
+
+  generateThemeConfig(): string {
+    return `{}`;
+  }
+
+  generateNavigationConfig(): string {
+    return `[]`;
+  }
+
+  generateConfig(): string {
+    return `{}`;
   }
 
   generateGitIgnore(): string {
@@ -714,7 +825,11 @@ export default function Home() {
   async stop() {
     if (this.watcher) {
       await this.watcher.close();
-      console.log(chalk.yellow("👋 Stopped watching for changes"));
+      console.log(chalk.yellow("👋 Stopped watching for MDX changes"));
+    }
+    if (this.configWatcher) {
+      await this.configWatcher.close();
+      console.log(chalk.yellow("👋 Stopped watching for config changes"));
     }
   }
 }

@@ -10,6 +10,7 @@ body {
   min-height: 100%;
   scroll-behavior: smooth;
   background-color: \${theme.colors.light};
+  scroll-padding-top: 20px;
 }
 
 body {
