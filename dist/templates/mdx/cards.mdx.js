@@ -1,6 +1,6 @@
 export const cardsMdxTemplate = `---
 title: "Cards"
-description: "Doccupine CLI commands"
+description: "Cards act as visual containers for your content, giving you flexibility to combine text, icons, images, and links in a clean and organized way."
 date: "2025-01-15"
 category: "Components"
 categoryOrder: 1
@@ -22,4 +22,20 @@ You can use the Cards component directly within your MDX files without any impor
 
 <Card title="Note" icon="BadgeInfo">
   Doccupine CLI is a command-line tool that helps you create and manage your Doccupine project. It provides a simple and intuitive interface for creating and configuring your project.
-</Card>`;
+</Card>
+
+## Properties
+
+<Field value="title" type="string" required>
+  The title of the card.
+</Field>
+
+<Field value="icon" type="string" required>
+  The icon to display in the card.
+</Field>
+
+- [**Lucide icon**](https://lucide.dev/icons) name
+
+<Field value="children" type="string" required>
+  The content of the card.
+</Field>`;

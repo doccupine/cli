@@ -1,6 +1,6 @@
 export const iconsMdxTemplate = `---
 title: "Icons"
-description: "This is my first Doccupine project"
+description: "Integrate visual icons from well-known libraries to enrich your documentation."
 date: "2025-01-15"
 category: "Components"
 categoryOrder: 0

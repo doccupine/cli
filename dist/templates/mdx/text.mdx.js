@@ -1,6 +1,6 @@
 export const textMdxTemplate = `---
 title: "Headers and Text"
-description: "Doccupine CLI commands"
+description: "Learn how to structure and style your content with headers, formatting, and links."
 date: "2025-01-15"
 category: "Components"
 categoryOrder: 1

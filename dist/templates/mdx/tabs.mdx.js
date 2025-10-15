@@ -1,6 +1,6 @@
 export const tabsMdxTemplate = `---
 title: "Tabs"
-description: "Doccupine CLI commands"
+description: "Use the Tabs component to display different content sections in a switchable panel layout."
 date: "2025-01-15"
 category: "Components"
 categoryOrder: 1
@@ -56,4 +56,14 @@ You can use the Tabs component directly within your MDX files without any import
   <TabContent title="Third tab">
     💪 This third tab contains its own unique content.
   </TabContent>
-</Tabs>`;
+</Tabs>
+
+## Properties
+
+<Field value="title" type="string">
+  The title of the tab.
+</Field>
+
+<Field value="children" type="string" required>
+  The content of the tabs.
+</Field>`;

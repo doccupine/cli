@@ -1,6 +1,6 @@
 export const listTableMdxTemplate = `---
 title: "Lists and tables"
-description: "This is my first Doccupine project"
+description: "Present structured information using lists or tables."
 date: "2025-01-15"
 category: "Components"
 categoryOrder: 0

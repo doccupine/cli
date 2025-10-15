@@ -1,6 +1,6 @@
 export const imageEmbedsMdxTemplate = `---
 title: "Images and embeds"
-description: "This is my first Doccupine project"
+description: "Enrich your documentation with visuals, videos, and interactive embeds."
 date: "2025-01-15"
 category: "Components"
 categoryOrder: 0

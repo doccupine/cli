@@ -1,6 +1,6 @@
 export const commandsMdxTemplate = `---
 title: "Commands"
-description: "Doccupine CLI commands"
+description: "In this page, you can find all the commands available in Doccupine CLI."
 date: "2025-01-15"
 category: "General"
 categoryOrder: 0

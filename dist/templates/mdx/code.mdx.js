@@ -1,6 +1,6 @@
 export const codeMdxTemplate = `---
 title: "Code"
-description: "Doccupine CLI commands"
+description: "Learn how to display inline code and code blocks in documentation."
 date: "2025-01-15"
 category: "Components"
 categoryOrder: 1

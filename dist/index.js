@@ -37,19 +37,19 @@ import { docsSideBarTemplate } from "./templates/components/DocsSideBar.js";
 import { mdxComponentsTemplate } from "./templates/components/MDXComponents.js";
 import { orderNavItemsTemplate } from "./templates/utils/orderNavItems.js";
 import { sideBarTemplate } from "./templates/components/SideBar.js";
-import { homeMdxTemplate } from "./templates/home.mdx.js";
-import { commandsMdxTemplate } from "./templates/commands.mdx.js";
-import { accordionMdxTemplate } from "./templates/accordion.mdx.js";
-import { calloutsMdxTemplate } from "./templates/callouts.mdx.js";
-import { cardsMdxTemplate } from "./templates/cards.mdx.js";
-import { codeMdxTemplate } from "./templates/code.mdx.js";
-import { tabsMdxTemplate } from "./templates/tabs.mdx.js";
-import { textMdxTemplate } from "./templates/text.mdx.js";
-import { listTableMdxTemplate } from "./templates/list-table.mdx.js";
-import { imageEmbedsMdxTemplate } from "./templates/image-embeds.mdx.js";
-import { iconsMdxTemplate } from "./templates/icons.mdx.js";
-import { fieldsMdxTemplate } from "./templates/fields.mdx.js";
-import { updateMdxTemplate } from "./templates/update.mdx.js";
+import { accordionMdxTemplate } from "./templates/mdx/accordion.mdx.js";
+import { calloutsMdxTemplate } from "./templates/mdx/callouts.mdx.js";
+import { cardsMdxTemplate } from "./templates/mdx/cards.mdx.js";
+import { codeMdxTemplate } from "./templates/mdx/code.mdx.js";
+import { commandsMdxTemplate } from "./templates/mdx/commands.mdx.js";
+import { fieldsMdxTemplate } from "./templates/mdx/fields.mdx.js";
+import { iconsMdxTemplate } from "./templates/mdx/icons.mdx.js";
+import { imageEmbedsMdxTemplate } from "./templates/mdx/image-embeds.mdx.js";
+import { indexMdxTemplate } from "./templates/mdx/index.mdx.js";
+import { listTableMdxTemplate } from "./templates/mdx/list-table.mdx.js";
+import { tabsMdxTemplate } from "./templates/mdx/tabs.mdx.js";
+import { textMdxTemplate } from "./templates/mdx/text.mdx.js";
+import { updateMdxTemplate } from "./templates/mdx/update.mdx.js";
 class ConfigManager {
     configPath;
     constructor(configPath = "doccupine.json") {
@@ -201,7 +201,7 @@ class MDXToNextJSGenerator {
             "components/layout/Icon.tsx": this.generateIcon(),
             "components/layout/Pictograms.tsx": this.generatePictograms(),
             "components/layout/Typography.ts": this.generateTypography(),
-            "components/layout/Update.ts": this.generateUpdate(),
+            "components/layout/Update.tsx": this.generateUpdate(),
             "components/layout/Header.tsx": this.generateHeader(),
             "components/layout/Footer.tsx": this.generateFooter(),
             "components/layout/GlobalStyles.ts": this.generateGlobalStyles(),
@@ -231,18 +231,18 @@ class MDXToNextJSGenerator {
     }
     async createStartingDocs() {
         const structure = {
-            "index.mdx": this.generateHomeMdx(),
-            "commands.mdx": this.generateCommandsMdx(),
             "accordion.mdx": this.generateAccordionMdx(),
             "callouts.mdx": this.generateCalloutsMdx(),
             "cards.mdx": this.generateCardsMdx(),
             "code.mdx": this.generateCodeMdx(),
+            "commands.mdx": this.generateCommandsMdx(),
+            "fields.mdx": this.generateFieldsMdx(),
+            "icons.mdx": this.generateIconsMdx(),
+            "image-embeds.mdx": this.generateImageEmbedsMdx(),
+            "index.mdx": this.generateIndexMdx(),
+            "list-table.mdx": this.generateListTableMdx(),
             "tabs.mdx": this.generateTabsMdx(),
             "text.mdx": this.generateTextMdx(),
-            "list-table.mdx": this.generateListTableMdx(),
-            "image-embeds.mdx": this.generateImageEmbedsMdx(),
-            "icons.mdx": this.generateIconsMdx(),
-            "fields.mdx": this.generateFieldsMdx(),
             "update.mdx": this.generateUpdateMdx(),
         };
         const indexMdxExists = await fs.pathExists(path.join(this.watchDir, "index.mdx"));
@@ -538,12 +538,6 @@ export default function Home() {
         const layoutContent = await this.generateRootLayout();
         await fs.writeFile(path.join(this.outputDir, "app", "layout.tsx"), layoutContent, "utf8");
     }
-    generateHomeMdx() {
-        return homeMdxTemplate;
-    }
-    generateCommandsMdx() {
-        return commandsMdxTemplate;
-    }
     generateAccordionMdx() {
         return accordionMdxTemplate;
     }
@@ -556,23 +550,29 @@ export default function Home() {
     generateCodeMdx() {
         return codeMdxTemplate;
     }
+    generateCommandsMdx() {
+        return commandsMdxTemplate;
+    }
+    generateFieldsMdx() {
+        return fieldsMdxTemplate;
+    }
+    generateIconsMdx() {
+        return iconsMdxTemplate;
+    }
+    generateImageEmbedsMdx() {
+        return imageEmbedsMdxTemplate;
+    }
+    generateIndexMdx() {
+        return indexMdxTemplate;
+    }
+    generateListTableMdx() {
+        return listTableMdxTemplate;
+    }
     generateTabsMdx() {
         return tabsMdxTemplate;
     }
     generateTextMdx() {
         return textMdxTemplate;
-    }
-    generateListTableMdx() {
-        return listTableMdxTemplate;
-    }
-    generateImageEmbedsMdx() {
-        return imageEmbedsMdxTemplate;
-    }
-    generateIconsMdx() {
-        return iconsMdxTemplate;
-    }
-    generateFieldsMdx() {
-        return fieldsMdxTemplate;
     }
     generateUpdateMdx() {
         return updateMdxTemplate;
@@ -669,7 +669,7 @@ export default function Home() {
 program
     .name("doccupine")
     .description("Watch MDX files and generate Next.js documentation pages automatically")
-    .version("0.0.10");
+    .version("0.0.11");
 program
     .command("watch", { isDefault: true })
     .description("Watch a directory for MDX changes and generate Next.js app")

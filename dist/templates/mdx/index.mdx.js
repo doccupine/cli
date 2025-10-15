@@ -1,6 +1,6 @@
-export const homeMdxTemplate = `---
+export const indexMdxTemplate = `---
 title: "Getting Started"
-description: "This is my first Doccupine project"
+description: "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease."
 date: "2025-01-15"
 category: "General"
 categoryOrder: 0

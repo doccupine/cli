@@ -1,6 +1,6 @@
 export const fieldsMdxTemplate = `---
 title: "Fields"
-description: "This is my first Doccupine project"
+description: "Configure parameters for your API or SDK documentation."
 date: "2025-01-15"
 category: "Components"
 categoryOrder: 0

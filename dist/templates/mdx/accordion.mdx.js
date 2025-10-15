@@ -1,6 +1,6 @@
 export const accordionMdxTemplate = `---
 title: "Accordion"
-description: "Doccupine CLI commands"
+description: "Interactive panels for toggling visibility of content."
 date: "2025-01-15"
 category: "Components"
 categoryOrder: 1
@@ -38,4 +38,14 @@ You can use the Accordion component directly within your MDX files without any i
         }
     }
   \`\`\`
-</Accordion>`;
+</Accordion>
+
+## Properties
+
+<Field value="title" type="string" required>
+  The title of the accordion.
+</Field>
+
+<Field value="children" type="string" required>
+  The content of the accordion.
+</Field>`;

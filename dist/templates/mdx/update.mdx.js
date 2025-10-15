@@ -1,6 +1,6 @@
 export const updateMdxTemplate = `---
 title: "Update"
-description: "This is my first Doccupine project"
+description: "Easily manage and present change history."
 date: "2025-01-15"
 category: "Components"
 categoryOrder: 0
@@ -54,5 +54,4 @@ You can combine multiple \`Update\` components to build complete changelogs.
 
 <Field value="description" type="string" required>
   The description of the update.
-</Field>
-`;
+</Field>`;

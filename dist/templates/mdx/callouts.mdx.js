@@ -1,6 +1,6 @@
 export const calloutsMdxTemplate = `---
 title: "Callouts"
-description: "Doccupine CLI commands"
+description: "Make your content stand out by using callouts for extra emphasis."
 date: "2025-01-15"
 category: "Components"
 categoryOrder: 1
@@ -54,4 +54,14 @@ You can use the Callouts component directly within your MDX files without any im
 
 <Callout type="success">
  This is a success callout
-</Callout>`;
+</Callout>
+
+## Properties
+
+<Field value="type" type="string" required>
+  The type of the callout.
+</Field>
+
+<Field value="children" type="string" required>
+  The content of the callout.
+</Field>`;
