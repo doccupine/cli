@@ -35,7 +35,7 @@ function ClientThemeProvider({
             router.refresh();
           })
           .catch(() => {
-            // noop
+            console.error("Error setting theme");
           });
       }
     } catch {}
