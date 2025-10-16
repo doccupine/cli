@@ -906,7 +906,7 @@ program
   .description(
     "Watch MDX files and generate Next.js documentation pages automatically",
   )
-  .version("0.0.12");
+  .version("0.0.13");
 
 program
   .command("watch", { isDefault: true })
