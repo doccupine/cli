@@ -7,7 +7,6 @@ categoryOrder: 1
 order: 8
 ---
 # Images and embeds
-
 Enrich your documentation with visuals, videos, and interactive embeds.
 
 Display images, embed video content, or add interactive frames via iframes to supplement your docs.
@@ -15,11 +14,9 @@ Display images, embed video content, or add interactive frames via iframes to su
 ![Demo Image](https://doccupine.com/demo.png)
 
 ## Images
-
 Images enhance documentation with context, illustration, or decorative visual cues.
 
 ### Basic Image Syntax
-
 Include an image in Markdown using the syntax below:
 
 \`\`\`md
@@ -31,7 +28,6 @@ Include an image in Markdown using the syntax below:
 </Callout>
 
 ### HTML image embeds
-
 Embed images in your Markdown content using HTML syntax.
 
 \`\`\`md
@@ -39,11 +35,9 @@ Embed images in your Markdown content using HTML syntax.
 \`\`\`
 
 ## Videos
-
 Videos add a dynamic element to your documentation, engaging your audience and providing a more immersive experience.
 
 ### YouTube Embed
-
 To embed a YouTube video, use the following syntax:
 
 \`\`\`html
@@ -67,7 +61,6 @@ To embed a YouTube video, use the following syntax:
 ></iframe>
 
 ### Self-hosted videos
-
 Serve up your own video content using the \`<video>\` tag:
 
 \`\`\`html
@@ -86,7 +79,6 @@ Serve up your own video content using the \`<video>\` tag:
 
 
 #### Autoplay and Looping
-
 For demonstration videos that loop or start automatically, add attributes as shown:
 
 \`\`\`html

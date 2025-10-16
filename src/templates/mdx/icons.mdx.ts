@@ -7,14 +7,13 @@ categoryOrder: 1
 order: 9
 ---
 # Icons
-
 Integrate visual icons from well-known libraries to enrich your documentation.
 
 Icons can be sourced from Lucide, SVG elements, external URLs, or local files within your project directory.
 
 <Icon name="flag" size={32} />
 
-\`\`\`text
+\`\`\`mdx
 <Icon name="flag" size={32} />
 \`\`\`
 
@@ -23,7 +22,7 @@ You can use icons directly within text to highlight information or add visual co
 
 <Icon name="flag" size={16} /> Build your documentation seamlessly.
 
-\`\`\`text
+\`\`\`mdx
 <Icon name="flag" size={16} /> Build your documentation seamlessly.
 \`\`\`
 

@@ -7,16 +7,14 @@ categoryOrder: 1
 order: 12
 ---
 # Columns
-
 Arrange multiple cards neatly in a side-by-side grid layout.
 
 The \`Columns\` component helps you organize several \`Card\` elements into a visually balanced grid. By choosing how many columns you want, you can control the layout and spacing of your cards.
 
 ## Columns Usage
-
 You can use the \`Columns\` component to create a grid of cards with a specified number of columns.
 
-\`\`\`jsx
+\`\`\`mdx
 <Columns cols={2}>
   <Card title="Getting Started" icon="rocket">
     Kick off your project using our easy quickstart guide.
@@ -37,7 +35,6 @@ You can use the \`Columns\` component to create a grid of cards with a specified
     Browse all endpoints, parameters, and code examples for your API integration.
   </Card>
 </Columns>
-
 
 ## Properties
 

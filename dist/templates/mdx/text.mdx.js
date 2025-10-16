@@ -124,19 +124,16 @@ This is the next line.
 # Best Practices
 
 ## Organizing content
-
 - Use headers to establish hierarchy
 - Maintain logical order (avoid skipping levels, e.g., H2 → H4)
 - Always write meaningful, descriptive headers
 
 ## Formatting text
-
 - Use **bold** for key emphasis only
 - Use *italics* for emphasis or technical terms
 - Limit formatting combinations to maintain readability
 
 ## Links
-
 - Avoid vague text like “click here”
 - Prefer root-relative paths for internal links
 - Regularly validate links to ensure they are not broken`;

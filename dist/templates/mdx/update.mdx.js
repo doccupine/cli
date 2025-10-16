@@ -7,7 +7,6 @@ categoryOrder: 1
 order: 11
 ---
 # Update
-
 Easily manage and present change history.
 
 The \`Update\` component helps you display release notes, version details, and changelogs in a standardized format.
@@ -27,10 +26,9 @@ The \`Update\` component helps you display release notes, version details, and c
 </Update>
 
 ## Update Usage
-
 You can combine multiple \`Update\` components to build complete changelogs.
 
-~~~text
+\`\`\`mdx
 <Update label="Example" description="v0.0.1">
   ## Example entry
 
@@ -44,7 +42,7 @@ You can combine multiple \`Update\` components to build complete changelogs.
   - Individual anchor for each update
   - Automatic RSS feed entry generation
 </Update>
-~~~
+\`\`\`
 
 ## Properties
 
