@@ -1,18 +1,9 @@
-export const cherryThemeProviderTemplate = `"use client";
-import React, { createContext, useEffect, useState } from "react";
-import { ThemeProvider as StyledThemeProvider } from "styled-components";
+export const cherryThemeProviderTemplate = `import React from "react";
+import { cookies } from "next/headers";
 import { Theme } from "cherry-styled-components/src/lib";
-import { GlobalStyles } from "@/components/layout/GlobalStyles";
+import { ClientThemeProvider } from "@/components/layout/ClientThemeProvider";
 
-interface ThemeContextProps {
-  setTheme: any;
-}
-
-export const ThemeContext = createContext<ThemeContextProps>({
-  setTheme: null,
-});
-
-function CherryThemeProvider({
+async function CherryThemeProvider({
   children,
   theme,
   themeDark,
@@ -21,30 +12,13 @@ function CherryThemeProvider({
   theme: Theme;
   themeDark?: Theme;
 }) {
-  const [currentTheme, setTheme] = useState(theme);
-  useEffect(() => {
-    if (!themeDark) return setTheme(theme);
-    if (
-      localStorage.theme === "dark" ||
-      (!("theme" in localStorage) &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches)
-    ) {
-      document.documentElement.classList.add("dark");
-      setTheme(themeDark);
-    } else {
-      document.documentElement.classList.remove("dark");
-      setTheme(theme);
-    }
-  }, []);
-  const GlobalStylesComponent = GlobalStyles(currentTheme);
+  const cookieStore = await cookies();
+  const cookieTheme = cookieStore.get("theme")?.value;
+  const useDark = cookieTheme === "dark";
+  const currentTheme = useDark && themeDark ? themeDark : theme;
 
   return (
-    <StyledThemeProvider theme={currentTheme}>
-      <ThemeContext.Provider value={{ setTheme }}>
-        <GlobalStylesComponent />
-        {children}
-      </ThemeContext.Provider>
-    </StyledThemeProvider>
+    <ClientThemeProvider theme={currentTheme}>{children}</ClientThemeProvider>
   );
 }
 

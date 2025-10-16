@@ -13,6 +13,8 @@ import { tsconfigTemplate } from "./templates/tsconfig.js";
 import { notFoundTemplate } from "./templates/not-found.js";
 import { layoutTemplate } from "./templates/layout.js";
 import { themeTemplate } from "./templates/theme.js";
+import { middlewareTemplate } from "./templates/middleware.js";
+import { routesTemplate } from "./templates/api/theme/routes.js";
 import { iconTemplate } from "./templates/components/layout/Icon.js";
 import { pictogramsTemplate } from "./templates/components/layout/Pictograms.js";
 import { typographyTemplate } from "./templates/components/layout/Typography.js";
@@ -29,6 +31,7 @@ import { columnsTemplate } from "./templates/components/layout/Columns.js";
 import { cardTemplate } from "./templates/components/layout/Card.js";
 import { fieldTemplate } from "./templates/components/layout/Field.js";
 import { cherryThemeProviderTemplate } from "./templates/components/layout/CherryThemeProvider.js";
+import { clientThemeProviderTemplate } from "./templates/components/layout/ClientThemeProvider.js";
 import { tabsTemplate } from "./templates/components/layout/Tabs.js";
 import { docsComponentsTemplate } from "./templates/components/layout/DocsComponents.js";
 import { clickOutsideTemplate } from "./templates/components/ClickOutside.js";
@@ -197,6 +200,8 @@ class MDXToNextJSGenerator {
             "package.json": this.generatePackageJson(),
             "next.config.ts": this.generateNextConfig(),
             "tsconfig.json": this.generateTSConfig(),
+            "middleware.ts": this.generateMiddleware(),
+            "app/api/theme/route.ts": this.generateRoutes(),
             "app/layout.tsx": await this.generateRootLayout(),
             "app/not-found.tsx": this.generateNotFoundPage(),
             "app/theme.ts": this.generateTheme(),
@@ -216,6 +221,7 @@ class MDXToNextJSGenerator {
             "components/layout/Card.tsx": this.generateCard(),
             "components/layout/Field.tsx": this.generateField(),
             "components/layout/CherryThemeProvider.tsx": this.generateCherryThemeProvider(),
+            "components/layout/ClientThemeProvider.tsx": this.generateClientThemeProvider(),
             "components/layout/Tabs.tsx": this.generateTabs(),
             "components/layout/DocsComponents.tsx": this.generateDocsComponents(),
             "components/ClickOutside.ts": this.generateClickOutside(),
@@ -593,6 +599,12 @@ export default function Home() {
     generateTheme() {
         return themeTemplate;
     }
+    generateMiddleware() {
+        return middlewareTemplate;
+    }
+    generateRoutes() {
+        return routesTemplate;
+    }
     generateIcon() {
         return iconTemplate;
     }
@@ -643,6 +655,9 @@ export default function Home() {
     }
     generateCherryThemeProvider() {
         return cherryThemeProviderTemplate;
+    }
+    generateClientThemeProvider() {
+        return clientThemeProviderTemplate;
     }
     generateTabs() {
         return tabsTemplate;

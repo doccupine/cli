@@ -1,11 +1,9 @@
 export const themeToggleTemplate = `"use client";
-import React, { useContext, useEffect, useState } from "react";
+import React from "react";
 import { Theme, resetButton } from "cherry-styled-components/src/lib";
 import styled, { css, useTheme } from "styled-components";
-import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { rgba } from "polished";
-import { ThemeContext } from "@/components/layout/CherryThemeProvider";
-import { theme as themeLight, themeDark } from "@/app/theme";
 import { Icon } from "@/components/layout/Icon";
 
 const StyledThemeToggle = styled.button<{ theme: Theme; $hidden?: boolean }>\`
@@ -80,35 +78,18 @@ const StyledThemeToggle = styled.button<{ theme: Theme; $hidden?: boolean }>\`
 
 function ToggleTheme({ $hidden }: { $hidden?: boolean }) {
   const theme = useTheme() as Theme;
-  const { setTheme } = useContext(ThemeContext);
-  const [isMounted, setIsMounted] = useState(false);
-
-  const searchParams = useSearchParams();
-  const themeParam = searchParams.get("theme");
-
-  useEffect(() => {
-    setIsMounted(true);
-    if (themeParam === "light") {
-      setTheme(themeLight);
-      localStorage.theme = "light";
-    } else if (themeParam === "dark") {
-      setTheme(themeDark);
-      localStorage.theme = "dark";
-    }
-  }, [themeParam, setTheme]);
-
-  if (!isMounted) return null;
+  const router = useRouter();
 
   return (
     <StyledThemeToggle
-      onClick={() => {
-        if (theme.isDark) {
-          setTheme(themeLight);
-          localStorage.theme = "light";
-        } else {
-          setTheme(themeDark);
-          localStorage.theme = "dark";
-        }
+      onClick={async () => {
+        const nextTheme = theme.isDark ? "light" : "dark";
+        await fetch("/api/theme", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ theme: nextTheme }),
+        });
+        router.refresh();
       }}
       $hidden={$hidden}
       aria-label="Toggle Theme"
@@ -128,5 +109,4 @@ function ToggleThemeLoading() {
   );
 }
 
-export { ToggleTheme, ToggleThemeLoading };
-`;
+export { ToggleTheme, ToggleThemeLoading };`;
