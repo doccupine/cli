@@ -40,6 +40,7 @@ import { headerTemplate } from "./templates/components/layout/Header.js";
 import { iconTemplate } from "./templates/components/layout/Icon.js";
 import { pictogramsTemplate } from "./templates/components/layout/Pictograms.js";
 import { sharedStyledTemplate } from "./templates/components/layout/SharedStyles.js";
+import { stepsTemplate } from "./templates/components/layout/Stepts.js";
 import { tabsTemplate } from "./templates/components/layout/Tabs.js";
 import { themeToggleTemplate } from "./templates/components/layout/ThemeToggle.js";
 import { typographyTemplate } from "./templates/components/layout/Typography.js";
@@ -246,6 +247,7 @@ class MDXToNextJSGenerator {
       "components/layout/Icon.tsx": this.generateIcon(),
       "components/layout/Pictograms.tsx": this.generatePictograms(),
       "components/layout/SharedStyled.ts": this.generateSharedStyled(),
+      "components/layout/Stepts.tsx": this.generateSteps(),
       "components/layout/Tabs.tsx": this.generateTabs(),
       "components/layout/ThemeToggle.tsx": this.generateThemeToggle(),
       "components/layout/Typography.ts": this.generateTypography(),
@@ -795,6 +797,10 @@ export default function Home() {
 
   generateSharedStyled(): string {
     return sharedStyledTemplate;
+  }
+
+  generateSteps(): string {
+    return stepsTemplate;
   }
 
   generateTabs(): string {

@@ -9,6 +9,7 @@ import { Icon } from "@/components/layout/Icon";
 import { Columns } from "@/components/layout/Columns";
 import { Field } from "@/components/layout/Field";
 import { Update } from "@/components/layout/Update";
+import { Steps, Step } from "@/components/layout/Steps";
 
 function extractAllTextFromChildren(children: React.ReactNode): string {
   if (children == null) return "";
@@ -119,6 +120,8 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     Columns,
     Field,
     Update,
+    Steps,
+    Step,
     ...components,
   };
 }`;

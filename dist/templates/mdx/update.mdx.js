@@ -54,4 +54,8 @@ You can combine multiple \`Update\` components to build complete changelogs.
 
 <Field value="description" type="string" required>
   The description of the update.
+</Field>
+
+<Field value="children" type="node" required>
+  The content of the update.
 </Field>`;

@@ -36,6 +36,6 @@ You can use the Cards component directly within your MDX files without any impor
 
 - [**Lucide icon**](https://lucide.dev/icons) name
 
-<Field value="children" type="string" required>
+<Field value="children" type="node" required>
   The content of the card.
 </Field>`;

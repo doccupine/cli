@@ -64,7 +64,8 @@ To centrally define the entire sidebar, create a \`navigation.json\` at your pro
       { "slug": "icons", "title": "Icons" },
       { "slug": "fields", "title": "Fields" },
       { "slug": "update", "title": "Update" },
-      { "slug": "columns", "title": "Columns" }
+      { "slug": "columns", "title": "Columns" },
+      { "slug": "steps", "title": "Steps" }
     ]
   },
   {

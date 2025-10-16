@@ -64,6 +64,6 @@ You can use the Tabs component directly within your MDX files without any import
   The title of the tab.
 </Field>
 
-<Field value="children" type="string" required>
+<Field value="children" type="node" required>
   The content of the tabs.
 </Field>`;

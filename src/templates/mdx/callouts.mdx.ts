@@ -62,6 +62,6 @@ You can use the Callouts component directly within your MDX files without any im
   The type of the callout.
 </Field>
 
-<Field value="children" type="string" required>
+<Field value="children" type="node" required>
   The content of the callout.
 </Field>`;

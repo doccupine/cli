@@ -43,4 +43,8 @@ You can use the \`Columns\` component to create a grid of cards with a specified
 
 <Field value="cols" type="number" required>
   The number of columns in the grid.
+</Field>
+
+<Field value="children" type="node" required>
+  The content of the columns.
 </Field>`;
