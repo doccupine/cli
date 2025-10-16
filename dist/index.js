@@ -149,50 +149,6 @@ class MDXToNextJSGenerator {
         console.log(chalk.white(`   cd ${path.relative(process.cwd(), this.outputDir)}`));
         console.log(chalk.white("   npm install && npm run dev"));
     }
-    async copyCustomConfigFiles() {
-        console.log(chalk.blue(`🔍 Checking for config files in: ${this.watchDir}`));
-        for (const configFile of this.configFiles) {
-            const sourcePath = path.join(this.rootDir, configFile);
-            const destPath = path.join(this.outputDir, configFile);
-            console.log(chalk.gray(`  Checking ${configFile}...`));
-            if (await fs.pathExists(sourcePath)) {
-                await fs.copy(sourcePath, destPath);
-                console.log(chalk.green(`  ✓ Copied ${configFile} to Next.js app`));
-            }
-            else {
-                console.log(chalk.gray(`  ✗ ${configFile} not found, skipping`));
-            }
-        }
-    }
-    async handleConfigFileChange(filePath) {
-        const fileName = path.basename(filePath);
-        if (this.configFiles.includes(fileName)) {
-            const sourcePath = path.join(this.rootDir, fileName);
-            const destPath = path.join(this.outputDir, fileName);
-            try {
-                await fs.copy(sourcePath, destPath);
-                console.log(chalk.green(`📋 Updated ${fileName} in Next.js app`));
-            }
-            catch (error) {
-                console.error(chalk.red(`❌ Error copying ${fileName}:`), error);
-            }
-        }
-    }
-    async handleConfigFileDelete(filePath) {
-        const fileName = path.basename(filePath);
-        if (this.configFiles.includes(fileName)) {
-            const destPath = path.join(this.outputDir, fileName);
-            try {
-                if (await fs.pathExists(destPath)) {
-                    await fs.remove(destPath);
-                    console.log(chalk.yellow(`🗑️ Removed ${fileName} from Next.js app`));
-                }
-            }
-            catch (error) {
-                console.error(chalk.red(`❌ Error removing ${fileName}:`), error);
-            }
-        }
-    }
     async createNextJSStructure() {
         const structure = {
             ".gitignore": this.generateGitIgnore(),
@@ -265,6 +221,50 @@ class MDXToNextJSGenerator {
                 const fullPath = path.join(this.watchDir, filePath);
                 await fs.ensureDir(path.dirname(fullPath));
                 await fs.writeFile(fullPath, String(content), "utf8");
+            }
+        }
+    }
+    async copyCustomConfigFiles() {
+        console.log(chalk.blue(`🔍 Checking for config files in: ${this.watchDir}`));
+        for (const configFile of this.configFiles) {
+            const sourcePath = path.join(this.rootDir, configFile);
+            const destPath = path.join(this.outputDir, configFile);
+            console.log(chalk.gray(`  Checking ${configFile}...`));
+            if (await fs.pathExists(sourcePath)) {
+                await fs.copy(sourcePath, destPath);
+                console.log(chalk.green(`  ✓ Copied ${configFile} to Next.js app`));
+            }
+            else {
+                console.log(chalk.gray(`  ✗ ${configFile} not found, skipping`));
+            }
+        }
+    }
+    async handleConfigFileChange(filePath) {
+        const fileName = path.basename(filePath);
+        if (this.configFiles.includes(fileName)) {
+            const sourcePath = path.join(this.rootDir, fileName);
+            const destPath = path.join(this.outputDir, fileName);
+            try {
+                await fs.copy(sourcePath, destPath);
+                console.log(chalk.green(`📋 Updated ${fileName} in Next.js app`));
+            }
+            catch (error) {
+                console.error(chalk.red(`❌ Error copying ${fileName}:`), error);
+            }
+        }
+    }
+    async handleConfigFileDelete(filePath) {
+        const fileName = path.basename(filePath);
+        if (this.configFiles.includes(fileName)) {
+            const destPath = path.join(this.outputDir, fileName);
+            try {
+                if (await fs.pathExists(destPath)) {
+                    await fs.remove(destPath);
+                    console.log(chalk.yellow(`🗑️ Removed ${fileName} from Next.js app`));
+                }
+            }
+            catch (error) {
+                console.error(chalk.red(`❌ Error removing ${fileName}:`), error);
             }
         }
     }
