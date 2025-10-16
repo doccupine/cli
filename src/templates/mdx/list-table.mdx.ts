@@ -3,7 +3,7 @@ title: "Lists and tables"
 description: "Present structured information using lists or tables."
 date: "2025-01-15"
 category: "Components"
-categoryOrder: 0
+categoryOrder: 1
 order: 2
 ---
 # Lists and Tables

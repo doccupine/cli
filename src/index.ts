@@ -46,6 +46,7 @@ import { accordionMdxTemplate } from "./templates/mdx/accordion.mdx.js";
 import { calloutsMdxTemplate } from "./templates/mdx/callouts.mdx.js";
 import { cardsMdxTemplate } from "./templates/mdx/cards.mdx.js";
 import { codeMdxTemplate } from "./templates/mdx/code.mdx.js";
+import { columnsMdxTemplate } from "./templates/mdx/columns.mdx.js";
 import { commandsMdxTemplate } from "./templates/mdx/commands.mdx.js";
 import { configMdxTemplate } from "./templates/mdx/config.mdx.js";
 import { fieldsMdxTemplate } from "./templates/mdx/fields.mdx.js";
@@ -305,6 +306,7 @@ class MDXToNextJSGenerator {
       "callouts.mdx": this.generateCalloutsMdx(),
       "cards.mdx": this.generateCardsMdx(),
       "code.mdx": this.generateCodeMdx(),
+      "columns.mdx": this.generateColumnsMdx(),
       "commands.mdx": this.generateCommandsMdx(),
       "config.mdx": this.generateConfigMdx(),
       "fields.mdx": this.generateFieldsMdx(),
@@ -693,6 +695,10 @@ export default function Home() {
 
   generateCodeMdx(): string {
     return codeMdxTemplate;
+  }
+
+  generateColumnsMdx(): string {
+    return columnsMdxTemplate;
   }
 
   generateCommandsMdx(): string {

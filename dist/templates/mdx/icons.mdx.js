@@ -3,8 +3,8 @@ title: "Icons"
 description: "Integrate visual icons from well-known libraries to enrich your documentation."
 date: "2025-01-15"
 category: "Components"
-categoryOrder: 0
-order: 8
+categoryOrder: 1
+order: 9
 ---
 # Icons
 

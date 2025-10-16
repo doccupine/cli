@@ -3,8 +3,8 @@ title: "Images and embeds"
 description: "Enrich your documentation with visuals, videos, and interactive embeds."
 date: "2025-01-15"
 category: "Components"
-categoryOrder: 0
-order: 7
+categoryOrder: 1
+order: 8
 ---
 # Images and embeds
 

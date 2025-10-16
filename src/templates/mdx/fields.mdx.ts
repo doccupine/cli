@@ -3,8 +3,8 @@ title: "Fields"
 description: "Configure parameters for your API or SDK documentation."
 date: "2025-01-15"
 category: "Components"
-categoryOrder: 0
-order: 9
+categoryOrder: 1
+order: 10
 ---
 # Fields
 

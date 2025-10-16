@@ -3,8 +3,8 @@ title: "Update"
 description: "Easily manage and present change history."
 date: "2025-01-15"
 category: "Components"
-categoryOrder: 0
-order: 10
+categoryOrder: 1
+order: 11
 ---
 # Update
 

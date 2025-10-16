@@ -15,11 +15,11 @@ const StyledColumns = styled.div<{ theme: Theme; $columns?: number }>\`
 
 export interface ColumnsProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
-  columns?: number;
+  cols?: number;
 }
 
-function Columns({ children, columns }: ColumnsProps) {
-  return <StyledColumns $columns={columns}>{children}</StyledColumns>;
+function Columns({ children, cols }: ColumnsProps) {
+  return <StyledColumns $columns={cols}>{children}</StyledColumns>;
 }
 
 export { Columns };`;
