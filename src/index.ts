@@ -247,7 +247,7 @@ class MDXToNextJSGenerator {
       "components/layout/Icon.tsx": this.generateIcon(),
       "components/layout/Pictograms.tsx": this.generatePictograms(),
       "components/layout/SharedStyled.ts": this.generateSharedStyled(),
-      "components/layout/Stepts.tsx": this.generateSteps(),
+      "components/layout/Steps.tsx": this.generateSteps(),
       "components/layout/Tabs.tsx": this.generateTabs(),
       "components/layout/ThemeToggle.tsx": this.generateThemeToggle(),
       "components/layout/Typography.ts": this.generateTypography(),
