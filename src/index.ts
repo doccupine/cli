@@ -7,41 +7,48 @@ import path from "path";
 import matter from "gray-matter";
 import chalk from "chalk";
 import prompts from "prompts";
+
 import { gitignoreTemplate } from "./templates/gitignore.js";
-import { packageJsonTemplate } from "./templates/package.js";
-import { nextConfigTemplate } from "./templates/next.config.js";
-import { tsconfigTemplate } from "./templates/tsconfig.js";
-import { notFoundTemplate } from "./templates/not-found.js";
-import { layoutTemplate } from "./templates/layout.js";
-import { themeTemplate } from "./templates/theme.js";
 import { middlewareTemplate } from "./templates/middleware.js";
-import { styledDTemplate } from "./templates/types/styled.js";
-import { routesTemplate } from "./templates/api/theme/routes.js";
-import { iconTemplate } from "./templates/components/layout/Icon.js";
-import { pictogramsTemplate } from "./templates/components/layout/Pictograms.js";
-import { typographyTemplate } from "./templates/components/layout/Typography.js";
-import { updateTemplate } from "./templates/components/layout/Update.js";
-import { headerTemplate } from "./templates/components/layout/Header.js";
-import { footerTemplate } from "./templates/components/layout/Footer.js";
-import { globalStylesTemplate } from "./templates/components/layout/GlobalStyles.js";
-import { themeToggleTemplate } from "./templates/components/layout/ThemeToggle.js";
-import { sharedStyledTemplate } from "./templates/components/layout/SharedStyles.js";
-import { accordionTemplate } from "./templates/components/layout/Accordion.js";
-import { calloutTemplate } from "./templates/components/layout/Callout.js";
-import { codeTemplate } from "./templates/components/layout/Code.js";
-import { columnsTemplate } from "./templates/components/layout/Columns.js";
-import { cardTemplate } from "./templates/components/layout/Card.js";
-import { fieldTemplate } from "./templates/components/layout/Field.js";
-import { cherryThemeProviderTemplate } from "./templates/components/layout/CherryThemeProvider.js";
-import { clientThemeProviderTemplate } from "./templates/components/layout/ClientThemeProvider.js";
-import { tabsTemplate } from "./templates/components/layout/Tabs.js";
-import { docsComponentsTemplate } from "./templates/components/layout/DocsComponents.js";
+import { nextConfigTemplate } from "./templates/next.config.js";
+import { packageJsonTemplate } from "./templates/package.js";
+import { tsconfigTemplate } from "./templates/tsconfig.js";
+
+import { routesTemplate } from "./templates/app/api/theme/routes.js";
+import { layoutTemplate } from "./templates/app/layout.js";
+import { notFoundTemplate } from "./templates/app/not-found.js";
+import { themeTemplate } from "./templates/app/theme.js";
+
 import { clickOutsideTemplate } from "./templates/components/ClickOutside.js";
 import { docsTemplate } from "./templates/components/Docs.js";
 import { docsSideBarTemplate } from "./templates/components/DocsSideBar.js";
 import { mdxComponentsTemplate } from "./templates/components/MDXComponents.js";
-import { orderNavItemsTemplate } from "./templates/utils/orderNavItems.js";
 import { sideBarTemplate } from "./templates/components/SideBar.js";
+
+import { accordionTemplate } from "./templates/components/layout/Accordion.js";
+import { calloutTemplate } from "./templates/components/layout/Callout.js";
+import { cardTemplate } from "./templates/components/layout/Card.js";
+import { cherryThemeProviderTemplate } from "./templates/components/layout/CherryThemeProvider.js";
+import { clientThemeProviderTemplate } from "./templates/components/layout/ClientThemeProvider.js";
+import { codeTemplate } from "./templates/components/layout/Code.js";
+import { columnsTemplate } from "./templates/components/layout/Columns.js";
+import { docsComponentsTemplate } from "./templates/components/layout/DocsComponents.js";
+import { fieldTemplate } from "./templates/components/layout/Field.js";
+import { footerTemplate } from "./templates/components/layout/Footer.js";
+import { globalStylesTemplate } from "./templates/components/layout/GlobalStyles.js";
+import { headerTemplate } from "./templates/components/layout/Header.js";
+import { iconTemplate } from "./templates/components/layout/Icon.js";
+import { pictogramsTemplate } from "./templates/components/layout/Pictograms.js";
+import { sharedStyledTemplate } from "./templates/components/layout/SharedStyles.js";
+import { tabsTemplate } from "./templates/components/layout/Tabs.js";
+import { themeToggleTemplate } from "./templates/components/layout/ThemeToggle.js";
+import { typographyTemplate } from "./templates/components/layout/Typography.js";
+import { updateTemplate } from "./templates/components/layout/Update.js";
+
+import { styledDTemplate } from "./templates/types/styled.js";
+
+import { orderNavItemsTemplate } from "./templates/utils/orderNavItems.js";
+
 import { accordionMdxTemplate } from "./templates/mdx/accordion.mdx.js";
 import { calloutsMdxTemplate } from "./templates/mdx/callouts.mdx.js";
 import { cardsMdxTemplate } from "./templates/mdx/cards.mdx.js";
@@ -251,46 +258,51 @@ class MDXToNextJSGenerator {
 
   async createNextJSStructure() {
     const structure = {
-      "theme.json": this.generateThemeConfig(),
-      "navigation.json": this.generateNavigationConfig(),
-      "config.json": this.generateConfig(),
       ".gitignore": this.generateGitIgnore(),
-      "package.json": this.generatePackageJson(),
-      "next.config.ts": this.generateNextConfig(),
-      "tsconfig.json": this.generateTSConfig(),
+      "config.json": this.generateConfig(),
       "middleware.ts": this.generateMiddleware(),
-      "types/styled.d.ts": this.generateStyledDTypes(),
-      "app/api/theme/route.ts": this.generateRoutes(),
+      "navigation.json": this.generateNavigationConfig(),
+      "next.config.ts": this.generateNextConfig(),
+      "package.json": this.generatePackageJson(),
+      "theme.json": this.generateThemeConfig(),
+      "tsconfig.json": this.generateTSConfig(),
+
       "app/layout.tsx": await this.generateRootLayout(),
       "app/not-found.tsx": this.generateNotFoundPage(),
       "app/theme.ts": this.generateTheme(),
-      "components/layout/Icon.tsx": this.generateIcon(),
-      "components/layout/Pictograms.tsx": this.generatePictograms(),
-      "components/layout/Typography.ts": this.generateTypography(),
-      "components/layout/Update.tsx": this.generateUpdate(),
-      "components/layout/Header.tsx": this.generateHeader(),
-      "components/layout/Footer.tsx": this.generateFooter(),
-      "components/layout/GlobalStyles.ts": this.generateGlobalStyles(),
-      "components/layout/ThemeToggle.tsx": this.generateThemeToggle(),
-      "components/layout/SharedStyled.ts": this.generateSharedStyled(),
-      "components/layout/Accordion.tsx": this.generateAccordion(),
-      "components/layout/Callout.tsx": this.generateCallout(),
-      "components/layout/Code.tsx": this.generateCode(),
-      "components/layout/Columns.tsx": this.generateColumns(),
-      "components/layout/Card.tsx": this.generateCard(),
-      "components/layout/Field.tsx": this.generateField(),
-      "components/layout/CherryThemeProvider.tsx":
-        this.generateCherryThemeProvider(),
-      "components/layout/ClientThemeProvider.tsx":
-        this.generateClientThemeProvider(),
-      "components/layout/Tabs.tsx": this.generateTabs(),
-      "components/layout/DocsComponents.tsx": this.generateDocsComponents(),
+      "app/api/theme/route.ts": this.generateRoutes(),
+
+      "types/styled.d.ts": this.generateStyledDTypes(),
+
+      "utils/orderNavItems.ts": this.generateOrderNavItems(),
+
       "components/ClickOutside.ts": this.generateClickOutside(),
       "components/Docs.tsx": this.generateDocs(),
       "components/DocsSideBar.tsx": this.generateDocsSideBar(),
       "components/MDXComponents.tsx": this.generateMDXComponents(),
       "components/SideBar.tsx": this.generateSideBar(),
-      "utils/orderNavItems.ts": this.generateOrderNavItems(),
+
+      "components/layout/Accordion.tsx": this.generateAccordion(),
+      "components/layout/Callout.tsx": this.generateCallout(),
+      "components/layout/Card.tsx": this.generateCard(),
+      "components/layout/CherryThemeProvider.tsx":
+        this.generateCherryThemeProvider(),
+      "components/layout/ClientThemeProvider.tsx":
+        this.generateClientThemeProvider(),
+      "components/layout/Code.tsx": this.generateCode(),
+      "components/layout/Columns.tsx": this.generateColumns(),
+      "components/layout/DocsComponents.tsx": this.generateDocsComponents(),
+      "components/layout/Field.tsx": this.generateField(),
+      "components/layout/Footer.tsx": this.generateFooter(),
+      "components/layout/GlobalStyles.ts": this.generateGlobalStyles(),
+      "components/layout/Header.tsx": this.generateHeader(),
+      "components/layout/Icon.tsx": this.generateIcon(),
+      "components/layout/Pictograms.tsx": this.generatePictograms(),
+      "components/layout/SharedStyled.ts": this.generateSharedStyled(),
+      "components/layout/Tabs.tsx": this.generateTabs(),
+      "components/layout/ThemeToggle.tsx": this.generateThemeToggle(),
+      "components/layout/Typography.ts": this.generateTypography(),
+      "components/layout/Update.tsx": this.generateUpdate(),
     };
 
     for (const [filePath, content] of Object.entries(structure)) {
@@ -506,6 +518,66 @@ class MDXToNextJSGenerator {
       .toLowerCase();
   }
 
+  generateGitIgnore(): string {
+    return gitignoreTemplate;
+  }
+
+  generateConfig(): string {
+    return `{}`;
+  }
+
+  generateMiddleware(): string {
+    return middlewareTemplate;
+  }
+
+  generateNavigationConfig(): string {
+    return `[]`;
+  }
+
+  generateNextConfig(): string {
+    return nextConfigTemplate;
+  }
+
+  generatePackageJson(): string {
+    return packageJsonTemplate;
+  }
+
+  generateThemeConfig(): string {
+    return `{}`;
+  }
+
+  generateTSConfig(): string {
+    return tsconfigTemplate;
+  }
+
+  async generateRootLayout(): Promise<string> {
+    const files = await this.getAllMDXFiles();
+    const pages = [];
+
+    for (const file of files) {
+      const fullPath = path.join(this.watchDir, file);
+      const content = await fs.readFile(fullPath, "utf8");
+      const { data: frontmatter } = matter(content);
+
+      pages.push({
+        slug: this.generateSlug(file),
+        title: frontmatter.title || "Untitled",
+        description: frontmatter.description || "",
+        date: frontmatter.date || null,
+        category: frontmatter.category || "",
+        path: file,
+        categoryOrder: frontmatter.categoryOrder || 0,
+        order: frontmatter.order || 0,
+      });
+    }
+
+    return layoutTemplate(pages);
+  }
+
+  generateNotFoundPage(): string {
+    return notFoundTemplate;
+  }
+
   async generatePageFromMDX(mdxFile: MDXFile) {
     const files = await this.getAllMDXFiles();
     const pages = [];
@@ -620,58 +692,6 @@ export default function Home() {
     );
   }
 
-  generateThemeConfig(): string {
-    return `{}`;
-  }
-
-  generateNavigationConfig(): string {
-    return `[]`;
-  }
-
-  generateConfig(): string {
-    return `{}`;
-  }
-
-  generateGitIgnore(): string {
-    return gitignoreTemplate;
-  }
-
-  generatePackageJson(): string {
-    return packageJsonTemplate;
-  }
-
-  generateNextConfig(): string {
-    return nextConfigTemplate;
-  }
-
-  generateTSConfig(): string {
-    return tsconfigTemplate;
-  }
-
-  async generateRootLayout(): Promise<string> {
-    const files = await this.getAllMDXFiles();
-    const pages = [];
-
-    for (const file of files) {
-      const fullPath = path.join(this.watchDir, file);
-      const content = await fs.readFile(fullPath, "utf8");
-      const { data: frontmatter } = matter(content);
-
-      pages.push({
-        slug: this.generateSlug(file),
-        title: frontmatter.title || "Untitled",
-        description: frontmatter.description || "",
-        date: frontmatter.date || null,
-        category: frontmatter.category || "",
-        path: file,
-        categoryOrder: frontmatter.categoryOrder || 0,
-        order: frontmatter.order || 0,
-      });
-    }
-
-    return layoutTemplate(pages);
-  }
-
   async updateRootLayout() {
     const layoutContent = await this.generateRootLayout();
     await fs.writeFile(
@@ -679,6 +699,118 @@ export default function Home() {
       layoutContent,
       "utf8",
     );
+  }
+
+  generateTheme(): string {
+    return themeTemplate;
+  }
+
+  generateRoutes(): string {
+    return routesTemplate;
+  }
+
+  generateStyledDTypes(): string {
+    return styledDTemplate;
+  }
+
+  generateOrderNavItems(): string {
+    return orderNavItemsTemplate;
+  }
+
+  generateClickOutside(): string {
+    return clickOutsideTemplate;
+  }
+
+  generateDocs(): string {
+    return docsTemplate;
+  }
+
+  generateDocsSideBar(): string {
+    return docsSideBarTemplate;
+  }
+
+  generateMDXComponents(): string {
+    return mdxComponentsTemplate;
+  }
+
+  generateSideBar(): string {
+    return sideBarTemplate;
+  }
+
+  generateAccordion(): string {
+    return accordionTemplate;
+  }
+
+  generateCallout(): string {
+    return calloutTemplate;
+  }
+
+  generateCard(): string {
+    return cardTemplate;
+  }
+
+  generateCherryThemeProvider(): string {
+    return cherryThemeProviderTemplate;
+  }
+
+  generateClientThemeProvider(): string {
+    return clientThemeProviderTemplate;
+  }
+
+  generateCode(): string {
+    return codeTemplate;
+  }
+
+  generateColumns(): string {
+    return columnsTemplate;
+  }
+
+  generateDocsComponents(): string {
+    return docsComponentsTemplate;
+  }
+
+  generateField(): string {
+    return fieldTemplate;
+  }
+
+  generateFooter(): string {
+    return footerTemplate;
+  }
+
+  generateGlobalStyles(): string {
+    return globalStylesTemplate;
+  }
+
+  generateHeader(): string {
+    return headerTemplate;
+  }
+
+  generateIcon(): string {
+    return iconTemplate;
+  }
+
+  generatePictograms(): string {
+    return pictogramsTemplate;
+  }
+
+  generateSharedStyled(): string {
+    return sharedStyledTemplate;
+  }
+
+  generateTabs(): string {
+    return tabsTemplate;
+  }
+
+  generateThemeToggle(): string {
+    return themeToggleTemplate;
+  }
+
+  generateTypography(): string {
+    return typographyTemplate;
+  }
+
+  generateUpdate(): string {
+    return updateTemplate;
   }
 
   generateAccordionMdx(): string {
@@ -743,126 +875,6 @@ export default function Home() {
 
   generateUpdateMdx(): string {
     return updateMdxTemplate;
-  }
-
-  generateNotFoundPage(): string {
-    return notFoundTemplate;
-  }
-
-  generateTheme(): string {
-    return themeTemplate;
-  }
-
-  generateMiddleware(): string {
-    return middlewareTemplate;
-  }
-
-  generateStyledDTypes(): string {
-    return styledDTemplate;
-  }
-
-  generateRoutes(): string {
-    return routesTemplate;
-  }
-
-  generateIcon(): string {
-    return iconTemplate;
-  }
-
-  generatePictograms(): string {
-    return pictogramsTemplate;
-  }
-
-  generateClickOutside(): string {
-    return clickOutsideTemplate;
-  }
-
-  generateTypography(): string {
-    return typographyTemplate;
-  }
-
-  generateUpdate(): string {
-    return updateTemplate;
-  }
-
-  generateHeader(): string {
-    return headerTemplate;
-  }
-
-  generateFooter(): string {
-    return footerTemplate;
-  }
-
-  generateGlobalStyles(): string {
-    return globalStylesTemplate;
-  }
-
-  generateThemeToggle(): string {
-    return themeToggleTemplate;
-  }
-
-  generateSharedStyled(): string {
-    return sharedStyledTemplate;
-  }
-
-  generateAccordion(): string {
-    return accordionTemplate;
-  }
-
-  generateCallout(): string {
-    return calloutTemplate;
-  }
-
-  generateCode(): string {
-    return codeTemplate;
-  }
-
-  generateColumns(): string {
-    return columnsTemplate;
-  }
-
-  generateCard(): string {
-    return cardTemplate;
-  }
-
-  generateField(): string {
-    return fieldTemplate;
-  }
-
-  generateCherryThemeProvider(): string {
-    return cherryThemeProviderTemplate;
-  }
-
-  generateClientThemeProvider(): string {
-    return clientThemeProviderTemplate;
-  }
-
-  generateTabs(): string {
-    return tabsTemplate;
-  }
-
-  generateDocsComponents(): string {
-    return docsComponentsTemplate;
-  }
-
-  generateDocs(): string {
-    return docsTemplate;
-  }
-
-  generateDocsSideBar(): string {
-    return docsSideBarTemplate;
-  }
-
-  generateMDXComponents(): string {
-    return mdxComponentsTemplate;
-  }
-
-  generateSideBar(): string {
-    return sideBarTemplate;
-  }
-
-  generateOrderNavItems(): string {
-    return orderNavItemsTemplate;
   }
 
   async stop() {
