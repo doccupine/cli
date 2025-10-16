@@ -6,6 +6,7 @@ export function middleware(req: NextRequest) {
 
   res.headers.set("Accept-CH", "Sec-CH-Prefers-Color-Scheme");
   res.headers.set("Vary", "Sec-CH-Prefers-Color-Scheme");
+  res.headers.set("Critical-CH", "Sec-CH-Prefers-Color-Scheme");
 
   const existing = req.cookies.get("theme")?.value;
   const hint = req.headers.get("Sec-CH-Prefers-Color-Scheme");
