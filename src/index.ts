@@ -63,6 +63,7 @@ import { imageEmbedsMdxTemplate } from "./templates/mdx/image-embeds.mdx.js";
 import { indexMdxTemplate } from "./templates/mdx/index.mdx.js";
 import { listTableMdxTemplate } from "./templates/mdx/list-table.mdx.js";
 import { navigationMdxTemplate } from "./templates/mdx/navigation.mdx.js";
+import { stepsMdxTemplate } from "./templates/mdx/steps.mdx.js";
 import { tabsMdxTemplate } from "./templates/mdx/tabs.mdx.js";
 import { textMdxTemplate } from "./templates/mdx/text.mdx.js";
 import { updateMdxTemplate } from "./templates/mdx/update.mdx.js";
@@ -276,6 +277,7 @@ class MDXToNextJSGenerator {
       "index.mdx": this.generateIndexMdx(),
       "list-table.mdx": this.generateListTableMdx(),
       "navigation.mdx": this.generateNavigationMdx(),
+      "steps.mdx": this.generateStepsMdx(),
       "tabs.mdx": this.generateTabsMdx(),
       "text.mdx": this.generateTextMdx(),
       "update.mdx": this.generateUpdateMdx(),
@@ -869,6 +871,10 @@ export default function Home() {
 
   generateNavigationMdx(): string {
     return navigationMdxTemplate;
+  }
+
+  generateStepsMdx(): string {
+    return stepsMdxTemplate;
   }
 
   generateTabsMdx(): string {
