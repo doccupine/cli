@@ -26,13 +26,12 @@ const StyledDocsSidebar = styled.div<{ theme: Theme }>\`
 
 const StyledDocsContainer = styled.div<{ theme: Theme }>\`
   position: relative;
-  padding: 0;
+  padding: 0 0 100px 0;
   width: 100%;
   \${({ theme }) => styledText(theme)};
 
   \${mq("lg")} {
-    padding-left: 320px;
-    padding-right: 320px;
+    padding: 0 320px 80px 320px;
   }
 
   & p {
