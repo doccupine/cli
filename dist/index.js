@@ -42,11 +42,13 @@ import { calloutsMdxTemplate } from "./templates/mdx/callouts.mdx.js";
 import { cardsMdxTemplate } from "./templates/mdx/cards.mdx.js";
 import { codeMdxTemplate } from "./templates/mdx/code.mdx.js";
 import { commandsMdxTemplate } from "./templates/mdx/commands.mdx.js";
+import { configMdxTemplate } from "./templates/mdx/config.mdx.js";
 import { fieldsMdxTemplate } from "./templates/mdx/fields.mdx.js";
 import { iconsMdxTemplate } from "./templates/mdx/icons.mdx.js";
 import { imageEmbedsMdxTemplate } from "./templates/mdx/image-embeds.mdx.js";
 import { indexMdxTemplate } from "./templates/mdx/index.mdx.js";
 import { listTableMdxTemplate } from "./templates/mdx/list-table.mdx.js";
+import { navigationMdxTemplate } from "./templates/mdx/navigation.mdx.js";
 import { tabsMdxTemplate } from "./templates/mdx/tabs.mdx.js";
 import { textMdxTemplate } from "./templates/mdx/text.mdx.js";
 import { updateMdxTemplate } from "./templates/mdx/update.mdx.js";
@@ -236,11 +238,13 @@ class MDXToNextJSGenerator {
             "cards.mdx": this.generateCardsMdx(),
             "code.mdx": this.generateCodeMdx(),
             "commands.mdx": this.generateCommandsMdx(),
+            "config.mdx": this.generateConfigMdx(),
             "fields.mdx": this.generateFieldsMdx(),
             "icons.mdx": this.generateIconsMdx(),
             "image-embeds.mdx": this.generateImageEmbedsMdx(),
             "index.mdx": this.generateIndexMdx(),
             "list-table.mdx": this.generateListTableMdx(),
+            "navigation.mdx": this.generateNavigationMdx(),
             "tabs.mdx": this.generateTabsMdx(),
             "text.mdx": this.generateTextMdx(),
             "update.mdx": this.generateUpdateMdx(),
@@ -553,6 +557,9 @@ export default function Home() {
     generateCommandsMdx() {
         return commandsMdxTemplate;
     }
+    generateConfigMdx() {
+        return configMdxTemplate;
+    }
     generateFieldsMdx() {
         return fieldsMdxTemplate;
     }
@@ -567,6 +574,9 @@ export default function Home() {
     }
     generateListTableMdx() {
         return listTableMdxTemplate;
+    }
+    generateNavigationMdx() {
+        return navigationMdxTemplate;
     }
     generateTabsMdx() {
         return tabsMdxTemplate;
