@@ -23,6 +23,14 @@ After selecting the directory, Doccupine will ask you to enter the name of the d
 
 This will start the development server on port 3000. Open your browser and navigate to http://localhost:3000 to view your documentation.
 
+## Verbose mode
+
+~~~bash
+npx doccupine --verbose
+~~~
+
+This will show Next.js errors in the terminal console logs, providing more detailed output useful for debugging during development.
+
 ## Generate the website
 
 ~~~bash

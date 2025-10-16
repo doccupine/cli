@@ -1,0 +1,1 @@
+export declare const styledDTemplate = "import \"styled-components\";\nimport { Theme } from \"@/app/theme\";\n\ndeclare module \"styled-components\" {\n  export interface DefaultTheme extends Theme {}\n}\n";

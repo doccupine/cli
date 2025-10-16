@@ -1,7 +1,7 @@
 export const clientThemeProviderTemplate = `"use client";
 import React, { useEffect } from "react";
 import { ThemeProvider as StyledThemeProvider } from "styled-components";
-import { Theme } from "cherry-styled-components/src/lib";
+import { Theme } from "@/app/theme";
 import { useRouter } from "next/navigation";
 import { GlobalStyles } from "@/components/layout/GlobalStyles";
 
@@ -13,7 +13,6 @@ function ClientThemeProvider({
   theme: Theme;
 }) {
   const router = useRouter();
-  const GlobalStylesComponent = GlobalStyles(theme);
   useEffect(() => {
     try {
       const cookie = document.cookie
@@ -42,7 +41,7 @@ function ClientThemeProvider({
   }, [router]);
   return (
     <StyledThemeProvider theme={theme}>
-      <GlobalStylesComponent />
+      <GlobalStyles />
       {children}
     </StyledThemeProvider>
   );

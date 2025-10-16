@@ -19,6 +19,12 @@ export const tsconfigTemplate = JSON.stringify({
             "@/*": ["./*"],
         },
     },
-    include: ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+    include: [
+        "next-env.d.ts",
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.d.ts",
+        ".next/types/**/*.ts",
+    ],
     exclude: ["node_modules"],
 }, null, 2);

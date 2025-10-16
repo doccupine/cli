@@ -14,6 +14,7 @@ import { notFoundTemplate } from "./templates/not-found.js";
 import { layoutTemplate } from "./templates/layout.js";
 import { themeTemplate } from "./templates/theme.js";
 import { middlewareTemplate } from "./templates/middleware.js";
+import { styledDTemplate } from "./templates/types/styled.js";
 import { routesTemplate } from "./templates/api/theme/routes.js";
 import { iconTemplate } from "./templates/components/layout/Icon.js";
 import { pictogramsTemplate } from "./templates/components/layout/Pictograms.js";
@@ -201,6 +202,7 @@ class MDXToNextJSGenerator {
             "next.config.ts": this.generateNextConfig(),
             "tsconfig.json": this.generateTSConfig(),
             "middleware.ts": this.generateMiddleware(),
+            "types/styled.d.ts": this.generateStyledDTypes(),
             "app/api/theme/route.ts": this.generateRoutes(),
             "app/layout.tsx": await this.generateRootLayout(),
             "app/not-found.tsx": this.generateNotFoundPage(),
@@ -601,6 +603,9 @@ export default function Home() {
     }
     generateMiddleware() {
         return middlewareTemplate;
+    }
+    generateStyledDTypes() {
+        return styledDTemplate;
     }
     generateRoutes() {
         return routesTemplate;

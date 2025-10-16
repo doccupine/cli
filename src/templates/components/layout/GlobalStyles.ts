@@ -1,15 +1,14 @@
 export const globalStylesTemplate = `"use client";
 import { createGlobalStyle } from "styled-components";
-import { Theme } from "cherry-styled-components/src/lib";
 
-const GlobalStyles = (theme: Theme) => createGlobalStyle\`
+const GlobalStyles = createGlobalStyle\`
 html,
 body {
   margin: 0;
   padding: 0;
   min-height: 100%;
   scroll-behavior: smooth;
-  background-color: \${theme.colors.light};
+  background-color: \${({ theme }) => theme.colors.light};
   scroll-padding-top: 20px;
 }
 
@@ -53,11 +52,11 @@ ul li,
 ol li {
   margin: 0;
   padding: 0;
-  color: \${theme.colors.dark};
+  color: \${({ theme }) => theme.colors.dark};
 }
 
 a {
-  color: \${theme.isDark ? theme.colors.dark : theme.colors.primary};
+  color: \${({ theme }) => (theme.isDark ? theme.colors.dark : theme.colors.primary)};
 }
 
 ol,
