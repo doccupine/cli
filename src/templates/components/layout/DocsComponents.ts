@@ -239,7 +239,7 @@ export const StyledIndexSidebarLink = styled.a<{
   theme: Theme;
   $isActive: boolean;
 }>\`
-  \${({ theme }) => styledText(theme)};
+  \${({ theme }) => styledSmall(theme)};
   color: \${({ theme, $isActive }) =>
     $isActive ? theme.colors.primary : theme.colors.dark};
   font-weight: \${({ $isActive }) => ($isActive ? "600" : "400")};
