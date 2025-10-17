@@ -15,12 +15,12 @@ Cards act as visual containers for your content, giving you flexibility to combi
 You can use the Cards component directly within your MDX files without any import. The following example shows a basic usage:
 
 ~~~mdx
-<Card title="Note" icon="BadgeInfo">
+<Card title="Note" icon="badge-info">
   Doccupine CLI is a command-line tool that helps you create and manage your Doccupine project. It provides a simple and intuitive interface for creating and configuring your project.
 </Card>
 ~~~
 
-<Card title="Note" icon="BadgeInfo">
+<Card title="Note" icon="badge-info">
   Doccupine CLI is a command-line tool that helps you create and manage your Doccupine project. It provides a simple and intuitive interface for creating and configuring your project.
 </Card>
 
