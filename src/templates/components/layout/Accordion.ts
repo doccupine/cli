@@ -10,7 +10,8 @@ const StyledAccordion = styled.div<{ theme: Theme }>\`
   border-radius: \${({ theme }) => theme.spacing.radius.lg};
   padding: 20px;
   margin: 0;
-  \${({ theme }) => styledText(theme)}
+  \${({ theme }) => styledText(theme)};
+  width: 100%;
 \`;
 
 const StyledAccordionTitle = styled.h3<{ theme: Theme; $isOpen: boolean }>\`
