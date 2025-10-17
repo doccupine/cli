@@ -29,6 +29,7 @@ const StyledCallout = styled.div<{ theme: Theme; $type?: CalloutType }>\`
       background: \${theme.isDark ? "#0ea5e91a" : "#f0f9ff80"};
 
       & svg,
+      & .lucide,
       & p {
         color: \${theme.isDark ? "#bae6fd" : "#0c4a6e"};
       }
@@ -41,6 +42,7 @@ const StyledCallout = styled.div<{ theme: Theme; $type?: CalloutType }>\`
       background: \${theme.isDark ? "#71717a1a" : "#fafafa80"};
 
       & svg,
+      & .lucide,
       & p {
         color: \${theme.isDark ? "#e4e4e7" : "#18181b"};
       }
@@ -53,6 +55,7 @@ const StyledCallout = styled.div<{ theme: Theme; $type?: CalloutType }>\`
       background: \${theme.isDark ? "#f59e0b1a" : "#fffbeb80"};
 
       & svg,
+      & .lucide,
       & p {
         color: \${theme.isDark ? "#fde68a" : "#78350f"};
       }
@@ -65,6 +68,7 @@ const StyledCallout = styled.div<{ theme: Theme; $type?: CalloutType }>\`
       background: \${theme.isDark ? "#ef44441a" : "#fef2f280"};
 
       & svg,
+      & .lucide,
       & p {
       color: \${theme.isDark ? "#fecaca" : "#7f1d1d"};
       }
@@ -77,6 +81,7 @@ const StyledCallout = styled.div<{ theme: Theme; $type?: CalloutType }>\`
       background: \${theme.isDark ? "#10b9811a" : "#ecfdf580"};
 
       & svg,
+      & .lucide,
       & p {
         color: \${theme.isDark ? "#a7f3d0" : "#064e3b"};
       }
