@@ -1,4 +1,4 @@
-export const imageEmbedsMdxTemplate = `---
+export const imageAndEmbedsMdxTemplate = `---
 title: "Images and embeds"
 description: "Enrich your documentation with visuals, videos, and interactive embeds."
 date: "2025-01-15"

@@ -49,14 +49,14 @@ To centrally define the entire sidebar, create a \`navigation.json\` at your pro
   {
     "label": "Components",
     "links": [
-      { "slug": "text", "title": "Headers and Text" },
-      { "slug": "list-table", "title": "Lists and tables" },
+      { "slug": "headers-and-text", "title": "Headers and Text" },
+      { "slug": "lists-and-tables", "title": "Lists and tables" },
       { "slug": "code", "title": "Code" },
       { "slug": "accordion", "title": "Accordion" },
       { "slug": "tabs", "title": "Tabs" },
       { "slug": "cards", "title": "Cards" },
       { "slug": "callouts", "title": "Callouts" },
-      { "slug": "image-embeds", "title": "Images and embeds" },
+      { "slug": "images-and-embeds", "title": "Images and embeds" },
       { "slug": "icons", "title": "Icons" },
       { "slug": "fields", "title": "Fields" },
       { "slug": "update", "title": "Update" },
@@ -67,7 +67,7 @@ To centrally define the entire sidebar, create a \`navigation.json\` at your pro
   {
     "label": "Configuration",
     "links": [
-      { "slug": "config", "title": "Globals" },
+      { "slug": "globals", "title": "Globals" },
       { "slug": "navigation", "title": "Navigation" },
       { "slug": "theme", "title": "Theme" }
     ]

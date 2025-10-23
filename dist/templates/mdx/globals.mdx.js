@@ -1,4 +1,4 @@
-export const configMdxTemplate = `---
+export const globalsMdxTemplate = `---
 title: "Globals"
 description: "Configure global settings for your documentation."
 date: "2025-01-15"

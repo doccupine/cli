@@ -59,16 +59,16 @@ import { cardsMdxTemplate } from "./templates/mdx/cards.mdx.js";
 import { codeMdxTemplate } from "./templates/mdx/code.mdx.js";
 import { columnsMdxTemplate } from "./templates/mdx/columns.mdx.js";
 import { commandsMdxTemplate } from "./templates/mdx/commands.mdx.js";
-import { configMdxTemplate } from "./templates/mdx/config.mdx.js";
 import { fieldsMdxTemplate } from "./templates/mdx/fields.mdx.js";
+import { globalsMdxTemplate } from "./templates/mdx/globals.mdx.js";
+import { headersAndTextMdxTemplate } from "./templates/mdx/headers-and-text.mdx.js";
 import { iconsMdxTemplate } from "./templates/mdx/icons.mdx.js";
-import { imageEmbedsMdxTemplate } from "./templates/mdx/image-embeds.mdx.js";
+import { imageAndEmbedsMdxTemplate } from "./templates/mdx/image-and-embeds.mdx.js";
 import { indexMdxTemplate } from "./templates/mdx/index.mdx.js";
-import { listTableMdxTemplate } from "./templates/mdx/list-table.mdx.js";
+import { listAndTablesMdxTemplate } from "./templates/mdx/list-and-tables.mdx.js";
 import { navigationMdxTemplate } from "./templates/mdx/navigation.mdx.js";
 import { stepsMdxTemplate } from "./templates/mdx/steps.mdx.js";
 import { tabsMdxTemplate } from "./templates/mdx/tabs.mdx.js";
-import { textMdxTemplate } from "./templates/mdx/text.mdx.js";
 import { themeMdxTemplate } from "./templates/mdx/theme.mdx.js";
 import { updateMdxTemplate } from "./templates/mdx/update.mdx.js";
 
@@ -277,16 +277,16 @@ class MDXToNextJSGenerator {
       "code.mdx": this.generateCodeMdx(),
       "columns.mdx": this.generateColumnsMdx(),
       "commands.mdx": this.generateCommandsMdx(),
-      "config.mdx": this.generateConfigMdx(),
       "fields.mdx": this.generateFieldsMdx(),
+      "globals.mdx": this.generateGlobalsMdx(),
+      "headers-and-text.mdx": this.generateHeadersAndTextMdx(),
       "icons.mdx": this.generateIconsMdx(),
-      "image-embeds.mdx": this.generateImageEmbedsMdx(),
+      "image-and-embeds.mdx": this.generateImagesAndEmbedsMdx(),
       "index.mdx": this.generateIndexMdx(),
-      "list-table.mdx": this.generateListTableMdx(),
+      "lists-and-tables.mdx": this.generateListsAndTablesMdx(),
       "navigation.mdx": this.generateNavigationMdx(),
       "steps.mdx": this.generateStepsMdx(),
       "tabs.mdx": this.generateTabsMdx(),
-      "text.mdx": this.generateTextMdx(),
       "theme.mdx": this.generateThemeMdx(),
       "update.mdx": this.generateUpdateMdx(),
     };
@@ -865,28 +865,32 @@ export default function Home() {
     return commandsMdxTemplate;
   }
 
-  generateConfigMdx(): string {
-    return configMdxTemplate;
-  }
-
   generateFieldsMdx(): string {
     return fieldsMdxTemplate;
+  }
+
+  generateGlobalsMdx(): string {
+    return globalsMdxTemplate;
+  }
+
+  generateHeadersAndTextMdx(): string {
+    return headersAndTextMdxTemplate;
   }
 
   generateIconsMdx(): string {
     return iconsMdxTemplate;
   }
 
-  generateImageEmbedsMdx(): string {
-    return imageEmbedsMdxTemplate;
+  generateImagesAndEmbedsMdx(): string {
+    return imageAndEmbedsMdxTemplate;
   }
 
   generateIndexMdx(): string {
     return indexMdxTemplate;
   }
 
-  generateListTableMdx(): string {
-    return listTableMdxTemplate;
+  generateListsAndTablesMdx(): string {
+    return listAndTablesMdxTemplate;
   }
 
   generateNavigationMdx(): string {
@@ -899,10 +903,6 @@ export default function Home() {
 
   generateTabsMdx(): string {
     return tabsMdxTemplate;
-  }
-
-  generateTextMdx(): string {
-    return textMdxTemplate;
   }
 
   generateThemeMdx(): string {
@@ -930,7 +930,7 @@ program
   .description(
     "Watch MDX files and generate Next.js documentation pages automatically",
   )
-  .version("0.0.16");
+  .version("0.0.17");
 
 program
   .command("watch", { isDefault: true })
