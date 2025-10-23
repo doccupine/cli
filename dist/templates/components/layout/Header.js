@@ -11,6 +11,7 @@ import {
 } from "@/components/layout/ThemeToggle";
 import { useOnClickOutside } from "@/components/ClickOutside";
 import { Logo } from "@/components/layout/Pictograms";
+import themeJson from "@/theme.json";
 
 const StyledHeader = styled.header<{ theme: Theme }>\`
   position: sticky;
