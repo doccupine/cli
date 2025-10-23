@@ -287,7 +287,7 @@ export const StyledSidebarListItemLink = styled(Link)<Props>\`
     &:hover {
       color: \${({ theme }) =>
         theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
-      border-color: \${({ theme }) => theme.colors.info};
+      border-color: \${({ theme }) => theme.colors.primary};
     }
   }
 
@@ -295,7 +295,7 @@ export const StyledSidebarListItemLink = styled(Link)<Props>\`
     $isActive &&
     \`
 			color: \${theme.colors.dark};
-			border-color: \${theme.colors.info};
+			border-color: \${theme.colors.primary};
 			font-weight: 600;
 	\`};
 \`;

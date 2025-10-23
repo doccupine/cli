@@ -1,4 +1,13 @@
 export const themeTemplate = `"use client";
+import customThemeJson from "@/theme.json";
+
+interface CustomTheme {
+  default?: Partial<Colors>;
+  dark?: Partial<Colors>;
+}
+
+const customTheme = customThemeJson as CustomTheme;
+
 export const breakpoints: Breakpoints = {
   xs: 0,
   sm: 576,
@@ -44,6 +53,8 @@ export const colors: Colors = {
 
   dark: "#000000",
   light: "#ffffff",
+
+  ...(customTheme.default ? (customTheme.default as Partial<Colors>) : {}),
 };
 
 export const colorsDark: Colors = {
@@ -70,6 +81,8 @@ export const colorsDark: Colors = {
 
   dark: "#ffffff",
   light: "#000000",
+
+  ...(customTheme.dark ? (customTheme.dark as Partial<Colors>) : {}),
 };
 
 export const shadows: Shadows = {

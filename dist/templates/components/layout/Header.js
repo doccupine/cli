@@ -7,7 +7,7 @@ import { rgba } from "polished";
 import { mq, Theme } from "@/app/theme";
 import { 
   ToggleTheme,
-  ToggleThemeLoading
+  ToggleThemeLoading,
 } from "@/components/layout/ThemeToggle";
 import {
   StyledTinyDesktopOnly,
@@ -51,6 +51,10 @@ const StyledHeader = styled.header<{ theme: Theme }>\`
 
     & svg {
       margin: auto;
+
+      & path[fill] {
+        fill: \${({ theme }) => theme.colors.primary};
+      }
     }
   }
 \`;
