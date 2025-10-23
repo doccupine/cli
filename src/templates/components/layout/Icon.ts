@@ -3,7 +3,7 @@ export const iconTemplate = `import { icons } from "lucide-react";
 export type IconProps = keyof typeof icons;
 
 interface Props {
-  name: IconProps;
+  name: string | IconProps;
   color?: string;
   size?: number;
   className?: string;

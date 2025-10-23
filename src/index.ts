@@ -9,9 +9,9 @@ import chalk from "chalk";
 import prompts from "prompts";
 
 import { gitignoreTemplate } from "./templates/gitignore.js";
-import { middlewareTemplate } from "./templates/middleware.js";
 import { nextConfigTemplate } from "./templates/next.config.js";
 import { packageJsonTemplate } from "./templates/package.js";
+import { proxyTemplate } from "./templates/proxy.js";
 import { tsconfigTemplate } from "./templates/tsconfig.js";
 
 import { routesTemplate } from "./templates/app/api/theme/routes.js";
@@ -26,12 +26,14 @@ import { mdxComponentsTemplate } from "./templates/components/MDXComponents.js";
 import { sideBarTemplate } from "./templates/components/SideBar.js";
 
 import { accordionTemplate } from "./templates/components/layout/Accordion.js";
+import { buttonTemplate } from "./templates/components/layout/Button.js";
 import { calloutTemplate } from "./templates/components/layout/Callout.js";
 import { cardTemplate } from "./templates/components/layout/Card.js";
 import { cherryThemeProviderTemplate } from "./templates/components/layout/CherryThemeProvider.js";
 import { clientThemeProviderTemplate } from "./templates/components/layout/ClientThemeProvider.js";
 import { codeTemplate } from "./templates/components/layout/Code.js";
 import { columnsTemplate } from "./templates/components/layout/Columns.js";
+import { demoThemeTemplate } from "./templates/components/layout/DemoTheme.js";
 import { docsComponentsTemplate } from "./templates/components/layout/DocsComponents.js";
 import { fieldTemplate } from "./templates/components/layout/Field.js";
 import { footerTemplate } from "./templates/components/layout/Footer.js";
@@ -51,6 +53,7 @@ import { styledDTemplate } from "./templates/types/styled.js";
 import { orderNavItemsTemplate } from "./templates/utils/orderNavItems.js";
 
 import { accordionMdxTemplate } from "./templates/mdx/accordion.mdx.js";
+import { buttonsMdxTemplate } from "./templates/mdx/buttons.mdx.js";
 import { calloutsMdxTemplate } from "./templates/mdx/callouts.mdx.js";
 import { cardsMdxTemplate } from "./templates/mdx/cards.mdx.js";
 import { codeMdxTemplate } from "./templates/mdx/code.mdx.js";
@@ -210,10 +213,10 @@ class MDXToNextJSGenerator {
     const structure = {
       ".gitignore": this.generateGitIgnore(),
       "config.json": this.generateConfig(),
-      "middleware.ts": this.generateMiddleware(),
       "navigation.json": this.generateNavigationConfig(),
       "next.config.ts": this.generateNextConfig(),
       "package.json": this.generatePackageJson(),
+      "proxy.ts": this.generateProxy(),
       "theme.json": this.generateThemeConfig(),
       "tsconfig.json": this.generateTSConfig(),
 
@@ -233,6 +236,7 @@ class MDXToNextJSGenerator {
       "components/SideBar.tsx": this.generateSideBar(),
 
       "components/layout/Accordion.tsx": this.generateAccordion(),
+      "components/layout/Button.tsx": this.generateButton(),
       "components/layout/Callout.tsx": this.generateCallout(),
       "components/layout/Card.tsx": this.generateCard(),
       "components/layout/CherryThemeProvider.tsx":
@@ -241,6 +245,7 @@ class MDXToNextJSGenerator {
         this.generateClientThemeProvider(),
       "components/layout/Code.tsx": this.generateCode(),
       "components/layout/Columns.tsx": this.generateColumns(),
+      "components/layout/DemoTheme.tsx": this.generateDemoTheme(),
       "components/layout/DocsComponents.tsx": this.generateDocsComponents(),
       "components/layout/Field.tsx": this.generateField(),
       "components/layout/Footer.tsx": this.generateFooter(),
@@ -266,6 +271,7 @@ class MDXToNextJSGenerator {
   async createStartingDocs() {
     const structure = {
       "accordion.mdx": this.generateAccordionMdx(),
+      "buttons.mdx": this.generateButtonsMdx(),
       "callouts.mdx": this.generateCalloutsMdx(),
       "cards.mdx": this.generateCardsMdx(),
       "code.mdx": this.generateCodeMdx(),
@@ -532,10 +538,6 @@ class MDXToNextJSGenerator {
     return `{}`;
   }
 
-  generateMiddleware(): string {
-    return middlewareTemplate;
-  }
-
   generateNavigationConfig(): string {
     return `[]`;
   }
@@ -546,6 +548,10 @@ class MDXToNextJSGenerator {
 
   generatePackageJson(): string {
     return packageJsonTemplate;
+  }
+
+  generateProxy(): string {
+    return proxyTemplate;
   }
 
   generateThemeConfig(): string {
@@ -747,6 +753,10 @@ export default function Home() {
     return accordionTemplate;
   }
 
+  generateButton(): string {
+    return buttonTemplate;
+  }
+
   generateCallout(): string {
     return calloutTemplate;
   }
@@ -769,6 +779,10 @@ export default function Home() {
 
   generateColumns(): string {
     return columnsTemplate;
+  }
+
+  generateDemoTheme(): string {
+    return demoThemeTemplate;
   }
 
   generateDocsComponents(): string {
@@ -825,6 +839,10 @@ export default function Home() {
 
   generateAccordionMdx(): string {
     return accordionMdxTemplate;
+  }
+
+  generateButtonsMdx(): string {
+    return buttonsMdxTemplate;
   }
 
   generateCalloutsMdx(): string {
@@ -912,7 +930,7 @@ program
   .description(
     "Watch MDX files and generate Next.js documentation pages automatically",
   )
-  .version("0.0.15");
+  .version("0.0.16");
 
 program
   .command("watch", { isDefault: true })

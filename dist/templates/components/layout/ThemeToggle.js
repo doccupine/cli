@@ -5,6 +5,7 @@ import styled, { css, useTheme } from "styled-components";
 import { useRouter } from "next/navigation";
 import { rgba } from "polished";
 import { Icon } from "@/components/layout/Icon";
+import { useThemeOverride } from "@/components/layout/ClientThemeProvider";
 
 const StyledThemeToggle = styled.button<{ theme: Theme; $hidden?: boolean }>\`
   \${resetButton}
@@ -77,12 +78,14 @@ const StyledThemeToggle = styled.button<{ theme: Theme; $hidden?: boolean }>\`
 \`;
 
 function ToggleTheme({ $hidden }: { $hidden?: boolean }) {
+  const { setTheme } = useThemeOverride();
   const theme = useTheme() as Theme;
   const router = useRouter();
 
   return (
     <StyledThemeToggle
       onClick={async () => {
+        setTheme(null);
         const nextTheme = theme.isDark ? "light" : "dark";
         await fetch("/api/theme", {
           method: "POST",

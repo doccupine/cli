@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
   compiler: {
     styledComponents: true,
   },
-  transpilePackages: ["lucide-react"],
+  transpilePackages: ["lucide-react", "cherry-styled-components"],
 };
 
 export default nextConfig;

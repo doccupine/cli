@@ -18,6 +18,12 @@ Place a \`theme.json\` at your project root (the same folder where you execute \
     "primaryLight": "#86efac",
     "primary": "#22c55e",
     "primaryDark": "#15803d",
+    "secondaryLight": "#c4b5fd",
+    "secondary": "#8b5cf6",
+    "secondaryDark": "#5b21b6",
+    "tertiaryLight": "#fbbf24",
+    "tertiary": "#f59e0b",
+    "tertiaryDark": "#d97706",
     "grayLight": "#f3f4f6",
     "gray": "#9ca3af",
     "grayDark": "#374151",
@@ -32,6 +38,12 @@ Place a \`theme.json\` at your project root (the same folder where you execute \
     "primaryLight": "#6ee7b7",
     "primary": "#10b981",
     "primaryDark": "#065f46",
+    "secondaryLight": "#ddd6fe",
+    "secondary": "#a78bfa",
+    "secondaryDark": "#7c3aed",
+    "tertiaryLight": "#fed7aa",
+    "tertiary": "#fb923c",
+    "tertiaryDark": "#ea580c",
     "grayLight": "#1f2937",
     "gray": "#6b7280",
     "grayDark": "#9ca3af",
@@ -57,6 +69,12 @@ Place a \`theme.json\` at your project root (the same folder where you execute \
 - **primaryLight**: A lighter variant of your brand color, used for subtle accents and backgrounds.
 - **primary**: The main brand color.
 - **primaryDark**: A darker variant of your brand color for emphasis and hover states.
+- **secondaryLight**: A lighter variant of your secondary color, used for subtle accents and backgrounds.
+- **secondary**: The secondary brand color used for highlights and UI accents.
+- **secondaryDark**: A darker variant of your secondary color for emphasis and hover states.
+- **tertiaryLight**: A lighter variant of your tertiary color, used for subtle accents and backgrounds.
+- **tertiary**: The tertiary accent color.
+- **tertiaryDark**: A darker variant of your tertiary color for emphasis and hover states.
 - **grayLight**: Light gray for surfaces and borders.
 - **gray**: Neutral gray for text and UI elements.
 - **grayDark**: Dark gray for headings or high‑contrast text.
@@ -77,5 +95,158 @@ Place a \`theme.json\` at your project root (the same folder where you execute \
 
 ## Tips
 - **Contrast**: Ensure sufficient contrast between text and backgrounds for readability.
-- **Branding**: Start with your brand’s primary color, then derive \`primaryLight\` and \`primaryDark\`.
-- **Iterate**: Adjust colors and refresh the site to preview changes quickly.`;
+- **Branding**: Start with your brand’s \`primary\` color, then derive \`primaryLight\` and \`primaryDark\`.
+- **Iterate**: Adjust colors and refresh the site to preview changes quickly.
+
+# Demo
+In the following demos, you can see how the theme can be changed. To override the theme, create a \`theme.json\` file in the project root and copy paste the code below.
+
+<DemoTheme variant="purple" />
+<DemoTheme variant="green" />
+<DemoTheme variant="yellow" />
+<DemoTheme />
+
+## Purple
+
+\`\`\`json
+{
+  "default": {
+    "primaryLight": "#c4b5fd",
+    "primary": "#8b5cf6",
+    "primaryDark": "#5b21b6",
+    "secondaryLight": "#86efac",
+    "secondary": "#22c55e",
+    "secondaryDark": "#15803d",
+    "tertiaryLight": "#fbbf24",
+    "tertiary": "#f59e0b",
+    "tertiaryDark": "#d97706",
+    "grayLight": "#f3f4f6",
+    "gray": "#9ca3af",
+    "grayDark": "#374151",
+    "success": "#10b981",
+    "error": "#f43f5e",
+    "warning": "#f59e0b",
+    "info": "#3b82f6",
+    "dark": "#000000",
+    "light": "#ffffff"
+  },
+  "dark": {
+    "primaryLight": "#ddd6fe",
+    "primary": "#a78bfa",
+    "primaryDark": "#7c3aed",
+    "secondaryLight": "#6ee7b7",
+    "secondary": "#10b981",
+    "secondaryDark": "#065f46",
+    "tertiaryLight": "#fed7aa",
+    "tertiary": "#fb923c",
+    "tertiaryDark": "#ea580c",
+    "grayLight": "#1f2937",
+    "gray": "#6b7280",
+    "grayDark": "#9ca3af",
+    "success": "#10b981",
+    "error": "#f43f5e",
+    "warning": "#f59e0b",
+    "info": "#3b82f6",
+    "dark": "#ffffff",
+    "light": "#000000"
+  }
+}
+\`\`\`
+<DemoTheme variant="purple" />
+
+## Green
+
+\`\`\`json
+{
+  "default": {
+    "primaryLight": "#86efac",
+    "primary": "#22c55e",
+    "primaryDark": "#15803d",
+    "secondaryLight": "#c4b5fd",
+    "secondary": "#8b5cf6",
+    "secondaryDark": "#5b21b6",
+    "tertiaryLight": "#fbbf24",
+    "tertiary": "#f59e0b",
+    "tertiaryDark": "#d97706",
+    "grayLight": "#f3f4f6",
+    "gray": "#9ca3af",
+    "grayDark": "#374151",
+    "success": "#10b981",
+    "error": "#f43f5e",
+    "warning": "#f59e0b",
+    "info": "#3b82f6",
+    "dark": "#000000",
+    "light": "#ffffff"
+  },
+  "dark": {
+    "primaryLight": "#6ee7b7",
+    "primary": "#10b981",
+    "primaryDark": "#065f46",
+    "secondaryLight": "#ddd6fe",
+    "secondary": "#a78bfa",
+    "secondaryDark": "#7c3aed",
+    "tertiaryLight": "#fed7aa",
+    "tertiary": "#fb923c",
+    "tertiaryDark": "#ea580c",
+    "grayLight": "#1f2937",
+    "gray": "#6b7280",
+    "grayDark": "#9ca3af",
+    "success": "#10b981",
+    "error": "#f43f5e",
+    "warning": "#f59e0b",
+    "info": "#3b82f6",
+    "dark": "#ffffff",
+    "light": "#000000"
+  }
+}
+\`\`\`
+<DemoTheme variant="green" />
+
+## Yellow
+
+\`\`\`json
+{
+  "default": {
+    "primaryLight": "#fbbf24",
+    "primary": "#f59e0b",
+    "primaryDark": "#d97706",
+    "secondaryLight": "#c4b5fd",
+    "secondary": "#8b5cf6",
+    "secondaryDark": "#5b21b6",
+    "tertiaryLight": "#86efac",
+    "tertiary": "#22c55e",
+    "tertiaryDark": "#15803d",
+    "grayLight": "#f3f4f6",
+    "gray": "#9ca3af",
+    "grayDark": "#374151",
+    "success": "#10b981",
+    "error": "#f43f5e",
+    "warning": "#f59e0b",
+    "info": "#3b82f6",
+    "dark": "#000000",
+    "light": "#ffffff"
+  },
+  "dark": {
+    "primaryLight": "#fed7aa",
+    "primary": "#fb923c",
+    "primaryDark": "#ea580c",
+    "secondaryLight": "#ddd6fe",
+    "secondary": "#a78bfa",
+    "secondaryDark": "#7c3aed",
+    "tertiaryLight": "#6ee7b7",
+    "tertiary": "#10b981",
+    "tertiaryDark": "#065f46",
+    "grayLight": "#1f2937",
+    "gray": "#6b7280",
+    "grayDark": "#9ca3af",
+    "success": "#10b981",
+    "error": "#f43f5e",
+    "warning": "#f59e0b",
+    "info": "#3b82f6",
+    "dark": "#ffffff",
+    "light": "#000000"
+  }
+}
+\`\`\`
+
+<DemoTheme variant="yellow" />`;

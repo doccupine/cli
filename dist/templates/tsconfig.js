@@ -11,7 +11,7 @@ export const tsconfigTemplate = JSON.stringify({
         moduleResolution: "bundler",
         resolveJsonModule: true,
         isolatedModules: true,
-        jsx: "preserve",
+        jsx: "react-jsx",
         incremental: true,
         plugins: [{ name: "next" }],
         baseUrl: ".",
@@ -25,6 +25,7 @@ export const tsconfigTemplate = JSON.stringify({
         "**/*.tsx",
         "**/*.d.ts",
         ".next/types/**/*.ts",
+        ".next/dev/types/**/*.ts",
     ],
     exclude: ["node_modules"],
 }, null, 2);

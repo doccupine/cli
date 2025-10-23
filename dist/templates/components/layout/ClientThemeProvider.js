@@ -1,9 +1,25 @@
 export const clientThemeProviderTemplate = `"use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useState, useContext } from "react";
 import { ThemeProvider as StyledThemeProvider } from "styled-components";
 import { Theme } from "@/app/theme";
 import { useRouter } from "next/navigation";
 import { GlobalStyles } from "@/components/layout/GlobalStyles";
+
+type ThemeOverrideContextValue = {
+  theme: Theme;
+  setTheme: (t: Theme | null) => void;
+};
+
+const ThemeOverrideContext =
+  React.createContext<ThemeOverrideContextValue | null>(null);
+
+function useThemeOverride() {
+  const ctx = useContext(ThemeOverrideContext);
+  if (!ctx) {
+    throw new Error("useThemeOverride must be used within ClientThemeProvider");
+  }
+  return ctx;
+}
 
 function ClientThemeProvider({
   children,
@@ -13,6 +29,7 @@ function ClientThemeProvider({
   theme: Theme;
 }) {
   const router = useRouter();
+  const [overrideTheme, setOverrideTheme] = useState<Theme | null>(null);
   useEffect(() => {
     try {
       const cookie = document.cookie
@@ -39,12 +56,21 @@ function ClientThemeProvider({
       }
     } catch {}
   }, [router]);
+
+  const effectiveTheme = useMemo(
+    () => overrideTheme ?? theme,
+    [overrideTheme, theme],
+  );
   return (
-    <StyledThemeProvider theme={theme}>
-      <GlobalStyles />
-      {children}
-    </StyledThemeProvider>
+    <ThemeOverrideContext.Provider
+      value={{ theme: effectiveTheme, setTheme: setOverrideTheme }}
+    >
+      <StyledThemeProvider theme={effectiveTheme}>
+        <GlobalStyles />
+        {children}
+      </StyledThemeProvider>
+    </ThemeOverrideContext.Provider>
   );
 }
 
-export { ClientThemeProvider };`;
+export { ClientThemeProvider, useThemeOverride };`;

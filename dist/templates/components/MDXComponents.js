@@ -10,6 +10,8 @@ import { Columns } from "@/components/layout/Columns";
 import { Field } from "@/components/layout/Field";
 import { Update } from "@/components/layout/Update";
 import { Steps, Step } from "@/components/layout/Steps";
+import { Button } from "@/components/layout/Button";
+import { DemoTheme } from "@/components/layout/DemoTheme";
 
 function extractAllTextFromChildren(children: React.ReactNode): string {
   if (children == null) return "";
@@ -122,6 +124,9 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     Update,
     Steps,
     Step,
+    Button,
+    DemoTheme,
     ...components,
   };
-}`;
+}
+`;

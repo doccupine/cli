@@ -34,13 +34,13 @@ export const colors: Colors = {
   primary: "#3b82f6",
   primaryDark: "#1e40af",
 
-  secondaryLight: "#475569",
-  secondary: "#1e293b",
-  secondaryDark: "#020617",
+  secondaryLight: "#c4b5fd",
+  secondary: "#8b5cf6",
+  secondaryDark: "#5b21b6",
 
-  tertiaryLight: "#ebccb9",
-  tertiary: "#816b5a",
-  tertiaryDark: "#675445",
+  tertiaryLight: "#86efac",
+  tertiary: "#22c55e",
+  tertiaryDark: "#15803d",
 
   grayLight: "#e5e7eb",
   gray: "#9ca3af",

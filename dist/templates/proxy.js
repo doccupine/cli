@@ -1,7 +1,7 @@
-export const middlewareTemplate = `import { NextResponse } from "next/server";
+export const proxyTemplate = `import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const res = NextResponse.next();
 
   res.headers.set("Accept-CH", "Sec-CH-Prefers-Color-Scheme");
@@ -25,4 +25,5 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: ["/:path*"],
-};`;
+};
+`;

@@ -1,17 +1,21 @@
 export const headerTemplate = `"use client";
 import { Flex, MaxWidth } from "cherry-styled-components/src/lib";
-import React, { useCallback, useRef, useState, Suspense } from "react";
+import { useCallback, useRef, useState, Suspense } from "react";
 import styled, { useTheme } from "styled-components";
 import Link from "next/link";
 import { rgba } from "polished";
 import { mq, Theme } from "@/app/theme";
-import { 
+import {
   ToggleTheme,
   ToggleThemeLoading,
 } from "@/components/layout/ThemeToggle";
 import { useOnClickOutside } from "@/components/ClickOutside";
 import { Logo } from "@/components/layout/Pictograms";
 import themeJson from "@/theme.json";
+
+const customThemeJson = themeJson as typeof themeJson & {
+  logo?: { dark: string; light: string };
+};
 
 const StyledHeader = styled.header<{ theme: Theme }>\`
   position: sticky;
@@ -85,17 +89,17 @@ function Header() {
         <MaxWidth $size={1000}>
           <Flex $justifyContent="space-between" $wrap="nowrap">
             <Link href="/" className="logo" aria-label="Logo">
-              {themeJson.logo ? (
+              {(customThemeJson as any).logo ? (
                 theme.isDark ? (
                   <img
-                    src={themeJson.logo.dark}
+                    src={(themeJson as any).logo.dark}
                     alt="Logo"
                     width="100"
                     height="100"
                   />
                 ) : (
                   <img
-                    src={themeJson.logo.light}
+                    src={(themeJson as any).logo.light}
                     alt="Logo"
                     width="100"
                     height="100"

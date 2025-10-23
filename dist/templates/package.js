@@ -9,7 +9,7 @@ export const packageJsonTemplate = JSON.stringify({
         lint: "next lint",
     },
     dependencies: {
-        next: "15.5.5",
+        next: "16.0.0",
         react: "19.2.0",
         "react-dom": "19.2.0",
     },
@@ -20,7 +20,7 @@ export const packageJsonTemplate = JSON.stringify({
         "@types/react-dom": "^19",
         "cherry-styled-components": "^0.1.0-43",
         eslint: "^9",
-        "eslint-config-next": "15.5.5",
+        "eslint-config-next": "16.0.0",
         "lucide-react": "^0.546.0",
         "next-mdx-remote": "^5.0.0",
         polished: "^4.3.1",
