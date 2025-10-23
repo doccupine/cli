@@ -66,6 +66,7 @@ import { navigationMdxTemplate } from "./templates/mdx/navigation.mdx.js";
 import { stepsMdxTemplate } from "./templates/mdx/steps.mdx.js";
 import { tabsMdxTemplate } from "./templates/mdx/tabs.mdx.js";
 import { textMdxTemplate } from "./templates/mdx/text.mdx.js";
+import { themeMdxTemplate } from "./templates/mdx/theme.mdx.js";
 import { updateMdxTemplate } from "./templates/mdx/update.mdx.js";
 
 interface MDXFile {
@@ -280,6 +281,7 @@ class MDXToNextJSGenerator {
       "steps.mdx": this.generateStepsMdx(),
       "tabs.mdx": this.generateTabsMdx(),
       "text.mdx": this.generateTextMdx(),
+      "theme.mdx": this.generateThemeMdx(),
       "update.mdx": this.generateUpdateMdx(),
     };
 
@@ -883,6 +885,10 @@ export default function Home() {
 
   generateTextMdx(): string {
     return textMdxTemplate;
+  }
+
+  generateThemeMdx(): string {
+    return themeMdxTemplate;
   }
 
   generateUpdateMdx(): string {

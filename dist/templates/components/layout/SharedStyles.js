@@ -495,24 +495,6 @@ export const StyledDesktopOnly = styled.em<{ theme: Theme }>\`
   }
 \`;
 
-export const StyledTinyMobileOnly = styled.em<{ theme: Theme }>\`
-  font-style: normal;
-  display: flex;
-
-  @media screen and (min-width: 426px) {
-    display: none;
-  }
-\`;
-
-export const StyledTinyDesktopOnly = styled.em<{ theme: Theme }>\`
-  font-style: normal;
-  display: none;
-
-  @media screen and (min-width: 426px) {
-    display: flex;
-  }
-\`;
-
 export const StyledAlignMiddle = styled.div<{ theme: Theme }>\`
   margin: auto 0;
 \`;

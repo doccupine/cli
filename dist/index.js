@@ -58,6 +58,7 @@ import { navigationMdxTemplate } from "./templates/mdx/navigation.mdx.js";
 import { stepsMdxTemplate } from "./templates/mdx/steps.mdx.js";
 import { tabsMdxTemplate } from "./templates/mdx/tabs.mdx.js";
 import { textMdxTemplate } from "./templates/mdx/text.mdx.js";
+import { themeMdxTemplate } from "./templates/mdx/theme.mdx.js";
 import { updateMdxTemplate } from "./templates/mdx/update.mdx.js";
 class ConfigManager {
     configPath;
@@ -217,6 +218,7 @@ class MDXToNextJSGenerator {
             "steps.mdx": this.generateStepsMdx(),
             "tabs.mdx": this.generateTabsMdx(),
             "text.mdx": this.generateTextMdx(),
+            "theme.mdx": this.generateThemeMdx(),
             "update.mdx": this.generateUpdateMdx(),
         };
         const indexMdxExists = await fs.pathExists(path.join(this.watchDir, "index.mdx"));
@@ -696,6 +698,9 @@ export default function Home() {
     }
     generateTextMdx() {
         return textMdxTemplate;
+    }
+    generateThemeMdx() {
+        return themeMdxTemplate;
     }
     generateUpdateMdx() {
         return updateMdxTemplate;
