@@ -77,6 +77,7 @@ function Header() {
     isOptionActive ? closeMenu : () => {},
   );
   useOnClickOutside([langRef, wrapperRef], isLangActive ? closeMenu : () => {});
+  const theme = useTheme() as Theme;
 
   return (
     <>
