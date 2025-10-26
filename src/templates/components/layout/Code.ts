@@ -1,4 +1,5 @@
 export const codeTemplate = `"use client";
+import { useState, useCallback } from "react";
 import styled from "styled-components";
 import { Theme, styledCode } from "cherry-styled-components/src/lib";
 import { rgba } from "polished";
@@ -7,6 +8,7 @@ import rehypeParse from "rehype-parse";
 import rehypeHighlight from "rehype-highlight";
 import rehypeStringify from "rehype-stringify";
 import { editableContent } from "@/components/layout/SharedStyled";
+import { Icon } from "@/components/layout/Icon";
 
 interface CodeProps extends React.HTMLAttributes<HTMLDivElement> {
   code: string;
@@ -33,17 +35,55 @@ const TopBar = styled.div<{ theme: Theme }>\`
   height: 33px;
   width: 100%;
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
+  align-items: center;
   gap: 5px;
-  padding: 10px;
+  padding: 0 10px;
+\`;
+
+const DotsContainer = styled.div\`
+  display: flex;
+  gap: 5px;
 \`;
 
 const Dot = styled.span<{ theme: Theme }>\`
-  margin: auto 0;
   width: 10px;
   height: 10px;
   border-radius: 50%;
   background: \${rgba("#ffffff", 0.1)};
+\`;
+
+const CopyButton = styled.button<{ theme: Theme; $copied: boolean }>\`
+  background: \${({ $copied }) =>
+    $copied ? rgba("#7ee787", 0.2) : "transparent"};
+  border: solid 1px
+    \${({ $copied }) => ($copied ? "#7ee787" : rgba("#ffffff", 0.1))};
+  color: \${({ $copied }) => ($copied ? "#7ee787" : "#c9d1d9")};
+  border-radius: \${({ theme }) => theme.spacing.radius.xs};
+  padding: 4px 8px;
+  font-size: 12px;
+  font-family: \${({ theme }) => theme.fonts.mono};
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: -6px;
+
+  & svg.lucide {
+    color: \${({ $copied }) => ($copied ? "#7ee787" : "#c9d1d9")};
+  }
+
+  &:hover {
+    background: \${({ $copied }) =>
+      $copied ? rgba("#7ee787", 0.3) : rgba("#ffffff", 0.1)};
+    border-color: \${({ $copied }) =>
+      $copied ? "#7ee787" : rgba("#ffffff", 0.2)};
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
 \`;
 
 const Body = styled.div<{ theme: Theme }>\`
@@ -184,13 +224,40 @@ const highlightCode = (code: string, language: string): string => {
 };
 
 function Code({ code, language = "javascript", ...props }: CodeProps) {
+  const [copied, setCopied] = useState(false);
   const highlightedCode = highlightCode(code, language);
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy code:", err);
+    }
+  }, [code]);
+
   return (
     <CodeWrapper>
       <TopBar>
-        <Dot />
-        <Dot />
-        <Dot />
+        <DotsContainer>
+          <Dot />
+          <Dot />
+          <Dot />
+        </DotsContainer>
+        <CopyButton onClick={handleCopy} $copied={copied}>
+          {copied ? (
+            <>
+              <Icon name="check" size={12} />
+              <span>Copied!</span>
+            </>
+          ) : (
+            <>
+              <Icon name="copy" size={12} />
+              <span>Copy</span>
+            </>
+          )}
+        </CopyButton>
       </TopBar>
       <Body dangerouslySetInnerHTML={{ __html: highlightedCode }} {...props} />
     </CodeWrapper>
