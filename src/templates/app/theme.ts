@@ -62,13 +62,13 @@ export const colorsDark: Colors = {
   primary: "#1e7ae0",
   primaryDark: "#033d7e",
 
-  secondaryLight: "#a4b17b",
-  secondary: "#5c6e46",
-  secondaryDark: "#354c2b",
+  secondaryLight: "#ddd6fe",
+  secondary: "#a78bfa",
+  secondaryDark: "#7c3aed",
 
-  tertiaryLight: "#0B0E13",
-  tertiary: "#372414",
-  tertiaryDark: "",
+  tertiaryLight: "#6ee7b7",
+  tertiary: "#10b981",
+  tertiaryDark: "#065f46",
 
   grayLight: "#1a1a1a",
   gray: "#454444",
