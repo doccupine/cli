@@ -7,7 +7,7 @@ import {
   styledText,
 } from "cherry-styled-components/src/lib";
 import Link from "next/link";
-import { rgba } from "polished";
+import { darken, rgba } from "polished";
 import React from "react";
 import styled, { css } from "styled-components";
 import { interactiveStyles } from "./SharedStyled";
@@ -260,6 +260,7 @@ export const StyledSidebarList = styled.ul\`
 export const StyledStrong = styled.strong<{ theme: Theme }>\`
   font-weight: 600;
   \${({ theme }) => styledStrong(theme)};
+  color: \${({ theme }) => darken(0.1, theme.colors.primaryDark)};
 \`;
 
 export const StyledSidebarListItem = styled.li\`
@@ -294,7 +295,7 @@ export const StyledSidebarListItemLink = styled(Link)<Props>\`
   \${({ $isActive, theme }) =>
     $isActive &&
     \`
-			color: \${theme.colors.dark};
+			color: \${darken(0.1, theme.colors.primaryDark)};
 			border-color: \${theme.colors.primary};
 			font-weight: 600;
 	\`};
