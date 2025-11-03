@@ -28,8 +28,10 @@ import { cherryThemeProviderTemplate } from "./templates/components/layout/Cherr
 import { clientThemeProviderTemplate } from "./templates/components/layout/ClientThemeProvider.js";
 import { codeTemplate } from "./templates/components/layout/Code.js";
 import { columnsTemplate } from "./templates/components/layout/Columns.js";
+import { copyButtonTemplate } from "./templates/components/layout/CopyButton.js";
 import { demoThemeTemplate } from "./templates/components/layout/DemoTheme.js";
 import { docsComponentsTemplate } from "./templates/components/layout/DocsComponents.js";
+import { docsNavigationTemplate } from "./templates/components/layout/DocsNavigation.js";
 import { fieldTemplate } from "./templates/components/layout/Field.js";
 import { footerTemplate } from "./templates/components/layout/Footer.js";
 import { globalStylesTemplate } from "./templates/components/layout/GlobalStyles.js";
@@ -51,6 +53,7 @@ import { cardsMdxTemplate } from "./templates/mdx/cards.mdx.js";
 import { codeMdxTemplate } from "./templates/mdx/code.mdx.js";
 import { columnsMdxTemplate } from "./templates/mdx/columns.mdx.js";
 import { commandsMdxTemplate } from "./templates/mdx/commands.mdx.js";
+import { deploymentMdxTemplate } from "./templates/mdx/deployment.mdx.js";
 import { fieldsMdxTemplate } from "./templates/mdx/fields.mdx.js";
 import { globalsMdxTemplate } from "./templates/mdx/globals.mdx.js";
 import { headersAndTextMdxTemplate } from "./templates/mdx/headers-and-text.mdx.js";
@@ -184,8 +187,10 @@ class MDXToNextJSGenerator {
             "components/layout/ClientThemeProvider.tsx": this.generateClientThemeProvider(),
             "components/layout/Code.tsx": this.generateCode(),
             "components/layout/Columns.tsx": this.generateColumns(),
+            "components/layout/CopyButton.tsx": this.generateCopyButton(),
             "components/layout/DemoTheme.tsx": this.generateDemoTheme(),
             "components/layout/DocsComponents.tsx": this.generateDocsComponents(),
+            "components/layout/DocsNavigation.tsx": this.generateDocsNavigation(),
             "components/layout/Field.tsx": this.generateField(),
             "components/layout/Footer.tsx": this.generateFooter(),
             "components/layout/GlobalStyles.ts": this.generateGlobalStyles(),
@@ -214,6 +219,7 @@ class MDXToNextJSGenerator {
             "code.mdx": this.generateCodeMdx(),
             "columns.mdx": this.generateColumnsMdx(),
             "commands.mdx": this.generateCommandsMdx(),
+            "deployment.mdx": this.generateDeploymentMdx(),
             "fields.mdx": this.generateFieldsMdx(),
             "globals.mdx": this.generateGlobalsMdx(),
             "headers-and-text.mdx": this.generateHeadersAndTextMdx(),
@@ -621,11 +627,17 @@ export default function Home() {
     generateColumns() {
         return columnsTemplate;
     }
+    generateCopyButton() {
+        return copyButtonTemplate;
+    }
     generateDemoTheme() {
         return demoThemeTemplate;
     }
     generateDocsComponents() {
         return docsComponentsTemplate;
+    }
+    generateDocsNavigation() {
+        return docsNavigationTemplate;
     }
     generateField() {
         return fieldTemplate;
@@ -683,6 +695,9 @@ export default function Home() {
     }
     generateCommandsMdx() {
         return commandsMdxTemplate;
+    }
+    generateDeploymentMdx() {
+        return deploymentMdxTemplate;
     }
     generateFieldsMdx() {
         return fieldsMdxTemplate;

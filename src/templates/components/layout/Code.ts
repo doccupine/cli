@@ -238,7 +238,7 @@ function Code({ code, language = "javascript", ...props }: CodeProps) {
   }, [code]);
 
   return (
-    <CodeWrapper>
+    <CodeWrapper className="code-wrapper">
       <TopBar>
         <DotsContainer>
           <Dot />

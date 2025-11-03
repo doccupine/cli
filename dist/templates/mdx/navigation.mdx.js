@@ -69,7 +69,8 @@ To centrally define the entire sidebar, create a \`navigation.json\` at your pro
     "links": [
       { "slug": "globals", "title": "Globals" },
       { "slug": "navigation", "title": "Navigation" },
-      { "slug": "theme", "title": "Theme" }
+      { "slug": "theme", "title": "Theme" },
+      { "slug": "deployment", "title": "Deployment" }
     ]
   }
 ]

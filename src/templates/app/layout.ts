@@ -12,6 +12,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { DocsWrapper } from "@/components/layout/DocsComponents";
 import { SideBar } from "@/components/SideBar";
+import { DocsNavigation } from "@/components/layout/DocsNavigation";
 import { transformPagesToGroupedStructure } from "@/utils/orderNavItems";
 import navigation from "@/navigation.json";
 
@@ -59,6 +60,9 @@ export default async function RootLayout({
               <DocsWrapper>
                 <SideBar result={result.length ? result : defaultResults} />
                 {children}
+                <DocsNavigation
+                  result={result.length ? result : defaultResults}
+                />
               </DocsWrapper>
             </Container>
             <Footer />

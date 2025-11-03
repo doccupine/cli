@@ -56,6 +56,10 @@ const StyledDocsContainer = styled.div<{ theme: Theme }>\`
       \${({ theme }) => styledText(theme)};
       min-height: 23px;
 
+      & .code-wrapper {
+        margin: 10px 0;
+      }
+
       $mq: "lg" {
         min-height: 27px;
       }
@@ -88,6 +92,10 @@ const StyledDocsContainer = styled.div<{ theme: Theme }>\`
       counter-increment: item;
       margin: 0;
       \${({ theme }) => styledText(theme)};
+
+      & .code-wrapper {
+        margin: 10px 0;
+      }
 
       &::before {
         content: counter(item) ".";
