@@ -19,7 +19,7 @@ const NavigationWrapper = styled.div\`
 \`;
 
 const NavButton = styled(Link)<{ theme: Theme }>\`
-\${interactiveStyles};
+  \${interactiveStyles};
   display: flex;
   flex-direction: column;
   text-decoration: none;
