@@ -2,11 +2,20 @@ export const copyButtonTemplate = `"use client";
 import { useState } from "react";
 import styled from "styled-components";
 import { Icon } from "@/components/layout/Icon";
-import { Theme } from "@/app/theme";
+import { mq, Theme } from "@/app/theme";
 
 interface CopyButtonProps {
   content: string;
 }
+
+const StyledCopyWrapper = styled.div\`
+  position: relative;
+  padding-top: 70px;
+
+  \${mq("lg")} {
+    padding-top: 80px;
+  }
+\`;
 
 const StyledCopyButton = styled.button<{ theme: Theme; $copied: boolean }>\`
   background: transparent;
@@ -55,7 +64,7 @@ function CopyButton({ content }: CopyButtonProps) {
   };
 
   return (
-    <div>
+    <StyledCopyWrapper>
       <StyledCopyButton onClick={handleCopyContent} $copied={copied}>
         {copied ? (
           <>
@@ -69,7 +78,7 @@ function CopyButton({ content }: CopyButtonProps) {
           </>
         )}
       </StyledCopyButton>
-    </div>
+    </StyledCopyWrapper>
   );
 }
 

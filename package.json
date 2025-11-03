@@ -1,6 +1,6 @@
 {
   "name": "doccupine",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "description": "Generate beautiful, ready-to-use documentation with just one CLI command – fast, simple, and open source.",
   "main": "dist/index.js",
   "bin": {
