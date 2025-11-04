@@ -31,7 +31,7 @@ const NavButton = styled(Link)<{ theme: Theme }>\`
   color: \${({ theme }) => theme.colors.dark};
 
   &:hover {
-    border-color: \${({ theme }) => theme.colors.primary || "#3b82f6"};
+    border-color: \${({ theme }) => theme.colors.primary};
   }
 
   &[data-direction="prev"] {
@@ -92,42 +92,31 @@ interface DocsNavigationProps {
 function DocsNavigation({ result }: DocsNavigationProps) {
   const pathname = usePathname();
 
-  // Flatten all pages from all categories into a single sorted array
-  // Handle categories with links array, items array, or direct page objects
   const allPages: Page[] = result.flatMap((item) => {
-    // If item has links array (it's a category), return those links
     if (item.links && Array.isArray(item.links)) {
       return item.links;
     }
-    // If item has items array (alternative structure), return those items
     if (item.items && Array.isArray(item.items)) {
       return item.items;
     }
-    // If item has a slug (it's a page itself), return it
     if (item.slug !== undefined) {
       return [item as Page];
     }
-    // Otherwise, skip it
     return [];
   });
 
-  // Get current slug from pathname (remove leading slash and trailing slash)
   const currentSlug = pathname.replace(/^\\//, "").replace(/\\/$/, "");
 
-  // Find current page index
   const currentIndex = allPages.findIndex((page) => page.slug === currentSlug);
 
-  // Get previous and next pages
   const prevPage = currentIndex > 0 ? allPages[currentIndex - 1] : null;
   const nextPage =
     currentIndex < allPages.length - 1 ? allPages[currentIndex + 1] : null;
 
-  // If current page not found or no pages available, don't render navigation
   if (currentIndex === -1 || allPages.length === 0) {
     return null;
   }
 
-  // If no prev or next, still render empty wrapper for consistency
   if (!prevPage && !nextPage) {
     return null;
   }
