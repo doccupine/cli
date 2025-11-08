@@ -282,7 +282,7 @@ export const StyledSidebarListItem = styled.li\`
 
 export const StyledSidebarListItemLink = styled(Link)<Props>\`
   text-decoration: none;
-  font-size: \${({ theme }) => theme.fontSizes.strong.xs};
+  font-size: \${({ theme }) => theme.fontSizes.small.xs};
   line-height: 1.6;
   color: \${({ theme }) =>
     theme.isDark ? theme.colors.grayDark : theme.colors.primary};
@@ -290,10 +290,6 @@ export const StyledSidebarListItemLink = styled(Link)<Props>\`
   display: flex;
   transition: all 0.3s ease;
   border-left: solid 1px \${({ theme }) => theme.colors.grayLight};
-
-  \${mq("lg")} {
-    font-size: \${({ theme }) => theme.fontSizes.strong.lg};
-  }
 
   @media (hover: hover) {
     &:hover {
