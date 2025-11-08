@@ -7,7 +7,7 @@ import { MDXRemote } from "next-mdx-remote/rsc";
 import remarkGfm from "remark-gfm";
 import { useMDXComponents } from "@/components/MDXComponents";
 import { DocsSideBar } from "@/components/DocsSideBar";
-import { CopyButton } from "@/components/layout/CopyButton";
+import { ActionBar } from "@/components/layout/ActionBar";
 
 interface DocsProps {
   content: string;
@@ -49,22 +49,23 @@ function Docs({ content }: DocsProps) {
   return (
     <>
       <DocsContainer>
-        <Flex $gap={20}>
-          <StyledMarkdownContainer>
-            <CopyButton content={content} />
-            {content && (
-              <MDXRemote
-                source={content}
-                options={{
-                  mdxOptions: {
-                    remarkPlugins: [remarkGfm],
-                  },
-                }}
-                components={components}
-              />
-            )}
-          </StyledMarkdownContainer>
-        </Flex>
+        <ActionBar content={content}>
+          <Flex $gap={20}>
+            <StyledMarkdownContainer>
+              {content && (
+                <MDXRemote
+                  source={content}
+                  options={{
+                    mdxOptions: {
+                      remarkPlugins: [remarkGfm],
+                    },
+                  }}
+                  components={components}
+                />
+              )}
+            </StyledMarkdownContainer>
+          </Flex>
+        </ActionBar>
       </DocsContainer>
       <DocsSideBar headings={headings} />
     </>

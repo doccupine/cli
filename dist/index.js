@@ -21,6 +21,7 @@ import { docsSideBarTemplate } from "./templates/components/DocsSideBar.js";
 import { mdxComponentsTemplate } from "./templates/components/MDXComponents.js";
 import { sideBarTemplate } from "./templates/components/SideBar.js";
 import { accordionTemplate } from "./templates/components/layout/Accordion.js";
+import { actionBarTemplate } from "./templates/components/layout/ActionBar.js";
 import { buttonTemplate } from "./templates/components/layout/Button.js";
 import { calloutTemplate } from "./templates/components/layout/Callout.js";
 import { cardTemplate } from "./templates/components/layout/Card.js";
@@ -28,7 +29,6 @@ import { cherryThemeProviderTemplate } from "./templates/components/layout/Cherr
 import { clientThemeProviderTemplate } from "./templates/components/layout/ClientThemeProvider.js";
 import { codeTemplate } from "./templates/components/layout/Code.js";
 import { columnsTemplate } from "./templates/components/layout/Columns.js";
-import { copyButtonTemplate } from "./templates/components/layout/CopyButton.js";
 import { demoThemeTemplate } from "./templates/components/layout/DemoTheme.js";
 import { docsComponentsTemplate } from "./templates/components/layout/DocsComponents.js";
 import { docsNavigationTemplate } from "./templates/components/layout/DocsNavigation.js";
@@ -180,6 +180,7 @@ class MDXToNextJSGenerator {
             "components/MDXComponents.tsx": this.generateMDXComponents(),
             "components/SideBar.tsx": this.generateSideBar(),
             "components/layout/Accordion.tsx": this.generateAccordion(),
+            "components/layout/ActionBar.tsx": this.generateActionBar(),
             "components/layout/Button.tsx": this.generateButton(),
             "components/layout/Callout.tsx": this.generateCallout(),
             "components/layout/Card.tsx": this.generateCard(),
@@ -187,7 +188,6 @@ class MDXToNextJSGenerator {
             "components/layout/ClientThemeProvider.tsx": this.generateClientThemeProvider(),
             "components/layout/Code.tsx": this.generateCode(),
             "components/layout/Columns.tsx": this.generateColumns(),
-            "components/layout/CopyButton.tsx": this.generateCopyButton(),
             "components/layout/DemoTheme.tsx": this.generateDemoTheme(),
             "components/layout/DocsComponents.tsx": this.generateDocsComponents(),
             "components/layout/DocsNavigation.tsx": this.generateDocsNavigation(),
@@ -606,6 +606,9 @@ export default function Home() {
     generateAccordion() {
         return accordionTemplate;
     }
+    generateActionBar() {
+        return actionBarTemplate;
+    }
     generateButton() {
         return buttonTemplate;
     }
@@ -626,9 +629,6 @@ export default function Home() {
     }
     generateColumns() {
         return columnsTemplate;
-    }
-    generateCopyButton() {
-        return copyButtonTemplate;
     }
     generateDemoTheme() {
         return demoThemeTemplate;
