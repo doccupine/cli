@@ -21,9 +21,12 @@ const StyledActionBar = styled.div<{ theme: Theme }>\`
   width: 100%;
 
   \${mq("lg")} {
-    width: calc(100% + 20px);
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: calc(100vw - 640px);
+    width: 100%;
     padding: 0 20px 20px 20px;
-    margin: 0 -10px;
+    margin: 0;
   }
 \`;
 
@@ -136,7 +139,7 @@ const StyledToggle = styled.button<{ theme: Theme; $isActive?: boolean }>\`
 const StyledContent = styled.div\`
   padding-top: 140px;
 
-  \${mq("md")} {
+  \${mq("lg")} {
     padding-top: 70px;
   }
 
