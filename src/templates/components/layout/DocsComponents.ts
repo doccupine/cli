@@ -282,7 +282,7 @@ export const StyledSidebarListItem = styled.li\`
 
 export const StyledSidebarListItemLink = styled(Link)<Props>\`
   text-decoration: none;
-  font-size: \${({ theme }) => theme.fontSizes.small.xs};
+  font-size: \${({ theme }) => theme.fontSizes.small.lg};
   line-height: 1.6;
   color: \${({ theme }) =>
     theme.isDark ? theme.colors.grayDark : theme.colors.primary};

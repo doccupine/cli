@@ -21,7 +21,7 @@ export const packageJsonTemplate = JSON.stringify({
         "cherry-styled-components": "^0.1.0-43",
         eslint: "^9",
         "eslint-config-next": "16.0.1",
-        "lucide-react": "^0.552.0",
+        "lucide-react": "^0.553.0",
         "next-mdx-remote": "^5.0.0",
         polished: "^4.3.1",
         prettier: "^3.6.2",
