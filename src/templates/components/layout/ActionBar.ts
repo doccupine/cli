@@ -144,6 +144,8 @@ const StyledContent = styled.div\`
   }
 
   & textarea {
+    max-width: 640px;
+    margin: auto;
     width: 100%;
     height: 100%;
     min-height: calc(100vh - 180px);
