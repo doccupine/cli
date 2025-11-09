@@ -6,19 +6,24 @@ import { Icon } from "@/components/layout/Icon";
 import { mq, Theme } from "@/app/theme";
 import { interactiveStyles } from "@/components/layout/SharedStyled";
 
-const NavigationWrapper = styled.div\`
+const StyledNavigationWrapper = styled.div\`
+  padding: 0 20px 100px 20px;
+
+  \${mq("lg")} {
+    padding: 0 340px 80px 340px;
+  }
+\`;
+
+const StyledNavigationInner = styled.div\`
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 20px;
-  padding: 0 0 100px 0;
-
-  \${mq("lg")} {
-    padding: 0 320px 80px 320px;
-  }
+  max-width: 640px;
+  margin: auto;
 \`;
 
-const NavButton = styled(Link)<{ theme: Theme }>\`
+const StyledNavButton = styled(Link)<{ theme: Theme }>\`
   \${interactiveStyles};
   display: flex;
   flex-direction: column;
@@ -45,7 +50,7 @@ const NavButton = styled(Link)<{ theme: Theme }>\`
   }
 \`;
 
-const NavLabel = styled.span<{ theme: Theme }>\`
+const StyledNavLabel = styled.span<{ theme: Theme }>\`
   color: \${({ theme }) => theme.colors.gray};
   display: flex;
   flex-direction: row;
@@ -56,7 +61,7 @@ const NavLabel = styled.span<{ theme: Theme }>\`
   }
 \`;
 
-const NavTitle = styled.span<{ theme: Theme }>\`
+const StyledNavTitle = styled.span<{ theme: Theme }>\`
   color: \${({ theme }) => theme.colors.dark};
   font-weight: 600;
   margin: 0 0 4px 0;
@@ -65,7 +70,7 @@ const NavTitle = styled.span<{ theme: Theme }>\`
   overflow: hidden;
 \`;
 
-const Spacer = styled.div\`
+const StyledSpacer = styled.div\`
   flex: 1;
 \`;
 
@@ -122,27 +127,29 @@ function DocsNavigation({ result }: DocsNavigationProps) {
   }
 
   return (
-    <NavigationWrapper>
-      {prevPage ? (
-        <NavButton href={\`/\${prevPage.slug}\`} data-direction="prev">
-          <NavTitle>{prevPage.title}</NavTitle>
-          <NavLabel>
-            <Icon name="arrow-left" size={16} /> Previous
-          </NavLabel>
-        </NavButton>
-      ) : (
-        <Spacer />
-      )}
+    <StyledNavigationWrapper>
+      <StyledNavigationInner>
+        {prevPage ? (
+          <StyledNavButton href={\`/\${prevPage.slug}\`} data-direction="prev">
+            <StyledNavTitle>{prevPage.title}</StyledNavTitle>
+            <StyledNavLabel>
+              <Icon name="arrow-left" size={16} /> Previous
+            </StyledNavLabel>
+          </StyledNavButton>
+        ) : (
+          <StyledSpacer />
+        )}
 
-      {nextPage && (
-        <NavButton href={\`/\${nextPage.slug}\`} data-direction="next">
-          <NavTitle>{nextPage.title}</NavTitle>
-          <NavLabel>
-            Next <Icon name="arrow-right" size={16} />
-          </NavLabel>
-        </NavButton>
-      )}
-    </NavigationWrapper>
+        {nextPage && (
+          <StyledNavButton href={\`/\${nextPage.slug}\`} data-direction="next">
+            <StyledNavTitle>{nextPage.title}</StyledNavTitle>
+            <StyledNavLabel>
+              Next <Icon name="arrow-right" size={16} />
+            </StyledNavLabel>
+          </StyledNavButton>
+        )}
+      </StyledNavigationInner>
+    </StyledNavigationWrapper>
   );
 }
 

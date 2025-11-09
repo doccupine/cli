@@ -1,9 +1,6 @@
 export const layoutTemplate = (pages) => `import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { 
-  Container,
-  StyledComponentsRegistry,
-} from "cherry-styled-components/src/lib";
+import { StyledComponentsRegistry } from "cherry-styled-components/src/lib";
 import { theme, themeDark } from "@/app/theme";
 import { CherryThemeProvider } from "@/components/layout/CherryThemeProvider";
 import { Footer } from "@/components/layout/Footer";
@@ -54,15 +51,13 @@ export default async function RootLayout({
         <StyledComponentsRegistry>
           <CherryThemeProvider theme={theme} themeDark={themeDark}>
             <Header />
-            <Container $padding={20}>
-              <DocsWrapper>
-                <SideBar result={result.length ? result : defaultResults} />
-                {children}
-                <DocsNavigation
-                  result={result.length ? result : defaultResults}
-                />
-              </DocsWrapper>
-            </Container>
+            <DocsWrapper>
+              <SideBar result={result.length ? result : defaultResults} />
+              {children}
+              <DocsNavigation
+                result={result.length ? result : defaultResults}
+              />
+            </DocsWrapper>
             <Footer />
           </CherryThemeProvider>
         </StyledComponentsRegistry>

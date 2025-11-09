@@ -15,7 +15,7 @@ const StyledActionBar = styled.div<{ theme: Theme }>\`
   position: absolute;
   border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
   left: 0;
-  padding: 70px 0 20px 0;
+  padding: 70px 20px 20px 20px;
   display: flex;
   justify-content: space-between;
   width: 100%;

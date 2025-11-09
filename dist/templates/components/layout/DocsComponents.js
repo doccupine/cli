@@ -1,5 +1,7 @@
 export const docsComponentsTemplate = `"use client";
-import { mq, Theme } from "@/app/theme";
+import { darken, lighten, rgba } from "polished";
+import React from "react";
+import styled, { css } from "styled-components";
 import {
   resetButton,
   styledSmall,
@@ -7,10 +9,7 @@ import {
   styledText,
 } from "cherry-styled-components/src/lib";
 import Link from "next/link";
-import { darken, lighten, rgba } from "polished";
-import React from "react";
-import styled, { css } from "styled-components";
-import { interactiveStyles } from "./SharedStyled";
+import { mq, Theme } from "@/app/theme";
 
 interface DocsProps {
   children: React.ReactNode;
@@ -26,12 +25,12 @@ const StyledDocsSidebar = styled.div<{ theme: Theme }>\`
 
 const StyledDocsContainer = styled.div<{ theme: Theme }>\`
   position: relative;
-  padding: 0 0 100px 0;
+  padding: 20px 20px 100px 20px;
   width: 100%;
   \${({ theme }) => styledText(theme)};
 
   \${mq("lg")} {
-    padding: 0 320px 80px 320px;
+    padding: 20px 340px 80px 340px;
   }
 
   & p {
@@ -325,7 +324,7 @@ export const StyleMobileBar = styled.button<Props>\`
     theme.isDark ? theme.colors.dark : theme.colors.primary};
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  padding: 30px;
+  padding: 20px;
   border-radius: 100px;
   margin: 0 0 20px 0;
   font-weight: 600;
@@ -337,7 +336,7 @@ export const StyleMobileBar = styled.button<Props>\`
     display: none;
   }
 
-  \${({ $isActive }) => $isActive && \`position: fixed; \`};
+  \${({ $isActive }) => $isActive && \`position: fixed;\`};
 \`;
 
 export const StyledMobileBurger = styled.span<Props>\`
@@ -384,147 +383,6 @@ export const StyledMobileBurger = styled.span<Props>\`
     \`};
 \`;
 
-export const StyledInlineButton = styled.button<{ theme: Theme }>\`
-  \${resetButton};
-  \${interactiveStyles};
-  color: \${({ theme }) => theme.colors.primary};
-  vertical-align: middle;
-  border: solid 1px \${({ theme }) => theme.colors.grayLight};
-  border-radius: \${({ theme }) => theme.spacing.radius.xs};
-  padding: 0;
-  width: 18px;
-  height: 18px;
-  display: flex;
-  margin: auto 0;
-  transition: all 0.3s ease;
-
-  @media (hover: hover) {
-    &:hover {
-      color: \${({ theme }) => theme.colors.light};
-      background: \${({ theme }) => theme.colors.primary};
-      border-color: \${({ theme }) => theme.colors.primary};
-    }
-  }
-
-  & svg {
-    vertical-align: middle;
-    width: 12px;
-    height: 12px;
-    margin: auto;
-  }
-\`;
-
-export const StyledPlusButton = styled.button<{ theme: Theme }>\`
-  \${resetButton};
-  color: \${({ theme }) => theme.colors.primary};
-  vertical-align: middle;
-  padding: 0;
-  width: 100%;
-  height: 18px;
-  display: flex;
-  margin: auto 0;
-  transition: all 0.3s ease;
-  position: relative;
-  margin: 20px 0 0 0;
-
-  &::before {
-    content: "";
-    display: block;
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 100%;
-    height: 1px;
-    border-radius: 3px;
-    background: \${({ theme }) => theme.colors.grayLight};
-    transition: all 0.3s ease;
-    z-index: -1;
-  }
-
-  &::after {
-    content: "";
-    display: block;
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: 18px;
-    height: 18px;
-    border: solid 1px \${({ theme }) => theme.colors.grayLight};
-    border-radius: \${({ theme }) => theme.spacing.radius.xs};
-    background: \${({ theme }) => theme.colors.light};
-    transition: all 0.3s ease;
-    z-index: -1;
-  }
-
-  box-shadow: 0 0 0 0px \${({ theme }) => theme.colors.primary};
-
-  @media (hover: hover) {
-    &:hover {
-      &::after {
-        border-color: \${({ theme }) => theme.colors.primary};
-      }
-    }
-  }
-
-  &:focus {
-    &::after {
-      border-color: \${({ theme }) => theme.colors.primary};
-      box-shadow: 0 0 0 4px \${({ theme }) => theme.colors.primaryLight};
-    }
-  }
-
-  &:active {
-    &::after {
-      box-shadow: 0 0 0 2px \${({ theme }) => theme.colors.primaryLight};
-    }
-  }
-
-  @media (hover: hover) {
-    &:hover {
-      color: \${({ theme }) => theme.colors.light};
-
-      &::after {
-        background: \${({ theme }) => theme.colors.primary};
-        border-color: \${({ theme }) => theme.colors.primary};
-      }
-    }
-  }
-
-  & svg {
-    vertical-align: middle;
-    width: 14px;
-    height: 14px;
-    margin: auto;
-  }
-\`;
-
-export const StyledFullHeightInput = styled.div\`
-  height: 100%;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  flex: 1;
-
-  & > span {
-    height: 100%;
-    width: 100%;
-  }
-
-  & textarea {
-    height: 100%;
-  }
-\`;
-
-export const StyledEditorWrapper = styled.div\`
-  flex: 1;
-
-  &:empty {
-    display: none;
-  }
-\`;
-
 function DocsWrapper({ children }: DocsProps) {
   return <StyledDocsWrapper>{children}</StyledDocsWrapper>;
 }
@@ -537,5 +395,4 @@ function DocsContainer({ children }: DocsProps) {
   return <StyledDocsContainer>{children}</StyledDocsContainer>;
 }
 
-export { DocsWrapper, DocsSidebar, DocsContainer };
-`;
+export { DocsWrapper, DocsSidebar, DocsContainer };`;
