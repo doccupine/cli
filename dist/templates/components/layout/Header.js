@@ -27,6 +27,7 @@ const StyledHeader = styled.header<{ theme: Theme }>\`
 
   \${mq("lg")} {
     width: 320px;
+    border-right: solid 1px \${({ theme }) => theme.colors.grayLight};
   }
 
   &::before,

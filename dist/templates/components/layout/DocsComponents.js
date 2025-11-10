@@ -85,6 +85,10 @@ const StyledDocsContainer = styled.div<{ theme: Theme }>\`
     padding: 0;
     margin: 0;
 
+    & ul {
+      padding-left: 15px;
+    }
+
     & > li {
       position: relative;
       padding: 0;
@@ -189,8 +193,10 @@ export const StyledSidebar = styled.nav<Props>\`
   transform: translateY(30px);
   left: 0;
   background: \${({ theme }) => theme.colors.light};
+  border-right: solid 1px \${({ theme }) => theme.colors.grayLight};
 
   \${mq("lg")} {
+    transition: none;
     max-height: 100svh;
     width: 220px;
     background: transparent;
