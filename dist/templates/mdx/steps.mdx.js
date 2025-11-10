@@ -16,7 +16,7 @@ The Steps component is perfect for organizing procedures or workflows in a clear
 You can use the \`Steps\` component to create a step-by-step guide. Each step is represented by a \`Step\` component, which includes a title and content.
 
 \`\`\`mdx
-  <Steps>
+<Steps>
   <Step title="Step 1">
     Lorem ipsum dolor sit amet, consectetur adipiscing elit.
   </Step>
