@@ -44,12 +44,13 @@ const StyledCopyButton = styled.button<{ theme: Theme; $copied: boolean }>\`
   border-radius: \${({ theme }) => theme.spacing.radius.xs};
   padding: 6px 8px;
   font-size: 12px;
-  font-family: \${({ theme }) => theme.fonts.mono};
+  font-family: \${({ theme }) => theme.fonts.text};
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   margin-right: -6px;
 
   & svg.lucide {
@@ -176,12 +177,12 @@ function ActionBar({ children, content }: ActionBarProps) {
         <StyledCopyButton onClick={handleCopyContent} $copied={copied}>
           {copied ? (
             <>
-              <Icon name="check" size={12} />
+              <Icon name="check" size={16} />
               <span>Copied!</span>
             </>
           ) : (
             <>
-              <Icon name="copy" size={12} />
+              <Icon name="copy" size={16} />
               <span>Copy Content</span>
             </>
           )}
