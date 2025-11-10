@@ -44,7 +44,6 @@ You can use the \`Steps\` component to create a step-by-step guide. Each step is
   </Step>
 </Steps>
 
-
 ## Properties
 
 <Field value="title" type="string" required>
