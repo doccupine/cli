@@ -44,7 +44,7 @@ const StyledHeader = styled.header<{ theme: Theme }>\`
   }
 
   &::after {
-    background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.1)};
+    background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.05)};
     z-index: -1;
   }
 

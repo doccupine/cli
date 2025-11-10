@@ -30,58 +30,46 @@ export const spacing: Spacing = {
 };
 
 export const colors: Colors = {
-  primaryLight: "#93c5fd",
-  primary: "#3b82f6",
-  primaryDark: "#1e40af",
-
+  primaryLight: "#d1d5db",
+  primary: "#6b7280",
+  primaryDark: "#374151",
   secondaryLight: "#c4b5fd",
   secondary: "#8b5cf6",
   secondaryDark: "#5b21b6",
-
   tertiaryLight: "#86efac",
   tertiary: "#22c55e",
   tertiaryDark: "#15803d",
-
   grayLight: "#e5e7eb",
   gray: "#9ca3af",
   grayDark: "#4b5563",
-
   success: "#84cc16",
   error: "#ef4444",
   warning: "#eab308",
   info: "#06b6d4",
-
   dark: "#000000",
   light: "#ffffff",
-
   ...(customTheme.default ? (customTheme.default as Partial<Colors>) : {}),
 };
 
 export const colorsDark: Colors = {
-  primaryLight: "#9bcaff",
-  primary: "#1e7ae0",
-  primaryDark: "#033d7e",
-
+  primaryLight: "#9ca3af",
+  primary: "#6b7280",
+  primaryDark: "#374151",
   secondaryLight: "#ddd6fe",
   secondary: "#a78bfa",
   secondaryDark: "#7c3aed",
-
   tertiaryLight: "#6ee7b7",
   tertiary: "#10b981",
   tertiaryDark: "#065f46",
-
   grayLight: "#1a1a1a",
   gray: "#454444",
   grayDark: "#808080",
-
   success: "#84cc16",
   error: "#ef4444",
   warning: "#eab308",
   info: "#06b6d4",
-
   dark: "#ffffff",
   light: "#000000",
-
   ...(customTheme.dark ? (customTheme.dark as Partial<Colors>) : {}),
 };
 

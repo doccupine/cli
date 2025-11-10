@@ -198,7 +198,7 @@ export const StyledSidebar = styled.nav<Props>\`
     opacity: 1;
     pointer-events: all;
     transform: translateY(0);
-    background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.1)};
+    background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.05)};
     top: 0;
     width: 320px;
   }
