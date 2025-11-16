@@ -21,7 +21,7 @@ ${
       ? `const font = localFont({
   src: ${fontConfig.localFonts?.src?.length ? JSON.stringify(fontConfig?.localFonts.src, null, 2).replace(/"([^"]+)":/g, "$1:") : `"${fontConfig?.localFonts}"`},
 });`
-      : 'const font = Inter({ subsets: ["latin"], weight: "400" });'
+      : 'const font = Inter({ subsets: ["latin"] });'
 }
 
 export const metadata: Metadata = {

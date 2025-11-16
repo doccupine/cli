@@ -1,6 +1,6 @@
 {
   "name": "doccupine",
-  "version": "0.0.24",
+  "version": "0.0.25",
   "description": "Generate beautiful, ready-to-use documentation with just one CLI command – fast, simple, and open source.",
   "main": "dist/index.js",
   "bin": {
@@ -39,7 +39,7 @@
   "devDependencies": {
     "@types/chokidar": "^2.1.7",
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^24.10.0",
+    "@types/node": "^24.10.1",
     "@types/prompts": "^2.4.9",
     "typescript": "^5.9.3"
   },

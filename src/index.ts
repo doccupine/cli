@@ -63,6 +63,7 @@ import { columnsMdxTemplate } from "./templates/mdx/columns.mdx.js";
 import { commandsMdxTemplate } from "./templates/mdx/commands.mdx.js";
 import { deploymentMdxTemplate } from "./templates/mdx/deployment.mdx.js";
 import { fieldsMdxTemplate } from "./templates/mdx/fields.mdx.js";
+import { fontsMdxTemplate } from "./templates/mdx/fonts.mdx.js";
 import { globalsMdxTemplate } from "./templates/mdx/globals.mdx.js";
 import { headersAndTextMdxTemplate } from "./templates/mdx/headers-and-text.mdx.js";
 import { iconsMdxTemplate } from "./templates/mdx/icons.mdx.js";
@@ -291,6 +292,7 @@ class MDXToNextJSGenerator {
       "commands.mdx": this.generateCommandsMdx(),
       "deployment.mdx": this.generateDeploymentMdx(),
       "fields.mdx": this.generateFieldsMdx(),
+      "fonts.mdx": this.generateFontsMdx(),
       "globals.mdx": this.generateGlobalsMdx(),
       "headers-and-text.mdx": this.generateHeadersAndTextMdx(),
       "icons.mdx": this.generateIconsMdx(),
@@ -995,6 +997,10 @@ export default function Home() {
     return fieldsMdxTemplate;
   }
 
+  generateFontsMdx(): string {
+    return fontsMdxTemplate;
+  }
+
   generateGlobalsMdx(): string {
     return globalsMdxTemplate;
   }
@@ -1060,7 +1066,7 @@ program
   .description(
     "Watch MDX files and generate Next.js documentation pages automatically",
   )
-  .version("0.0.24");
+  .version("0.0.25");
 
 program
   .command("watch", { isDefault: true })
