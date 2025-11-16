@@ -1,1 +1,1 @@
-export declare const layoutTemplate: (pages: any[]) => string;
+export declare const layoutTemplate: (pages: any[], fontConfig: any) => string;

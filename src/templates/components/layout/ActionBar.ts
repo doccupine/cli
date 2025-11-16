@@ -44,7 +44,7 @@ const StyledCopyButton = styled.button<{ theme: Theme; $copied: boolean }>\`
   border-radius: \${({ theme }) => theme.spacing.radius.xs};
   padding: 6px 8px;
   font-size: 12px;
-  font-family: \${({ theme }) => theme.fonts.text};
+  font-family: inherit;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;

@@ -1,5 +1,5 @@
-export const layoutTemplate = (pages) => `import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+export const layoutTemplate = (pages, fontConfig) => `import type { Metadata } from "next";
+${fontConfig?.googleFont?.fontName?.length ? `import { ${fontConfig.googleFont.fontName} } from "next/font/google";` : 'import { Inter } from "next/font/google";'}
 import { StyledComponentsRegistry } from "cherry-styled-components/src/lib";
 import { theme, themeDark } from "@/app/theme";
 import { CherryThemeProvider } from "@/components/layout/CherryThemeProvider";
@@ -11,7 +11,7 @@ import { DocsNavigation } from "@/components/layout/DocsNavigation";
 import { transformPagesToGroupedStructure } from "@/utils/orderNavItems";
 import navigation from "@/navigation.json";
 
-const inter = Inter({ subsets: ["latin"] });
+${fontConfig?.googleFont?.fontName?.length ? `const font = ${fontConfig.googleFont.fontName}({ subsets: ${fontConfig?.googleFont?.subsets?.length ? JSON.stringify(fontConfig?.googleFont?.subsets, null, 2) : '["latin"]'}, ${fontConfig.googleFont?.weight.length ? `weight: "${fontConfig.googleFont.weight}"` : ""} });` : 'const font = Inter({ subsets: ["latin"], weight: "400" });'}
 
 export const metadata: Metadata = {
   title: "Doccupine",
@@ -39,6 +39,10 @@ export default async function RootLayout({
   },
 ];
 
+const fontString = ${JSON.stringify(fontConfig, null, 2)};
+
+console.log(fontString);
+
   const pages: any = ${JSON.stringify(pages, null, 2)};
   const result = navigation.length
     ? navigation
@@ -47,7 +51,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={font.className}>
         <StyledComponentsRegistry>
           <CherryThemeProvider theme={theme} themeDark={themeDark}>
             <Header />

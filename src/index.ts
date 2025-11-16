@@ -88,6 +88,10 @@ interface DoccupineConfig {
   port: string;
 }
 
+interface FontConfig {
+  [key: string]: any;
+}
+
 class ConfigManager {
   private configPath: string;
 
@@ -185,7 +189,9 @@ class MDXToNextJSGenerator {
   private rootDir: string;
   private watcher: FSWatcher | null = null;
   private configWatcher: FSWatcher | null = null;
+  private fontWatcher: FSWatcher | null = null;
   private configFiles = ["theme.json", "navigation.json", "config.json"];
+  private fontConfigFile = "fonts.json";
 
   constructor(watchDir: string, outputDir: string) {
     this.watchDir = path.resolve(watchDir);
@@ -202,6 +208,7 @@ class MDXToNextJSGenerator {
     await this.createNextJSStructure();
     await this.createStartingDocs();
     await this.copyCustomConfigFiles();
+    await this.copyFontConfig();
     await this.processAllMDXFiles();
 
     console.log(chalk.green("✅ Initial setup complete!"));
@@ -330,6 +337,40 @@ class MDXToNextJSGenerator {
     }
   }
 
+  async copyFontConfig() {
+    console.log(chalk.blue(`🔍 Checking for font configuration...`));
+
+    const sourcePath = path.join(this.rootDir, this.fontConfigFile);
+    const destPath = path.join(this.outputDir, this.fontConfigFile);
+
+    if (await fs.pathExists(sourcePath)) {
+      await fs.copy(sourcePath, destPath);
+      console.log(
+        chalk.green(`  ✓ Copied ${this.fontConfigFile} to Next.js app`),
+      );
+    } else {
+      console.log(chalk.gray(`  ✗ ${this.fontConfigFile} not found, skipping`));
+    }
+  }
+
+  async loadFontConfig(): Promise<FontConfig | null> {
+    const fontPath = path.join(this.rootDir, this.fontConfigFile);
+
+    try {
+      if (await fs.pathExists(fontPath)) {
+        const fontContent = await fs.readFile(fontPath, "utf8");
+        return JSON.parse(fontContent) as FontConfig;
+      }
+    } catch (error) {
+      console.warn(
+        chalk.yellow(`⚠️ Error reading ${this.fontConfigFile}`),
+        error,
+      );
+    }
+
+    return null;
+  }
+
   async handleConfigFileChange(filePath: string) {
     const fileName = path.basename(filePath);
 
@@ -360,6 +401,49 @@ class MDXToNextJSGenerator {
       } catch (error) {
         console.error(chalk.red(`❌ Error removing ${fileName}:`), error);
       }
+    }
+  }
+
+  async handleFontConfigChange() {
+    console.log(chalk.cyan(`🔤 Font configuration changed`));
+
+    const sourcePath = path.join(this.rootDir, this.fontConfigFile);
+    const destPath = path.join(this.outputDir, this.fontConfigFile);
+
+    try {
+      await fs.copy(sourcePath, destPath);
+      console.log(
+        chalk.green(`📋 Updated ${this.fontConfigFile} in Next.js app`),
+      );
+
+      // Update the layout template with new font config
+      await this.updateRootLayout();
+      console.log(chalk.green(`✅ Layout updated with new font configuration`));
+    } catch (error) {
+      console.error(chalk.red(`❌ Error updating font configuration:`), error);
+    }
+  }
+
+  async handleFontConfigDelete() {
+    console.log(chalk.red(`🗑️ Font configuration deleted`));
+
+    const destPath = path.join(this.outputDir, this.fontConfigFile);
+
+    try {
+      if (await fs.pathExists(destPath)) {
+        await fs.remove(destPath);
+        console.log(
+          chalk.yellow(`🗑️ Removed ${this.fontConfigFile} from Next.js app`),
+        );
+
+        // Update the layout template without font config
+        await this.updateRootLayout();
+        console.log(
+          chalk.green(`✅ Layout updated without font configuration`),
+        );
+      }
+    } catch (error) {
+      console.error(chalk.red(`❌ Error removing font configuration:`), error);
     }
   }
 
@@ -434,6 +518,28 @@ class MDXToNextJSGenerator {
       })
       .on("error", (error: any) => {
         console.error(chalk.red("❌ Config watcher error:"), error);
+      });
+
+    const fontPath = path.join(this.rootDir, this.fontConfigFile);
+
+    this.fontWatcher = chokidar.watch(fontPath, {
+      persistent: true,
+      ignoreInitial: true,
+    });
+
+    this.fontWatcher
+      .on("add", () => {
+        console.log(chalk.cyan(`🔤 Font configuration added`));
+        this.handleFontConfigChange();
+      })
+      .on("change", () => {
+        this.handleFontConfigChange();
+      })
+      .on("unlink", () => {
+        this.handleFontConfigDelete();
+      })
+      .on("error", (error: any) => {
+        console.error(chalk.red("❌ Font watcher error:"), error);
       });
   }
 
@@ -589,7 +695,9 @@ class MDXToNextJSGenerator {
       });
     }
 
-    return layoutTemplate(pages);
+    const fontConfig = await this.loadFontConfig();
+
+    return layoutTemplate(pages, fontConfig);
   }
 
   generateNotFoundPage(): string {
@@ -939,6 +1047,10 @@ export default function Home() {
     if (this.configWatcher) {
       await this.configWatcher.close();
       console.log(chalk.yellow("👋 Stopped watching for config changes"));
+    }
+    if (this.fontWatcher) {
+      await this.fontWatcher.close();
+      console.log(chalk.yellow("👋 Stopped watching for font config changes"));
     }
   }
 }
