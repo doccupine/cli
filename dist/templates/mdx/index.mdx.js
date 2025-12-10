@@ -7,16 +7,32 @@ categoryOrder: 0
 order: 0
 ---
 # Welcome to Doccupine
-Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease. Using Doccupine, you simply create your documentation in MDX files with traditional Markdown syntax, Doccupine monitors your changes automatically generating a beautiful, modern documentation website.
-
-## Open Source and Extensible
-Doccupine is built on open standards, enabling customization and extensibility for different documentation needs. You stay in control of your content, with the option to host docs yourself and tailor the website’s look and features to match your organization’s requirements.
+Using Doccupine, you simply create your documentation in MDX files with traditional Markdown syntax, Doccupine monitors your changes automatically generating a beautiful, modern documentation website.
 
 ## Features
-- 📝 Markdown-based content
-- 📦 Built-in file structure
-- ⚡ Live Preview & Auto-Update
-- 🚀 Easy Deployment
+
+<Columns cols={2}>
+  <Card>
+    <img src="https://doccupine.com/mdx.svg" alt="Markdown-based content" className="full-width" />
+    <Space $size={12} />
+    Markdown-based content
+  </Card>
+  <Card>
+    <img src="https://doccupine.com/structure.svg" alt="Built-in file structure" className="full-width" />
+    <Space $size={12} />
+    Built-in file structure
+  </Card>
+  <Card>
+    <img src="https://doccupine.com/live-reload.svg" alt="Live Preview & Auto-Update" className="full-width" />
+    <Space $size={12} />
+    Live Preview & Auto-Update
+  </Card>
+  <Card>
+    <img src="https://doccupine.com/deployment.svg" alt="Easy Deployment" className="full-width" />
+    <Space $size={12} />
+    Easy Deployment
+  </Card>
+</Columns>
 
 ## Getting Started
 

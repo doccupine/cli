@@ -87,6 +87,10 @@ svg * {
 strong,
 b {
   font-weight: 700;
+}
+
+.full-width {
+  width: 100%;
 }\`;
 
 export { GlobalStyles };`;
