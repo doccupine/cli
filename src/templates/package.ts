@@ -10,9 +10,9 @@ export const packageJsonTemplate = JSON.stringify(
       lint: "next lint",
     },
     dependencies: {
-      next: "16.0.8",
-      react: "19.2.1",
-      "react-dom": "19.2.1",
+      next: "16.1.1",
+      react: "19.2.3",
+      "react-dom": "19.2.3",
     },
     devDependencies: {
       "@mdx-js/react": "^3.1.1",
@@ -21,8 +21,8 @@ export const packageJsonTemplate = JSON.stringify(
       "@types/react-dom": "^19",
       "cherry-styled-components": "^0.1.0-43",
       eslint: "^9",
-      "eslint-config-next": "16.0.8",
-      "lucide-react": "^0.559.0",
+      "eslint-config-next": "16.1.1",
+      "lucide-react": "^0.562.0",
       "next-mdx-remote": "^5.0.0",
       polished: "^4.3.1",
       prettier: "^3.7.4",
