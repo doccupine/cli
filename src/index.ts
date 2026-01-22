@@ -798,7 +798,7 @@ interface Config {
 
 const config = configData as Config;
 
-${indexMDX ? `const indexContent = \`${indexMDX.content.replace(/`/g, "\\`")}\`;` : `const indexContent = null;`}
+${indexMDX ? `const content = \`${indexMDX.content.replace(/`/g, "\\`")}\`;` : `const indexContent = null;`}
 
 ${
   indexMDX
@@ -825,7 +825,7 @@ ${
 }
 
 export default function Home() {
-  return <Docs content={indexContent} />;
+  return <Docs content={content} />;
 }
 `;
 
