@@ -133,7 +133,7 @@ This is the next line.
 - Use *italics* for emphasis or technical terms
 - Limit formatting combinations to maintain readability
 
-## Links
+## Links usage
 - Avoid vague text like “click here”
 - Prefer root-relative paths for internal links
 - Regularly validate links to ensure they are not broken`;
