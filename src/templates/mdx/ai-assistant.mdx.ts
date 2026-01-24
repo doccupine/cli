@@ -54,7 +54,11 @@ You need to set the API key that matches your chosen provider:
 - For Google: Set \`GOOGLE_API_KEY\`
 
 <Callout type="warning">
-  Keep your API keys secure. Never commit your \`.env\` file to version control. Add \`.env\` to your \`.gitignore\` file.
+  Keep your API keys secure. Never commit your \`.env\` file to version control.
+</Callout>
+
+<Callout type="note">
+  Doccupine automatically adds \`.env\` to your \`.gitignore\` file.
 </Callout>
 
 ## Using Anthropic with OpenAI
