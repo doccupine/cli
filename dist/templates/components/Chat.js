@@ -518,7 +518,7 @@ const StyledAnswer = styled.div<{ theme: Theme; $isAnswer: boolean }>\`
 
       &::before {
         position: absolute;
-        top: 1px;
+        top: 0;
         left: 0;
       }
     }
