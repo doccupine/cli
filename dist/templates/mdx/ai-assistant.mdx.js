@@ -80,10 +80,15 @@ This hybrid approach allows you to leverage Anthropic's powerful chat models whi
 ## Optional Settings
 
 ### Chat Model
-Override the default chat model by uncommenting and setting \`LLM_CHAT_MODEL\`. Available models depend on your provider:
+Override the default chat model by uncommenting and setting \`LLM_CHAT_MODEL\`. You can use any available model from your chosen provider. Example models include:
 - **OpenAI**: \`gpt-4o-mini\`, \`gpt-4o\`, \`gpt-4-turbo\`
 - **Anthropic**: \`claude-3-5-sonnet-20241022\`, \`claude-3-5-haiku-20241022\`, \`claude-3-opus-20240229\`
 - **Google**: \`gemini-2.5-flash-lite\`, \`gemini-1.5-pro\`, \`gemini-1.5-flash\`
+
+For a complete list of available models, refer to the official documentation:
+- [OpenAI Models](https://platform.openai.com/docs/models)
+- [Anthropic Models](https://docs.anthropic.com/claude/docs/models-overview)
+- [Google Gemini Models](https://ai.google.dev/models/gemini)
 
 ### Embedding Model
 Override the default embedding model by uncommenting and setting \`LLM_EMBEDDING_MODEL\`:
