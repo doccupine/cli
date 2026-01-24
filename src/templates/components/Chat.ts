@@ -43,7 +43,6 @@ const StyledChat = styled.div<{ theme: Theme; $isVisible: boolean }>\`
   transition: all 0.3s ease;
   transform: translateX(0);
   background: \${({ theme }) => theme.colors.light};
-  border-left: solid 1px \${({ theme }) => theme.colors.grayLight};
 
   \${({ $isVisible }) =>
     !$isVisible &&
@@ -53,6 +52,7 @@ const StyledChat = styled.div<{ theme: Theme; $isVisible: boolean }>\`
 
   \${mq("lg")} {
     width: 420px;
+    border-left: solid 1px \${({ theme }) => theme.colors.grayLight};
   }
 \`;
 
@@ -338,12 +338,12 @@ const StyledChatForm = styled.form<{ theme: Theme; $isVisible: boolean }>\`
   z-index: 1000;
   width: 100%;
   border-top: solid 1px \${({ theme }) => theme.colors.grayLight};
-  border-left: solid 1px \${({ theme }) => theme.colors.grayLight};
   transition: all 0.3s ease;
   transform: translateX(100%);
 
   \${mq("lg")} {
     width: 420px;
+    border-left: solid 1px \${({ theme }) => theme.colors.grayLight};
   }
 
   \${({ $isVisible }) =>
