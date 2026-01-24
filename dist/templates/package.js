@@ -23,7 +23,7 @@ export const packageJsonTemplate = JSON.stringify({
         "@types/node": "^25",
         "@types/react": "^19",
         "@types/react-dom": "^19",
-        "baseline-browser-mapping": "^2.9.17",
+        "baseline-browser-mapping": "^2.9.18",
         "cherry-styled-components": "^0.1.0-43",
         eslint: "^9",
         "eslint-config-next": "16.1.4",
