@@ -144,7 +144,7 @@ export const StyledIndexSidebar = styled.ul<{ theme: Theme }>\`
   height: 100vh;
   overflow-y: auto;
   z-index: 1;
-  padding: 40px;
+  padding: 25px 40px;
   background: \${({ theme }) => theme.colors.light};
   border-left: solid 1px \${({ theme }) => theme.colors.grayLight};
 
