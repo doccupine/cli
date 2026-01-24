@@ -72,7 +72,7 @@ interface StepProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 function Step({ title, children, icon, ...props }: StepProps) {
-  return <StyledStep {...props} />;
+  return null;
 }
 
 interface StepsProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -88,7 +88,7 @@ function Steps({ children, ...props }: StepsProps) {
   );
 
   return (
-    <StyledStepsContainer {...props}>
+    <StyledStepsContainer theme={theme}>
       {steps.map((step, index) => {
         const { title, children: stepContent, icon } = step.props;
 

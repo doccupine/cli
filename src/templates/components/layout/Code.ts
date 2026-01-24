@@ -10,7 +10,10 @@ import rehypeStringify from "rehype-stringify";
 import { editableContent } from "@/components/layout/SharedStyled";
 import { Icon } from "@/components/layout/Icon";
 
-interface CodeProps extends React.HTMLAttributes<HTMLDivElement> {
+interface CodeProps extends Omit<
+  React.HTMLAttributes<HTMLDivElement>,
+  "theme"
+> {
   code: string;
   language?: string;
   theme?: Theme;
@@ -367,7 +370,7 @@ const highlightCode = (code: string, language: string): string => {
   return String(result);
 };
 
-function Code({ code, language = "javascript", ...props }: CodeProps) {
+function Code({ code, language = "javascript", theme, className }: CodeProps) {
   const [copied, setCopied] = useState(false);
   const highlightedCode = highlightCode(code, language);
 
@@ -382,14 +385,17 @@ function Code({ code, language = "javascript", ...props }: CodeProps) {
   }, [code]);
 
   return (
-    <CodeWrapper className="code-wrapper">
-      <TopBar>
+    <CodeWrapper
+      className={className + \`\${className && " "}code-wrapper\`}
+      theme={theme}
+    >
+      <TopBar theme={theme}>
         <DotsContainer>
-          <Dot />
-          <Dot />
-          <Dot />
+          <Dot theme={theme} />
+          <Dot theme={theme} />
+          <Dot theme={theme} />
         </DotsContainer>
-        <CopyButton onClick={handleCopy} $copied={copied}>
+        <CopyButton onClick={handleCopy} $copied={copied} theme={theme}>
           {copied ? (
             <>
               <Icon name="check" size={12} />
@@ -403,10 +409,13 @@ function Code({ code, language = "javascript", ...props }: CodeProps) {
           )}
         </CopyButton>
       </TopBar>
-      <Body dangerouslySetInnerHTML={{ __html: highlightedCode }} {...props} />
+      <Body
+        dangerouslySetInnerHTML={{ __html: highlightedCode }}
+        theme={theme}
+        className="code-wrapper-body"
+      />
     </CodeWrapper>
   );
 }
 
-export { Code };
-`;
+export { Code };`;

@@ -6,15 +6,18 @@ import path from "path";
 import matter from "gray-matter";
 import chalk from "chalk";
 import prompts from "prompts";
+import { envExampleTemplate } from "./templates/env.example.js";
 import { gitignoreTemplate } from "./templates/gitignore.js";
 import { nextConfigTemplate } from "./templates/next.config.js";
 import { packageJsonTemplate } from "./templates/package.js";
 import { proxyTemplate } from "./templates/proxy.js";
 import { tsconfigTemplate } from "./templates/tsconfig.js";
+import { ragRoutesTemplate } from "./templates/app/api/rag/route.js";
 import { routesTemplate } from "./templates/app/api/theme/routes.js";
 import { layoutTemplate } from "./templates/app/layout.js";
 import { notFoundTemplate } from "./templates/app/not-found.js";
 import { themeTemplate } from "./templates/app/theme.js";
+import { chatTemplate } from "./templates/components/Chat.js";
 import { clickOutsideTemplate } from "./templates/components/ClickOutside.js";
 import { docsTemplate } from "./templates/components/Docs.js";
 import { docsSideBarTemplate } from "./templates/components/DocsSideBar.js";
@@ -44,6 +47,10 @@ import { tabsTemplate } from "./templates/components/layout/Tabs.js";
 import { themeToggleTemplate } from "./templates/components/layout/ThemeToggle.js";
 import { typographyTemplate } from "./templates/components/layout/Typography.js";
 import { updateTemplate } from "./templates/components/layout/Update.js";
+import { llmConfigTemplate } from "./templates/services/llm/config.js";
+import { llmFactoryTemplate } from "./templates/services/llm/factory.js";
+import { llmIndexTemplate } from "./templates/services/llm/index.js";
+import { llmTypesTemplate } from "./templates/services/llm/types.js";
 import { styledDTemplate } from "./templates/types/styled.js";
 import { orderNavItemsTemplate } from "./templates/utils/orderNavItems.js";
 import { accordionMdxTemplate } from "./templates/mdx/accordion.mdx.js";
@@ -164,6 +171,7 @@ class MDXToNextJSGenerator {
     }
     async createNextJSStructure() {
         const structure = {
+            ".env.example": this.generateEnvExample(),
             ".gitignore": this.generateGitIgnore(),
             "config.json": this.generateConfig(),
             "navigation.json": this.generateNavigationConfig(),
@@ -175,9 +183,15 @@ class MDXToNextJSGenerator {
             "app/layout.tsx": await this.generateRootLayout(),
             "app/not-found.tsx": this.generateNotFoundPage(),
             "app/theme.ts": this.generateTheme(),
+            "app/api/rag/route.ts": this.generateRagRoutes(),
             "app/api/theme/route.ts": this.generateRoutes(),
+            "services/llm/config.ts": this.generateLLMConfig(),
+            "services/llm/factory.ts": this.generateLLMFactory(),
+            "services/llm/index.ts": this.generateLLMIndex(),
+            "services/llm/types.ts": this.generateLLMTypes(),
             "types/styled.d.ts": this.generateStyledDTypes(),
             "utils/orderNavItems.ts": this.generateOrderNavItems(),
+            "components/Chat.tsx": this.generateChat(),
             "components/ClickOutside.ts": this.generateClickOutside(),
             "components/Docs.tsx": this.generateDocs(),
             "components/DocsSideBar.tsx": this.generateDocsSideBar(),
@@ -507,6 +521,9 @@ class MDXToNextJSGenerator {
             .replace(/[^a-zA-Z0-9\/\-_]/g, "-")
             .toLowerCase();
     }
+    generateEnvExample() {
+        return envExampleTemplate;
+    }
     generateGitIgnore() {
         return gitignoreTemplate;
     }
@@ -676,14 +693,32 @@ export default function Home() {
     generateTheme() {
         return themeTemplate;
     }
+    generateRagRoutes() {
+        return ragRoutesTemplate;
+    }
     generateRoutes() {
         return routesTemplate;
+    }
+    generateLLMConfig() {
+        return llmConfigTemplate;
+    }
+    generateLLMFactory() {
+        return llmFactoryTemplate;
+    }
+    generateLLMIndex() {
+        return llmIndexTemplate;
+    }
+    generateLLMTypes() {
+        return llmTypesTemplate;
     }
     generateStyledDTypes() {
         return styledDTemplate;
     }
     generateOrderNavItems() {
         return orderNavItemsTemplate;
+    }
+    generateChat() {
+        return chatTemplate;
     }
     generateClickOutside() {
         return clickOutsideTemplate;

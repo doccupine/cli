@@ -3,6 +3,7 @@ ${fontConfig?.googleFont?.fontName?.length ? `import { ${fontConfig.googleFont.f
 import { StyledComponentsRegistry } from "cherry-styled-components/src/lib";
 import { theme, themeDark } from "@/app/theme";
 import { CherryThemeProvider } from "@/components/layout/CherryThemeProvider";
+import { Chat, ChtProvider } from "@/components/Chat";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { DocsWrapper } from "@/components/layout/DocsComponents";
@@ -56,19 +57,21 @@ export default async function RootLayout({
       <body className={font.className}>
         <StyledComponentsRegistry>
           <CherryThemeProvider theme={theme} themeDark={themeDark}>
-            <Header />
-            <DocsWrapper>
-              <SideBar result={result.length ? result : defaultResults} />
-              {children}
-              <DocsNavigation
-                result={result.length ? result : defaultResults}
-              />
-            </DocsWrapper>
-            <Footer />
+            <ChtProvider isChatActive={process.env.LLM_PROVIDER ? true : false}>
+              <Header />
+              {process.env.LLM_PROVIDER && <Chat />}
+              <DocsWrapper>
+                <SideBar result={result.length ? result : defaultResults} />
+                {children}
+                <DocsNavigation
+                  result={result.length ? result : defaultResults}
+                />
+              </DocsWrapper>
+              <Footer />
+            </ChtProvider>
           </CherryThemeProvider>
         </StyledComponentsRegistry>
       </body>
     </html>
   );
-}
-`;
+}`;

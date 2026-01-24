@@ -45,10 +45,10 @@ function Pre(props: any) {
     const className = child.props.className || "";
     const match = /language-(\\w+)/.exec(className);
     const language = match ? match[1] : undefined;
-    const code =
-      typeof child.props.children === "string"
-        ? child.props.children.replace(/\\n$/, "")
-        : String(child.props.children ?? "");
+    const code = extractAllTextFromChildren(child.props.children).replace(
+      /\\n$/,
+      "",
+    );
     if (language) {
       return (
         <CodeBlock className={className} code={code} language={language} />

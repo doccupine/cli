@@ -1,17 +1,18 @@
 export const actionBarTemplate = `"use client";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import styled, { css } from "styled-components";
 import { Icon } from "@/components/layout/Icon";
 import { mq, Theme } from "@/app/theme";
 import { rgba } from "polished";
 import { resetButton, Textarea } from "cherry-styled-components/src/lib";
+import { ChatContext } from "@/components/Chat";
 
 interface ActionBarProps {
   children: React.ReactNode;
   content: string;
 }
 
-const StyledActionBar = styled.div<{ theme: Theme }>\`
+const StyledActionBar = styled.div<{ theme: Theme; $isChatOpen?: boolean }>\`
   position: absolute;
   border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
   left: 0;
@@ -19,6 +20,7 @@ const StyledActionBar = styled.div<{ theme: Theme }>\`
   display: flex;
   justify-content: space-between;
   width: 100%;
+  transition: all 0.3s ease;
 
   \${mq("lg")} {
     left: 50%;
@@ -27,6 +29,12 @@ const StyledActionBar = styled.div<{ theme: Theme }>\`
     width: 100%;
     padding: 0 20px 20px 20px;
     margin: 0;
+
+    \${({ $isChatOpen }) =>
+      $isChatOpen &&
+      css\`
+        padding: 0 120px 20px 20px;
+      \`}
   }
 \`;
 
@@ -137,11 +145,24 @@ const StyledToggle = styled.button<{ theme: Theme; $isActive?: boolean }>\`
   }
 \`;
 
-const StyledContent = styled.div\`
+const StyledContent = styled.div<{
+  theme: Theme;
+  $isChatActive?: boolean;
+  $isChatOpen?: boolean;
+}>\`
   padding-top: 140px;
+  transition: all 0.3s ease;
 
   \${mq("lg")} {
-    padding-top: 70px;
+    \${({ $isChatActive }) =>
+      $isChatActive ? \`padding-top: 140px;\` : \`padding-top: 70px;\`}
+
+    \${({ $isChatOpen, $isChatActive }) =>
+      $isChatOpen &&
+      $isChatActive &&
+      css\`
+        padding-top: 70px;
+      \`}
   }
 
   & textarea {
@@ -151,8 +172,22 @@ const StyledContent = styled.div\`
     height: 100%;
     min-height: calc(100vh - 180px);
 
+    \${({ $isChatOpen, $isChatActive }) =>
+      !$isChatOpen &&
+      $isChatActive &&
+      css\`
+        min-height: calc(100vh - 250px);
+      \`}
+
     \${mq("lg")} {
       min-height: calc(100vh - 110px);
+
+      \${({ $isChatOpen, $isChatActive }) =>
+        !$isChatOpen &&
+        $isChatActive &&
+        css\`
+          min-height: calc(100vh - 180px);
+        \`}
     }
   }
 \`;
@@ -160,6 +195,7 @@ const StyledContent = styled.div\`
 function ActionBar({ children, content }: ActionBarProps) {
   const [isView, setIsView] = useState(true);
   const [copied, setCopied] = useState(false);
+  const { isOpen, isChatActive } = useContext(ChatContext);
 
   const handleCopyContent = async () => {
     try {
@@ -173,7 +209,7 @@ function ActionBar({ children, content }: ActionBarProps) {
 
   return (
     <>
-      <StyledActionBar>
+      <StyledActionBar $isChatOpen={isOpen}>
         <StyledCopyButton onClick={handleCopyContent} $copied={copied}>
           {copied ? (
             <>
@@ -199,9 +235,13 @@ function ActionBar({ children, content }: ActionBarProps) {
           </StyledToggle>
         </StyledActionBarContent>
       </StyledActionBar>
-      {isView && <StyledContent>{children}</StyledContent>}
+      {isView && (
+        <StyledContent $isChatActive={isChatActive} $isChatOpen={isOpen}>
+          {children}
+        </StyledContent>
+      )}
       {!isView && (
-        <StyledContent>
+        <StyledContent $isChatActive={isChatActive} $isChatOpen={isOpen}>
           <Textarea defaultValue={content} $fullWidth />
         </StyledContent>
       )}

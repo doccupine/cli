@@ -1,19 +1,26 @@
 export const docsNavigationTemplate = `"use client";
+import { useContext } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { Icon } from "@/components/layout/Icon";
 import { mq, Theme } from "@/app/theme";
 import { interactiveStyles } from "@/components/layout/SharedStyled";
-
-const StyledNavigationWrapper = styled.div\`
+import { ChatContext } from "@/components/Chat";
+const StyledNavigationWrapper = styled.div<{
+  $isChatOpen?: boolean;
+}>\`
+  transition: all 0.3s ease;
   padding: 0 20px 100px 20px;
-
   \${mq("lg")} {
     padding: 0 340px 80px 340px;
+    \${({ $isChatOpen }) =>
+      $isChatOpen &&
+      css\`
+        padding: 0 440px 80px 340px;
+      \`}
   }
 \`;
-
 const StyledNavigationInner = styled.div\`
   display: flex;
   justify-content: space-between;
@@ -22,7 +29,6 @@ const StyledNavigationInner = styled.div\`
   max-width: 640px;
   margin: auto;
 \`;
-
 const StyledNavButton = styled(Link)<{ theme: Theme }>\`
   \${interactiveStyles};
   display: flex;
@@ -34,33 +40,27 @@ const StyledNavButton = styled(Link)<{ theme: Theme }>\`
   border-radius: \${({ theme }) => theme.spacing.radius.lg};
   border: solid 1px \${({ theme }) => theme.colors.grayLight};
   color: \${({ theme }) => theme.colors.dark};
-
   &:hover {
     border-color: \${({ theme }) => theme.colors.primary};
   }
-
   &[data-direction="prev"] {
     align-items: flex-start;
   }
-
   &[data-direction="next"] {
     align-items: flex-end;
     margin-left: auto;
     text-align: right;
   }
 \`;
-
 const StyledNavLabel = styled.span<{ theme: Theme }>\`
   color: \${({ theme }) => theme.colors.gray};
   display: flex;
   flex-direction: row;
   gap: 4px;
-
   & svg {
     margin: auto 0;
   }
 \`;
-
 const StyledNavTitle = styled.span<{ theme: Theme }>\`
   color: \${({ theme }) => theme.colors.dark};
   font-weight: 600;
@@ -69,18 +69,15 @@ const StyledNavTitle = styled.span<{ theme: Theme }>\`
   text-overflow: ellipsis;
   overflow: hidden;
 \`;
-
 const StyledSpacer = styled.div\`
   flex: 1;
 \`;
-
 interface Page {
   slug: string;
   title: string;
   category?: string;
   [key: string]: any;
 }
-
 interface NavigationItem {
   category?: string;
   slug?: string;
@@ -89,14 +86,12 @@ interface NavigationItem {
   items?: Page[];
   [key: string]: any;
 }
-
 interface DocsNavigationProps {
   result: NavigationItem[];
 }
-
 function DocsNavigation({ result }: DocsNavigationProps) {
+  const { isOpen } = useContext(ChatContext);
   const pathname = usePathname();
-
   const allPages: Page[] = result.flatMap((item) => {
     if (item.links && Array.isArray(item.links)) {
       return item.links;
@@ -109,25 +104,19 @@ function DocsNavigation({ result }: DocsNavigationProps) {
     }
     return [];
   });
-
   const currentSlug = pathname.replace(/^\\//, "").replace(/\\/$/, "");
-
   const currentIndex = allPages.findIndex((page) => page.slug === currentSlug);
-
   const prevPage = currentIndex > 0 ? allPages[currentIndex - 1] : null;
   const nextPage =
     currentIndex < allPages.length - 1 ? allPages[currentIndex + 1] : null;
-
   if (currentIndex === -1 || allPages.length === 0) {
     return null;
   }
-
   if (!prevPage && !nextPage) {
     return null;
   }
-
   return (
-    <StyledNavigationWrapper>
+    <StyledNavigationWrapper $isChatOpen={isOpen}>
       <StyledNavigationInner>
         {prevPage ? (
           <StyledNavButton href={\`/\${prevPage.slug}\`} data-direction="prev">
@@ -139,7 +128,6 @@ function DocsNavigation({ result }: DocsNavigationProps) {
         ) : (
           <StyledSpacer />
         )}
-
         {nextPage && (
           <StyledNavButton href={\`/\${nextPage.slug}\`} data-direction="next">
             <StyledNavTitle>{nextPage.title}</StyledNavTitle>
@@ -152,5 +140,4 @@ function DocsNavigation({ result }: DocsNavigationProps) {
     </StyledNavigationWrapper>
   );
 }
-
 export { DocsNavigation };`;

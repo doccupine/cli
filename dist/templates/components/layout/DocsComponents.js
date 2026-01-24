@@ -1,6 +1,6 @@
 export const docsComponentsTemplate = `"use client";
 import { darken, lighten, rgba } from "polished";
-import React from "react";
+import React, { useContext } from "react";
 import styled, { css } from "styled-components";
 import {
   resetButton,
@@ -10,6 +10,8 @@ import {
 } from "cherry-styled-components/src/lib";
 import Link from "next/link";
 import { mq, Theme } from "@/app/theme";
+import { styledTable, stylesLists } from "@/components/layout/SharedStyled";
+import { ChatContext } from "@/components/Chat";
 
 interface DocsProps {
   children: React.ReactNode;
@@ -23,14 +25,21 @@ const StyledDocsSidebar = styled.div<{ theme: Theme }>\`
   clear: both;
 \`;
 
-const StyledDocsContainer = styled.div<{ theme: Theme }>\`
+const StyledDocsContainer = styled.div<{ theme: Theme; $isChatOpen?: boolean }>\`
   position: relative;
   padding: 20px 20px 100px 20px;
   width: 100%;
   \${({ theme }) => styledText(theme)};
+  transition: all 0.3s ease;
 
   \${mq("lg")} {
     padding: 20px 340px 80px 340px;
+
+    \${({ $isChatOpen }) =>
+      $isChatOpen &&
+      css\`
+        padding: 20px 440px 80px 340px;
+      \`}
   }
 
   & p {
@@ -41,75 +50,8 @@ const StyledDocsContainer = styled.div<{ theme: Theme }>\`
     max-width: 100%;
   }
 
-  & ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-
-    & li {
-      text-indent: 0;
-      display: block;
-      position: relative;
-      padding: 0 0 0 15px;
-      margin: 0;
-      \${({ theme }) => styledText(theme)};
-      min-height: 23px;
-
-      & .code-wrapper {
-        margin: 10px 0;
-      }
-
-      $mq: "lg" {
-        min-height: 27px;
-      }
-
-      &::before {
-        content: "";
-        display: block;
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: \${({ theme }) => theme.colors.primary};
-        position: absolute;
-        top: 8px;
-        left: 2px;
-
-        \${mq("lg")} {
-          top: 10px;
-        }
-      }
-    }
-  }
-
-  & ol {
-    padding: 0;
-    margin: 0;
-
-    & ul {
-      padding-left: 15px;
-    }
-
-    & > li {
-      position: relative;
-      padding: 0;
-      counter-increment: item;
-      margin: 0;
-      \${({ theme }) => styledText(theme)};
-
-      & .code-wrapper {
-        margin: 10px 0;
-      }
-
-      &::before {
-        content: counter(item) ".";
-        display: inline-block;
-        margin: 0 4px 0 0;
-        font-weight: 700;
-        color: \${({ theme }) => theme.colors.primary};
-        min-width: max-content;
-      }
-    }
-  }
+  \${stylesLists};
+  \${styledTable};
 
   & img,
   & video,
@@ -123,34 +65,6 @@ const StyledDocsContainer = styled.div<{ theme: Theme }>\`
     color: \${({ theme }) => theme.colors.dark};
     padding: 2px 4px;
     border-radius: \${({ theme }) => theme.spacing.radius.xs};
-  }
-
-  & table {
-    margin: 0;
-    padding: 0;
-    border-collapse: collapse;
-    width: 100%;
-    text-align: left;
-
-    & tr {
-      margin: 0;
-      padding: 0;
-    }
-
-    & th {
-      border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
-      padding: 10px 0;
-      \${({ theme }) => styledSmall(theme)};
-      font-weight: 600;
-      color: \${({ theme }) => theme.colors.dark};
-    }
-
-    & td {
-      border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
-      padding: 10px 10px 10px 0;
-      color: \${({ theme }) => theme.colors.grayDark};
-      \${({ theme }) => styledSmall(theme)};
-    }
   }
 
   & .lucide {
@@ -186,7 +100,7 @@ export const StyledSidebar = styled.nav<Props>\`
   z-index: 99;
   top: 70px;
   height: 100%;
-  padding: 20px;
+  padding: 20px 20px 80px 20px;
   opacity: 0;
   pointer-events: none;
   transition: all 0.3s ease;
@@ -316,7 +230,7 @@ export const StyledSidebarListItemLink = styled(Link)<Props>\`
 export const StyleMobileBar = styled.button<Props>\`
   \${resetButton};
   position: fixed;
-  z-index: 1000;
+  z-index: 999;
   bottom: 0;
   right: 20px;
   font-size: \${({ theme }) => theme.fontSizes.strong.lg};
@@ -398,7 +312,11 @@ function DocsSidebar({ children }: DocsProps) {
 }
 
 function DocsContainer({ children }: DocsProps) {
-  return <StyledDocsContainer>{children}</StyledDocsContainer>;
+  const { isOpen } = useContext(ChatContext);
+
+  return (
+    <StyledDocsContainer $isChatOpen={isOpen}>{children}</StyledDocsContainer>
+  );
 }
 
 export { DocsWrapper, DocsSidebar, DocsContainer };`;
