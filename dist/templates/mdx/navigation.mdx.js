@@ -71,6 +71,7 @@ To centrally define the entire sidebar, create a \`navigation.json\` at your pro
       { "slug": "navigation", "title": "Navigation" },
       { "slug": "theme", "title": "Theme" },
       { "slug": "fonts", "title": "Fonts" },
+      { "slug": "ai-assistant", "title": "AI Assistant" },
       { "slug": "deployment", "title": "Deployment" }
     ]
   }
