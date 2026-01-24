@@ -54,6 +54,7 @@ import { llmTypesTemplate } from "./templates/services/llm/types.js";
 import { styledDTemplate } from "./templates/types/styled.js";
 import { orderNavItemsTemplate } from "./templates/utils/orderNavItems.js";
 import { accordionMdxTemplate } from "./templates/mdx/accordion.mdx.js";
+import { aiAssistantMdxTemplate } from "./templates/mdx/ai-assistant.mdx.js";
 import { buttonsMdxTemplate } from "./templates/mdx/buttons.mdx.js";
 import { calloutsMdxTemplate } from "./templates/mdx/callouts.mdx.js";
 import { cardsMdxTemplate } from "./templates/mdx/cards.mdx.js";
@@ -231,6 +232,7 @@ class MDXToNextJSGenerator {
     async createStartingDocs() {
         const structure = {
             "accordion.mdx": this.generateAccordionMdx(),
+            "ai-assistant.mdx": this.generateAiAssistantMdx(),
             "buttons.mdx": this.generateButtonsMdx(),
             "callouts.mdx": this.generateCalloutsMdx(),
             "cards.mdx": this.generateCardsMdx(),
@@ -809,6 +811,9 @@ export default function Home() {
     }
     generateAccordionMdx() {
         return accordionMdxTemplate;
+    }
+    generateAiAssistantMdx() {
+        return aiAssistantMdxTemplate;
     }
     generateButtonsMdx() {
         return buttonsMdxTemplate;
