@@ -4,6 +4,8 @@ import { program } from "commander";
 import chokidar, { FSWatcher } from "chokidar";
 import fs from "fs-extra";
 import path from "path";
+import { fileURLToPath } from "url";
+
 import matter from "gray-matter";
 import chalk from "chalk";
 import prompts from "prompts";
@@ -90,6 +92,13 @@ import { stepsMdxTemplate } from "./templates/mdx/steps.mdx.js";
 import { tabsMdxTemplate } from "./templates/mdx/tabs.mdx.js";
 import { themeMdxTemplate } from "./templates/mdx/theme.mdx.js";
 import { updateMdxTemplate } from "./templates/mdx/update.mdx.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const packageJson = JSON.parse(
+  fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf8"),
+);
+const version = packageJson.version;
 
 interface MDXFile {
   path: string;
@@ -1168,7 +1177,7 @@ program
   .description(
     "Watch MDX files and generate Next.js documentation pages automatically",
   )
-  .version("0.0.29");
+  .version(version);
 
 program
   .command("watch", { isDefault: true })
