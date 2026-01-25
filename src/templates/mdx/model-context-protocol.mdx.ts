@@ -85,7 +85,7 @@ Executes an MCP tool call.
   "content": [
     {
       "path": "app/deployment/page.tsx",
-      "uri": "docs:///deployment",
+      "uri": "docs://deployment",
       "score": "0.892",
       "text": "Deploy your Doccupine site as a Next.js application..."
     },
