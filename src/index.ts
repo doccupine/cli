@@ -15,6 +15,7 @@ import { packageJsonTemplate } from "./templates/package.js";
 import { proxyTemplate } from "./templates/proxy.js";
 import { tsconfigTemplate } from "./templates/tsconfig.js";
 
+import { mcpRoutesTemplate } from "./templates/app/api/mcp/route.js";
 import { ragRoutesTemplate } from "./templates/app/api/rag/route.js";
 import { routesTemplate } from "./templates/app/api/theme/routes.js";
 import { layoutTemplate } from "./templates/app/layout.js";
@@ -53,6 +54,10 @@ import { themeToggleTemplate } from "./templates/components/layout/ThemeToggle.j
 import { typographyTemplate } from "./templates/components/layout/Typography.js";
 import { updateTemplate } from "./templates/components/layout/Update.js";
 
+import { mcpIndexTemplate } from "./templates/services/mcp/index.js";
+import { mcpServerTemplate } from "./templates/services/mcp/server.js";
+import { mcpToolsTemplate } from "./templates/services/mcp/tools.js";
+import { mcpTypesTemplate } from "./templates/services/mcp/types.js";
 import { llmConfigTemplate } from "./templates/services/llm/config.js";
 import { llmFactoryTemplate } from "./templates/services/llm/factory.js";
 import { llmIndexTemplate } from "./templates/services/llm/index.js";
@@ -78,6 +83,7 @@ import { headersAndTextMdxTemplate } from "./templates/mdx/headers-and-text.mdx.
 import { iconsMdxTemplate } from "./templates/mdx/icons.mdx.js";
 import { imageAndEmbedsMdxTemplate } from "./templates/mdx/image-and-embeds.mdx.js";
 import { indexMdxTemplate } from "./templates/mdx/index.mdx.js";
+import { mcpMdxTemplate } from "./templates/mdx/model-context-protocol.mdx.js";
 import { listAndTablesMdxTemplate } from "./templates/mdx/list-and-tables.mdx.js";
 import { navigationMdxTemplate } from "./templates/mdx/navigation.mdx.js";
 import { stepsMdxTemplate } from "./templates/mdx/steps.mdx.js";
@@ -244,9 +250,14 @@ class MDXToNextJSGenerator {
       "app/layout.tsx": await this.generateRootLayout(),
       "app/not-found.tsx": this.generateNotFoundPage(),
       "app/theme.ts": this.generateTheme(),
+      "app/api/mcp/route.ts": this.generateMCPRoutes(),
       "app/api/rag/route.ts": this.generateRagRoutes(),
       "app/api/theme/route.ts": this.generateRoutes(),
 
+      "services/mcp/index.ts": this.generateMCPIndex(),
+      "services/mcp/server.ts": this.generateMCPServer(),
+      "services/mcp/tools.ts": this.generateMCPTools(),
+      "services/mcp/types.ts": this.generateMCPTypes(),
       "services/llm/config.ts": this.generateLLMConfig(),
       "services/llm/factory.ts": this.generateLLMFactory(),
       "services/llm/index.ts": this.generateLLMIndex(),
@@ -316,6 +327,7 @@ class MDXToNextJSGenerator {
       "icons.mdx": this.generateIconsMdx(),
       "image-and-embeds.mdx": this.generateImagesAndEmbedsMdx(),
       "index.mdx": this.generateIndexMdx(),
+      "model-context-protocol.mdx": this.generateMCPMdx(),
       "lists-and-tables.mdx": this.generateListsAndTablesMdx(),
       "navigation.mdx": this.generateNavigationMdx(),
       "steps.mdx": this.generateStepsMdx(),
@@ -871,12 +883,32 @@ export default function Home() {
     return themeTemplate;
   }
 
+  generateMCPRoutes(): string {
+    return mcpRoutesTemplate;
+  }
+
   generateRagRoutes(): string {
     return ragRoutesTemplate;
   }
 
   generateRoutes(): string {
     return routesTemplate;
+  }
+
+  generateMCPIndex(): string {
+    return mcpIndexTemplate;
+  }
+
+  generateMCPServer(): string {
+    return mcpServerTemplate;
+  }
+
+  generateMCPTools(): string {
+    return mcpToolsTemplate;
+  }
+
+  generateMCPTypes(): string {
+    return mcpTypesTemplate;
   }
 
   generateLLMConfig(): string {
@@ -1081,6 +1113,10 @@ export default function Home() {
 
   generateImagesAndEmbedsMdx(): string {
     return imageAndEmbedsMdxTemplate;
+  }
+
+  generateMCPMdx(): string {
+    return mcpMdxTemplate;
   }
 
   generateIndexMdx(): string {

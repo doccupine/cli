@@ -63,6 +63,10 @@ const StyledStepTitle = styled.h3<{ theme: Theme }>\`
 const StepContent = styled.div<{ theme: Theme }>\`
   color: \${({ theme }) => theme.colors.grayDark};
   \${({ theme }) => styledText(theme)};
+
+  & > .code-wrapper {
+    margin: 10px 0;
+  }
 \`;
 
 interface StepProps extends React.HTMLAttributes<HTMLDivElement> {

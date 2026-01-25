@@ -1,160 +1,13 @@
 export const ragRoutesTemplate = `import { NextResponse } from "next/server";
 import path from "node:path";
-import fs from "node:fs/promises";
+import { getLLMConfig, createChatModel } from "@/services/llm";
 import {
-  getLLMConfig,
-  createChatModel,
-  createEmbeddings,
-} from "@/services/llm";
-
-type Chunk = {
-  id: string;
-  text: string;
-  path: string;
-  embedding: number[];
-};
-
-let indexCache: { ready: boolean; building: boolean; chunks: Chunk[] } = {
-  ready: false,
-  building: false,
-  chunks: [],
-};
+  searchDocs,
+  ensureDocsIndex,
+  getIndexStatus,
+} from "@/services/mcp/server";
 
 const PROJECT_ROOT = process.cwd();
-const APP_DIR = path.join(PROJECT_ROOT, "app");
-
-const VALID_EXT = new Set([".ts", ".tsx", ".js", ".jsx"]);
-
-async function* walk(dir: string): AsyncGenerator<string> {
-  const entries = await fs.readdir(dir, { withFileTypes: true });
-  for (const entry of entries) {
-    const p = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      if (
-        entry.name === "node_modules" ||
-        entry.name === ".next" ||
-        entry.name === ".git"
-      )
-        continue;
-      yield* walk(p);
-    } else {
-      const ext = path.extname(entry.name).toLowerCase();
-      if (VALID_EXT.has(ext)) {
-        yield p;
-      }
-    }
-  }
-}
-
-function extractContentBlocks(fileText: string): string[] {
-  const results: string[] = [];
-
-  // Template literal form: const content = \`...\`;
-  const tplRegex = /(?:export\\s+)?const\\s+content\\s*=\\s*\`((?:\\\\\`|[^\`])*)\`\\s*;/g;
-  let m: RegExpExecArray | null;
-  while ((m = tplRegex.exec(fileText)) !== null) {
-    results.push(m[1]);
-  }
-
-  // Single-quoted form: const content = '...'; (single line)
-  const sglRegex = /(?:export\\s+)?const\\s+content\\s*=\\s*'([^']*)'\\s*;/g;
-  while ((m = sglRegex.exec(fileText)) !== null) {
-    results.push(m[1]);
-  }
-
-  // Double-quoted form: const content = "..."; (single line)
-  const dblRegex = /(?:export\\s+)?const\\s+content\\s*=\\s*"([^"]*)"\\s*;/g;
-  while ((m = dblRegex.exec(fileText)) !== null) {
-    results.push(m[1]);
-  }
-
-  return results;
-}
-
-function chunkText(text: string, chunkSize = 1500, overlap = 200): string[] {
-  const chunks: string[] = [];
-  let i = 0;
-  while (i < text.length) {
-    const end = Math.min(i + chunkSize, text.length);
-    chunks.push(text.slice(i, end));
-    if (end === text.length) break;
-    i = end - overlap;
-    if (i < 0) i = 0;
-  }
-  return chunks;
-}
-
-function cosineSim(a: number[], b: number[]): number {
-  let dot = 0,
-    na = 0,
-    nb = 0;
-  for (let i = 0; i < a.length; i++) {
-    const x = a[i];
-    const y = b[i];
-    dot += x * y;
-    na += x * x;
-    nb += y * y;
-  }
-  if (na === 0 || nb === 0) return 0;
-  return dot / (Math.sqrt(na) * Math.sqrt(nb));
-}
-
-async function buildIndex() {
-  if (indexCache.building) return;
-  indexCache.building = true;
-  try {
-    const files: string[] = [];
-    for await (const f of walk(APP_DIR)) files.push(f);
-
-    const docs: { path: string; chunk: string }[] = [];
-    for (const f of files) {
-      try {
-        const buf = await fs.readFile(f, "utf8");
-        const blocks = extractContentBlocks(buf);
-        for (const b of blocks) {
-          const clean = b
-            .replace(/\\r\\n/g, "\\n")
-            .replace(/\\n{3,}/g, "\\n\\n")
-            .slice(0, 200_000);
-          const pieces = chunkText(clean);
-          for (const piece of pieces) {
-            docs.push({ path: f, chunk: piece });
-          }
-        }
-      } catch {}
-    }
-
-    if (docs.length === 0) {
-      indexCache.chunks = [];
-      indexCache.ready = true;
-      return;
-    }
-
-    const config = getLLMConfig();
-    const embeddings = createEmbeddings(config);
-    const vectors = await embeddings.embedDocuments(docs.map((d) => d.chunk));
-
-    indexCache.chunks = docs.map((d, i) => ({
-      id: \`\${d.path}:\${i}\`,
-      text: d.chunk,
-      path: d.path,
-      embedding: vectors[i],
-    }));
-    indexCache.ready = true;
-  } finally {
-    indexCache.building = false;
-  }
-}
-
-async function ensureIndex(force = false) {
-  if (force) {
-    indexCache.ready = false;
-    indexCache.chunks = [];
-  }
-  if (!indexCache.ready) {
-    await buildIndex();
-  }
-}
 
 export async function POST(req: Request) {
   try {
@@ -163,52 +16,52 @@ export async function POST(req: Request) {
     let config;
     try {
       config = getLLMConfig();
-    } catch (error: any) {
-      return NextResponse.json(
-        { error: error?.message || "LLM configuration error" },
-        { status: 500 },
-      );
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "LLM configuration error";
+      return NextResponse.json({ error: message }, { status: 500 });
     }
 
-    await ensureIndex(Boolean(refresh));
+    // Use MCP service to ensure docs are indexed
+    await ensureDocsIndex(Boolean(refresh));
 
-    const embedder = createEmbeddings(config);
-    const qVec = await embedder.embedQuery(String(question || ""));
+    // Use MCP search_docs tool to find relevant documentation
+    const searchResults = await searchDocs(String(question || ""), 6);
 
-    const scored = indexCache.chunks
-      .map((c) => ({ c, score: cosineSim(qVec, c.embedding) }))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 6);
-
-    const context = scored
+    // Build context from search results
+    const context = searchResults
       .map(
-        ({ c, score }) =>
-          \`File: \${path.relative(PROJECT_ROOT, c.path)}\\nScore: \${score.toFixed(3)}\\n----\\n\${c.text}\`,
+        ({ chunk, score }) =>
+          \`File: \${path.relative(PROJECT_ROOT, chunk.path)}\\nScore: \${score.toFixed(3)}\\n----\\n\${chunk.text}\`,
       )
       .join("\\n\\n================\\n\\n");
 
+    // Create chat model and stream response
     const llm = createChatModel(config);
     const prompt = [
       {
-        role: "system",
+        role: "system" as const,
         content:
           "You are a helpful documentation assistant. Answer strictly from the provided context. If the answer is not in the context, say you don't know and suggest where to look. Make sure the mdx can be nested properly if you show code components within nested \`\`\`",
       },
       {
-        role: "user",
+        role: "user" as const,
         content: \`Question: \${question}\\n\\nContext:\\n\${context}\`,
       },
-    ] as const;
+    ];
 
-    const stream = await llm.stream(prompt as any);
+    const stream = await llm.stream(prompt);
 
+    // Build metadata from MCP search results
+    const indexStatus = getIndexStatus();
     const metadata = {
-      sources: scored.map(({ c, score }) => ({
-        id: c.id,
-        path: path.relative(PROJECT_ROOT, c.path),
+      sources: searchResults.map(({ chunk, score }) => ({
+        id: chunk.id,
+        path: path.relative(PROJECT_ROOT, chunk.path),
+        uri: chunk.uri,
         score,
       })),
-      chunkCount: indexCache.chunks.length,
+      chunkCount: indexStatus.chunkCount,
     };
 
     const encoder = new TextEncoder();
@@ -236,10 +89,12 @@ export async function POST(req: Request) {
             encoder.encode(\`data: \${JSON.stringify({ type: "done" })}\\n\\n\`),
           );
           controller.close();
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const message =
+            error instanceof Error ? error.message : "Stream error";
           controller.enqueue(
             encoder.encode(
-              \`data: \${JSON.stringify({ type: "error", data: error?.message || "Stream error" })}\\n\\n\`,
+              \`data: \${JSON.stringify({ type: "error", data: message })}\\n\\n\`,
             ),
           );
           controller.close();
@@ -254,18 +109,16 @@ export async function POST(req: Request) {
         Connection: "keep-alive",
       },
     });
-  } catch (e: any) {
-    return NextResponse.json(
-      { error: e?.message || "Unknown error" },
-      { status: 500 },
-    );
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
 export async function GET() {
+  const status = getIndexStatus();
   return NextResponse.json({
-    ready: indexCache.ready,
-    chunks: indexCache.chunks.length,
+    ready: status.ready,
+    chunks: status.chunkCount,
   });
-}
-`;
+}`;

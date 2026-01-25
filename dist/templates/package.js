@@ -12,6 +12,7 @@ export const packageJsonTemplate = JSON.stringify({
         "@langchain/anthropic": "^1.3.12",
         "@langchain/google-genai": "^2.1.13",
         "@langchain/openai": "^1.2.3",
+        "@modelcontextprotocol/sdk": "^1.25.3",
         langchain: "^1.2.13",
         next: "16.1.4",
         openai: "^6.16.0",
