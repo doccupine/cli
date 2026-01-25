@@ -1193,9 +1193,20 @@ program
     let devServer: any = null;
 
     console.log(chalk.blue("📦 Installing dependencies..."));
-    const { spawn } = await import("child_process");
+    const { spawn, execSync } = await import("child_process");
 
-    const install = spawn("npm", ["install"], {
+    // Check if pnpm is available, fallback to npm
+    let packageManager = "npm";
+    try {
+      execSync("pnpm --version", { stdio: "ignore" });
+      packageManager = "pnpm";
+    } catch {
+      // pnpm not available, use npm
+    }
+
+    console.log(chalk.blue(`📦 Using ${packageManager}...`));
+
+    const install = spawn(packageManager, ["install"], {
       cwd: config.outputDir,
       stdio: "pipe",
     });
