@@ -40,6 +40,7 @@ export const packageJsonTemplate = JSON.stringify(
       "styled-components": "^6.3.8",
       typescript: "^5",
       unified: "^11.0.5",
+      zod: "^4.3.6",
     },
   },
   null,
