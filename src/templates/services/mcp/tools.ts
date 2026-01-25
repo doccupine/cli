@@ -4,7 +4,6 @@ import type {
   MCPToolDefinition,
   DocsResource,
   DocsChunk,
-  SearchDocsParams,
   GetDocParams,
   ListDocsParams,
 } from "@/services/mcp/types";

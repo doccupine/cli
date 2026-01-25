@@ -17,11 +17,6 @@ export interface DocsChunk {
   uri: string;
 }
 
-export interface SearchDocsParams {
-  query: string;
-  limit?: number;
-}
-
 export interface GetDocParams {
   path: string;
 }
