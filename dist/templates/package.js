@@ -38,5 +38,6 @@ export const packageJsonTemplate = JSON.stringify({
         "remark-gfm": "^4.0.1",
         "styled-components": "^6.3.8",
         typescript: "^5",
+        unified: "^11.0.5",
     },
 }, null, 2);
