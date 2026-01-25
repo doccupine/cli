@@ -7,6 +7,7 @@ import { Icon, IconProps } from "@/components/layout/Icon";
 
 const StyledStepsContainer = styled.div<{ theme: Theme }>\`
   position: relative;
+  width: 100%;
 \`;
 
 const StyledStep = styled.div<{ theme: Theme }>\`
