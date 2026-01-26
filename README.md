@@ -12,6 +12,8 @@ Doccupine is built on open standards, enabling customization and extensibility f
 - 📦 Built-in file structure
 - ⚡ Live Preview & Auto-Update
 - 🚀 Easy Deployment
+- 🤖 AI-powered
+- 🔌 Model Context Protocol (MCP)
 
 ## Getting Started
 
