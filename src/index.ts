@@ -841,7 +841,7 @@ interface Config {
 
 const config = configData as Config;
 
-${indexMDX ? `const content = \`${indexMDX.content.replace(/`/g, "\\`")}\`;` : `const indexContent = null;`}
+${indexMDX ? `const content = \`${indexMDX.content.replace(/`/g, "\\`")}\`;` : `const content = null;`}
 
 ${
   indexMDX
