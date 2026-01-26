@@ -27,11 +27,11 @@ ${
 
 export const metadata: Metadata = {
   title: "Doccupine",
-  description: 
+  description:
     "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease.",
   openGraph: {
     title: "Doccupine",
-    description: 
+    description:
       "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease.",
   },
 };
