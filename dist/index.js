@@ -625,12 +625,12 @@ const content = \`${mdxFile.content.replace(/`/g, "\\`")}\`;
 
 export const metadata: Metadata = {
   title: \`${mdxFile.frontmatter.title || "Generated with Doccupine"} \${config.name ? "- " + config.name : "- Doccupine"}\`,
-  description: \`${mdxFile.frontmatter.description ? mdxFile.frontmatter.description : "${config.description ? config.description : 'Generated with Doccupine'}"}\`,
-  icons: \`${mdxFile.frontmatter.icon ? mdxFile.frontmatter.icon : "\${config.icon || 'https://doccupine.com/favicon.ico'}"}\`,
+  description: \`${mdxFile.frontmatter.description ? mdxFile.frontmatter.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
+  icons: \`${mdxFile.frontmatter.icon ? mdxFile.frontmatter.icon : '\${config.icon || "https://doccupine.com/favicon.ico"}'}\`,
   openGraph: {
     title: \`${mdxFile.frontmatter.title || "Generated with Doccupine"} \${config.name ? "- " + config.name : "- Doccupine"}\`,
-    description: \`${mdxFile.frontmatter.description ? mdxFile.frontmatter.description : "${config.description ? config.description : 'Generated with Doccupine'}"}\`,
-    images: \`${mdxFile.frontmatter.image ? mdxFile.frontmatter.image : "\${config.preview || 'https://doccupine.com/preview.png'}"}\`,
+    description: \`${mdxFile.frontmatter.description ? mdxFile.frontmatter.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
+    images: \`${mdxFile.frontmatter.image ? mdxFile.frontmatter.image : '\${config.preview || "https://doccupine.com/preview.png"}'}\`,
   },
 };
 
@@ -680,12 +680,12 @@ ${indexMDX ? `const content = \`${indexMDX.content.replace(/`/g, "\\`")}\`;` : `
 ${indexMDX
             ? `export const metadata: Metadata = {
   title: \`\${config.name ? config.name + " -" : "Doccupine -"} ${indexMDX.title}\`,
-  description: \`${indexMDX.description ? indexMDX.description : "${config.description ? config.description : 'Generated with Doccupine'}"}\`,
+  description: \`${indexMDX.description ? indexMDX.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
   icons: \`${indexMDX.icon ? indexMDX.icon : "\${config.icon || 'https://doccupine.com/favicon.ico'}"}\`,
   openGraph: {
     title: \`\${config.name ? config.name + " -" : "Doccupine -"} ${indexMDX.title}\`,
-    description: \`${indexMDX.description ? indexMDX.description : "${config.description ? config.description : 'Generated with Doccupine'}"}\`,
-    images: \`${indexMDX.image ? indexMDX.image : "\${config.preview || 'https://doccupine.com/preview.png'}"}\`,
+    description: \`${indexMDX.description ? indexMDX.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
+    images: \`${indexMDX.image ? indexMDX.image : '\${config.preview || "https://doccupine.com/preview.png"}'}\`,
   },
 };`
             : `export const metadata: Metadata = {
