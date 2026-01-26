@@ -67,7 +67,7 @@ const StyledCallout = styled.div<{ theme: Theme; $type?: CalloutType }>\`
 
       & svg.lucide,
       & p {
-      color: \${theme.isDark ? "#fecaca" : "#7f1d1d"};
+        color: \${theme.isDark ? "#fecaca" : "#7f1d1d"};
       }
     \`}
 
