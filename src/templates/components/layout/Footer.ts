@@ -73,4 +73,5 @@ function Footer() {
     </StyledFooter>
   );
 }
-export { Footer };`;
+export { Footer };
+`;

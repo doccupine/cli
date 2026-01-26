@@ -85,4 +85,5 @@ function GitHubLogo({ ...props }: Props) {
   );
 }
 
-export { Logo, GitHubLogo };`;
+export { Logo, GitHubLogo };
+`;

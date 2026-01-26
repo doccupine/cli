@@ -22,4 +22,5 @@ async function CherryThemeProvider({
   );
 }
 
-export { CherryThemeProvider };`;
+export { CherryThemeProvider };
+`;

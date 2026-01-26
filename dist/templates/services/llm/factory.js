@@ -65,4 +65,5 @@ export function createEmbeddings(config: LLMConfig) {
         \`Unsupported LLM provider for embeddings: \${config.provider}\`,
       );
   }
-}`;
+}
+`;

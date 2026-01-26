@@ -242,4 +242,5 @@ export function createMCPServer(): McpServer {
   });
 
   return server;
-}`;
+}
+`;

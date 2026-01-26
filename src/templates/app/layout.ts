@@ -27,10 +27,12 @@ ${
 
 export const metadata: Metadata = {
   title: "Doccupine",
-  description: "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease.",
+  description: 
+    "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease.",
   openGraph: {
     title: "Doccupine",
-    description: "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease.",
+    description: 
+      "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease.",
   },
 };
 
@@ -40,15 +42,15 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const defaultPages = [
-  {
-    "slug": "",
-    "title": "Getting Started",
-    "description": "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease.",
-    "date": "2025-01-15",
-    "category": "Introduction",
-    "categoryOrder": 0,
-    "order": 0
-  },
+    {
+      "slug": "",
+      "title": "Getting Started",
+      "description": "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease.",
+      "date": "2025-01-15",
+      "category": "Introduction",
+      "categoryOrder": 0,
+      "order": 0
+    },
 ];
 
   const pages: any = ${JSON.stringify(pages, null, 2)};
@@ -79,4 +81,5 @@ export default async function RootLayout({
       </body>
     </html>
   );
-}`;
+}
+`;

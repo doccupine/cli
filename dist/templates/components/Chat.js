@@ -919,4 +919,5 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
   );
 };
 
-export { Chat, ChtProvider, ChatContext };`;
+export { Chat, ChtProvider, ChatContext };
+`;

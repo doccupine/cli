@@ -112,4 +112,5 @@ function ToggleThemeLoading() {
   );
 }
 
-export { ToggleTheme, ToggleThemeLoading };`;
+export { ToggleTheme, ToggleThemeLoading };
+`;

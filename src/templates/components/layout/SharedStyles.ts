@@ -872,4 +872,5 @@ export const styledTable = css<{ theme: Theme }>\`
       \${({ theme }) => styledSmall(theme)};
     }
   }
-\`;`;
+\`;
+`;

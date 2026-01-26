@@ -35,4 +35,5 @@ export interface MCPToolDefinition {
     properties: Record<string, unknown>;
     required?: string[];
   };
-}`;
+}
+`;

@@ -418,4 +418,5 @@ function Code({ code, language = "javascript", theme, className }: CodeProps) {
   );
 }
 
-export { Code };`;
+export { Code };
+`;

@@ -93,4 +93,5 @@ b {
   width: 100%;
 }\`;
 
-export { GlobalStyles };`;
+export { GlobalStyles };
+`;

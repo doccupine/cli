@@ -68,4 +68,5 @@ export function isLLMConfigured(): boolean {
   } catch {
     return false;
   }
-}`;
+}
+`;

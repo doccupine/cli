@@ -240,4 +240,5 @@ export async function getAllDocsChunks(): Promise<DocsChunk[]> {
   }
 
   return allChunks;
-}`;
+}
+`;

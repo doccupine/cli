@@ -110,4 +110,5 @@ function Steps({ children, ...props }: StepsProps) {
   );
 }
 
-export { Steps, Step };`;
+export { Steps, Step };
+`;

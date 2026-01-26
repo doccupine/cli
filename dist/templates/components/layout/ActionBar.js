@@ -249,4 +249,5 @@ function ActionBar({ children, content }: ActionBarProps) {
   );
 }
 
-export { ActionBar };`;
+export { ActionBar };
+`;

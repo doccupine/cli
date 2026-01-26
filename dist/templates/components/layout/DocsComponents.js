@@ -319,4 +319,5 @@ function DocsContainer({ children }: DocsProps) {
   );
 }
 
-export { DocsWrapper, DocsSidebar, DocsContainer };`;
+export { DocsWrapper, DocsSidebar, DocsContainer };
+`;

@@ -22,4 +22,5 @@ export interface ProviderModels {
   embedding: string;
 }
 
-export type ProviderDefaults = Record<LLMProvider, ProviderModels>;`;
+export type ProviderDefaults = Record<LLMProvider, ProviderModels>;
+`;

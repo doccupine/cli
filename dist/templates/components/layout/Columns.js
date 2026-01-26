@@ -22,4 +22,5 @@ function Columns({ children, cols }: ColumnsProps) {
   return <StyledColumns $columns={cols}>{children}</StyledColumns>;
 }
 
-export { Columns };`;
+export { Columns };
+`;

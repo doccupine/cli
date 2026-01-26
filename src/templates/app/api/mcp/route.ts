@@ -175,4 +175,5 @@ export async function GET() {
 export async function DELETE(req: Request) {
   // DELETE is only used by MCP protocol
   return handleMCPRequest(req);
-}`;
+}
+`;

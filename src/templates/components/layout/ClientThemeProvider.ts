@@ -73,4 +73,5 @@ function ClientThemeProvider({
   );
 }
 
-export { ClientThemeProvider, useThemeOverride };`;
+export { ClientThemeProvider, useThemeOverride };
+`;

@@ -73,4 +73,5 @@ function Docs({ content }: DocsProps) {
   );
 }
 
-export { Docs };`;
+export { Docs };
+`;

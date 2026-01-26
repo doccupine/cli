@@ -140,4 +140,5 @@ function DocsNavigation({ result }: DocsNavigationProps) {
     </StyledNavigationWrapper>
   );
 }
-export { DocsNavigation };`;
+export { DocsNavigation };
+`;

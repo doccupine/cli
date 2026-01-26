@@ -108,4 +108,5 @@ const Tabs: React.FC<TabsProps> = ({ children }) => {
     </TabsContainer>
   );
 };
-export { Tabs, TabContent };`;
+export { Tabs, TabContent };
+`;

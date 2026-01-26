@@ -121,4 +121,5 @@ export async function GET() {
     ready: status.ready,
     chunks: status.chunkCount,
   });
-}`;
+}
+`;
