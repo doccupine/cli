@@ -45,11 +45,12 @@ export default async function RootLayout({
     {
       slug: "",
       title: "Getting Started",
-      description: "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease.",
+      description:
+        "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease.",
       date: "2025-01-15",
       category: "Introduction",
       categoryOrder: 0,
-      order: 0
+      order: 0,
     },
   ];
 
