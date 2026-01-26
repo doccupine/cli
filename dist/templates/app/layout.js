@@ -66,8 +66,8 @@ export default async function RootLayout({
                 <DocsNavigation
                   result={result.length ? result : defaultResults}
                 />
+                <Footer />
               </DocsWrapper>
-              <Footer />
             </ChtProvider>
           </CherryThemeProvider>
         </StyledComponentsRegistry>
