@@ -1,5 +1,4 @@
-export const footerTemplate = `
-"use client";
+export const footerTemplate = `"use client";
 import { useContext } from "react";
 import styled, { css } from "styled-components";
 import { styledSmall } from "cherry-styled-components/src/lib";
@@ -73,5 +72,6 @@ function Footer() {
     </StyledFooter>
   );
 }
+
 export { Footer };
 `;
