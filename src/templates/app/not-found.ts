@@ -17,8 +17,6 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return (
-    <Docs content={content} />
-  );
+  return <Docs content={content} />;
 }
 `;
