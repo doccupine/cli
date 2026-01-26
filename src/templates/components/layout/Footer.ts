@@ -64,7 +64,7 @@ function Footer() {
           <span>
             Powered by <a href="https://doccupine.com">Doccupine</a>
           </span>
-          <a href="https://github.com/doccupine/">
+          <a href="https://github.com/doccupine/" target="_blank">
             <GitHubLogo />
           </a>
         </StyledFooterFlex>
