@@ -36,6 +36,8 @@ export const metadata: Metadata = {
   },
 };
 
+const doccupinePages = ${JSON.stringify(pages, null, 2).replace(/"([^"]+)":/g, "$1:")};
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -54,7 +56,7 @@ export default async function RootLayout({
     },
   ];
 
-  const pages: any = ${JSON.stringify(pages, null, 2)};
+  const pages: any = doccupinePages;
   const result = navigation.length
     ? navigation
     : transformPagesToGroupedStructure(pages);
