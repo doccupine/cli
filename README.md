@@ -34,6 +34,6 @@ This will start the development server on port 3000. Open your browser and navig
 
 ## Start documenting
 
-Start documenting your project by editing the **index.mdx** file in the choosen MDX directory.
+Start documenting your project by editing the `index.mdx` file in the choosen MDX directory, this is the content for the home page of your documentation website.
 
 In your MDX directory, you can structure your content using folders and files. Doccupine will automatically generate a navigation menu based on the configured categories and order.
