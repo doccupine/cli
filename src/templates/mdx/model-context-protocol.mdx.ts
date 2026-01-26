@@ -4,7 +4,7 @@ description: "Connect your Doccupine documentation to AI tools with an MCP serve
 date: "2025-01-24"
 category: "Configuration"
 categoryOrder: 3
-order: 7
+order: 6
 ---
 # Model Context Protocol
 Connect your documentation to AI tools with a hosted MCP server.

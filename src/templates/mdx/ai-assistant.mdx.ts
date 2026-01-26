@@ -4,7 +4,7 @@ description: "Integrate AI capabilities into your Doccupine documentation using 
 date: "2025-01-24"
 category: "Configuration"
 categoryOrder: 3
-order: 6
+order: 5
 ---
 # AI Assistant
 Doccupine supports AI integration to enhance your documentation experience. You can use OpenAI, Anthropic, or Google Gemini to power AI features in your documentation site. The AI assistant uses your documentation content as context, allowing users to ask questions about your docs and receive accurate answers based on the documentation.
