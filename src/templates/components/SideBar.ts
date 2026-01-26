@@ -2,7 +2,7 @@ export const sideBarTemplate = `"use client";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { Space } from "cherry-styled-components/src/lib";
-import { 
+import {
   DocsSidebar,
   StyledSidebar,
   StyledSidebarList,
