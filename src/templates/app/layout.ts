@@ -13,6 +13,7 @@ import { DocsWrapper } from "@/components/layout/DocsComponents";
 import { SideBar } from "@/components/SideBar";
 import { DocsNavigation } from "@/components/layout/DocsNavigation";
 import { transformPagesToGroupedStructure } from "@/utils/orderNavItems";
+import { StaticLinks } from "@/components/layout/StaticLinks";
 import navigation from "@/navigation.json";
 
 ${
@@ -69,6 +70,7 @@ export default async function RootLayout({
           <CherryThemeProvider theme={theme} themeDark={themeDark}>
             <ChtProvider isChatActive={process.env.LLM_PROVIDER ? true : false}>
               <Header />
+              <StaticLinks />
               {process.env.LLM_PROVIDER && <Chat />}
               <DocsWrapper>
                 <SideBar result={result.length ? result : defaultResults} />
