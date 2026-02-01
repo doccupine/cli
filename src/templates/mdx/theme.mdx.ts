@@ -4,7 +4,7 @@ description: "Customize the documentation UI colors with a theme.json file."
 date: "2025-01-15"
 category: "Configuration"
 categoryOrder: 3
-order: 3
+order: 4
 ---
 # Theme
 Define your site’s color system with a \`theme.json\` file. This lets you tailor the look and feel of your documentation without changing content.

@@ -4,7 +4,7 @@ description: "Customize the documentation typography with a fonts.json file (Goo
 date: "2025-01-15"
 category: "Configuration"
 categoryOrder: 3
-order: 4
+order: 5
 ---
 # Fonts
 Define your site’s typography with a \`fonts.json\` file. You can load fonts from Google Fonts or from local font files bundled with your project.

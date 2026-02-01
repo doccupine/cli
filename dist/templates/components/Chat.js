@@ -17,6 +17,7 @@ import { serialize } from "next-mdx-remote/serialize";
 import { mq, Theme } from "@/app/theme";
 import { useMDXComponents } from "@/components/MDXComponents";
 import { styledTable, stylesLists } from "@/components/layout/SharedStyled";
+import links from "@/links.json";
 
 const styledText = css<{ theme: Theme }>\`
   font-size: \${({ theme }) => theme.fontSizes.text.xs};
@@ -357,13 +358,17 @@ const StyledChatForm = styled.form<{ theme: Theme; $isVisible: boolean }>\`
   }
 \`;
 
-const StyledChatFixedForm = styled.form<{ theme: Theme; $hide: boolean }>\`
+const StyledChatFixedForm = styled.form<{
+  theme: Theme;
+  $hide: boolean;
+  $hasLinks: boolean;
+}>\`
   transition: all 0.3s ease;
   position: fixed;
   bottom: 20px;
   left: 20px;
   width: calc(100% - 115px);
-  z-index: 1000;
+  z-index: 998;
 
   \${mq("lg")} {
     left: 50%;
@@ -373,6 +378,12 @@ const StyledChatFixedForm = styled.form<{ theme: Theme; $hide: boolean }>\`
     top: 90px;
     width: calc(100% - 320px * 2 - 40px);
     opacity: 1;
+
+    \${({ $hasLinks }) =>
+      $hasLinks &&
+      css\`
+        top: 164px;
+      \`}
   }
 
   \${({ $hide }) =>
@@ -592,13 +603,6 @@ type Answer = {
   mdx?: MDXRemoteSerializeResult;
 };
 
-type ApiResponse = {
-  answer?: string | any;
-  sources?: Source[];
-  chunkCount?: number;
-  error?: string;
-};
-
 const SPARKLE_COLORS = [
   "#ff6b6b",
   "#feca57",
@@ -810,7 +814,11 @@ function Chat() {
 
   return (
     <>
-      <StyledChatFixedForm onSubmit={ask} $hide={answer?.length > 0}>
+      <StyledChatFixedForm
+        onSubmit={ask}
+        $hide={answer?.length > 0}
+        $hasLinks={links.length > 0}
+      >
         <StyledChatFixedInner>
           <RainbowInput
             value={question}

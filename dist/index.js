@@ -44,6 +44,7 @@ import { headerTemplate } from "./templates/components/layout/Header.js";
 import { iconTemplate } from "./templates/components/layout/Icon.js";
 import { pictogramsTemplate } from "./templates/components/layout/Pictograms.js";
 import { sharedStyledTemplate } from "./templates/components/layout/SharedStyles.js";
+import { staticLinksTemplate } from "./templates/components/layout/StaticLinks.js";
 import { stepsTemplate } from "./templates/components/layout/Stepts.js";
 import { tabsTemplate } from "./templates/components/layout/Tabs.js";
 import { themeToggleTemplate } from "./templates/components/layout/ThemeToggle.js";
@@ -75,6 +76,7 @@ import { headersAndTextMdxTemplate } from "./templates/mdx/headers-and-text.mdx.
 import { iconsMdxTemplate } from "./templates/mdx/icons.mdx.js";
 import { imageAndEmbedsMdxTemplate } from "./templates/mdx/image-and-embeds.mdx.js";
 import { indexMdxTemplate } from "./templates/mdx/index.mdx.js";
+import { linksMdxTemplate } from "./templates/mdx/links.mdx.js";
 import { mcpMdxTemplate } from "./templates/mdx/model-context-protocol.mdx.js";
 import { listAndTablesMdxTemplate } from "./templates/mdx/list-and-tables.mdx.js";
 import { navigationMdxTemplate } from "./templates/mdx/navigation.mdx.js";
@@ -160,7 +162,12 @@ class MDXToNextJSGenerator {
     watcher = null;
     configWatcher = null;
     fontWatcher = null;
-    configFiles = ["theme.json", "navigation.json", "config.json"];
+    configFiles = [
+        "theme.json",
+        "navigation.json",
+        "config.json",
+        "links.json",
+    ];
     fontConfigFile = "fonts.json";
     constructor(watchDir, outputDir) {
         this.watchDir = path.resolve(watchDir);
@@ -186,6 +193,7 @@ class MDXToNextJSGenerator {
             ".env.example": this.generateEnvExample(),
             ".gitignore": this.generateGitIgnore(),
             "config.json": this.generateConfig(),
+            "links.json": this.generateLinksConfig(),
             "navigation.json": this.generateNavigationConfig(),
             "next.config.ts": this.generateNextConfig(),
             "package.json": this.generatePackageJson(),
@@ -233,6 +241,7 @@ class MDXToNextJSGenerator {
             "components/layout/Icon.tsx": this.generateIcon(),
             "components/layout/Pictograms.tsx": this.generatePictograms(),
             "components/layout/SharedStyled.ts": this.generateSharedStyled(),
+            "components/layout/StaticLinks.tsx": this.generateStaticLinks(),
             "components/layout/Steps.tsx": this.generateSteps(),
             "components/layout/Tabs.tsx": this.generateTabs(),
             "components/layout/ThemeToggle.tsx": this.generateThemeToggle(),
@@ -263,6 +272,7 @@ class MDXToNextJSGenerator {
             "icons.mdx": this.generateIconsMdx(),
             "image-and-embeds.mdx": this.generateImagesAndEmbedsMdx(),
             "index.mdx": this.generateIndexMdx(),
+            "links.mdx": this.generateLinksMdx(),
             "model-context-protocol.mdx": this.generateMCPMdx(),
             "lists-and-tables.mdx": this.generateListsAndTablesMdx(),
             "navigation.mdx": this.generateNavigationMdx(),
@@ -549,6 +559,9 @@ class MDXToNextJSGenerator {
     generateConfig() {
         return `{}`;
     }
+    generateLinksConfig() {
+        return `[]`;
+    }
     generateNavigationConfig() {
         return `[]`;
     }
@@ -826,6 +839,9 @@ export default function Home() {
     generateSharedStyled() {
         return sharedStyledTemplate;
     }
+    generateStaticLinks() {
+        return staticLinksTemplate;
+    }
     generateSteps() {
         return stepsTemplate;
     }
@@ -891,6 +907,9 @@ export default function Home() {
     }
     generateIndexMdx() {
         return indexMdxTemplate;
+    }
+    generateLinksMdx() {
+        return linksMdxTemplate;
     }
     generateListsAndTablesMdx() {
         return listAndTablesMdxTemplate;

@@ -6,6 +6,7 @@ import { mq, Theme } from "@/app/theme";
 import { rgba } from "polished";
 import { resetButton, Textarea } from "cherry-styled-components/src/lib";
 import { ChatContext } from "@/components/Chat";
+import links from "@/links.json";
 
 interface ActionBarProps {
   children: React.ReactNode;
@@ -149,6 +150,7 @@ const StyledContent = styled.div<{
   theme: Theme;
   $isChatActive?: boolean;
   $isChatOpen?: boolean;
+  $hasLinks?: boolean;
 }>\`
   padding-top: 140px;
   transition: all 0.3s ease;
@@ -172,21 +174,43 @@ const StyledContent = styled.div<{
     height: 100%;
     min-height: calc(100vh - 180px);
 
-    \${({ $isChatOpen, $isChatActive }) =>
+    \${({ $hasLinks }) =>
+      $hasLinks &&
+      css\`
+        min-height: calc(100vh - 253px);
+      \`}
+
+    \${({ $isChatOpen, $isChatActive, $hasLinks }) =>
       !$isChatOpen &&
       $isChatActive &&
       css\`
         min-height: calc(100vh - 250px);
+
+        \${$hasLinks &&
+        css\`
+          min-height: calc(100vh - 323px);
+        \`}
       \`}
 
     \${mq("lg")} {
       min-height: calc(100vh - 110px);
 
-      \${({ $isChatOpen, $isChatActive }) =>
+      \${({ $hasLinks }) =>
+        $hasLinks &&
+        css\`
+          min-height: calc(100vh - 183px);
+        \`}
+
+      \${({ $isChatOpen, $isChatActive, $hasLinks }) =>
         !$isChatOpen &&
         $isChatActive &&
         css\`
           min-height: calc(100vh - 180px);
+
+          \${$hasLinks &&
+          css\`
+            min-height: calc(100vh - 253px);
+          \`}
         \`}
     }
   }
@@ -236,12 +260,20 @@ function ActionBar({ children, content }: ActionBarProps) {
         </StyledActionBarContent>
       </StyledActionBar>
       {isView && (
-        <StyledContent $isChatActive={isChatActive} $isChatOpen={isOpen}>
+        <StyledContent
+          $isChatActive={isChatActive}
+          $isChatOpen={isOpen}
+          $hasLinks={links.length > 0}
+        >
           {children}
         </StyledContent>
       )}
       {!isView && (
-        <StyledContent $isChatActive={isChatActive} $isChatOpen={isOpen}>
+        <StyledContent
+          $isChatActive={isChatActive}
+          $isChatOpen={isOpen}
+          $hasLinks={links.length > 0}
+        >
           <Textarea defaultValue={content} $fullWidth />
         </StyledContent>
       )}
