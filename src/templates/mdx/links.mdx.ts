@@ -17,7 +17,7 @@ Place a \`links.json\` at your project root (the same folder where you execute \
 \`\`\`json
 [
   {
-    "title": "Openclaw",
+    "title": "OpenClaw",
     "url": "https://github.com/openclaw/openclaw"
   },
   {
