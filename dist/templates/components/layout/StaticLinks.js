@@ -11,6 +11,7 @@ import linksData from "@/links.json";
 interface LinkProps {
   title: string;
   url: string;
+  icon?: string;
 }
 
 const links = linksData as LinkProps[];
@@ -55,6 +56,7 @@ const StyledStaticLinksContent = styled.div\`
 \`;
 
 const StyledLink = styled.a<{ theme: Theme; $hasIcon?: boolean }>\`
+position: relative;
   text-decoration: none;
   font-size: \${({ theme }) => theme.fontSizes.small.lg};
   line-height: 1;
