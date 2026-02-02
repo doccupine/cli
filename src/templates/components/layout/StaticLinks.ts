@@ -56,7 +56,7 @@ const StyledStaticLinksContent = styled.div\`
 \`;
 
 const StyledLink = styled.a<{ theme: Theme; $hasIcon?: boolean }>\`
-position: relative;
+  position: relative;
   text-decoration: none;
   font-size: \${({ theme }) => theme.fontSizes.small.lg};
   line-height: 1;
