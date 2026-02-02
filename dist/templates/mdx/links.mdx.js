@@ -17,16 +17,19 @@ Place a \`links.json\` at your project root (the same folder where you execute \
 \`\`\`json
 [
   {
-    "title": "OpenClaw",
-    "url": "https://github.com/openclaw/openclaw"
+    "title": "Back to Home",
+    "url": "https://doccupine.com",
+    "icon": "arrow-left"
   },
   {
-    "title": "Doccupine",
-    "url": "https://github.com/doccupine/doccupine"
+    "title": "GitHub",
+    "url": "https://github.com/doccupine",
+    "icon": "github"
   },
   {
-    "title": "OpenAI",
-    "url": "https://openai.com/"
+    "title": "Discord",
+    "url": "https://discord.gg/E9BufYGPhG",
+    "icon": "message-circle"
   }
 ]
 \`\`\`
@@ -34,6 +37,7 @@ Place a \`links.json\` at your project root (the same folder where you execute \
 ### Fields
 - **title**: The label shown for the link in the bar.
 - **url**: The destination URL. Links open in a new tab with \`target="_blank"\` and \`rel="noopener noreferrer"\`.
+- **icon**: The icon to display next to the label. Icons are from [Lucide](https://lucide.dev/).
 
 ## Behavior
 - **Empty or missing file**: If \`links.json\` is empty or not present, the links bar is hidden.

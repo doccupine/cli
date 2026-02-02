@@ -30,7 +30,7 @@ const StyledActionBar = styled.div<{
   \${({ $hasLinks }) =>
     $hasLinks &&
     css\`
-      margin-top: 73px;
+      margin-top: 49px;
     \`}
 
   \${mq("lg")} {
@@ -174,35 +174,36 @@ const StyledContent = styled.div<{
   \${({ $hasLinks }) =>
     $hasLinks &&
     css\`
-      padding-top: calc(73px + 140px);
+      padding-top: calc(49px + 140px);
     \`}
 
   \${mq("lg")} {
     padding-top: 70px;
+
+    \${({ $hasLinks }) =>
+      $hasLinks &&
+      css\`
+        padding-top: calc(73px + 70px);
+      \`}
+
+    \${({ $isChatActive }) =>
+      $isChatActive &&
+      css\`
+        padding-top: 140px;
+      \`}
+
+    \${({ $isChatOpen, $isChatActive }) =>
+      $isChatOpen &&
+      $isChatActive &&
+      css\`
+        padding-top: 70px;
+      \`}
+
     \${({ $isChatActive, $hasLinks }) =>
       $isChatActive &&
       $hasLinks &&
       css\`
         padding-top: calc(73px + 140px);
-      \`}
-
-    \${({ $isChatActive, $hasLinks }) =>
-      $isChatActive &&
-      !$hasLinks &&
-      css\`
-        padding-top: 140px;
-      \`}
-
-    \${({ $isChatOpen, $isChatActive, $hasLinks }) =>
-      $isChatOpen &&
-      $isChatActive &&
-      css\`
-        padding-top: 70px;
-
-        \${$hasLinks &&
-        css\`
-          padding-top: calc(73px + 70px);
-        \`}
       \`}
   }
 
@@ -216,7 +217,7 @@ const StyledContent = styled.div<{
     \${({ $hasLinks }) =>
       $hasLinks &&
       css\`
-        min-height: calc(100vh - 253px);
+        min-height: calc(100vh - 229px);
       \`}
 
     \${({ $isChatOpen, $isChatActive, $hasLinks }) =>
@@ -227,7 +228,7 @@ const StyledContent = styled.div<{
 
         \${$hasLinks &&
         css\`
-          min-height: calc(100vh - 323px);
+          min-height: calc(100vh - 299px);
         \`}
       \`}
 
@@ -287,7 +288,6 @@ function ActionBar({ children, content }: ActionBarProps) {
           )}
         </StyledCopyButton>
         <StyledActionBarContent>
-          {" "}
           <StyledToggle
             onClick={() => setIsView(!isView)}
             aria-label="Toggle Theme"
