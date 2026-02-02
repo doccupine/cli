@@ -15,7 +15,7 @@ Place a \`config.json\` at your project root (the same folder where you execute 
 \`\`\`json
 {
   "name": "Doccupine",
-  "description": "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease.",
+  "description": "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease. AI-ready.",
   "icon": "https://doccupine.com/favicon.ico",
   "preview": "https://doccupine.com/preview.png"
 }

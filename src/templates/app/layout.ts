@@ -29,11 +29,11 @@ ${
 export const metadata: Metadata = {
   title: "Doccupine",
   description:
-    "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease.",
+    "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease. AI-ready.",
   openGraph: {
     title: "Doccupine",
     description:
-      "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease.",
+      "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease. AI-ready.",
   },
 };
 
@@ -49,7 +49,7 @@ export default async function RootLayout({
       slug: "",
       title: "Getting Started",
       description:
-        "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease.",
+        "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease. AI-ready.",
       date: "2025-01-15",
       category: "Introduction",
       categoryOrder: 0,
