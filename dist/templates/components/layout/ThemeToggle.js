@@ -1,10 +1,9 @@
 export const themeToggleTemplate = `"use client";
-import React from "react";
 import { Theme, resetButton } from "cherry-styled-components/src/lib";
 import styled, { css, useTheme } from "styled-components";
-import { useRouter } from "next/navigation";
 import { rgba } from "polished";
 import { Icon } from "@/components/layout/Icon";
+import { theme as themeLight, themeDark } from "@/app/theme";
 import { useThemeOverride } from "@/components/layout/ClientThemeProvider";
 
 const StyledThemeToggle = styled.button<{ theme: Theme; $hidden?: boolean }>\`
@@ -80,19 +79,17 @@ const StyledThemeToggle = styled.button<{ theme: Theme; $hidden?: boolean }>\`
 function ToggleTheme({ $hidden }: { $hidden?: boolean }) {
   const { setTheme } = useThemeOverride();
   const theme = useTheme() as Theme;
-  const router = useRouter();
 
   return (
     <StyledThemeToggle
       onClick={async () => {
-        setTheme(null);
         const nextTheme = theme.isDark ? "light" : "dark";
+        setTheme(nextTheme === "light" ? themeLight : themeDark);
         await fetch("/api/theme", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ theme: nextTheme }),
         });
-        router.refresh();
       }}
       $hidden={$hidden}
       aria-label="Toggle Theme"

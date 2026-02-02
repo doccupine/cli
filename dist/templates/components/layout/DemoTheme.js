@@ -1,5 +1,4 @@
 export const demoThemeTemplate = `"use client";
-import React from "react";
 import { Button } from "@/components/layout/Button";
 import { useThemeOverride } from "@/components/layout/ClientThemeProvider";
 import { Theme, theme, themeDark } from "@/app/theme";
