@@ -13,7 +13,7 @@ interface LinkProps {
 const links = linksData as LinkProps[];
 
 const StyledStaticLinks = styled.div<{ theme: Theme; $isChatOpen?: boolean }>\`
-  position: sticky;
+  position: fixed;
   border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
   top: 70px;
   padding: 20px;
@@ -26,6 +26,8 @@ const StyledStaticLinks = styled.div<{ theme: Theme; $isChatOpen?: boolean }>\`
   height: 73px;
   background: \${({ theme }) => theme.colors.light};
   overflow-x: auto;
+  left: 50%;
+  transform: translateX(-50%);
 
   \${mq("lg")} {
     top: 0;

@@ -13,7 +13,11 @@ interface ActionBarProps {
   content: string;
 }
 
-const StyledActionBar = styled.div<{ theme: Theme; $isChatOpen?: boolean }>\`
+const StyledActionBar = styled.div<{
+  theme: Theme;
+  $isChatOpen?: boolean;
+  $hasLinks?: boolean;
+}>\`
   position: absolute;
   border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
   left: 0;
@@ -23,6 +27,12 @@ const StyledActionBar = styled.div<{ theme: Theme; $isChatOpen?: boolean }>\`
   width: 100%;
   transition: all 0.3s ease;
 
+  \${({ $hasLinks }) =>
+    $hasLinks &&
+    css\`
+      margin-top: 73px;
+    \`}
+
   \${mq("lg")} {
     left: 50%;
     transform: translateX(-50%);
@@ -30,6 +40,12 @@ const StyledActionBar = styled.div<{ theme: Theme; $isChatOpen?: boolean }>\`
     width: 100%;
     padding: 0 20px 20px 20px;
     margin: 0;
+
+    \${({ $hasLinks }) =>
+      $hasLinks &&
+      css\`
+        margin-top: 73px;
+      \`}
 
     \${({ $isChatOpen }) =>
       $isChatOpen &&
@@ -155,15 +171,38 @@ const StyledContent = styled.div<{
   padding-top: 140px;
   transition: all 0.3s ease;
 
-  \${mq("lg")} {
-    \${({ $isChatActive }) =>
-      $isChatActive ? \`padding-top: 140px;\` : \`padding-top: 70px;\`}
+  \${({ $hasLinks }) =>
+    $hasLinks &&
+    css\`
+      padding-top: calc(73px + 140px);
+    \`}
 
-    \${({ $isChatOpen, $isChatActive }) =>
+  \${mq("lg")} {
+    padding-top: 70px;
+    \${({ $isChatActive, $hasLinks }) =>
+      $isChatActive &&
+      $hasLinks &&
+      css\`
+        padding-top: calc(73px + 140px);
+      \`}
+
+    \${({ $isChatActive, $hasLinks }) =>
+      $isChatActive &&
+      !$hasLinks &&
+      css\`
+        padding-top: 140px;
+      \`}
+
+    \${({ $isChatOpen, $isChatActive, $hasLinks }) =>
       $isChatOpen &&
       $isChatActive &&
       css\`
         padding-top: 70px;
+
+        \${$hasLinks &&
+        css\`
+          padding-top: calc(73px + 70px);
+        \`}
       \`}
   }
 
@@ -233,7 +272,7 @@ function ActionBar({ children, content }: ActionBarProps) {
 
   return (
     <>
-      <StyledActionBar $isChatOpen={isOpen}>
+      <StyledActionBar $isChatOpen={isOpen} $hasLinks={links.length > 0}>
         <StyledCopyButton onClick={handleCopyContent} $copied={copied}>
           {copied ? (
             <>
