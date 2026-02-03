@@ -5,11 +5,11 @@ export const llmConfigTemplate = `import type {
 } from "@/services/llm/types";
 const PROVIDER_DEFAULTS: ProviderDefaults = {
   openai: {
-    chat: "gpt-4o-mini",
+    chat: "gpt-4.1-nano",
     embedding: "text-embedding-3-small",
   },
   anthropic: {
-    chat: "claude-3-5-sonnet-20241022",
+    chat: "claude-sonnet-4-5-20250929",
     embedding: "text-embedding-3-small", // Fallback to OpenAI
   },
   google: {

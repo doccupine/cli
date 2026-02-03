@@ -26,10 +26,10 @@ ANTHROPIC_API_KEY=your_anthropic_api_key_here
 GOOGLE_API_KEY=your_google_api_key_here
 
 # Optional: Override default models
-# OpenAI models: gpt-4o-mini, gpt-4o, gpt-4-turbo
-# Anthropic models: claude-3-5-sonnet-20241022, claude-3-5-haiku-20241022, claude-3-opus-20240229
-# Google models: gemini-2.5-flash-lite, gemini-1.5-pro, gemini-1.5-flash
-# LLM_CHAT_MODEL=gpt-4o-mini
+# OpenAI models: gpt-4.1-mini, gpt-4.1-nano, gpt-4.1
+# Anthropic models: claude-sonnet-4-5-20250929, claude-haiku-4-5-20251001, claude-opus-4-5-20251101
+# Google models: gemini-2.5-flash-lite, gemini-2.5-pro, gemini-2.5-flash
+# LLM_CHAT_MODEL=gpt-4.1-nano
 
 # Optional: Override default embedding model
 # OpenAI: text-embedding-3-small, text-embedding-3-large
@@ -43,9 +43,9 @@ GOOGLE_API_KEY=your_google_api_key_here
 
 ## Provider Selection
 Set \`LLM_PROVIDER\` to one of the following values:
-- \`openai\` - Use OpenAI's models (GPT-4o, GPT-4o-mini, GPT-4-turbo)
-- \`anthropic\` - Use Anthropic's models (Claude 3.5 Sonnet, Claude 3.5 Haiku, Claude 3 Opus)
-- \`google\` - Use Google's models (Gemini 2.5 Flash Lite, Gemini 1.5 Pro, Gemini 1.5 Flash)
+- \`openai\` - Use OpenAI's models (GPT-4.1, GPT-4.1-mini, GPT-4.1-nano)
+- \`anthropic\` - Use Anthropic's models (Claude Sonnet 4.5, Claude Haiku 4.5, Claude Opus 4.5)
+- \`google\` - Use Google's models (Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash-Lite)
 
 ## API Keys
 You need to set the API key that matches your chosen provider:
@@ -85,9 +85,9 @@ This hybrid approach allows you to leverage Anthropic's powerful chat models whi
 
 ### Chat Model
 Override the default chat model by uncommenting and setting \`LLM_CHAT_MODEL\`. You can use any available model from your chosen provider. Example models include:
-- **OpenAI**: \`gpt-4o-mini\`, \`gpt-4o\`, \`gpt-4-turbo\`
-- **Anthropic**: \`claude-3-5-sonnet-20241022\`, \`claude-3-5-haiku-20241022\`, \`claude-3-opus-20240229\`
-- **Google**: \`gemini-2.5-flash-lite\`, \`gemini-1.5-pro\`, \`gemini-1.5-flash\`
+- **OpenAI**: \`gpt-4.1-nano\`, \`gpt-4.1-mini\`, \`gpt-4.1\`
+- **Anthropic**: \`claude-sonnet-4-5-20250929\`, \`claude-haiku-4-5-20251001\`, \`claude-opus-4-5-20251101\`
+- **Google**: \`gemini-2.5-flash-lite\`, \`gemini-2.5-pro\`, \`gemini-2.5-flash\`
 
 For a complete list of available models, refer to the official documentation:
 - [OpenAI Models](https://platform.openai.com/docs/models)

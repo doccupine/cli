@@ -8,10 +8,10 @@ ANTHROPIC_API_KEY=your_anthropic_api_key_here
 GOOGLE_API_KEY=your_google_api_key_here
 
 # Optional: Override default models
-# OpenAI models: gpt-4o-mini, gpt-4o, gpt-4-turbo
-# Anthropic models: claude-3-5-sonnet-20241022, claude-3-5-haiku-20241022, claude-3-opus-20240229
-# Google models: gemini-2.5-flash-lite, gemini-1.5-pro, gemini-1.5-flash
-# LLM_CHAT_MODEL=gpt-4o-mini
+# OpenAI models: gpt-4.1-mini, gpt-4.1-nano, gpt-4.1
+# Anthropic models: claude-sonnet-4-5-20250929, claude-haiku-4-5-20251001, claude-opus-4-5-20251101
+# Google models: gemini-2.5-flash-lite, gemini-2.5-pro, gemini-2.5-flash
+# LLM_CHAT_MODEL=gpt-4.1-nano
 
 # Optional: Override default embedding model
 # OpenAI: text-embedding-3-small, text-embedding-3-large

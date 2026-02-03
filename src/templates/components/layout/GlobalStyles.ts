@@ -28,6 +28,12 @@ body {
   min-width: 0;
 }
 
+hr {
+  border: none;
+  border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
+  margin: 10px 0;
+}
+
 pre,
 code,
 kbd,
