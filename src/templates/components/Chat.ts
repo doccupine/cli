@@ -262,6 +262,8 @@ const StyledRainbowButton = styled(Button)<{
   theme: Theme;
   $hasContent: boolean;
 }>\`
+  padding-top: 10px;
+  padding-bottom: 10px;
   position: relative;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
