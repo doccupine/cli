@@ -1,7 +1,7 @@
 {
   "name": "doccupine",
   "version": "0.0.33",
-  "description": "Generate beautiful, ready-to-use documentation with just one CLI command – fast, simple, and open source.",
+  "description": "Document management system that allows you to store, organize, and share your documentation with ease. AI-ready.",
   "main": "dist/index.js",
   "bin": {
     "doccupine": "dist/index.js"
