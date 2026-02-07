@@ -77,8 +77,9 @@ import { iconsMdxTemplate } from "./templates/mdx/icons.mdx.js";
 import { imageAndEmbedsMdxTemplate } from "./templates/mdx/image-and-embeds.mdx.js";
 import { indexMdxTemplate } from "./templates/mdx/index.mdx.js";
 import { linksMdxTemplate } from "./templates/mdx/links.mdx.js";
-import { mcpMdxTemplate } from "./templates/mdx/model-context-protocol.mdx.js";
 import { listAndTablesMdxTemplate } from "./templates/mdx/list-and-tables.mdx.js";
+import { mediaAndAssetsMdxTemplate } from "./templates/mdx/media-and-assets.mdx.js";
+import { mcpMdxTemplate } from "./templates/mdx/model-context-protocol.mdx.js";
 import { navigationMdxTemplate } from "./templates/mdx/navigation.mdx.js";
 import { stepsMdxTemplate } from "./templates/mdx/steps.mdx.js";
 import { tabsMdxTemplate } from "./templates/mdx/tabs.mdx.js";
@@ -162,6 +163,7 @@ class MDXToNextJSGenerator {
     watcher = null;
     configWatcher = null;
     fontWatcher = null;
+    publicWatcher = null;
     configFiles = [
         "theme.json",
         "navigation.json",
@@ -182,6 +184,7 @@ class MDXToNextJSGenerator {
         await this.createStartingDocs();
         await this.copyCustomConfigFiles();
         await this.copyFontConfig();
+        await this.copyPublicFiles();
         await this.processAllMDXFiles();
         console.log(chalk.green("✅ Initial setup complete!"));
         console.log(chalk.cyan("💡 To start the Next.js dev server:"));
@@ -273,8 +276,9 @@ class MDXToNextJSGenerator {
             "image-and-embeds.mdx": this.generateImagesAndEmbedsMdx(),
             "index.mdx": this.generateIndexMdx(),
             "links.mdx": this.generateLinksMdx(),
-            "model-context-protocol.mdx": this.generateMCPMdx(),
             "lists-and-tables.mdx": this.generateListsAndTablesMdx(),
+            "media-and-assets.mdx": this.generateMediaAndAssetsMdx(),
+            "model-context-protocol.mdx": this.generateMCPMdx(),
             "navigation.mdx": this.generateNavigationMdx(),
             "steps.mdx": this.generateStepsMdx(),
             "tabs.mdx": this.generateTabsMdx(),
@@ -390,6 +394,45 @@ class MDXToNextJSGenerator {
             console.error(chalk.red(`❌ Error removing font configuration:`), error);
         }
     }
+    async copyPublicFiles() {
+        const publicDir = path.join(this.rootDir, "public");
+        const destDir = path.join(this.outputDir, "public");
+        console.log(chalk.blue(`🔍 Checking for public directory...`));
+        if (await fs.pathExists(publicDir)) {
+            await fs.copy(publicDir, destDir);
+            console.log(chalk.green(`  ✓ Copied public directory to Next.js app`));
+        }
+        else {
+            console.log(chalk.gray(`  ✗ public directory not found, skipping`));
+        }
+    }
+    async handlePublicFileChange(filePath) {
+        const publicDir = path.join(this.rootDir, "public");
+        const relativePath = path.relative(publicDir, filePath);
+        const destPath = path.join(this.outputDir, "public", relativePath);
+        try {
+            await fs.ensureDir(path.dirname(destPath));
+            await fs.copy(filePath, destPath);
+            console.log(chalk.green(`📋 Updated public/${relativePath} in Next.js app`));
+        }
+        catch (error) {
+            console.error(chalk.red(`❌ Error copying public/${relativePath}:`), error);
+        }
+    }
+    async handlePublicFileDelete(filePath) {
+        const publicDir = path.join(this.rootDir, "public");
+        const relativePath = path.relative(publicDir, filePath);
+        const destPath = path.join(this.outputDir, "public", relativePath);
+        try {
+            if (await fs.pathExists(destPath)) {
+                await fs.remove(destPath);
+                console.log(chalk.yellow(`🗑️ Removed public/${relativePath} from Next.js app`));
+            }
+        }
+        catch (error) {
+            console.error(chalk.red(`❌ Error removing public/${relativePath}:`), error);
+        }
+    }
     async startWatching() {
         console.log(chalk.yellow(`👀 Watching for changes in: ${this.watchDir}`));
         this.watcher = chokidar.watch(this.watchDir, {
@@ -466,6 +509,29 @@ class MDXToNextJSGenerator {
             .on("error", (error) => {
             console.error(chalk.red("❌ Font watcher error:"), error);
         });
+        const publicDir = path.join(this.rootDir, "public");
+        if (await fs.pathExists(publicDir)) {
+            this.publicWatcher = chokidar.watch(publicDir, {
+                persistent: true,
+                ignoreInitial: true,
+            });
+            this.publicWatcher
+                .on("add", (filePath) => {
+                console.log(chalk.cyan(`📁 Public file added: ${path.relative(publicDir, filePath)}`));
+                this.handlePublicFileChange(filePath);
+            })
+                .on("change", (filePath) => {
+                console.log(chalk.cyan(`📁 Public file changed: ${path.relative(publicDir, filePath)}`));
+                this.handlePublicFileChange(filePath);
+            })
+                .on("unlink", (filePath) => {
+                console.log(chalk.red(`🗑️ Public file deleted: ${path.relative(publicDir, filePath)}`));
+                this.handlePublicFileDelete(filePath);
+            })
+                .on("error", (error) => {
+                console.error(chalk.red("❌ Public watcher error:"), error);
+            });
+        }
     }
     async handleFileChange(action, filePath) {
         console.log(chalk.cyan(`📝 File ${action}: ${filePath}`));
@@ -902,9 +968,6 @@ export default function Home() {
     generateImagesAndEmbedsMdx() {
         return imageAndEmbedsMdxTemplate;
     }
-    generateMCPMdx() {
-        return mcpMdxTemplate;
-    }
     generateIndexMdx() {
         return indexMdxTemplate;
     }
@@ -913,6 +976,12 @@ export default function Home() {
     }
     generateListsAndTablesMdx() {
         return listAndTablesMdxTemplate;
+    }
+    generateMediaAndAssetsMdx() {
+        return mediaAndAssetsMdxTemplate;
+    }
+    generateMCPMdx() {
+        return mcpMdxTemplate;
     }
     generateNavigationMdx() {
         return navigationMdxTemplate;
@@ -941,6 +1010,10 @@ export default function Home() {
         if (this.fontWatcher) {
             await this.fontWatcher.close();
             console.log(chalk.yellow("👋 Stopped watching for font config changes"));
+        }
+        if (this.publicWatcher) {
+            await this.publicWatcher.close();
+            console.log(chalk.yellow("👋 Stopped watching for public directory changes"));
         }
     }
 }

@@ -4,7 +4,7 @@ description: "Deploy your Doccupine Next.js app to Vercel."
 date: "2025-01-15"
 category: "Configuration"
 categoryOrder: 3
-order: 8
+order: 9
 ---
 # Deployment
 Deploy your Doccupine site as a Next.js application on Vercel. You can connect a Git repository for automatic deployments or use the Vercel CLI for manual control.
