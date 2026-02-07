@@ -67,7 +67,8 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
 
   useEffect(() => {
     if (headings.length === 0) return;
-    handleScroll();
+    // Run initial scroll check on next frame to avoid synchronous setState in effect
+    const rafId = requestAnimationFrame(handleScroll);
     let timeoutId: NodeJS.Timeout;
     const throttledHandleScroll = () => {
       clearTimeout(timeoutId);
@@ -78,6 +79,7 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
     return () => {
       window.removeEventListener("scroll", throttledHandleScroll);
       window.removeEventListener("resize", handleScroll);
+      cancelAnimationFrame(rafId);
       clearTimeout(timeoutId);
     };
   }, [handleScroll, headings]);

@@ -93,6 +93,7 @@ function Header() {
             <Link href="/" className="logo" aria-label="Logo">
               {(customThemeJson as any).logo ? (
                 theme.isDark ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={(themeJson as any).logo.dark}
                     alt="Logo"
@@ -100,6 +101,7 @@ function Header() {
                     height="100"
                   />
                 ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={(themeJson as any).logo.light}
                     alt="Logo"

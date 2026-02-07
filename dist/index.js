@@ -9,6 +9,7 @@ import chalk from "chalk";
 import prompts from "prompts";
 import { envExampleTemplate } from "./templates/env.example.js";
 import { gitignoreTemplate } from "./templates/gitignore.js";
+import { eslintConfigTeamplate } from "./templates/eslint.config.js";
 import { nextConfigTemplate } from "./templates/next.config.js";
 import { packageJsonTemplate } from "./templates/package.js";
 import { proxyTemplate } from "./templates/proxy.js";
@@ -196,6 +197,7 @@ class MDXToNextJSGenerator {
             ".env.example": this.generateEnvExample(),
             ".gitignore": this.generateGitIgnore(),
             "config.json": this.generateConfig(),
+            "eslint.config.mjs": this.generateESLintConfig(),
             "links.json": this.generateLinksConfig(),
             "navigation.json": this.generateNavigationConfig(),
             "next.config.ts": this.generateNextConfig(),
@@ -624,6 +626,9 @@ class MDXToNextJSGenerator {
     }
     generateConfig() {
         return `{}`;
+    }
+    generateESLintConfig() {
+        return eslintConfigTeamplate;
     }
     generateLinksConfig() {
         return `[]`;

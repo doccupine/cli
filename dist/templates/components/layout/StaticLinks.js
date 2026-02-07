@@ -91,11 +91,9 @@ const StyledLink = styled.a<{ theme: Theme; $hasIcon?: boolean }>\`
     transform: translateY(-50%);
   }
 
-  @media (hover: hover) {
-    &:hover {
-      color: \${({ theme }) =>
-        theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
-    }
+  &:hover {
+    color: \${({ theme }) =>
+      theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
   }
 \`;
 

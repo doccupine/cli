@@ -211,12 +211,10 @@ export const StyledSidebarListItemLink = styled(Link)<Props>\`
   transition: all 0.3s ease;
   border-left: solid 1px \${({ theme }) => theme.colors.grayLight};
 
-  @media (hover: hover) {
-    &:hover {
-      color: \${({ theme }) =>
-        theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
-      border-color: \${({ theme }) => theme.colors.primary};
-    }
+  &:hover {
+    color: \${({ theme }) =>
+      theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
+    border-color: \${({ theme }) => theme.colors.primary};
   }
 
   \${({ $isActive, theme }) =>

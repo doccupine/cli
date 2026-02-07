@@ -17,10 +17,8 @@ export const interactiveStyles = css<{ theme: Theme }>\`
   border: solid 1px transparent;
   box-shadow: 0 0 0 0px \${({ theme }) => theme.colors.primary};
 
-  @media (hover: hover) {
-    &:hover {
-      border-color: \${({ theme }) => theme.colors.primary};
-    }
+  &:hover {
+    border-color: \${({ theme }) => theme.colors.primary};
   }
 
   &:focus {
@@ -133,18 +131,16 @@ export const StyledDataArrowButton = styled.button<{
     color: \${({ theme }) => theme.colors.primary};
   }
 
-  @media (hover: hover) {
-    &:hover {
-      & .lucide-chevron-down {
-        & path {
-          stroke: \${({ theme }) => theme.colors.primaryDark};
-        }
+  &:hover {
+    & .lucide-chevron-down {
+      & path {
+        stroke: \${({ theme }) => theme.colors.primaryDark};
       }
+    }
 
-      & .avatar,
-      & .clickable {
-        border-color: \${({ theme }) => theme.colors.primary};
-      }
+    & .avatar,
+    & .clickable {
+      border-color: \${({ theme }) => theme.colors.primary};
     }
   }
 
@@ -330,16 +326,14 @@ export const StyledDataDropdownItem = styled.li<{ theme: Theme }>\`
     height: auto;
     min-height: 45px;
 
-    @media (hover: hover) {
-      &:hover {
-        background-color: \${({ theme }) =>
-          rgba(
-            theme.isDark ? theme.colors.primaryDark : theme.colors.primaryLight,
-            0.1,
-          )};
-        color: \${({ theme }) =>
-          theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
-      }
+    &:hover {
+      background-color: \${({ theme }) =>
+        rgba(
+          theme.isDark ? theme.colors.primaryDark : theme.colors.primaryLight,
+          0.1,
+        )};
+      color: \${({ theme }) =>
+        theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
     }
 
     &:active,
@@ -403,11 +397,9 @@ export const StyledDataTagButton = styled.button<{ theme: Theme }>\`
       rgba(theme.isDark ? theme.colors.dark : theme.colors.light, 0.2)};
   transition: all 0.3s ease;
 
-  @media (hover: hover) {
-    &:hover {
-      background: \${({ theme }) =>
-        rgba(theme.isDark ? theme.colors.dark : theme.colors.light, 0.2)};
-    }
+  &:hover {
+    background: \${({ theme }) =>
+      rgba(theme.isDark ? theme.colors.dark : theme.colors.light, 0.2)};
   }
 
   & svg {
@@ -636,13 +628,11 @@ export const StyledPanelButton = styled(Link)<{ theme: Theme }>\`
   text-decoration: none;
   transition: all 0.3s ease;
 
-  @media (hover: hover) {
-    &:hover {
-      background-color: \${({ theme }) => rgba(theme.colors.primaryLight, 0.1)};
+  &:hover {
+    background-color: \${({ theme }) => rgba(theme.colors.primaryLight, 0.1)};
 
-      & .link {
-        border-color: \${({ theme }) => theme.colors.primaryDark};
-      }
+    & .link {
+      border-color: \${({ theme }) => theme.colors.primaryDark};
     }
   }
 
@@ -723,13 +713,11 @@ export const StyledSmallButtonWrapper = styled.div<{ theme: Theme }>\`
     transform: translateY(10px);
   }
 
-  @media (hover: hover) {
-    &:hover {
-      & .hidden-button {
-        opacity: 1;
-        pointer-events: all;
-        transform: translateY(0);
-      }
+  &:hover {
+    & .hidden-button {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateY(0);
     }
   }
 \`;

@@ -23,10 +23,8 @@ const StyledAccordionTitle = styled.h3<{ theme: Theme; $isOpen: boolean }>\`
   transition: color 0.3s ease;
   position: relative;
 
-  @media (hover: hover) {
-    &:hover {
-      color: \${({ theme }) => theme.colors.primaryDark};
-    }
+  &:hover {
+    color: \${({ theme }) => theme.colors.primaryDark};
   }
 
   & .lucide-chevron-down {

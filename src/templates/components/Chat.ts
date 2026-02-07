@@ -587,15 +587,13 @@ const StyledChatCloseButton = styled.button<{ theme: Theme }>\`
   margin: 0;
   color: \${({ theme }) => theme.colors.primary};
 
-  @media (hover: hover) {
-    &:hover {
-      color: \${({ theme }) => theme.colors.primaryDark};
-      transform: scale(1.05);
-    }
+  &:hover {
+    color: \${({ theme }) => theme.colors.primaryDark};
+    transform: scale(1.05);
+  }
 
-    &:active {
-      transform: scale(0.95);
-    }
+  &:active {
+    transform: scale(0.95);
   }
 \`;
 
