@@ -1,12 +1,12 @@
 export const mediaAndAssetsMdxTemplate = `---
-title: "Media and Assets"
+title: "Media and assets"
 description: "Serve static files like images, favicons, fonts, and Open Graph previews from the public directory."
 date: "2025-01-15"
 category: "Configuration"
 categoryOrder: 3
 order: 5
 ---
-# Media and Assets
+# Media and assets
 Doccupine watches a \`public\` directory in your project root (the same folder where you execute \`npx doccupine\`) and copies its contents into the generated Next.js \`public\` folder. Use it to serve static files such as favicons, Open Graph preview images, custom fonts, or any other media your documentation needs.
 
 ## The public directory
