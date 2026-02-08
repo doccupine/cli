@@ -891,6 +891,7 @@ import configData from "@/config.json";
 
 interface Config {
   name?: string;
+  description?: string;
   icon?: string;
   preview?: string;
 }
@@ -950,6 +951,7 @@ import configData from "@/config.json";
 
 interface Config {
   name?: string;
+  description?: string;
   icon?: string;
   preview?: string;
 }
@@ -971,13 +973,13 @@ ${
   },
 };`
     : `export const metadata: Metadata = {
-  title: "Doccupine",
-  description: "Generated with Doccupine",
-  icons: "https://doccupine.com/favicon.ico",
+  title: \`\${config.name || "Doccupine"}\`,
+  description: \`\${config.description || "Generated with Doccupine"}\`,
+  icons: \`\${config.icon || "https://doccupine.com/favicon.ico"}\`,
   openGraph: {
-    title: "Doccupine",
-    description: "Generated with Doccupine",
-    images: "https://doccupine.com/preview.png",
+    title: \`\${config.name || "Doccupine"}\`,
+    description: \`\${config.description || "Generated with Doccupine"}\`,
+    images: \`\${config.preview || "https://doccupine.com/preview.png"}\`,
   },
 };`
 }
