@@ -1,6 +1,6 @@
 {
   "name": "doccupine",
-  "version": "0.0.35",
+  "version": "0.0.36",
   "description": "Document management system that allows you to store, organize, and share your documentation with ease. AI-ready.",
   "main": "dist/index.js",
   "bin": {

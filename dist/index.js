@@ -743,8 +743,8 @@ export default function Page() {
                     description: frontmatter.description || "",
                     categoryOrder: frontmatter.categoryOrder || 0,
                     order: frontmatter.order || 0,
-                    icon: frontmatter.icon || "https://doccupine.com/favicon.ico",
-                    image: frontmatter.image || "https://doccupine.com/preview.png",
+                    icon: frontmatter.icon,
+                    image: frontmatter.image,
                 };
             }
         }
