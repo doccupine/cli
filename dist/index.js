@@ -767,7 +767,7 @@ ${indexMDX
             ? `export const metadata: Metadata = {
   title: \`\${config.name ? config.name + " -" : "Doccupine -"} ${indexMDX.title}\`,
   description: \`${indexMDX.description ? indexMDX.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
-  icons: \`${indexMDX.icon ? indexMDX.icon : "\${config.icon || 'https://doccupine.com/favicon.ico'}"}\`,
+  icons: \`${indexMDX.icon ? indexMDX.icon : '\${config.icon || "https://doccupine.com/favicon.ico"}'}\`,
   openGraph: {
     title: \`\${config.name ? config.name + " -" : "Doccupine -"} ${indexMDX.title}\`,
     description: \`${indexMDX.description ? indexMDX.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
