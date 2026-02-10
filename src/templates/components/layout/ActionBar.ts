@@ -198,11 +198,16 @@ const StyledContent = styled.div<{
         padding-top: 70px;
       \`}
 
-    \${({ $isChatActive, $hasLinks }) =>
+    \${({ $isChatActive, $hasLinks, $isChatOpen }) =>
       $isChatActive &&
       $hasLinks &&
       css\`
         padding-top: calc(73px + 140px);
+
+        \${$isChatOpen &&
+        css\`
+          padding-top: calc(73px + 70px);
+        \`}
       \`}
   }
 
