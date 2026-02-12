@@ -62,7 +62,8 @@ export async function POST(req: Request) {
     const prompt = [
       {
         role: "system" as const,
-        content: systemContext,
+        content: systemContext as string,
+      },
       {
         role: "user" as const,
         content: \`Question: \${question}\\n\\nContext:\\n\${context}\`,
