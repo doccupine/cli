@@ -59,7 +59,17 @@ export async function buildDocsIndex(force = false): Promise<void> {
 
     const config = getLLMConfig();
     const embeddings = createEmbeddings(config);
-    const vectors = await embeddings.embedDocuments(chunks.map((c) => c.text));
+
+    // Process embeddings in small batches to avoid exceeding token limits
+    const BATCH_SIZE = 10;
+    const texts = chunks.map((c) => c.text);
+    const vectors: number[][] = [];
+
+    for (let i = 0; i < texts.length; i += BATCH_SIZE) {
+      const batch = texts.slice(i, i + BATCH_SIZE);
+      const batchVectors = await embeddings.embedDocuments(batch);
+      vectors.push(...batchVectors);
+    }
 
     docsIndex.chunks = chunks.map((c, i) => ({
       ...c,

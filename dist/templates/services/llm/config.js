@@ -5,7 +5,7 @@ export const llmConfigTemplate = `import type {
 } from "@/services/llm/types";
 const PROVIDER_DEFAULTS: ProviderDefaults = {
   openai: {
-    chat: "gpt-4.1-nano",
+    chat: "gpt-5-nano",
     embedding: "text-embedding-3-small",
   },
   anthropic: {
@@ -49,7 +49,7 @@ export function getLLMConfig(): LLMConfig {
     provider,
     chatModel: process.env.LLM_CHAT_MODEL || defaults.chat,
     embeddingModel: process.env.LLM_EMBEDDING_MODEL || defaults.embedding,
-    temperature: parseFloat(process.env.LLM_TEMPERATURE || "0"),
+    temperature: parseFloat(process.env.LLM_TEMPERATURE || "1"),
   };
 }
 export function getLLMDisplayName(config?: LLMConfig): string {
