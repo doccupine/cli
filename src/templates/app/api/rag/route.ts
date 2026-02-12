@@ -8,6 +8,8 @@ import {
 } from "@/services/mcp/server";
 import configData from "@/config.json";
 
+const config = configData as Config;
+
 interface Config {
   name?: string;
   description?: string;
@@ -17,7 +19,7 @@ interface Config {
 
 const PROJECT_ROOT = process.cwd();
 
-const projectName = configData.name || "Doccupine";
+const projectName = config.name || "Doccupine";
 
 const systemContext = \`You are AI Assistant, a documentation assistant for \${projectName}, Your name is \${projectName} AI Assistant.
 
