@@ -6,10 +6,20 @@ import {
   ensureDocsIndex,
   getIndexStatus,
 } from "@/services/mcp/server";
+import configData from "@/config.json";
+
+interface Config {
+  name?: string;
+  description?: string;
+  icon?: string;
+  preview?: string;
+}
 
 const PROJECT_ROOT = process.cwd();
 
-const systemContext = \`You are AI Assistant, a documentation assistant for Doccupine.
+const projectName = configData.name || "Doccupine";
+
+const systemContext = \`You are AI Assistant, a documentation assistant for \${projectName}, Your name is \${projectName} AI Assistant.
 
 ## Core Rules
 1. Answer ONLY from the provided context. Never fabricate information.
