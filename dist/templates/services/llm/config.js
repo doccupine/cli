@@ -5,7 +5,7 @@ export const llmConfigTemplate = `import type {
 } from "@/services/llm/types";
 const PROVIDER_DEFAULTS: ProviderDefaults = {
   openai: {
-    chat: "gpt-5-nano",
+    chat: "gpt-4.1-nano",
     embedding: "text-embedding-3-small",
   },
   anthropic: {

@@ -26,7 +26,7 @@ ANTHROPIC_API_KEY=your_anthropic_api_key_here
 GOOGLE_API_KEY=your_google_api_key_here
 
 # Optional: Override default models
-# OpenAI models: gpt-5-mini, gpt-5-nano, gpt-5
+# OpenAI models: gpt-4.1-nano, gpt-5-mini, gpt-5-nano, gpt-5
 # Anthropic models: claude-sonnet-4-5-20250929, claude-haiku-4-5-20251001, claude-opus-4-5-20251101
 # Google models: gemini-2.5-flash-lite, gemini-2.5-pro, gemini-2.5-flash
 # LLM_CHAT_MODEL=gpt-4.1-nano
