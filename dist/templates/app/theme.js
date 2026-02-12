@@ -116,6 +116,7 @@ export const fontSizes: FontSizes = {
 
   button: { xs: "16px", lg: "16px" },
   buttonBig: { xs: "18px", lg: "18px" },
+  buttonSmall: { xs: "14px", lg: "14px" },
 
   input: { xs: "16px", lg: "16px" },
   inputBig: { xs: "18px", lg: "18px" },
@@ -143,6 +144,7 @@ export const lineHeights: LineHeights = {
 
   button: { xs: "1", lg: "1" },
   buttonBig: { xs: "1", lg: "1" },
+  buttonSmall: { xs: "1", lg: "1" },
 
   input: { xs: "1", lg: "1" },
   inputBig: { xs: "1", lg: "1" },
@@ -249,6 +251,7 @@ export interface FontSizes<TString = string> {
 
   button: { xs: TString; lg: TString };
   buttonBig: { xs: TString; lg: TString };
+  buttonSmall: { xs: TString; lg: TString };
 
   input: { xs: TString; lg: TString };
   inputBig: { xs: TString; lg: TString };
@@ -276,6 +279,7 @@ export interface LineHeights<TString = string> {
 
   button: { xs: TString; lg: TString };
   buttonBig: { xs: TString; lg: TString };
+  buttonSmall: { xs: TString; lg: TString };
 
   input: { xs: TString; lg: TString };
   inputBig: { xs: TString; lg: TString };
