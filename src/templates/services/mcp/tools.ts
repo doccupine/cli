@@ -200,8 +200,8 @@ export async function getDoc(
  */
 export function chunkText(
   text: string,
-  chunkSize = 1500,
-  overlap = 200,
+  chunkSize = 800,
+  overlap = 100,
 ): string[] {
   const chunks: string[] = [];
   let i = 0;
