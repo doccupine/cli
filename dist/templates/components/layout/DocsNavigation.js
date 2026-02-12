@@ -7,6 +7,7 @@ import { Icon } from "@/components/layout/Icon";
 import { mq, Theme } from "@/app/theme";
 import { interactiveStyles } from "@/components/layout/SharedStyled";
 import { ChatContext } from "@/components/Chat";
+
 const StyledNavigationWrapper = styled.div<{
   $isChatOpen?: boolean;
 }>\`
@@ -21,6 +22,7 @@ const StyledNavigationWrapper = styled.div<{
       \`}
   }
 \`;
+
 const StyledNavigationInner = styled.div\`
   display: flex;
   justify-content: space-between;
@@ -29,6 +31,7 @@ const StyledNavigationInner = styled.div\`
   max-width: 640px;
   margin: auto;
 \`;
+
 const StyledNavButton = styled(Link)<{ theme: Theme }>\`
   \${interactiveStyles};
   display: flex;
@@ -40,27 +43,33 @@ const StyledNavButton = styled(Link)<{ theme: Theme }>\`
   border-radius: \${({ theme }) => theme.spacing.radius.lg};
   border: solid 1px \${({ theme }) => theme.colors.grayLight};
   color: \${({ theme }) => theme.colors.dark};
+  
   &:hover {
     border-color: \${({ theme }) => theme.colors.primary};
   }
+
   &[data-direction="prev"] {
     align-items: flex-start;
   }
+
   &[data-direction="next"] {
     align-items: flex-end;
     margin-left: auto;
     text-align: right;
   }
 \`;
+
 const StyledNavLabel = styled.span<{ theme: Theme }>\`
   color: \${({ theme }) => theme.colors.gray};
   display: flex;
   flex-direction: row;
   gap: 4px;
+
   & svg {
     margin: auto 0;
   }
 \`;
+
 const StyledNavTitle = styled.span<{ theme: Theme }>\`
   color: \${({ theme }) => theme.colors.dark};
   font-weight: 600;
@@ -68,16 +77,20 @@ const StyledNavTitle = styled.span<{ theme: Theme }>\`
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
+  max-width: 100%;
 \`;
+
 const StyledSpacer = styled.div\`
   flex: 1;
 \`;
+
 interface Page {
   slug: string;
   title: string;
   category?: string;
   [key: string]: any;
 }
+
 interface NavigationItem {
   category?: string;
   slug?: string;
@@ -86,9 +99,11 @@ interface NavigationItem {
   items?: Page[];
   [key: string]: any;
 }
+
 interface DocsNavigationProps {
   result: NavigationItem[];
 }
+
 function DocsNavigation({ result }: DocsNavigationProps) {
   const { isOpen } = useContext(ChatContext);
   const pathname = usePathname();
@@ -140,5 +155,6 @@ function DocsNavigation({ result }: DocsNavigationProps) {
     </StyledNavigationWrapper>
   );
 }
+
 export { DocsNavigation };
 `;
