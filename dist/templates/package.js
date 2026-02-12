@@ -10,10 +10,10 @@ export const packageJsonTemplate = JSON.stringify({
     },
     dependencies: {
         "@langchain/anthropic": "^1.3.17",
-        "@langchain/google-genai": "^2.1.17",
+        "@langchain/google-genai": "^2.1.178",
         "@langchain/openai": "^1.2.7",
         "@modelcontextprotocol/sdk": "^1.26.0",
-        langchain: "^1.2.21",
+        langchain: "^1.2.23",
         next: "16.1.6",
         react: "19.2.4",
         "react-dom": "19.2.4",
