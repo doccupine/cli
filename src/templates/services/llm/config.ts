@@ -49,7 +49,7 @@ export function getLLMConfig(): LLMConfig {
     provider,
     chatModel: process.env.LLM_CHAT_MODEL || defaults.chat,
     embeddingModel: process.env.LLM_EMBEDDING_MODEL || defaults.embedding,
-    temperature: parseFloat(process.env.LLM_TEMPERATURE || "1"),
+    temperature: parseFloat(process.env.LLM_TEMPERATURE || "0"),
   };
 }
 export function getLLMDisplayName(config?: LLMConfig): string {

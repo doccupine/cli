@@ -19,6 +19,6 @@ GOOGLE_API_KEY=your_google_api_key_here
 # Note: Anthropic doesn't provide embeddings, will fallback to OpenAI
 # LLM_EMBEDDING_MODEL=text-embedding-3-small
 
-# Optional: Set temperature (0-1, default: 1)
-# LLM_TEMPERATURE=1
+# Optional: Set temperature (0-1, default: 0)
+# LLM_TEMPERATURE=0
 `;
