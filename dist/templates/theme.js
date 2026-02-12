@@ -131,6 +131,7 @@ export const fontSizes: FontSizes = {
 
   input: { xs: "16px", lg: "16px" },
   inputBig: { xs: "18px", lg: "18px" },
+  inputSmall: { xs: "14px", lg: "14px" },
 };
 
 export const lineHeights: LineHeights = {
@@ -157,6 +158,7 @@ export const lineHeights: LineHeights = {
 
   input: { xs: "1", lg: "1" },
   inputBig: { xs: "1", lg: "1" },
+  inputSmall: { xs: "1.00", lg: "1.00" },
 };
 
 export const theme: Theme = {
@@ -262,6 +264,7 @@ export interface FontSizes<TString = string> {
 
   input: { xs: TString; lg: TString };
   inputBig: { xs: TString; lg: TString };
+  inputSmall: { xs: TString; lg: TString };
 }
 
 export interface LineHeights<TString = string> {
@@ -288,6 +291,7 @@ export interface LineHeights<TString = string> {
 
   input: { xs: TString; lg: TString };
   inputBig: { xs: TString; lg: TString };
+  inputSmall: { xs: TString; lg: TString };
 }
 
 export interface Theme {
