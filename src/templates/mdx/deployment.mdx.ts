@@ -1,76 +1,51 @@
 export const deploymentMdxTemplate = `---
 title: "Deployment"
-description: "Deploy your Doccupine Next.js app to Vercel."
+description: "Deploy your documentation site with Doccupine or self-host on Vercel."
 date: "2025-01-15"
 category: "Configuration"
 categoryOrder: 3
 order: 9
 ---
 # Deployment
-Deploy your Doccupine site as a Next.js application on Vercel. You can connect a Git repository for automatic deployments or use the Vercel CLI for manual control.
+
+## Deploy with Doccupine
+
+Sign up for an account at [Doccupine](https://www.doccupine.com) and create your docs instantly — no build configuration, no infrastructure to manage.
+
+Doccupine gives you:
+- **Automatic deployments** on every push to your repository
+- **Site customization** through a visual dashboard — no code changes needed
+- **Team collaboration** so your whole team can manage docs together
+- **Custom domains** with automatic SSL
+- **AI Assistant and MCP server** included out of the box, no API key required
+
+Get started at [doccupine.com](https://www.doccupine.com).
+
+---
+
+## Self-hosting on Vercel
+
+If you prefer to self-host, Doccupine generates a standard Next.js app that can be deployed to Vercel.
 
 <Callout type="warning">
-  Only deploy the generated website directory produced by Doccupine (the Next.js app). Do not deploy your MDX source folder. If your repo contains multiple folders, set the Vercel project <strong>Root Directory</strong> to the generated site folder.
+  Deploy the generated website directory (the Next.js app), not your MDX source folder. In a monorepo, set the Vercel <strong>Root Directory</strong> to the generated site folder.
 </Callout>
 
-## Prerequisites
-- **Vercel account**: https://vercel.com/signup
-- **Git repository**: GitHub, GitLab, or Bitbucket with your Next.js app
-- **Node.js**: Use an LTS version
+### Quick start
+1. Push the generated site folder to GitHub, GitLab, or Bitbucket.
+2. Import the repository at [vercel.com/new](https://vercel.com/new). Vercel auto-detects Next.js and applies the correct build settings.
+3. Add any required environment variables under Project → Settings → Environment Variables.
+4. Deploy. Vercel creates Preview deployments per branch and promotes to Production on merge to main.
 
-## Option 1: Deploy via Git (recommended)
-1. **Push the generated site folder** to a Git repository (or ensure the repo’s root is the generated website directory).
-2. **Import to Vercel**: Go to https://vercel.com/new and select your repository.
-3. If your repo is a monorepo, set the project **Root Directory** to the generated website folder (Project → Settings → General → Root Directory).
-4. **Framework preset**: Vercel auto-detects Next.js.
-5. **Build settings** (defaults are fine):
-   - Install Command: \`pnpm i\`, \`yarn\`, or \`npm i\` (Vercel auto-detects)
-   - Build Command: \`next build\`
-   - Output: handled automatically by Vercel for Next.js
-6. **Environment Variables**: Add any values required by your docs (see below).
-7. **Deploy**: Vercel creates a Preview deployment per branch. Merge to your main branch to promote to Production.
+You can also deploy from the command line with the [Vercel CLI](https://vercel.com/docs/cli):
 
-## Option 2: Deploy with Vercel CLI
-1. Install the CLI:
-   \`\`\`bash
-   npm i -g vercel
-   \`\`\`
-2. From the generated website directory, run:
-   \`\`\`bash
-   vercel
-   \`\`\`
-   Follow the prompts to link or create a project.
-3. When ready for production:
-   \`\`\`bash
-   vercel --prod
-   \`\`\`
+\`\`\`bash
+npm i -g vercel
+\`\`\`
 
-## Environment variables
-If your documentation or site behavior depends on environment variables, define them in Vercel:
-- In the Vercel dashboard: Project → Settings → Environment Variables.
-- Or via CLI:
-  \`\`\`bash
-  vercel env add NAME
-  \`\`\`
+### Custom domains
+Add a domain under Project → Settings → Domains and point your DNS to Vercel.
 
-For Next.js, make sure variables needed on the client are prefixed with \`NEXT_PUBLIC_\`.
-
-## Next.js configuration notes
-- Ensure a valid \`next.config.js\` if you customize images, basePath, or MDX handling.
-- If you use MDX, include the necessary plugins/config in your project.
-- Vercel automatically enables Image Optimization and Edge/CDN features for Next.js.
-
-## Custom domains
-- Add a domain in Vercel: Project → Settings → Domains.
-- Point DNS to Vercel as instructed. Changes can take a few minutes to propagate.
-
-## Troubleshooting
-- **Build failed**: Check the Vercel build logs. Confirm Node version and lockfile are present.
-- **Missing content**: Ensure your MDX directory and any assets are included in the repository.
-- **Env not applied**: Add variables for the correct environment (Preview vs Production) and redeploy.
-- **Images not loading**: Configure \`images.domains\` in \`next.config.js\` if using remote images.
-
-## Tips
-- **Preview first**: Use Preview deployments to validate docs before merging to Production.
-- **Cache and performance**: Leverage ISR or static generation where applicable for faster loads.
-- **Consistent tooling**: Keep a single package manager and lockfile in the repo (npm, pnpm, or yarn).`;
+### Troubleshooting
+- **Build failed** — Check build logs. Ensure your lockfile and correct Node.js version are present.
+- **Missing content** — Verify your MDX files and assets are in the repository.`;
