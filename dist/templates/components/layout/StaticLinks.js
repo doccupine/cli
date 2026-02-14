@@ -114,7 +114,7 @@ function StaticLinks() {
 
   return (
     <>
-      <StyledStaticLinks $isChatOpen={isOpen}>
+      <StyledStaticLinks $isChatOpen={isOpen} id="static-links">
         <StyledStaticLinksContent>
           {links.map((link, index) => (
             <StyledLink
