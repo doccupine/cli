@@ -323,6 +323,34 @@ The first search may be slower as it builds the index. Subsequent searches are f
 - Consider reducing the number of documentation pages
 - Verify your server has sufficient memory
 
+### Cloudflare blocking MCP requests
+
+If you use Cloudflare as a proxy in front of your documentation site, Cloudflare's bot protection may block server-to-server requests from AI tools like Claude.ai. This can cause MCP connections to fail silently or return errors.
+
+There are two ways to resolve this:
+
+**Option 1: Disable the Cloudflare proxy (simplest)**
+
+In your Cloudflare DNS settings, click the orange cloud icon next to your domain record to switch it to "DNS only" (grey cloud). This disables Cloudflare's proxy and bot protection for your domain, allowing MCP requests to reach your server directly.
+
+**Option 2: Add a Cloudflare WAF exception (keeps your custom domain proxied)**
+
+In Cloudflare dashboard:
+
+1. Go to **Security > WAF**.
+2. Click **Create rule**.
+3. Set it up as:
+   - **Rule name**: Allow MCP API
+   - **Field**: URI Path
+   - **Operator**: starts with
+   - **Value**: \`/api/mcp\`
+   - **Action**: Skip -- then check all remaining custom rules, Rate limiting rules, and Bot Fight Mode / Super Bot Fight Mode.
+4. Deploy the rule and make sure it is ordered first (above other rules).
+
+<Callout type="warning">
+  Also check **Security > Bots** in your Cloudflare dashboard. If "Bot Fight Mode" or "Super Bot Fight Mode" is enabled, that is very likely what is blocking server-to-server requests from AI tools.
+</Callout>
+
 ## Best practices
 
 * **Keep content up-to-date**: Restart your server after updating documentation to rebuild the index with fresh content.
