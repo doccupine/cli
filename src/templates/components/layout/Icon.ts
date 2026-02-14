@@ -19,6 +19,7 @@ function transformIconName(name: string): string {
 const Icon = ({ name, color, size, className }: Props) => {
   const IconName = transformIconName(name as string);
   const LucideIcon = icons[IconName as keyof typeof icons];
+  if (!LucideIcon) return null;
 
   return <LucideIcon color={color} size={size} className={className} />;
 };
