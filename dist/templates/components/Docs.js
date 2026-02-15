@@ -57,6 +57,7 @@ function Docs({ content }: DocsProps) {
                 <MDXRemote
                   source={content}
                   options={{
+                    blockJS: false,
                     mdxOptions: {
                       remarkPlugins: [remarkGfm],
                     },

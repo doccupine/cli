@@ -26,10 +26,7 @@ const StyledLinkButton = styled(Link)<LinkButtonProps>\`
   & svg.lucide {
     margin: auto 0;
     min-width: min-content;
-    color: \${({ theme, $outline }) =>
-      $outline ? "inherit" : theme.colors.light};
-    stroke: \${({ theme, $outline }) =>
-      $outline ? "currentColor" : theme.colors.light};
+    color: inherit;
   }
 \`;
 
@@ -40,10 +37,7 @@ const ButtonBase = styled.button<ButtonProps>\`
   & svg.lucide {
     margin: auto 0;
     min-width: min-content;
-    color: \${({ theme, $outline }) =>
-      $outline ? "inherit" : theme.colors.light};
-    stroke: \${({ theme, $outline }) =>
-      $outline ? "currentColor" : theme.colors.light};
+    color: inherit;
   }
 \`;
 
@@ -68,13 +62,9 @@ function Button({
         $outline={outline}
         $fullWidth={fullWidth}
       >
-        {iconPosition === "left" && icon && (
-          <Icon name={icon} color={theme.colors.light} size={16} />
-        )}
+        {iconPosition === "left" && icon && <Icon name={icon} size={16} />}
         {props.children}
-        {iconPosition === "right" && icon && (
-          <Icon name={icon} color={theme.colors.light} size={16} />
-        )}
+        {iconPosition === "right" && icon && <Icon name={icon} size={16} />}
       </StyledLinkButton>
     </div>
   ) : (
@@ -86,13 +76,9 @@ function Button({
         $outline={outline}
         $fullWidth={fullWidth}
       >
-        {iconPosition === "left" && icon && (
-          <Icon name={icon} color={theme.colors.light} size={16} />
-        )}
+        {iconPosition === "left" && icon && <Icon name={icon} size={16} />}
         {props.children}
-        {iconPosition === "right" && icon && (
-          <Icon name={icon} color={theme.colors.light} size={16} />
-        )}
+        {iconPosition === "right" && icon && <Icon name={icon} size={16} />}
       </ButtonBase>
     </div>
   );

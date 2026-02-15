@@ -5,7 +5,7 @@ export type IconProps = keyof typeof icons;
 interface Props {
   name: string | IconProps;
   color?: string;
-  size?: number;
+  size?: string | number;
   className?: string;
 }
 
@@ -21,7 +21,9 @@ const Icon = ({ name, color, size, className }: Props) => {
   const LucideIcon = icons[IconName as keyof typeof icons];
   if (!LucideIcon) return null;
 
-  return <LucideIcon color={color} size={size} className={className} />;
+  const numericSize = size != null ? Number(size) : undefined;
+
+  return <LucideIcon color={color} size={numericSize} className={className} />;
 };
 
 export { Icon };
