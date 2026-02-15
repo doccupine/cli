@@ -1,6 +1,6 @@
 {
   "name": "doccupine",
-  "version": "0.0.49",
+  "version": "0.0.50",
   "description": "Document management system that allows you to store, organize, and share your documentation with ease. AI-ready.",
   "main": "dist/index.js",
   "bin": {
@@ -20,6 +20,7 @@
     "mdx",
     "ai",
     "llm",
+    "mcp",
     "nextjs",
     "cli",
     "generator",
