@@ -28,9 +28,9 @@
     "static-site-generator"
   ],
   "homepage": "https://doccupine.com",
-  "repository": "https://github.com/thethemefoundry/doccupine-cli",
+  "repository": "https://github.com/doccupine/cli",
   "author": "Luan Gjokaj",
-  "license": "MIT",
+  "license": "O’Saasy",
   "dependencies": {
     "chalk": "^5.6.2",
     "chokidar": "^5.0.0",
