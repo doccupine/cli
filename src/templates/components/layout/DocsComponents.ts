@@ -7,7 +7,7 @@ import {
   styledSmall,
   styledStrong,
   styledText,
-} from "cherry-styled-components/src/lib";
+} from "cherry-styled-components";
 import Link from "next/link";
 import { mq, Theme } from "@/app/theme";
 import { styledTable, stylesLists } from "@/components/layout/SharedStyled";

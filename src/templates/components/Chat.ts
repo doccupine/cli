@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import styled, { css, keyframes } from "styled-components";
 import { rgba } from "polished";
-import { Button } from "cherry-styled-components/src/lib";
+import { Button } from "cherry-styled-components";
 import { ArrowUp, LoaderPinwheel, Sparkles, X } from "lucide-react";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";

@@ -1,6 +1,6 @@
 export const docsSideBarTemplate = `"use client";
 import { useCallback, useEffect, useState } from "react";
-import { Space } from "cherry-styled-components/src/lib";
+import { Space } from "cherry-styled-components";
 import {
   StyledIndexSidebar,
   StyledIndexSidebarLink,

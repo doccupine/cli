@@ -1,6 +1,6 @@
 export const tabsTemplate = `"use client";
 import { Theme } from "@/app/theme";
-import { styledText } from "cherry-styled-components/src/lib";
+import { styledText } from "cherry-styled-components";
 import { rgba } from "polished";
 import React, { useState, ReactNode } from "react";
 import styled, { css } from "styled-components";

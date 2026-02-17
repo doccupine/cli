@@ -1,6 +1,6 @@
 export const updateTemplate = `"use client";
 import styled from "styled-components";
-import { mq, styledSmall, Theme } from "cherry-styled-components/src/lib";
+import { mq, styledSmall, Theme } from "cherry-styled-components";
 import { rgba } from "polished";
 
 const StyledUpdate = styled.div<{ theme: Theme; $columns?: number }>\`

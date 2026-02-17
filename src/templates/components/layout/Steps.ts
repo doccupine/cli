@@ -1,7 +1,7 @@
 export const stepsTemplate = `"use client";
 import React from "react";
 import styled, { useTheme } from "styled-components";
-import { styledText, Theme } from "cherry-styled-components/src/lib";
+import { styledText, Theme } from "cherry-styled-components";
 import { rgba } from "polished";
 import { Icon, IconProps } from "@/components/layout/Icon";
 

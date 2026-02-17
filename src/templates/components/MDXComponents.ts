@@ -1,6 +1,6 @@
 export const mdxComponentsTemplate = `import React from "react";
 type MDXComponents = Record<string, React.ComponentType<any>>;
-import { Space } from "cherry-styled-components/src/lib";
+import { Space } from "cherry-styled-components";
 import { Code as CodeBlock } from "@/components/layout/Code";
 import { Card } from "@/components/layout/Card";
 import { Accordion } from "@/components/layout/Accordion";

@@ -1,5 +1,5 @@
 export const themeToggleTemplate = `"use client";
-import { Theme, resetButton } from "cherry-styled-components/src/lib";
+import { Theme, resetButton } from "cherry-styled-components";
 import styled, { css, useTheme } from "styled-components";
 import { rgba } from "polished";
 import { Icon } from "@/components/layout/Icon";

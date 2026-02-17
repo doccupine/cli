@@ -6,7 +6,7 @@ import {
   styledSmall,
   styledText,
   Theme,
-} from "cherry-styled-components/src/lib";
+} from "cherry-styled-components";
 import { rgba } from "polished";
 import Link from "next/link";
 import styled, { css } from "styled-components";

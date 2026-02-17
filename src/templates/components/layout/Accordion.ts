@@ -1,7 +1,7 @@
 export const accordionTemplate = `"use client";
 import { useState } from "react";
 import styled, { css } from "styled-components";
-import { styledText, Theme } from "cherry-styled-components/src/lib";
+import { styledText, Theme } from "cherry-styled-components";
 import { Icon } from "@/components/layout/Icon";
 
 const StyledAccordion = styled.div<{ theme: Theme }>\`

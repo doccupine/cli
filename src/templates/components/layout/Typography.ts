@@ -8,7 +8,7 @@ import {
   styledH6,
   styledText,
   Theme,
-} from "cherry-styled-components/src/lib";
+} from "cherry-styled-components";
 import styled, { css } from "styled-components";
 
 const StyledHeading = css\`

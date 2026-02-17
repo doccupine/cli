@@ -1,6 +1,6 @@
 export const cardTemplate = `"use client";
 import styled, { useTheme } from "styled-components";
-import { styledText, Theme } from "cherry-styled-components/src/lib";
+import { styledText, Theme } from "cherry-styled-components";
 import { Icon, IconProps } from "@/components/layout/Icon";
 
 const StyledCard = styled.div<{ theme: Theme }>\`

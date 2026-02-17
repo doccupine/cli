@@ -1,7 +1,7 @@
 export const footerTemplate = `"use client";
 import { useContext } from "react";
 import styled, { css } from "styled-components";
-import { styledSmall } from "cherry-styled-components/src/lib";
+import { styledSmall } from "cherry-styled-components";
 import { ChatContext } from "@/components/Chat";
 import { mq, Theme } from "@/app/theme";
 import { GitHubLogo } from "@/components/layout/Pictograms";

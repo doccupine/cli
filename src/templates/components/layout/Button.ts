@@ -5,7 +5,7 @@ import {
   theme as localTheme,
   ButtonProps,
   buttonStyles,
-} from "cherry-styled-components/src/lib";
+} from "cherry-styled-components";
 import { Icon } from "@/components/layout/Icon";
 
 interface LinkButtonProps extends ButtonProps {
@@ -17,6 +17,7 @@ interface LinkButtonProps extends ButtonProps {
   fullWidth?: boolean;
   icon?: string;
   iconPosition?: "left" | "right";
+  theme?: typeof localTheme;
 }
 
 const StyledLinkButton = styled(Link)<LinkButtonProps>\`

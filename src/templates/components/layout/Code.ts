@@ -1,7 +1,7 @@
 export const codeTemplate = `"use client";
 import { useState, useCallback } from "react";
 import styled from "styled-components";
-import { Theme, styledCode } from "cherry-styled-components/src/lib";
+import { Theme, styledCode } from "cherry-styled-components";
 import { rgba } from "polished";
 import { unified } from "unified";
 import rehypeParse from "rehype-parse";

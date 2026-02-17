@@ -1,6 +1,6 @@
 export const fieldTemplate = `"use client";
 import styled from "styled-components";
-import { styledSmall, Theme } from "cherry-styled-components/src/lib";
+import { styledSmall, Theme } from "cherry-styled-components";
 import { rgba } from "polished";
 
 const StyledField = styled.div<{ theme: Theme; $columns?: number }>\`

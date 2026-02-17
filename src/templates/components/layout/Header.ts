@@ -1,5 +1,5 @@
 export const headerTemplate = `"use client";
-import { Flex, MaxWidth } from "cherry-styled-components/src/lib";
+import { Flex, MaxWidth } from "cherry-styled-components";
 import { useCallback, useRef, useState, Suspense } from "react";
 import styled, { useTheme } from "styled-components";
 import Link from "next/link";

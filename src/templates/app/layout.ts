@@ -3,7 +3,7 @@ export const layoutTemplate = (
   fontConfig: any,
 ): string => `import type { Metadata } from "next";
 ${fontConfig?.googleFont?.fontName?.length ? `import { ${fontConfig.googleFont.fontName} } from "next/font/google";` : fontConfig?.localFonts?.length || fontConfig?.localFonts?.src?.length ? 'import localFont from "next/font/local";' : 'import { Inter } from "next/font/google";'}
-import { StyledComponentsRegistry } from "cherry-styled-components/src/lib";
+import { StyledComponentsRegistry } from "cherry-styled-components";
 import { theme, themeDark } from "@/app/theme";
 import { CherryThemeProvider } from "@/components/layout/CherryThemeProvider";
 import { Chat, ChtProvider } from "@/components/Chat";

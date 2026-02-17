@@ -4,7 +4,7 @@ import styled, { css } from "styled-components";
 import { Icon } from "@/components/layout/Icon";
 import { mq, Theme } from "@/app/theme";
 import { rgba } from "polished";
-import { resetButton, Textarea } from "cherry-styled-components/src/lib";
+import { resetButton, Textarea } from "cherry-styled-components";
 import { ChatContext } from "@/components/Chat";
 import links from "@/links.json";
 

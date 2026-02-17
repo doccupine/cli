@@ -1,6 +1,6 @@
 export const calloutTemplate = `"use client";
 import { Theme } from "@/app/theme";
-import { styledSmall } from "cherry-styled-components/src/lib";
+import { styledSmall } from "cherry-styled-components";
 import styled, { css } from "styled-components";
 import { Icon, IconProps } from "@/components/layout/Icon";
 

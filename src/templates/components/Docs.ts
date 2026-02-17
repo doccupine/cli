@@ -1,4 +1,4 @@
-export const docsTemplate = `import { Flex } from "cherry-styled-components/src/lib";
+export const docsTemplate = `import { Flex } from "cherry-styled-components";
 import {
   DocsContainer,
   StyledMarkdownContainer,
