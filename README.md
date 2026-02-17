@@ -68,14 +68,14 @@ Navigation is auto-generated from `category`, `categoryOrder`, and `order`. Page
 
 Place these JSON files in your project root (where you run `doccupine`). They are auto-copied to the generated app and watched for changes.
 
-| File              | Purpose                                                                                               |
-| ----------------- | ----------------------------------------------------------------------------------------------------- |
-| `doccupine.json`  | CLI config (watchDir, outputDir, port). Auto-generated on first run.                                  |
-| `config.json`     | Site metadata: `name`, `description`, `icon`, `preview` image URL                                     |
-| `theme.json`      | Theme overrides for [cherry-styled-components](https://github.com/niconiahi/cherry-styled-components) |
-| `navigation.json` | Manual navigation structure (overrides auto-generated)                                                |
-| `links.json`      | Static header/footer links                                                                            |
-| `fonts.json`      | Font configuration (Google Fonts or local)                                                            |
+| File              | Purpose                                                                                                   |
+| ----------------- | --------------------------------------------------------------------------------------------------------- |
+| `doccupine.json`  | CLI config (watchDir, outputDir, port). Auto-generated on first run.                                      |
+| `config.json`     | Site metadata: `name`, `description`, `icon`, `preview` image URL                                         |
+| `theme.json`      | Theme overrides for [cherry-styled-components](https://github.com/cherry-design-system/styled-components) |
+| `navigation.json` | Manual navigation structure (overrides auto-generated)                                                    |
+| `links.json`      | Static header/footer links                                                                                |
+| `fonts.json`      | Font configuration (Google Fonts or local)                                                                |
 
 ## AI Chat Setup
 
