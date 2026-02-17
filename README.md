@@ -6,13 +6,13 @@
 
 ## Features
 
-- **Live preview** -watches your MDX files and regenerates pages on every save
-- **Auto-generated navigation** -sidebar built from frontmatter (`category`, `order`)
-- **Theming** -dark/light mode with customizable theme via `theme.json`
-- **AI chat assistant** -built-in RAG-powered chat (OpenAI, Anthropic, or Google)
-- **MCP server** -exposes `search_docs`, `get_doc`, and `list_docs` tools for AI agents
-- **Custom fonts** -Google Fonts or local fonts via `fonts.json`
-- **Zero config to start** -`npx doccupine` scaffolds everything and starts the server
+- **Live preview** - watches your MDX files and regenerates pages on every save
+- **Auto-generated navigation** - sidebar built from frontmatter (`category`, `order`)
+- **Theming** - dark/light mode with customizable theme via `theme.json`
+- **AI chat assistant** - built-in RAG-powered chat (OpenAI, Anthropic, or Google)
+- **MCP server** - exposes `search_docs`, `get_doc`, and `list_docs` tools for AI agents
+- **Custom fonts** - Google Fonts or local fonts via `fonts.json`
+- **Zero config to start** - `npx doccupine` scaffolds everything and starts the server
 
 ## Quick Start
 
@@ -94,9 +94,9 @@ If `LLM_PROVIDER` is not set, the chat component is hidden automatically.
 
 The generated app exposes an MCP endpoint at `/api/mcp` with three tools:
 
-- `search_docs` -semantic search across all documentation
-- `get_doc` -retrieve a specific document by path
-- `list_docs` -list all available documents
+- `search_docs` - semantic search across all documentation
+- `get_doc` - retrieve a specific document by path
+- `list_docs` - list all available documents
 
 This lets AI agents (Claude, ChatGPT, etc.) query your docs programmatically. Requires the AI chat setup above for embeddings.
 
