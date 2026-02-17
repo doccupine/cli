@@ -1,4 +1,4 @@
-export const eslintConfigTeamplate = `import nextConfig from "eslint-config-next";
+export const eslintConfigTemplate = `import nextConfig from "eslint-config-next";
 
 const config = [...nextConfig];
 

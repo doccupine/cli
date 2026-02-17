@@ -12,7 +12,7 @@ import prompts from "prompts";
 
 import { envExampleTemplate } from "./templates/env.example.js";
 import { gitignoreTemplate } from "./templates/gitignore.js";
-import { eslintConfigTeamplate } from "./templates/eslint.config.js";
+import { eslintConfigTemplate } from "./templates/eslint.config.js";
 import { nextConfigTemplate } from "./templates/next.config.js";
 import { packageJsonTemplate } from "./templates/package.js";
 import { proxyTemplate } from "./templates/proxy.js";
@@ -52,7 +52,7 @@ import { iconTemplate } from "./templates/components/layout/Icon.js";
 import { pictogramsTemplate } from "./templates/components/layout/Pictograms.js";
 import { sharedStyledTemplate } from "./templates/components/layout/SharedStyles.js";
 import { staticLinksTemplate } from "./templates/components/layout/StaticLinks.js";
-import { stepsTemplate } from "./templates/components/layout/Stepts.js";
+import { stepsTemplate } from "./templates/components/layout/Steps.js";
 import { tabsTemplate } from "./templates/components/layout/Tabs.js";
 import { themeToggleTemplate } from "./templates/components/layout/ThemeToggle.js";
 import { typographyTemplate } from "./templates/components/layout/Typography.js";
@@ -97,6 +97,39 @@ import { tabsMdxTemplate } from "./templates/mdx/tabs.mdx.js";
 import { themeMdxTemplate } from "./templates/mdx/theme.mdx.js";
 import { updateMdxTemplate } from "./templates/mdx/update.mdx.js";
 
+async function findAvailablePort(startPort: number): Promise<number> {
+  const net = await import("net");
+
+  return new Promise((resolve) => {
+    const server = net.createServer();
+    server.listen(startPort, () => {
+      server.close(() => resolve(startPort));
+    });
+    server.on("error", () => {
+      resolve(findAvailablePort(startPort + 1));
+    });
+  });
+}
+
+export function generateSlug(filePath: string): string {
+  if (filePath === "index.mdx" || filePath === "./index.mdx") {
+    return "";
+  }
+
+  return filePath
+    .replace(/\.mdx$/, "")
+    .replace(/\\/g, "/")
+    .replace(/[^a-zA-Z0-9\/\-_]/g, "-")
+    .toLowerCase();
+}
+
+export function escapeTemplateContent(content: string): string {
+  return content
+    .replace(/\\/g, "\\\\")
+    .replace(/`/g, "\\`")
+    .replace(/\$\{/g, "\\${");
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const packageJson = JSON.parse(
@@ -109,6 +142,17 @@ interface MDXFile {
   content: string;
   frontmatter: Record<string, any>;
   slug: string;
+}
+
+interface PageMeta {
+  slug: string;
+  title: string;
+  description: string;
+  date: string | null;
+  category: string;
+  path: string;
+  categoryOrder: number;
+  order: number;
 }
 
 interface DoccupineConfig {
@@ -180,6 +224,11 @@ class ConfigManager {
     ];
 
     const { watchDir, outputDir } = (await prompts(questions)) as PromptResult;
+
+    if (!watchDir || !outputDir) {
+      console.log(chalk.yellow("\n⚠️ Setup cancelled."));
+      process.exit(0);
+    }
 
     return {
       watchDir: path.resolve(process.cwd(), watchDir),
@@ -256,109 +305,107 @@ class MDXToNextJSGenerator {
   }
 
   async createNextJSStructure() {
-    const structure = {
-      ".env.example": this.generateEnvExample(),
-      ".gitignore": this.generateGitIgnore(),
-      "config.json": this.generateConfig(),
-      "eslint.config.mjs": this.generateESLintConfig(),
-      "links.json": this.generateLinksConfig(),
-      "navigation.json": this.generateNavigationConfig(),
-      "next.config.ts": this.generateNextConfig(),
-      "package.json": this.generatePackageJson(),
-      "proxy.ts": this.generateProxy(),
-      "theme.json": this.generateThemeConfig(),
-      "tsconfig.json": this.generateTSConfig(),
+    const structure: Record<string, string | Promise<string>> = {
+      ".env.example": envExampleTemplate,
+      ".gitignore": gitignoreTemplate,
+      "config.json": `{}`,
+      "eslint.config.mjs": eslintConfigTemplate,
+      "links.json": `[]`,
+      "navigation.json": `[]`,
+      "next.config.ts": nextConfigTemplate,
+      "package.json": packageJsonTemplate,
+      "proxy.ts": proxyTemplate,
+      "theme.json": `{}`,
+      "tsconfig.json": tsconfigTemplate,
 
-      "app/layout.tsx": await this.generateRootLayout(),
-      "app/not-found.tsx": this.generateNotFoundPage(),
-      "app/theme.ts": this.generateTheme(),
-      "app/api/mcp/route.ts": this.generateMCPRoutes(),
-      "app/api/rag/route.ts": this.generateRagRoutes(),
-      "app/api/theme/route.ts": this.generateRoutes(),
+      "app/layout.tsx": this.generateRootLayout(),
+      "app/not-found.tsx": notFoundTemplate,
+      "app/theme.ts": themeTemplate,
+      "app/api/mcp/route.ts": mcpRoutesTemplate,
+      "app/api/rag/route.ts": ragRoutesTemplate,
+      "app/api/theme/route.ts": routesTemplate,
 
-      "services/mcp/index.ts": this.generateMCPIndex(),
-      "services/mcp/server.ts": this.generateMCPServer(),
-      "services/mcp/tools.ts": this.generateMCPTools(),
-      "services/mcp/types.ts": this.generateMCPTypes(),
-      "services/llm/config.ts": this.generateLLMConfig(),
-      "services/llm/factory.ts": this.generateLLMFactory(),
-      "services/llm/index.ts": this.generateLLMIndex(),
-      "services/llm/types.ts": this.generateLLMTypes(),
+      "services/mcp/index.ts": mcpIndexTemplate,
+      "services/mcp/server.ts": mcpServerTemplate,
+      "services/mcp/tools.ts": mcpToolsTemplate,
+      "services/mcp/types.ts": mcpTypesTemplate,
+      "services/llm/config.ts": llmConfigTemplate,
+      "services/llm/factory.ts": llmFactoryTemplate,
+      "services/llm/index.ts": llmIndexTemplate,
+      "services/llm/types.ts": llmTypesTemplate,
 
-      "types/styled.d.ts": this.generateStyledDTypes(),
+      "types/styled.d.ts": styledDTemplate,
 
-      "utils/orderNavItems.ts": this.generateOrderNavItems(),
+      "utils/orderNavItems.ts": orderNavItemsTemplate,
 
-      "components/Chat.tsx": this.generateChat(),
-      "components/ClickOutside.ts": this.generateClickOutside(),
-      "components/Docs.tsx": this.generateDocs(),
-      "components/DocsSideBar.tsx": this.generateDocsSideBar(),
-      "components/MDXComponents.tsx": this.generateMDXComponents(),
-      "components/SideBar.tsx": this.generateSideBar(),
+      "components/Chat.tsx": chatTemplate,
+      "components/ClickOutside.ts": clickOutsideTemplate,
+      "components/Docs.tsx": docsTemplate,
+      "components/DocsSideBar.tsx": docsSideBarTemplate,
+      "components/MDXComponents.tsx": mdxComponentsTemplate,
+      "components/SideBar.tsx": sideBarTemplate,
 
-      "components/layout/Accordion.tsx": this.generateAccordion(),
-      "components/layout/ActionBar.tsx": this.generateActionBar(),
-      "components/layout/Button.tsx": this.generateButton(),
-      "components/layout/Callout.tsx": this.generateCallout(),
-      "components/layout/Card.tsx": this.generateCard(),
-      "components/layout/CherryThemeProvider.tsx":
-        this.generateCherryThemeProvider(),
-      "components/layout/ClientThemeProvider.tsx":
-        this.generateClientThemeProvider(),
-      "components/layout/Code.tsx": this.generateCode(),
-      "components/layout/Columns.tsx": this.generateColumns(),
-      "components/layout/DemoTheme.tsx": this.generateDemoTheme(),
-      "components/layout/DocsComponents.tsx": this.generateDocsComponents(),
-      "components/layout/DocsNavigation.tsx": this.generateDocsNavigation(),
-      "components/layout/Field.tsx": this.generateField(),
-      "components/layout/Footer.tsx": this.generateFooter(),
-      "components/layout/GlobalStyles.ts": this.generateGlobalStyles(),
-      "components/layout/Header.tsx": this.generateHeader(),
-      "components/layout/Icon.tsx": this.generateIcon(),
-      "components/layout/Pictograms.tsx": this.generatePictograms(),
-      "components/layout/SharedStyled.ts": this.generateSharedStyled(),
-      "components/layout/StaticLinks.tsx": this.generateStaticLinks(),
-      "components/layout/Steps.tsx": this.generateSteps(),
-      "components/layout/Tabs.tsx": this.generateTabs(),
-      "components/layout/ThemeToggle.tsx": this.generateThemeToggle(),
-      "components/layout/Typography.ts": this.generateTypography(),
-      "components/layout/Update.tsx": this.generateUpdate(),
+      "components/layout/Accordion.tsx": accordionTemplate,
+      "components/layout/ActionBar.tsx": actionBarTemplate,
+      "components/layout/Button.tsx": buttonTemplate,
+      "components/layout/Callout.tsx": calloutTemplate,
+      "components/layout/Card.tsx": cardTemplate,
+      "components/layout/CherryThemeProvider.tsx": cherryThemeProviderTemplate,
+      "components/layout/ClientThemeProvider.tsx": clientThemeProviderTemplate,
+      "components/layout/Code.tsx": codeTemplate,
+      "components/layout/Columns.tsx": columnsTemplate,
+      "components/layout/DemoTheme.tsx": demoThemeTemplate,
+      "components/layout/DocsComponents.tsx": docsComponentsTemplate,
+      "components/layout/DocsNavigation.tsx": docsNavigationTemplate,
+      "components/layout/Field.tsx": fieldTemplate,
+      "components/layout/Footer.tsx": footerTemplate,
+      "components/layout/GlobalStyles.ts": globalStylesTemplate,
+      "components/layout/Header.tsx": headerTemplate,
+      "components/layout/Icon.tsx": iconTemplate,
+      "components/layout/Pictograms.tsx": pictogramsTemplate,
+      "components/layout/SharedStyled.ts": sharedStyledTemplate,
+      "components/layout/StaticLinks.tsx": staticLinksTemplate,
+      "components/layout/Steps.tsx": stepsTemplate,
+      "components/layout/Tabs.tsx": tabsTemplate,
+      "components/layout/ThemeToggle.tsx": themeToggleTemplate,
+      "components/layout/Typography.ts": typographyTemplate,
+      "components/layout/Update.tsx": updateTemplate,
     };
 
     for (const [filePath, content] of Object.entries(structure)) {
       const fullPath = path.join(this.outputDir, filePath);
       await fs.ensureDir(path.dirname(fullPath));
-      await fs.writeFile(fullPath, String(content), "utf8");
+      await fs.writeFile(fullPath, String(await content), "utf8");
     }
   }
 
   async createStartingDocs() {
-    const structure = {
-      "accordion.mdx": this.generateAccordionMdx(),
-      "ai-assistant.mdx": this.generateAiAssistantMdx(),
-      "buttons.mdx": this.generateButtonsMdx(),
-      "callouts.mdx": this.generateCalloutsMdx(),
-      "cards.mdx": this.generateCardsMdx(),
-      "code.mdx": this.generateCodeMdx(),
-      "columns.mdx": this.generateColumnsMdx(),
-      "commands.mdx": this.generateCommandsMdx(),
-      "deployment.mdx": this.generateDeploymentMdx(),
-      "fields.mdx": this.generateFieldsMdx(),
-      "fonts.mdx": this.generateFontsMdx(),
-      "globals.mdx": this.generateGlobalsMdx(),
-      "headers-and-text.mdx": this.generateHeadersAndTextMdx(),
-      "icons.mdx": this.generateIconsMdx(),
-      "image-and-embeds.mdx": this.generateImagesAndEmbedsMdx(),
-      "index.mdx": this.generateIndexMdx(),
-      "links.mdx": this.generateLinksMdx(),
-      "lists-and-tables.mdx": this.generateListsAndTablesMdx(),
-      "media-and-assets.mdx": this.generateMediaAndAssetsMdx(),
-      "model-context-protocol.mdx": this.generateMCPMdx(),
-      "navigation.mdx": this.generateNavigationMdx(),
-      "steps.mdx": this.generateStepsMdx(),
-      "tabs.mdx": this.generateTabsMdx(),
-      "theme.mdx": this.generateThemeMdx(),
-      "update.mdx": this.generateUpdateMdx(),
+    const structure: Record<string, string> = {
+      "accordion.mdx": accordionMdxTemplate,
+      "ai-assistant.mdx": aiAssistantMdxTemplate,
+      "buttons.mdx": buttonsMdxTemplate,
+      "callouts.mdx": calloutsMdxTemplate,
+      "cards.mdx": cardsMdxTemplate,
+      "code.mdx": codeMdxTemplate,
+      "columns.mdx": columnsMdxTemplate,
+      "commands.mdx": commandsMdxTemplate,
+      "deployment.mdx": deploymentMdxTemplate,
+      "fields.mdx": fieldsMdxTemplate,
+      "fonts.mdx": fontsMdxTemplate,
+      "globals.mdx": globalsMdxTemplate,
+      "headers-and-text.mdx": headersAndTextMdxTemplate,
+      "icons.mdx": iconsMdxTemplate,
+      "image-and-embeds.mdx": imageAndEmbedsMdxTemplate,
+      "index.mdx": indexMdxTemplate,
+      "links.mdx": linksMdxTemplate,
+      "lists-and-tables.mdx": listAndTablesMdxTemplate,
+      "media-and-assets.mdx": mediaAndAssetsMdxTemplate,
+      "model-context-protocol.mdx": mcpMdxTemplate,
+      "navigation.mdx": navigationMdxTemplate,
+      "steps.mdx": stepsMdxTemplate,
+      "tabs.mdx": tabsMdxTemplate,
+      "theme.mdx": themeMdxTemplate,
+      "update.mdx": updateMdxTemplate,
     };
 
     const indexMdxExists = await fs.pathExists(
@@ -473,7 +520,6 @@ class MDXToNextJSGenerator {
         chalk.green(`📋 Updated ${this.fontConfigFile} in Next.js app`),
       );
 
-      // Update the layout template with new font config
       await this.updateRootLayout();
       console.log(chalk.green(`✅ Layout updated with new font configuration`));
     } catch (error) {
@@ -493,7 +539,6 @@ class MDXToNextJSGenerator {
           chalk.yellow(`🗑️ Removed ${this.fontConfigFile} from Next.js app`),
         );
 
-        // Update the layout template without font config
         await this.updateRootLayout();
         console.log(
           chalk.green(`✅ Layout updated without font configuration`),
@@ -596,7 +641,7 @@ class MDXToNextJSGenerator {
           chalk.green("📁 Initial scan complete. Ready for changes..."),
         );
       })
-      .on("error", (error: any) => {
+      .on("error", (error: unknown) => {
         console.error(chalk.red("❌ Watcher error:"), error);
       });
 
@@ -626,7 +671,7 @@ class MDXToNextJSGenerator {
         );
         this.handleConfigFileDelete(filePath);
       })
-      .on("error", (error: any) => {
+      .on("error", (error: unknown) => {
         console.error(chalk.red("❌ Config watcher error:"), error);
       });
 
@@ -648,7 +693,7 @@ class MDXToNextJSGenerator {
       .on("unlink", () => {
         this.handleFontConfigDelete();
       })
-      .on("error", (error: any) => {
+      .on("error", (error: unknown) => {
         console.error(chalk.red("❌ Font watcher error:"), error);
       });
 
@@ -685,10 +730,32 @@ class MDXToNextJSGenerator {
           );
           this.handlePublicFileDelete(filePath);
         })
-        .on("error", (error: any) => {
+        .on("error", (error: unknown) => {
           console.error(chalk.red("❌ Public watcher error:"), error);
         });
     }
+  }
+
+  private async parseMDXFile(file: string): Promise<PageMeta> {
+    const fullPath = path.join(this.watchDir, file);
+    const content = await fs.readFile(fullPath, "utf8");
+    const { data: frontmatter } = matter(content);
+
+    return {
+      slug: this.generateSlug(file),
+      title: frontmatter.title || "Untitled",
+      description: frontmatter.description || "",
+      date: frontmatter.date || null,
+      category: frontmatter.category || "",
+      path: file,
+      categoryOrder: frontmatter.categoryOrder || 0,
+      order: frontmatter.order || 0,
+    };
+  }
+
+  private async buildAllPagesMeta(): Promise<PageMeta[]> {
+    const files = await this.getAllMDXFiles();
+    return Promise.all(files.map((file) => this.parseMDXFile(file)));
   }
 
   async handleFileChange(action: string, filePath: string) {
@@ -702,8 +769,6 @@ class MDXToNextJSGenerator {
 
       if (filePath === "index.mdx" || filePath === "./index.mdx") {
         console.log(chalk.blue("🏠 Updating homepage with index.mdx content"));
-        await this.updatePagesIndex();
-        await this.updateRootLayout();
       } else {
         const mdxFile: MDXFile = {
           path: filePath,
@@ -713,9 +778,10 @@ class MDXToNextJSGenerator {
         };
 
         await this.generatePageFromMDX(mdxFile);
-        await this.updatePagesIndex();
-        await this.updateRootLayout();
       }
+
+      await this.updatePagesIndex();
+      await this.updateRootLayout();
 
       console.log(chalk.green(`✅ Generated page for: ${filePath}`));
     } catch (error) {
@@ -729,15 +795,14 @@ class MDXToNextJSGenerator {
     try {
       if (filePath === "index.mdx" || filePath === "./index.mdx") {
         console.log(chalk.blue("🏠 Updating homepage - index.mdx deleted"));
-        await this.updatePagesIndex();
-        await this.updateRootLayout();
       } else {
         const slug = this.generateSlug(filePath);
         const pagePath = path.join(this.outputDir, "app", slug);
         await fs.remove(pagePath);
-        await this.updatePagesIndex();
-        await this.updateRootLayout();
       }
+
+      await this.updatePagesIndex();
+      await this.updateRootLayout();
 
       console.log(chalk.green(`✅ Removed page for: ${filePath}`));
     } catch (error) {
@@ -779,112 +844,16 @@ class MDXToNextJSGenerator {
   }
 
   generateSlug(filePath: string): string {
-    if (filePath === "index.mdx" || filePath === "./index.mdx") {
-      return "";
-    }
-
-    return filePath
-      .replace(/\.mdx$/, "")
-      .replace(/\\/g, "/")
-      .replace(/[^a-zA-Z0-9\/\-_]/g, "-")
-      .toLowerCase();
-  }
-
-  generateEnvExample(): string {
-    return envExampleTemplate;
-  }
-
-  generateGitIgnore(): string {
-    return gitignoreTemplate;
-  }
-
-  generateConfig(): string {
-    return `{}`;
-  }
-
-  generateESLintConfig(): string {
-    return eslintConfigTeamplate;
-  }
-
-  generateLinksConfig(): string {
-    return `[]`;
-  }
-
-  generateNavigationConfig(): string {
-    return `[]`;
-  }
-
-  generateNextConfig(): string {
-    return nextConfigTemplate;
-  }
-
-  generatePackageJson(): string {
-    return packageJsonTemplate;
-  }
-
-  generateProxy(): string {
-    return proxyTemplate;
-  }
-
-  generateThemeConfig(): string {
-    return `{}`;
-  }
-
-  generateTSConfig(): string {
-    return tsconfigTemplate;
+    return generateSlug(filePath);
   }
 
   async generateRootLayout(): Promise<string> {
-    const files = await this.getAllMDXFiles();
-    const pages = [];
-
-    for (const file of files) {
-      const fullPath = path.join(this.watchDir, file);
-      const content = await fs.readFile(fullPath, "utf8");
-      const { data: frontmatter } = matter(content);
-
-      pages.push({
-        slug: this.generateSlug(file),
-        title: frontmatter.title || "Untitled",
-        description: frontmatter.description || "",
-        date: frontmatter.date || null,
-        category: frontmatter.category || "",
-        path: file,
-        categoryOrder: frontmatter.categoryOrder || 0,
-        order: frontmatter.order || 0,
-      });
-    }
-
+    const pages = await this.buildAllPagesMeta();
     const fontConfig = await this.loadFontConfig();
-
     return layoutTemplate(pages, fontConfig);
   }
 
-  generateNotFoundPage(): string {
-    return notFoundTemplate;
-  }
-
   async generatePageFromMDX(mdxFile: MDXFile) {
-    const files = await this.getAllMDXFiles();
-    const pages = [];
-
-    for (const file of files) {
-      const fullPath = path.join(this.watchDir, file);
-      const content = await fs.readFile(fullPath, "utf8");
-      const { data: frontmatter } = matter(content);
-
-      pages.push({
-        slug: this.generateSlug(file),
-        title: frontmatter.title || "Untitled",
-        description: frontmatter.description || "",
-        date: frontmatter.date || null,
-        category: frontmatter.category || "",
-        path: file,
-        categoryOrder: frontmatter.categoryOrder || 0,
-        order: frontmatter.order || 0,
-      });
-    }
-
     const pageContent = `import { Metadata } from "next";
 import { Docs } from "@/components/Docs";
 import configData from "@/config.json";
@@ -898,7 +867,7 @@ interface Config {
 
 const config = configData as Config;
 
-const content = \`${mdxFile.content.replace(/`/g, "\\`")}\`;
+const content = \`${escapeTemplateContent(mdxFile.content)}\`;
 
 export const metadata: Metadata = {
   title: \`${mdxFile.frontmatter.title || "Generated with Doccupine"} \${config.name ? "- " + config.name : "- Doccupine"}\`,
@@ -923,25 +892,28 @@ export default function Page() {
 
   async updatePagesIndex() {
     const files = await this.getAllMDXFiles();
-    let indexMDX = null;
+    let indexMDX: {
+      content: string;
+      title: string;
+      description: string;
+      icon?: string;
+      image?: string;
+    } | null = null;
 
     for (const file of files) {
-      const fullPath = path.join(this.watchDir, file);
-      const content = await fs.readFile(fullPath, "utf8");
-      const { data: frontmatter, content: mdxContent } = matter(content);
-
       if (file === "index.mdx" || file === "./index.mdx") {
+        const fullPath = path.join(this.watchDir, file);
+        const content = await fs.readFile(fullPath, "utf8");
+        const { data: frontmatter, content: mdxContent } = matter(content);
+
         indexMDX = {
           content: mdxContent,
-          frontmatter,
           title: frontmatter.title || "Welcome",
-          category: frontmatter.category || "",
           description: frontmatter.description || "",
-          categoryOrder: frontmatter.categoryOrder || 0,
-          order: frontmatter.order || 0,
           icon: frontmatter.icon,
           image: frontmatter.image,
         };
+        break;
       }
     }
 
@@ -958,7 +930,7 @@ interface Config {
 
 const config = configData as Config;
 
-${indexMDX ? `const content = \`${indexMDX.content.replace(/`/g, "\\`")}\`;` : `const content = null;`}
+${indexMDX ? `const content = \`${escapeTemplateContent(indexMDX.content)}\`;` : `const content = null;`}
 
 ${
   indexMDX
@@ -1003,286 +975,6 @@ export default function Home() {
       layoutContent,
       "utf8",
     );
-  }
-
-  generateTheme(): string {
-    return themeTemplate;
-  }
-
-  generateMCPRoutes(): string {
-    return mcpRoutesTemplate;
-  }
-
-  generateRagRoutes(): string {
-    return ragRoutesTemplate;
-  }
-
-  generateRoutes(): string {
-    return routesTemplate;
-  }
-
-  generateMCPIndex(): string {
-    return mcpIndexTemplate;
-  }
-
-  generateMCPServer(): string {
-    return mcpServerTemplate;
-  }
-
-  generateMCPTools(): string {
-    return mcpToolsTemplate;
-  }
-
-  generateMCPTypes(): string {
-    return mcpTypesTemplate;
-  }
-
-  generateLLMConfig(): string {
-    return llmConfigTemplate;
-  }
-
-  generateLLMFactory(): string {
-    return llmFactoryTemplate;
-  }
-
-  generateLLMIndex(): string {
-    return llmIndexTemplate;
-  }
-
-  generateLLMTypes(): string {
-    return llmTypesTemplate;
-  }
-
-  generateStyledDTypes(): string {
-    return styledDTemplate;
-  }
-
-  generateOrderNavItems(): string {
-    return orderNavItemsTemplate;
-  }
-
-  generateChat(): string {
-    return chatTemplate;
-  }
-
-  generateClickOutside(): string {
-    return clickOutsideTemplate;
-  }
-
-  generateDocs(): string {
-    return docsTemplate;
-  }
-
-  generateDocsSideBar(): string {
-    return docsSideBarTemplate;
-  }
-
-  generateMDXComponents(): string {
-    return mdxComponentsTemplate;
-  }
-
-  generateSideBar(): string {
-    return sideBarTemplate;
-  }
-
-  generateAccordion(): string {
-    return accordionTemplate;
-  }
-
-  generateActionBar(): string {
-    return actionBarTemplate;
-  }
-
-  generateButton(): string {
-    return buttonTemplate;
-  }
-
-  generateCallout(): string {
-    return calloutTemplate;
-  }
-
-  generateCard(): string {
-    return cardTemplate;
-  }
-
-  generateCherryThemeProvider(): string {
-    return cherryThemeProviderTemplate;
-  }
-
-  generateClientThemeProvider(): string {
-    return clientThemeProviderTemplate;
-  }
-
-  generateCode(): string {
-    return codeTemplate;
-  }
-
-  generateColumns(): string {
-    return columnsTemplate;
-  }
-
-  generateDemoTheme(): string {
-    return demoThemeTemplate;
-  }
-
-  generateDocsComponents(): string {
-    return docsComponentsTemplate;
-  }
-
-  generateDocsNavigation(): string {
-    return docsNavigationTemplate;
-  }
-
-  generateField(): string {
-    return fieldTemplate;
-  }
-
-  generateFooter(): string {
-    return footerTemplate;
-  }
-
-  generateGlobalStyles(): string {
-    return globalStylesTemplate;
-  }
-
-  generateHeader(): string {
-    return headerTemplate;
-  }
-
-  generateIcon(): string {
-    return iconTemplate;
-  }
-
-  generatePictograms(): string {
-    return pictogramsTemplate;
-  }
-
-  generateSharedStyled(): string {
-    return sharedStyledTemplate;
-  }
-
-  generateStaticLinks(): string {
-    return staticLinksTemplate;
-  }
-
-  generateSteps(): string {
-    return stepsTemplate;
-  }
-
-  generateTabs(): string {
-    return tabsTemplate;
-  }
-
-  generateThemeToggle(): string {
-    return themeToggleTemplate;
-  }
-
-  generateTypography(): string {
-    return typographyTemplate;
-  }
-
-  generateUpdate(): string {
-    return updateTemplate;
-  }
-
-  generateAccordionMdx(): string {
-    return accordionMdxTemplate;
-  }
-
-  generateAiAssistantMdx(): string {
-    return aiAssistantMdxTemplate;
-  }
-
-  generateButtonsMdx(): string {
-    return buttonsMdxTemplate;
-  }
-
-  generateCalloutsMdx(): string {
-    return calloutsMdxTemplate;
-  }
-
-  generateCardsMdx(): string {
-    return cardsMdxTemplate;
-  }
-
-  generateCodeMdx(): string {
-    return codeMdxTemplate;
-  }
-
-  generateColumnsMdx(): string {
-    return columnsMdxTemplate;
-  }
-
-  generateCommandsMdx(): string {
-    return commandsMdxTemplate;
-  }
-
-  generateDeploymentMdx(): string {
-    return deploymentMdxTemplate;
-  }
-
-  generateFieldsMdx(): string {
-    return fieldsMdxTemplate;
-  }
-
-  generateFontsMdx(): string {
-    return fontsMdxTemplate;
-  }
-
-  generateGlobalsMdx(): string {
-    return globalsMdxTemplate;
-  }
-
-  generateHeadersAndTextMdx(): string {
-    return headersAndTextMdxTemplate;
-  }
-
-  generateIconsMdx(): string {
-    return iconsMdxTemplate;
-  }
-
-  generateImagesAndEmbedsMdx(): string {
-    return imageAndEmbedsMdxTemplate;
-  }
-
-  generateIndexMdx(): string {
-    return indexMdxTemplate;
-  }
-
-  generateLinksMdx(): string {
-    return linksMdxTemplate;
-  }
-
-  generateListsAndTablesMdx(): string {
-    return listAndTablesMdxTemplate;
-  }
-
-  generateMediaAndAssetsMdx(): string {
-    return mediaAndAssetsMdxTemplate;
-  }
-
-  generateMCPMdx(): string {
-    return mcpMdxTemplate;
-  }
-
-  generateNavigationMdx(): string {
-    return navigationMdxTemplate;
-  }
-
-  generateStepsMdx(): string {
-    return stepsMdxTemplate;
-  }
-
-  generateTabsMdx(): string {
-    return tabsMdxTemplate;
-  }
-
-  generateThemeMdx(): string {
-    return themeMdxTemplate;
-  }
-
-  generateUpdateMdx(): string {
-    return updateMdxTemplate;
   }
 
   async stop() {
@@ -1334,7 +1026,7 @@ program
 
     await generator.init();
 
-    let devServer: any = null;
+    let devServer: ReturnType<typeof spawn> | null = null;
 
     console.log(chalk.blue("📦 Installing dependencies..."));
     const { spawn, execSync } = await import("child_process");
@@ -1361,25 +1053,40 @@ program
           console.log(chalk.green("✅ Dependencies installed"));
           resolve(void 0);
         } else {
-          reject(new Error(`npm install failed with code ${code}`));
+          reject(
+            new Error(`${packageManager} install failed with code ${code}`),
+          );
         }
       });
       install.on("error", reject);
     });
 
+    const port = await findAvailablePort(parseInt(config.port, 10));
+    if (port !== parseInt(config.port, 10)) {
+      console.log(
+        chalk.yellow(
+          `⚠️ Port ${config.port} is in use, using port ${port} instead`,
+        ),
+      );
+    }
     console.log(
-      chalk.blue(`🚀 Starting Next.js dev server on port ${config.port}...`),
+      chalk.blue(`🚀 Starting Next.js dev server on port ${port}...`),
     );
-    devServer = spawn("npm", ["run", "dev", "--", "--port", config.port], {
+    const portStr = String(port);
+    const devArgs =
+      packageManager === "npm"
+        ? ["run", "dev", "--", "--port", portStr]
+        : ["run", "dev", "--port", portStr];
+    devServer = spawn(packageManager, devArgs, {
       cwd: config.outputDir,
       stdio: ["ignore", "pipe", "pipe"],
     });
 
-    devServer.stdout.on("data", (data: Buffer) => {
+    devServer.stdout?.on("data", (data: Buffer) => {
       const output = data.toString();
       if (output.includes("Ready") || output.includes("started")) {
         console.log(
-          chalk.green(`🌐 Next.js ready at http://localhost:${config.port}`),
+          chalk.green(`🌐 Next.js ready at http://localhost:${port}`),
         );
       }
       if (
@@ -1391,14 +1098,23 @@ program
       }
     });
 
-    if (options.verbose) {
-      devServer.stderr.on("data", (data: Buffer) => {
-        process.stderr.write(chalk.red("[Next.js Error] ") + data.toString());
-      });
-    }
+    devServer.stderr?.on("data", (data: Buffer) => {
+      const output = data.toString();
+      if (options.verbose || output.includes("Error") || output.includes("error")) {
+        process.stderr.write(chalk.red("[Next.js] ") + output);
+      }
+    });
 
-    devServer.on("error", (error: any) => {
+    devServer.on("error", (error: Error) => {
       console.error(chalk.red("❌ Error starting dev server:"), error);
+    });
+
+    devServer.on("close", (code: number | null) => {
+      if (code && code !== 0) {
+        console.error(
+          chalk.red(`❌ Next.js dev server exited with code ${code}`),
+        );
+      }
     });
 
     await generator.startWatching();
@@ -1414,9 +1130,6 @@ program
 
     console.log(chalk.green("🎉 Generator is running! Press Ctrl+C to stop."));
     console.log(chalk.cyan(`📝 Edit your MDX files in: ${config.watchDir}`));
-    console.log(
-      chalk.cyan(`🌐 View changes at: http://localhost:${config.port}`),
-    );
   });
 
 program

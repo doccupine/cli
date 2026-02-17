@@ -11,7 +11,8 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "start": "node dist/index.js",
-    "prepare": "npm run build"
+    "prepare": "tsc",
+    "test": "vitest run"
   },
   "keywords": [
     "doccupine",
@@ -30,7 +31,7 @@
   "homepage": "https://doccupine.com",
   "repository": "https://github.com/doccupine/cli",
   "author": "Luan Gjokaj",
-  "license": "O’Saasy",
+  "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
     "chalk": "^5.6.2",
     "chokidar": "^5.0.0",
@@ -47,7 +48,8 @@
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^25.2.3",
     "@types/prompts": "^2.4.9",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   },
   "files": [
     "dist/**/*"
