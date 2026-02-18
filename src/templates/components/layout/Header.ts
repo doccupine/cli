@@ -55,9 +55,10 @@ const StyledHeader = styled.header<{ theme: Theme }>\`
     & svg,
     & img {
       margin: auto;
-      width: 100%;
-      max-width: max-content;
+      width: fit-content;
       height: auto;
+      max-width: 182px;
+      max-height: 30px;
 
       & path[fill] {
         fill: \${({ theme }) => theme.colors.primary};
