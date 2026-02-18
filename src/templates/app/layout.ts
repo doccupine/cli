@@ -46,7 +46,7 @@ const Chat = dynamic(() => import("@/components/Chat").then((mod) => mod.Chat));
 
 ${
   fontConfig?.googleFont?.fontName?.length
-    ? `const font = ${fontConfig.googleFont.fontName}({ subsets: ${fontConfig?.googleFont?.subsets?.length ? JSON.stringify(fontConfig?.googleFont?.subsets, null, 2) : '["latin"]'}, ${fontConfig.googleFont?.weight?.length ? `weight: ${Array.isArray(fontConfig.googleFont.weight) ? JSON.stringify(fontConfig.googleFont.weight) : `"${fontConfig.googleFont.weight}"`}` : ""} });`
+    ? `const font = ${fontConfig.googleFont.fontName}({ ${[fontConfig?.googleFont?.subsets?.length ? `subsets: ${JSON.stringify(fontConfig.googleFont.subsets)}` : "", fontConfig.googleFont?.weight?.length ? `weight: ${Array.isArray(fontConfig.googleFont.weight) ? JSON.stringify(fontConfig.googleFont.weight) : `"${fontConfig.googleFont.weight}"`}` : ""].filter(Boolean).join(", ")} });`
     : fontConfig?.localFonts?.length || fontConfig?.localFonts?.src?.length
       ? `const font = localFont({
   src: ${fontConfig.localFonts?.src?.length ? JSON.stringify(fontConfig?.localFonts.src, null, 2).replace(/"([^"]+)":/g, "$1:") : `"${fontConfig?.localFonts}"`},
