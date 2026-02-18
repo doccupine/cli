@@ -42,7 +42,7 @@ function SideBar({ result }: SideBarProps) {
 
       <StyledSidebar $isActive={isMobileMenuOpen}>
         {result &&
-          result.map((item: any, index: number) => {
+          result.map((item: NavItem, index: number) => {
             return (
               <StyledSidebarList key={index}>
                 <StyledSidebarListItem>
@@ -52,7 +52,7 @@ function SideBar({ result }: SideBarProps) {
                   <Space $size={20} />
                 </li>
                 {item.links &&
-                  item.links.map((link: any, indexChild: number) => {
+                  item.links.map((link: NavItemLink, indexChild: number) => {
                     return (
                       <StyledSidebarListItem key={indexChild}>
                         <StyledSidebarListItemLink

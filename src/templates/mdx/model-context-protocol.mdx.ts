@@ -40,6 +40,26 @@ Doccupine automatically generates an MCP server for your documentation and hosts
 
 The MCP server provides both a GET endpoint to discover available tools and a POST endpoint to execute tool calls.
 
+### Authentication
+
+You can optionally protect your MCP server with an API key by setting the \`DOCS_API_KEY\` environment variable in your \`.env\` file:
+
+\`\`\`bash
+DOCS_API_KEY=your-secret-key
+\`\`\`
+
+When \`DOCS_API_KEY\` is set, all requests to \`/api/mcp\` must include an \`Authorization\` header with a Bearer token:
+
+\`\`\`text
+Authorization: Bearer your-secret-key
+\`\`\`
+
+Requests without a valid token receive a \`401 Unauthorized\` response. When \`DOCS_API_KEY\` is not set, the MCP server is publicly accessible with no authentication required.
+
+<Callout type="note">
+  Authentication only applies to the \`/api/mcp\` endpoint. The \`/api/rag\` endpoint used by the built-in AI Assistant chat is not affected by this setting.
+</Callout>
+
 ### API Endpoints
 
 #### GET /api/mcp
@@ -268,6 +288,11 @@ These are some of the ways you can help your users connect to your MCP server:
 ## Requirements
 
 To use the MCP server, you need to have the AI Assistant configured. The MCP server uses the same LLM configuration for generating embeddings.
+
+| Variable | Required | Description |
+|---|---|---|
+| \`LLM_PROVIDER\` | Yes | Your LLM provider (\`openai\`, \`anthropic\`, or \`google\`) |
+| \`DOCS_API_KEY\` | No | When set, requires Bearer token authentication on \`/api/mcp\` |
 
 <Callout type="warning">
   The MCP server requires an LLM provider to be configured for generating embeddings. Make sure you have set up your AI Assistant with a valid API key before using the MCP server.

@@ -88,7 +88,7 @@ interface Page {
   slug: string;
   title: string;
   category?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface NavigationItem {
@@ -97,7 +97,7 @@ interface NavigationItem {
   title?: string;
   links?: Page[];
   items?: Page[];
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface DocsNavigationProps {

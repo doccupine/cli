@@ -31,7 +31,7 @@ function validateAPIKeys(provider: LLMProvider): void {
     );
   }
   if (provider === "anthropic" && !process.env.OPENAI_API_KEY) {
-    console.warn(
+    throw new Error(
       "Anthropic provider requires OPENAI_API_KEY for embeddings. Please set OPENAI_API_KEY in your environment variables.",
     );
   }

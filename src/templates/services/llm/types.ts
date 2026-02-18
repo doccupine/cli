@@ -14,7 +14,7 @@ export interface Message {
 
 export interface LLMResponse {
   content: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ProviderModels {

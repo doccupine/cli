@@ -57,7 +57,7 @@ export function createEmbeddings(config: LLMConfig) {
         "Anthropic provider selected but no native embeddings available. Falling back to OpenAI embeddings.",
       );
       return new OpenAIEmbeddings({
-        model: "text-embedding-3-small",
+        model: config.embeddingModel,
       });
 
     default:

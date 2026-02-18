@@ -1,11 +1,13 @@
 export const ragRoutesTemplate = `import { NextResponse } from "next/server";
 import path from "node:path";
+import { z } from "zod";
 import { getLLMConfig, createChatModel } from "@/services/llm";
 import {
   searchDocs,
   ensureDocsIndex,
   getIndexStatus,
 } from "@/services/mcp/server";
+import { rateLimit } from "@/utils/rateLimit";
 import configData from "@/config.json";
 
 const config = configData as Config;
@@ -18,6 +20,11 @@ interface Config {
 }
 
 const PROJECT_ROOT = process.cwd();
+
+const ragSchema = z.object({
+  question: z.string().min(1).max(2000),
+  refresh: z.boolean().optional(),
+});
 
 const projectName = config.name || "Doccupine";
 
@@ -43,8 +50,27 @@ When including code blocks in your response:
 If the user sends a greeting or non-documentation question, respond briefly and ask how you can help with the documentation.\`;
 
 export async function POST(req: Request) {
+  // Rate limit by IP
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const { allowed, retryAfter } = rateLimit(ip);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": String(retryAfter) } },
+    );
+  }
+
   try {
-    const { question, refresh } = await req.json();
+    const body = await req.json();
+    const parsed = ragSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid input", details: parsed.error.issues },
+        { status: 400 },
+      );
+    }
+    const { question, refresh } = parsed.data;
 
     let config;
     try {

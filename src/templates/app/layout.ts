@@ -12,7 +12,10 @@ import { Header } from "@/components/layout/Header";
 import { DocsWrapper } from "@/components/layout/DocsComponents";
 import { SideBar } from "@/components/SideBar";
 import { DocsNavigation } from "@/components/layout/DocsNavigation";
-import { transformPagesToGroupedStructure } from "@/utils/orderNavItems";
+import {
+  transformPagesToGroupedStructure,
+  type PagesProps,
+} from "@/utils/orderNavItems";
 import { StaticLinks } from "@/components/layout/StaticLinks";
 import navigation from "@/navigation.json";
 
@@ -57,7 +60,7 @@ export default async function RootLayout({
     },
   ];
 
-  const pages: any = doccupinePages;
+  const pages: PagesProps[] = doccupinePages;
   const result = navigation.length
     ? navigation
     : transformPagesToGroupedStructure(pages);

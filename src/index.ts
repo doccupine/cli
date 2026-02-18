@@ -70,6 +70,7 @@ import { llmTypesTemplate } from "./templates/services/llm/types.js";
 import { styledDTemplate } from "./templates/types/styled.js";
 
 import { orderNavItemsTemplate } from "./templates/utils/orderNavItems.js";
+import { rateLimitTemplate } from "./templates/utils/rateLimit.js";
 
 import { accordionMdxTemplate } from "./templates/mdx/accordion.mdx.js";
 import { aiAssistantMdxTemplate } from "./templates/mdx/ai-assistant.mdx.js";
@@ -337,6 +338,7 @@ class MDXToNextJSGenerator {
       "types/styled.d.ts": styledDTemplate,
 
       "utils/orderNavItems.ts": orderNavItemsTemplate,
+      "utils/rateLimit.ts": rateLimitTemplate,
 
       "components/Chat.tsx": chatTemplate,
       "components/ClickOutside.ts": clickOutsideTemplate,

@@ -1,6 +1,6 @@
 export const pictogramsTemplate = `"use client";
 import React from "react";
-import { useTheme } from "styled-components";
+
 
 interface Props extends React.SVGProps<SVGSVGElement> {
   className?: string;

@@ -1,8 +1,10 @@
-export const orderNavItemsTemplate = `interface PagesProps {
+export const orderNavItemsTemplate = `export interface PagesProps {
   slug: string;
   title: string;
   date: string;
   category: string;
+  description?: string;
+  path?: string;
   categoryOrder?: number;
   order?: number;
 }

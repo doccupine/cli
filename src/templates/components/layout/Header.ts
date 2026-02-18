@@ -91,11 +91,11 @@ function Header() {
         <MaxWidth $size={1000}>
           <Flex $justifyContent="space-between" $wrap="nowrap">
             <Link href="/" className="logo" aria-label="Logo">
-              {(customThemeJson as any).logo ? (
+              {customThemeJson.logo ? (
                 theme.isDark ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={(themeJson as any).logo.dark}
+                    src={customThemeJson.logo.dark}
                     alt="Logo"
                     width="100"
                     height="100"
@@ -103,7 +103,7 @@ function Header() {
                 ) : (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={(themeJson as any).logo.light}
+                    src={customThemeJson.logo.light}
                     alt="Logo"
                     width="100"
                     height="100"

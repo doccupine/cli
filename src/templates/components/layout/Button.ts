@@ -49,7 +49,7 @@ function Button({
   fullWidth,
   icon,
   iconPosition = "left",
-  theme = localTheme,
+  theme: _theme = localTheme,
   href,
   ...props
 }: LinkButtonProps) {

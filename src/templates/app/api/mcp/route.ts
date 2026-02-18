@@ -1,4 +1,5 @@
 export const mcpRoutesTemplate = `import { NextResponse } from "next/server";
+import { z } from "zod";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { createMCPServer } from "@/services/mcp/server";
 import {
@@ -10,6 +11,19 @@ import {
   getDoc,
 } from "@/services/mcp";
 import type { MCPToolName } from "@/services/mcp";
+
+const searchDocsSchema = z.object({
+  query: z.string().min(1).max(2000),
+  limit: z.number().int().min(1).max(50).optional(),
+});
+
+const getDocSchema = z.object({
+  path: z.string().min(1).max(500),
+});
+
+const listDocsSchema = z.object({
+  directory: z.string().max(500).optional(),
+});
 
 // Create a stateless transport for serverless environment
 function createTransport() {
@@ -80,10 +94,18 @@ async function handleRESTRequest(body: ToolCallRequest) {
 
     switch (tool) {
       case "search_docs": {
-        const query = String(params?.query || "");
-        const limit = typeof params?.limit === "number" ? params.limit : 6;
+        const parsed = searchDocsSchema.safeParse(params);
+        if (!parsed.success) {
+          return NextResponse.json(
+            { error: "Invalid params", details: parsed.error.issues },
+            { status: 400 },
+          );
+        }
         await ensureDocsIndex();
-        const results = await searchDocs(query, limit);
+        const results = await searchDocs(
+          parsed.data.query,
+          parsed.data.limit ?? 6,
+        );
         return NextResponse.json({
           content: results.map(({ chunk, score }) => ({
             path: chunk.path,
@@ -95,8 +117,14 @@ async function handleRESTRequest(body: ToolCallRequest) {
       }
 
       case "get_doc": {
-        const path = String(params?.path || "");
-        const doc = await getDoc({ path });
+        const parsed = getDocSchema.safeParse(params);
+        if (!parsed.success) {
+          return NextResponse.json(
+            { error: "Invalid params", details: parsed.error.issues },
+            { status: 400 },
+          );
+        }
+        const doc = await getDoc({ path: parsed.data.path });
         if (!doc) {
           return NextResponse.json(
             { error: "Document not found" },
@@ -107,9 +135,16 @@ async function handleRESTRequest(body: ToolCallRequest) {
       }
 
       case "list_docs": {
-        const directory =
-          typeof params?.directory === "string" ? params.directory : undefined;
-        const docs = await listDocs({ directory });
+        const parsed = listDocsSchema.safeParse(params);
+        if (!parsed.success) {
+          return NextResponse.json(
+            { error: "Invalid params", details: parsed.error.issues },
+            { status: 400 },
+          );
+        }
+        const docs = await listDocs({
+          directory: parsed.data.directory,
+        });
         return NextResponse.json({
           content: docs.map((d) => ({
             name: d.name,

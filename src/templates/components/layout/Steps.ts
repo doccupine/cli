@@ -76,7 +76,7 @@ interface StepProps extends React.HTMLAttributes<HTMLDivElement> {
   icon?: IconProps;
 }
 
-function Step({ title, children, icon, ...props }: StepProps) {
+function Step(_props: StepProps) {
   return null;
 }
 
@@ -84,7 +84,7 @@ interface StepsProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
 }
 
-function Steps({ children, ...props }: StepsProps) {
+function Steps({ children }: StepsProps) {
   const theme = useTheme() as Theme;
 
   const steps = React.Children.toArray(children).filter(

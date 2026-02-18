@@ -151,8 +151,8 @@ export async function listDocs(
         path: relativePath,
         content,
       });
-    } catch {
-      // Skip files that can't be read
+    } catch (error) {
+      console.warn(\`Failed to read doc file: \${filePath}\`, error);
     }
   }
 
@@ -177,6 +177,12 @@ export async function getDoc(
 
   const fullPath = path.join(PROJECT_ROOT, targetPath);
 
+  // Prevent path traversal
+  const resolvedPath = path.resolve(fullPath);
+  if (!resolvedPath.startsWith(path.resolve(APP_DIR))) {
+    return null;
+  }
+
   try {
     const fileContent = await fs.readFile(fullPath, "utf8");
     const blocks = extractContentBlocks(fileContent);
@@ -190,7 +196,8 @@ export async function getDoc(
       path: targetPath,
       content,
     };
-  } catch {
+  } catch (error) {
+    console.warn(\`Failed to read doc: \${targetPath}\`, error);
     return null;
   }
 }

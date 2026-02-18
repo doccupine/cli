@@ -597,7 +597,6 @@ const StyledChatCloseButton = styled.button<{ theme: Theme }>\`
   }
 \`;
 
-type Source = { id: string; path: string; score: number };
 type Answer = {
   text: string;
   answer?: boolean;
@@ -736,8 +735,6 @@ function Chat() {
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
       let streamedContent = "";
-      let metadata: any = null;
-
       if (!reader) {
         throw new Error("Failed to get response reader");
       }
@@ -758,9 +755,7 @@ function Chat() {
             try {
               const data = JSON.parse(line.slice(6));
 
-              if (data.type === "metadata") {
-                metadata = data.data;
-              } else if (data.type === "content") {
+              if (data.type === "content") {
                 streamedContent += data.data;
 
                 setAnswer((prev) => {
@@ -786,7 +781,7 @@ function Chat() {
                       development: false,
                     },
                   });
-                } catch (mdxError: any) {
+                } catch (mdxError: unknown) {
                   console.error("MDX serialization error:", mdxError);
                 }
 
@@ -806,8 +801,8 @@ function Chat() {
           }
         }
       }
-    } catch (err: any) {
-      setError(err.message || "Unknown error");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
     }
