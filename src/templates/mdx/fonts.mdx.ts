@@ -29,7 +29,7 @@ Use this when your font is hosted by Google Fonts.
 - **fontName**: Capitalize each word. If the name contains spaces, replace them with \`_\`.
   - Example: "Work Sans" → \`Work_Sans\`
 - **subsets**: Pick the subsets you need (for example, \`latin\`).
-- **weight**: The font weight to load (for example, \`"400"\`).
+- **weight**: The font weight to load - a single string (for example, \`"400"\`) or an array of strings (for example, \`["400", "500", "700"]\`).
 
 ### Tips
 - **One primary family**: Start with a single family and weight, then add more if needed.
@@ -92,7 +92,7 @@ If you have only one file, you can use:
 - **Local files**: Ensure the referenced files exist under the Next.js \`public\` directory.
 
 ## Examples
-- **Google Fonts (Work Sans)**
+- **Google Fonts (single weight)**
 
 \`\`\`json
 {
@@ -100,6 +100,18 @@ If you have only one file, you can use:
     "fontName": "Work_Sans",
     "subsets": ["latin"],
     "weight": "400"
+  }
+}
+\`\`\`
+
+- **Google Fonts (multiple weights)**
+
+\`\`\`json
+{
+  "googleFont": {
+    "fontName": "Work_Sans",
+    "subsets": ["latin"],
+    "weight": ["400", "500", "600", "700"]
   }
 }
 \`\`\`
