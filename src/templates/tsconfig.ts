@@ -1,35 +1,32 @@
-export const tsconfigTemplate = JSON.stringify(
-  {
-    compilerOptions: {
-      target: "es2020",
-      lib: ["dom", "dom.iterable", "esnext"],
-      allowJs: true,
-      skipLibCheck: true,
-      strict: true,
-      noEmit: true,
-      esModuleInterop: true,
-      module: "esnext",
-      moduleResolution: "bundler",
-      resolveJsonModule: true,
-      isolatedModules: true,
-      jsx: "react-jsx",
-      incremental: true,
-      plugins: [{ name: "next" }],
-      baseUrl: ".",
-      paths: {
-        "@/*": ["./*"],
-      },
-    },
-    include: [
-      "next-env.d.ts",
-      "**/*.ts",
-      "**/*.tsx",
-      "**/*.d.ts",
-      ".next/types/**/*.ts",
-      ".next/dev/types/**/*.ts",
-    ],
-    exclude: ["node_modules"],
+export const tsconfigTemplate = `{
+  "compilerOptions": {
+    "target": "es2020",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [{ "name": "next" }],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    }
   },
-  null,
-  2,
-);
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.d.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": ["node_modules"]
+}
+`;

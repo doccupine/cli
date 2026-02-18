@@ -809,7 +809,10 @@ function Chat() {
                 });
               }
             } catch (parseError) {
-              if (parseError instanceof Error && parseError.message !== "Unknown error") {
+              if (
+                parseError instanceof Error &&
+                parseError.message !== "Unknown error"
+              ) {
                 console.error("Failed to parse SSE data:", parseError);
               }
             }

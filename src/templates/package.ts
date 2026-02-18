@@ -8,6 +8,7 @@ export const packageJsonTemplate = JSON.stringify(
       build: "next build",
       start: "next start",
       lint: "eslint .",
+      format: "prettier --write .",
     },
     dependencies: {
       "@langchain/anthropic": "^1.3.18",
@@ -45,4 +46,4 @@ export const packageJsonTemplate = JSON.stringify(
   },
   null,
   2,
-);
+) + "\n";

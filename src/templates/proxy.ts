@@ -12,10 +12,7 @@ export function proxy(req: NextRequest) {
         : null;
 
       if (token !== apiKey) {
-        return NextResponse.json(
-          { error: "Unauthorized" },
-          { status: 401 },
-        );
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
     }
   }

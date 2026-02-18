@@ -1,7 +1,6 @@
 export const pictogramsTemplate = `"use client";
 import React from "react";
 
-
 interface Props extends React.SVGProps<SVGSVGElement> {
   className?: string;
 }

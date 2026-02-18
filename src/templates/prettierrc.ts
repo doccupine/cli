@@ -1,0 +1,15 @@
+export const prettierrcTemplate = JSON.stringify(
+  {
+    printWidth: 80,
+    useTabs: false,
+    tabWidth: 2,
+    endOfLine: "lf",
+    semi: true,
+    singleQuote: false,
+    trailingComma: "all",
+    bracketSpacing: true,
+    arrowParens: "always",
+  },
+  null,
+  2,
+) + "\n";

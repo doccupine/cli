@@ -32,7 +32,9 @@ function extractAllTextFromChildren(children: React.ReactNode): string {
   if (Array.isArray(children))
     return children.map(extractAllTextFromChildren).join("");
   if (React.isValidElement(children)) {
-    const element = children as React.ReactElement<{ children?: React.ReactNode }>;
+    const element = children as React.ReactElement<{
+      children?: React.ReactNode;
+    }>;
     return extractAllTextFromChildren(element.props.children);
   }
   return "";
@@ -48,9 +50,10 @@ function generateId(text: string): string {
 
 // Map <pre><code class="language-xyz"> to our <Code /> component
 function Pre(props: PreProps) {
-  const child = React.Children.only(
-    props.children,
-  ) as React.ReactElement<{ className?: string; children?: React.ReactNode }> | null;
+  const child = React.Children.only(props.children) as React.ReactElement<{
+    className?: string;
+    children?: React.ReactNode;
+  }> | null;
   if (child && child.type === "code") {
     const className = child.props.className || "";
     const match = /language-(\\w+)/.exec(className);

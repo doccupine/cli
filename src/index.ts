@@ -15,6 +15,8 @@ import { gitignoreTemplate } from "./templates/gitignore.js";
 import { eslintConfigTemplate } from "./templates/eslint.config.js";
 import { nextConfigTemplate } from "./templates/next.config.js";
 import { packageJsonTemplate } from "./templates/package.js";
+import { prettierrcTemplate } from "./templates/prettierrc.js";
+import { prettierignoreTemplate } from "./templates/prettierignore.js";
 import { proxyTemplate } from "./templates/proxy.js";
 import { tsconfigTemplate } from "./templates/tsconfig.js";
 
@@ -310,6 +312,8 @@ class MDXToNextJSGenerator {
     const structure: Record<string, string | Promise<string>> = {
       ".env.example": envExampleTemplate,
       ".gitignore": gitignoreTemplate,
+      ".prettierrc": prettierrcTemplate,
+      ".prettierignore": prettierignoreTemplate,
       "config.json": `{}`,
       "eslint.config.mjs": eslintConfigTemplate,
       "links.json": `[]`,

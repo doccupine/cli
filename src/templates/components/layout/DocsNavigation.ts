@@ -43,7 +43,7 @@ const StyledNavButton = styled(Link)<{ theme: Theme }>\`
   border-radius: \${({ theme }) => theme.spacing.radius.lg};
   border: solid 1px \${({ theme }) => theme.colors.grayLight};
   color: \${({ theme }) => theme.colors.dark};
-  
+
   &:hover {
     border-color: \${({ theme }) => theme.colors.primary};
   }

@@ -64,7 +64,7 @@ const StyledThemeToggle = styled.button<{ theme: Theme; $hidden?: boolean }>\`
     color: \${({ theme }) =>
       theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
 
-   & svg[stroke] {
+    & svg[stroke] {
       stroke: \${({ theme }) =>
         theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
     }

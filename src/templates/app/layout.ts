@@ -1,3 +1,24 @@
+function formatPagesArray(pages: Record<string, unknown>[]): string {
+  const MAX_WIDTH = 80;
+  const items = pages.map((page) => {
+    const lines: string[] = ["  {"];
+    const entries = Object.entries(page);
+    for (const [key, value] of entries) {
+      const valueStr = JSON.stringify(value);
+      const line = `    ${key}: ${valueStr},`;
+      if (line.length > MAX_WIDTH) {
+        lines.push(`    ${key}:`);
+        lines.push(`      ${valueStr},`);
+      } else {
+        lines.push(line);
+      }
+    }
+    lines.push("  },");
+    return lines.join("\n");
+  });
+  return "[\n" + items.join("\n") + "\n]";
+}
+
 export const layoutTemplate = (
   pages: any[],
   fontConfig: any,
@@ -34,16 +55,20 @@ ${
 
 export const metadata: Metadata = {
   title: config.name || "Doccupine",
-  description: config.description || "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease. AI-ready.",
+  description:
+    config.description ||
+    "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease. AI-ready.",
   icons: config.icon || "https://doccupine.com/favicon.ico",
   openGraph: {
     title: config.name || "Doccupine",
-    description: config.description || "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease. AI-ready.",
+    description:
+      config.description ||
+      "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease. AI-ready.",
     images: config.preview || "https://doccupine.com/preview.png",
   },
 };
 
-const doccupinePages = ${JSON.stringify(pages, null, 2).replace(/"([^"]+)":/g, "$1:")};
+const doccupinePages = ${formatPagesArray(pages)};
 
 export default async function RootLayout({
   children,
