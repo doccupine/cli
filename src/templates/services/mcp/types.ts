@@ -1,9 +1,4 @@
-export const mcpTypesTemplate = `export interface MCPToolResult {
-  content: string;
-  metadata?: Record<string, unknown>;
-}
-
-export interface DocsResource {
+export const mcpTypesTemplate = `export interface DocsResource {
   uri: string;
   name: string;
   path: string;

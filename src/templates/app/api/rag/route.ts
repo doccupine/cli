@@ -73,7 +73,7 @@ export async function POST(req: Request) {
     await ensureDocsIndex(Boolean(refresh));
 
     // Use MCP search_docs tool to find relevant documentation
-    const searchResults = await searchDocs(String(question || ""), 6);
+    const searchResults = await searchDocs(question, 6);
 
     // Build context from search results
     const context = searchResults
@@ -88,7 +88,7 @@ export async function POST(req: Request) {
     const prompt = [
       {
         role: "system" as const,
-        content: systemContext as string,
+        content: systemContext,
       },
       {
         role: "user" as const,

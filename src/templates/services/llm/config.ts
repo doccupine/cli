@@ -52,21 +52,4 @@ export function getLLMConfig(): LLMConfig {
     temperature: parseFloat(process.env.LLM_TEMPERATURE || "0"),
   };
 }
-export function getLLMDisplayName(config?: LLMConfig): string {
-  const c = config || getLLMConfig();
-  const providerNames: Record<LLMProvider, string> = {
-    openai: "OpenAI",
-    anthropic: "Anthropic",
-    google: "Google",
-  };
-  return \`\${providerNames[c.provider]} (\${c.chatModel})\`;
-}
-export function isLLMConfigured(): boolean {
-  try {
-    getLLMConfig();
-    return true;
-  } catch {
-    return false;
-  }
-}
 `;

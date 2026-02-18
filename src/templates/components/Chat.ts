@@ -15,11 +15,11 @@ import rehypeHighlight from "rehype-highlight";
 import { MDXRemote, MDXRemoteSerializeResult } from "next-mdx-remote";
 import { serialize } from "next-mdx-remote/serialize";
 import { mq, Theme } from "@/app/theme";
-import { useMDXComponents } from "@/components/MDXComponents";
+import { useMDXComponents as getMDXComponents } from "@/components/MDXComponents";
 import { styledTable, stylesLists } from "@/components/layout/SharedStyled";
 import links from "@/links.json";
 
-const mdxComponents = useMDXComponents({});
+const mdxComponents = getMDXComponents({});
 
 const styledText = css<{ theme: Theme }>\`
   font-size: \${({ theme }) => theme.fontSizes.text.xs};
@@ -36,12 +36,10 @@ const StyledChat = styled.div<{ theme: Theme; $isVisible: boolean }>\`
   position: fixed;
   top: 0;
   right: 0;
-  width: 100%;
   height: calc(100vh - 90px);
   overflow-y: scroll;
   overflow-x: hidden;
   z-index: 1000;
-  width: 100%;
   padding: 0 20px;
   transition: all 0.3s ease;
   transform: translateX(0);
