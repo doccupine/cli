@@ -386,7 +386,7 @@ function Code({ code, language = "javascript", theme, className }: CodeProps) {
 
   return (
     <CodeWrapper
-      className={className + \`\${className && " "}code-wrapper\`}
+      className={\`\${className ?? ""} code-wrapper\`.trim()}
       theme={theme}
     >
       <TopBar theme={theme}>

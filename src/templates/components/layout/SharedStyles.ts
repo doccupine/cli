@@ -783,7 +783,7 @@ export const stylesLists = css<{ theme: Theme }>\`
       \${({ theme }) => styledText(theme)};
       min-height: 23px;
 
-      $mq: "lg" {
+      \${mq("lg")} {
         min-height: 27px;
       }
 

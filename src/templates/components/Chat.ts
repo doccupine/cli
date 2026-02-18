@@ -492,7 +492,7 @@ const StyledAnswer = styled.div<{ theme: Theme; $isAnswer: boolean }>\`
     background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.2)};
     color: \${({ theme }) => theme.colors.dark};
     padding: 2px 4px;
-    border-radius: \${({ theme }) => theme.spacing.radius.xs};A
+    border-radius: \${({ theme }) => theme.spacing.radius.xs};
     white-space: pre;
   }
 
