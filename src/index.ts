@@ -73,6 +73,7 @@ import { styledDTemplate } from "./templates/types/styled.js";
 
 import { orderNavItemsTemplate } from "./templates/utils/orderNavItems.js";
 import { rateLimitTemplate } from "./templates/utils/rateLimit.js";
+import { brandingTemplate } from "./templates/utils/branding.js";
 import { configTemplate } from "./templates/utils/config.js";
 
 import { accordionMdxTemplate } from "./templates/mdx/accordion.mdx.js";
@@ -342,6 +343,7 @@ class MDXToNextJSGenerator {
 
       "types/styled.d.ts": styledDTemplate,
 
+      "utils/branding.ts": brandingTemplate,
       "utils/orderNavItems.ts": orderNavItemsTemplate,
       "utils/rateLimit.ts": rateLimitTemplate,
       "utils/config.ts": configTemplate,

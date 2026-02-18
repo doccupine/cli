@@ -40,6 +40,7 @@ import {
 } from "@/utils/orderNavItems";
 import { StaticLinks } from "@/components/layout/StaticLinks";
 import { config } from "@/utils/config";
+import { verifyBrandingKey } from "@/utils/branding";
 import navigation from "@/navigation.json";
 const Chat = dynamic(() => import("@/components/Chat").then((mod) => mod.Chat));
 
@@ -75,6 +76,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const hideBranding = verifyBrandingKey();
+
   const defaultPages = [
     {
       slug: "",
@@ -109,7 +112,7 @@ export default async function RootLayout({
                 <DocsNavigation
                   result={result.length ? result : defaultResults}
                 />
-                <Footer />
+                <Footer hideBranding={hideBranding} />
               </DocsWrapper>
             </ChtProvider>
           </CherryThemeProvider>

@@ -55,8 +55,11 @@ const StyledFooterFlex = styled.div\`
   align-items: center;
 \`;
 
-function Footer() {
+function Footer({ hideBranding }: { hideBranding?: boolean }) {
   const { isOpen } = useContext(ChatContext);
+
+  if (hideBranding) return null;
+
   return (
     <StyledFooter $isChatOpen={isOpen}>
       <StyledFooterInner>
