@@ -1090,7 +1090,11 @@ program
 
     devServer.stderr?.on("data", (data: Buffer) => {
       const output = data.toString();
-      if (options.verbose || output.includes("Error") || output.includes("error")) {
+      if (
+        options.verbose ||
+        output.includes("Error") ||
+        output.includes("error")
+      ) {
         process.stderr.write(chalk.red("[Next.js] ") + output);
       }
     });

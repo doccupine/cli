@@ -42,9 +42,7 @@ describe("escapeTemplateContent", () => {
   });
 
   it("escapes backslashes", () => {
-    expect(escapeTemplateContent("path\\to\\file")).toBe(
-      "path\\\\to\\\\file",
-    );
+    expect(escapeTemplateContent("path\\to\\file")).toBe("path\\\\to\\\\file");
   });
 
   it("escapes all dangerous characters together", () => {
