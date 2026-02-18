@@ -15,9 +15,9 @@ Place a \`theme.json\` at your project root (the same folder where you execute \
 \`\`\`json
 {
   "default": {
-    "primaryLight": "#86efac",
-    "primary": "#22c55e",
-    "primaryDark": "#15803d",
+    "primaryLight": "#93c5fd",
+    "primary": "#3b82f6",
+    "primaryDark": "#1e40af",
     "secondaryLight": "#c4b5fd",
     "secondary": "#8b5cf6",
     "secondaryDark": "#5b21b6",
@@ -35,9 +35,9 @@ Place a \`theme.json\` at your project root (the same folder where you execute \
     "light": "#ffffff"
   },
   "dark": {
-    "primaryLight": "#6ee7b7",
-    "primary": "#10b981",
-    "primaryDark": "#065f46",
+    "primaryLight": "#9bcaff",
+    "primary": "#1e7ae0",
+    "primaryDark": "#033d7e",
     "secondaryLight": "#ddd6fe",
     "secondary": "#a78bfa",
     "secondaryDark": "#7c3aed",
