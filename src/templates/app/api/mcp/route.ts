@@ -11,6 +11,7 @@ import {
   getDoc,
 } from "@/services/mcp";
 import type { MCPToolName } from "@/services/mcp";
+import { rateLimit } from "@/utils/rateLimit";
 
 const searchDocsSchema = z.object({
   query: z.string().min(1).max(2000),
@@ -167,6 +168,16 @@ async function handleRESTRequest(body: ToolCallRequest) {
 }
 
 export async function POST(req: Request) {
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const { allowed, retryAfter } = rateLimit(ip);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": String(retryAfter) } },
+    );
+  }
+
   // Clone the request to read body twice if needed
   const clonedReq = req.clone();
 

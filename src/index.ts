@@ -71,6 +71,7 @@ import { styledDTemplate } from "./templates/types/styled.js";
 
 import { orderNavItemsTemplate } from "./templates/utils/orderNavItems.js";
 import { rateLimitTemplate } from "./templates/utils/rateLimit.js";
+import { configTemplate } from "./templates/utils/config.js";
 
 import { accordionMdxTemplate } from "./templates/mdx/accordion.mdx.js";
 import { aiAssistantMdxTemplate } from "./templates/mdx/ai-assistant.mdx.js";
@@ -339,6 +340,7 @@ class MDXToNextJSGenerator {
 
       "utils/orderNavItems.ts": orderNavItemsTemplate,
       "utils/rateLimit.ts": rateLimitTemplate,
+      "utils/config.ts": configTemplate,
 
       "components/Chat.tsx": chatTemplate,
       "components/ClickOutside.ts": clickOutsideTemplate,
@@ -858,16 +860,7 @@ class MDXToNextJSGenerator {
   async generatePageFromMDX(mdxFile: MDXFile) {
     const pageContent = `import { Metadata } from "next";
 import { Docs } from "@/components/Docs";
-import configData from "@/config.json";
-
-interface Config {
-  name?: string;
-  description?: string;
-  icon?: string;
-  preview?: string;
-}
-
-const config = configData as Config;
+import { config } from "@/utils/config";
 
 const content = \`${escapeTemplateContent(mdxFile.content)}\`;
 
@@ -921,16 +914,7 @@ export default function Page() {
 
     const indexContent = `import { Metadata } from "next";
 import { Docs } from "@/components/Docs";
-import configData from "@/config.json";
-
-interface Config {
-  name?: string;
-  description?: string;
-  icon?: string;
-  preview?: string;
-}
-
-const config = configData as Config;
+import { config } from "@/utils/config";
 
 ${indexMDX ? `const content = \`${escapeTemplateContent(indexMDX.content)}\`;` : `const content = null;`}
 

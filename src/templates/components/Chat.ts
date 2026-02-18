@@ -19,6 +19,8 @@ import { useMDXComponents } from "@/components/MDXComponents";
 import { styledTable, stylesLists } from "@/components/layout/SharedStyled";
 import links from "@/links.json";
 
+const mdxComponents = useMDXComponents({});
+
 const styledText = css<{ theme: Theme }>\`
   font-size: \${({ theme }) => theme.fontSizes.text.xs};
   line-height: \${({ theme }) => theme.lineHeights.text.xs};
@@ -632,6 +634,7 @@ interface RainbowInputProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   placeholder?: string;
   autoComplete?: string;
+  "aria-label"?: string;
 }
 
 function RainbowInput({
@@ -640,6 +643,7 @@ function RainbowInput({
   onChange,
   placeholder,
   autoComplete,
+  "aria-label": ariaLabel,
 }: RainbowInputProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -675,6 +679,7 @@ function RainbowInput({
         onChange={onChange}
         placeholder={placeholder}
         autoComplete={autoComplete}
+        aria-label={ariaLabel}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
       />
@@ -688,7 +693,6 @@ function Chat() {
   const [error, setError] = useState<string | null>(null);
   const [answer, setAnswer] = useState<Answer[]>([]);
   const endRef = useRef<HTMLDivElement | null>(null);
-  const mdxComponents = useMDXComponents({});
   const { isOpen, setIsOpen } = useContext(ChatContext);
 
   useEffect(() => {
@@ -734,7 +738,7 @@ function Chat() {
 
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
-      let streamedContent = "";
+      const contentParts: string[] = [];
       if (!reader) {
         throw new Error("Failed to get response reader");
       }
@@ -756,7 +760,8 @@ function Chat() {
               const data = JSON.parse(line.slice(6));
 
               if (data.type === "content") {
-                streamedContent += data.data;
+                contentParts.push(data.data);
+                const streamedContent = contentParts.join("");
 
                 setAnswer((prev) => {
                   const newAnswers = [...prev];
@@ -769,6 +774,7 @@ function Chat() {
               } else if (data.type === "error") {
                 throw new Error(data.data);
               } else if (data.type === "done") {
+                const streamedContent = contentParts.join("");
                 // Finalize with MDX serialization
                 let mdxSource: MDXRemoteSerializeResult | null = null;
                 try {
@@ -821,11 +827,13 @@ function Chat() {
             onChange={(e) => setQuestion(e.target.value)}
             placeholder="Ask AI Assistant..."
             autoComplete="off"
+            aria-label="Ask a question about the documentation"
           />
           <StyledRainbowButton
             type="submit"
             disabled={loading}
             $hasContent={question.trim().length > 0}
+            aria-label={loading ? "Loading response" : "Submit question"}
           >
             {loading ? <LoaderPinwheel className="loading" /> : <ArrowUp />}
           </StyledRainbowButton>
@@ -843,6 +851,7 @@ function Chat() {
               setAnswer([]);
               setIsOpen(false);
             }}
+            aria-label="Close chat"
           >
             <X />
           </StyledChatCloseButton>
@@ -879,11 +888,13 @@ function Chat() {
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="Ask AI Assistant..."
           autoComplete="off"
+          aria-label="Ask a follow-up question"
         />
         <StyledRainbowButton
           type="submit"
           disabled={loading || question.trim() === ""}
           $hasContent={question.trim().length > 0}
+          aria-label={loading ? "Loading response" : "Submit question"}
         >
           {loading ? <LoaderPinwheel className="loading" /> : <ArrowUp />}
         </StyledRainbowButton>

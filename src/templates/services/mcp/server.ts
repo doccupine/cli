@@ -10,7 +10,8 @@ import { getLLMConfig, createEmbeddings } from "@/services/llm";
 import type { DocsChunk } from "@/services/mcp/types";
 
 /**
- * In-memory cache for document embeddings
+ * In-memory cache for document embeddings.
+ * Built once at server startup since docs are static.
  */
 let docsIndex: {
   ready: boolean;
@@ -21,6 +22,9 @@ let docsIndex: {
   building: false,
   chunks: [],
 };
+
+/** Resolves when the initial index build completes */
+let indexReady: Promise<void> | null = null;
 
 /**
  * Cosine similarity between two vectors
@@ -82,17 +86,24 @@ export async function buildDocsIndex(force = false): Promise<void> {
 }
 
 /**
- * Ensure the docs index is ready
+ * Ensure the docs index is ready.
+ * On first call, triggers the build; subsequent calls wait for the same promise.
  */
 export async function ensureDocsIndex(force = false): Promise<void> {
   if (force) {
     docsIndex.ready = false;
     docsIndex.chunks = [];
+    indexReady = buildDocsIndex();
+    return indexReady;
   }
-  if (!docsIndex.ready) {
-    await buildDocsIndex();
+  if (!indexReady) {
+    indexReady = buildDocsIndex();
   }
+  return indexReady;
 }
+
+// Eagerly start building the index on server startup (docs are static)
+indexReady = buildDocsIndex();
 
 /**
  * Search documents using semantic similarity

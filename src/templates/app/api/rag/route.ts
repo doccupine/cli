@@ -8,16 +8,7 @@ import {
   getIndexStatus,
 } from "@/services/mcp/server";
 import { rateLimit } from "@/utils/rateLimit";
-import configData from "@/config.json";
-
-const config = configData as Config;
-
-interface Config {
-  name?: string;
-  description?: string;
-  icon?: string;
-  preview?: string;
-}
+import { config } from "@/utils/config";
 
 const PROJECT_ROOT = process.cwd();
 

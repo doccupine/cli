@@ -203,7 +203,9 @@ export async function getDoc(
 }
 
 /**
- * Chunk text for embeddings
+ * Chunk text for embeddings.
+ * - chunkSize=800 chars balances granularity with embedding context window limits
+ * - overlap=100 chars ensures continuity so searches don't miss content at chunk boundaries
  */
 export function chunkText(
   text: string,

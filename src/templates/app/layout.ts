@@ -3,10 +3,11 @@ export const layoutTemplate = (
   fontConfig: any,
 ): string => `import type { Metadata } from "next";
 ${fontConfig?.googleFont?.fontName?.length ? `import { ${fontConfig.googleFont.fontName} } from "next/font/google";` : fontConfig?.localFonts?.length || fontConfig?.localFonts?.src?.length ? 'import localFont from "next/font/local";' : 'import { Inter } from "next/font/google";'}
+import dynamic from "next/dynamic";
 import { StyledComponentsRegistry } from "cherry-styled-components";
 import { theme, themeDark } from "@/app/theme";
 import { CherryThemeProvider } from "@/components/layout/CherryThemeProvider";
-import { Chat, ChtProvider } from "@/components/Chat";
+import { ChtProvider } from "@/components/Chat";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { DocsWrapper } from "@/components/layout/DocsComponents";
@@ -17,7 +18,9 @@ import {
   type PagesProps,
 } from "@/utils/orderNavItems";
 import { StaticLinks } from "@/components/layout/StaticLinks";
+import { config } from "@/utils/config";
 import navigation from "@/navigation.json";
+const Chat = dynamic(() => import("@/components/Chat").then((mod) => mod.Chat));
 
 ${
   fontConfig?.googleFont?.fontName?.length
@@ -30,13 +33,13 @@ ${
 }
 
 export const metadata: Metadata = {
-  title: "Doccupine",
-  description:
-    "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease. AI-ready.",
+  title: config.name || "Doccupine",
+  description: config.description || "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease. AI-ready.",
+  icons: config.icon || "https://doccupine.com/favicon.ico",
   openGraph: {
-    title: "Doccupine",
-    description:
-      "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease. AI-ready.",
+    title: config.name || "Doccupine",
+    description: config.description || "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease. AI-ready.",
+    images: config.preview || "https://doccupine.com/preview.png",
   },
 };
 

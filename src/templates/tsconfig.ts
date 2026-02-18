@@ -1,8 +1,8 @@
 export const tsconfigTemplate = JSON.stringify(
   {
     compilerOptions: {
-      target: "es5",
-      lib: ["dom", "dom.iterable", "es6"],
+      target: "es2020",
+      lib: ["dom", "dom.iterable", "esnext"],
       allowJs: true,
       skipLibCheck: true,
       strict: true,

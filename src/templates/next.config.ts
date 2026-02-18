@@ -1,5 +1,5 @@
 export const nextConfigTemplate = `import type { NextConfig } from "next";
-const path = require("path");
+import path from "node:path";
 
 const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(__dirname, "./"),
