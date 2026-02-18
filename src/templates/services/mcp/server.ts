@@ -95,9 +95,13 @@ export async function buildDocsIndex(force = false): Promise<void> {
  */
 export async function ensureDocsIndex(force = false): Promise<void> {
   if (force) {
+    // Wait for any in-flight build before starting a forced rebuild
+    if (docsIndex.building && indexReady) {
+      await indexReady.catch(() => {});
+    }
     docsIndex.ready = false;
     docsIndex.chunks = [];
-    indexReady = buildDocsIndex();
+    indexReady = buildDocsIndex(true);
     return indexReady;
   }
   if (!indexReady) {

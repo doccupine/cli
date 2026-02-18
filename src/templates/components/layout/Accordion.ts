@@ -72,7 +72,12 @@ function Accordion({ children, title }: AccordionProps) {
 
   return (
     <StyledAccordion>
-      <StyledAccordionTitle onClick={() => setIsOpen(!isOpen)} $isOpen={isOpen}>
+      <StyledAccordionTitle
+        onClick={() => setIsOpen(!isOpen)}
+        $isOpen={isOpen}
+        role="button"
+        aria-expanded={isOpen}
+      >
         {title} <Icon name="ChevronDown" />
       </StyledAccordionTitle>
       <StyledAccordionContent $isOpen={isOpen}>

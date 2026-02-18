@@ -27,7 +27,7 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
 
     const headingElements = headings
       .map((heading) => document.getElementById(heading.id))
-      .filter(Boolean) as HTMLElement[];
+      .filter((el): el is HTMLElement => el !== null);
 
     if (headingElements.length === 0) return;
 

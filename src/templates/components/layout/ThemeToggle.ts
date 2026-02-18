@@ -88,7 +88,7 @@ function ToggleTheme({ $hidden }: { $hidden?: boolean }) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ theme: nextTheme }),
-        });
+        }).catch((err) => console.error("Failed to persist theme:", err));
       }}
       $hidden={$hidden}
       aria-label="Toggle Theme"

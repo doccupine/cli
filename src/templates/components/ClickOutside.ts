@@ -1,27 +1,29 @@
-export const clickOutsideTemplate = `import { RefObject, useEffect } from "react";
+export const clickOutsideTemplate = `import { RefObject, useCallback, useEffect } from "react";
 
 export function useOnClickOutside(
   refs: RefObject<HTMLElement | null>[],
   cb: () => void,
 ) {
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+  // Stable callback ref to avoid re-subscribing on every render
+  const handleClickOutside = useCallback(
+    (event: MouseEvent) => {
       if (
-        refs &&
-        refs
-          .map(
-            (ref) =>
-              ref && ref.current && ref.current.contains(event.target as Node),
-          )
-          .every((i) => i === false)
+        refs.every(
+          (ref) => !ref.current || !ref.current.contains(event.target as Node),
+        )
       ) {
         cb();
       }
-    }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [...refs, cb],
+  );
+
+  useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [refs, cb]);
+  }, [handleClickOutside]);
 }
 `;
