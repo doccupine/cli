@@ -1,5 +1,5 @@
 export const codeTemplate = `"use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import styled from "styled-components";
 import { Theme, styledCode } from "cherry-styled-components";
 import { rgba } from "polished";
@@ -354,8 +354,12 @@ const escapeHtml = (unsafe: string): string => {
     .replace(/'/g, "&#039;");
 };
 
+const sanitizeLanguage = (lang: string): string =>
+  lang.replace(/[^a-zA-Z0-9_-]/g, "");
+
 const highlightCode = (code: string, language: string): string => {
   const escapedCode = escapeHtml(code);
+  const safeLang = sanitizeLanguage(language);
   const result = unified()
     .use(rehypeParse, { fragment: true })
     .use(rehypeHighlight, {
@@ -364,7 +368,7 @@ const highlightCode = (code: string, language: string): string => {
     })
     .use(rehypeStringify)
     .processSync(
-      \`<pre><code class="language-\${language}">\${escapedCode}</code></pre>\`,
+      \`<pre><code class="language-\${safeLang}">\${escapedCode}</code></pre>\`,
     );
 
   return String(result);
@@ -372,7 +376,10 @@ const highlightCode = (code: string, language: string): string => {
 
 function Code({ code, language = "javascript", theme, className }: CodeProps) {
   const [copied, setCopied] = useState(false);
-  const highlightedCode = highlightCode(code, language);
+  const highlightedCode = useMemo(
+    () => highlightCode(code, language),
+    [code, language],
+  );
 
   const handleCopy = useCallback(async () => {
     try {

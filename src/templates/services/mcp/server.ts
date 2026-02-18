@@ -80,6 +80,10 @@ export async function buildDocsIndex(force = false): Promise<void> {
       embedding: vectors[i],
     }));
     docsIndex.ready = true;
+  } catch (error) {
+    // Reset so the next call to ensureDocsIndex retries
+    indexReady = null;
+    throw error;
   } finally {
     docsIndex.building = false;
   }
@@ -105,6 +109,16 @@ export async function ensureDocsIndex(force = false): Promise<void> {
 // Eagerly start building the index on server startup (docs are static)
 indexReady = buildDocsIndex();
 
+/** Cached embeddings instance for search queries */
+let cachedEmbeddings: ReturnType<typeof createEmbeddings> | null = null;
+
+function getEmbeddings() {
+  if (!cachedEmbeddings) {
+    cachedEmbeddings = createEmbeddings(getLLMConfig());
+  }
+  return cachedEmbeddings;
+}
+
 /**
  * Search documents using semantic similarity
  */
@@ -114,9 +128,7 @@ export async function searchDocs(
 ): Promise<{ chunk: DocsChunk; score: number }[]> {
   await ensureDocsIndex();
 
-  const config = getLLMConfig();
-  const embeddings = createEmbeddings(config);
-  const queryVector = await embeddings.embedQuery(query);
+  const queryVector = await getEmbeddings().embedQuery(query);
 
   const scored = docsIndex.chunks
     .map((c) => ({

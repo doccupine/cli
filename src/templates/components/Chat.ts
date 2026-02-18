@@ -693,6 +693,7 @@ function Chat() {
   const [error, setError] = useState<string | null>(null);
   const [answer, setAnswer] = useState<Answer[]>([]);
   const endRef = useRef<HTMLDivElement | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const { isOpen, setIsOpen } = useContext(ChatContext);
 
   useEffect(() => {
@@ -724,11 +725,15 @@ function Chat() {
 
     setAnswer(mergedQuestions);
 
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
       const res = await fetch("/api/rag", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: currentQuestion }),
+        signal: controller.signal,
       });
 
       if (!res.ok) {
@@ -747,14 +752,17 @@ function Chat() {
       const streamingAnswerIndex = mergedQuestions.length;
       setAnswer([...mergedQuestions, { text: "", answer: true }]);
 
+      let buffer = "";
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value);
-        const lines = chunk.split("\\n");
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split("\\n");
+        // Keep the last (potentially incomplete) part in the buffer
+        buffer = parts.pop() ?? "";
 
-        for (const line of lines) {
+        for (const line of parts) {
           if (line.startsWith("data: ")) {
             try {
               const data = JSON.parse(line.slice(6));
@@ -802,14 +810,18 @@ function Chat() {
                 });
               }
             } catch (parseError) {
-              console.error("Failed to parse SSE data:", parseError);
+              if (parseError instanceof Error && parseError.message !== "Unknown error") {
+                console.error("Failed to parse SSE data:", parseError);
+              }
             }
           }
         }
       }
     } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
+      abortRef.current = null;
       setLoading(false);
     }
   }
@@ -848,6 +860,7 @@ function Chat() {
           </StyledChatTitleIconWrapper>
           <StyledChatCloseButton
             onClick={() => {
+              abortRef.current?.abort();
               setAnswer([]);
               setIsOpen(false);
             }}

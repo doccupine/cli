@@ -1,5 +1,4 @@
 export const ragRoutesTemplate = `import { NextResponse } from "next/server";
-import path from "node:path";
 import { z } from "zod";
 import { getLLMConfig, createChatModel } from "@/services/llm";
 import {
@@ -9,8 +8,6 @@ import {
 } from "@/services/mcp/server";
 import { rateLimit } from "@/utils/rateLimit";
 import { config } from "@/utils/config";
-
-const PROJECT_ROOT = process.cwd();
 
 const ragSchema = z.object({
   question: z.string().min(1).max(2000),
@@ -63,9 +60,9 @@ export async function POST(req: Request) {
     }
     const { question, refresh } = parsed.data;
 
-    let config;
+    let llmConfig;
     try {
-      config = getLLMConfig();
+      llmConfig = getLLMConfig();
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "LLM configuration error";
@@ -82,12 +79,12 @@ export async function POST(req: Request) {
     const context = searchResults
       .map(
         ({ chunk, score }) =>
-          \`File: \${path.relative(PROJECT_ROOT, chunk.path)}\\nScore: \${score.toFixed(3)}\\n----\\n\${chunk.text}\`,
+          \`File: \${chunk.path}\\nScore: \${score.toFixed(3)}\\n----\\n\${chunk.text}\`,
       )
       .join("\\n\\n================\\n\\n");
 
     // Create chat model and stream response
-    const llm = createChatModel(config);
+    const llm = createChatModel(llmConfig);
     const prompt = [
       {
         role: "system" as const,
@@ -106,7 +103,7 @@ export async function POST(req: Request) {
     const metadata = {
       sources: searchResults.map(({ chunk, score }) => ({
         id: chunk.id,
-        path: path.relative(PROJECT_ROOT, chunk.path),
+        path: chunk.path,
         uri: chunk.uri,
         score,
       })),
