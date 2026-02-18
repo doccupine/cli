@@ -36,6 +36,7 @@ const StyledChat = styled.div<{ theme: Theme; $isVisible: boolean }>\`
   position: fixed;
   top: 0;
   right: 0;
+  width: 100%;
   height: calc(100vh - 90px);
   overflow-y: scroll;
   overflow-x: hidden;
