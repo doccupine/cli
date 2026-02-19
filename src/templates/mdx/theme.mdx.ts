@@ -55,8 +55,8 @@ Place a \`theme.json\` at your project root (the same folder where you execute \
     "light": "#000000"
   },
   "logo": {
-    "dark": "https://doccupine.com/logo-dark.svg",
-    "light": "https://doccupine.com/logo-light.svg"
+    "dark": "https://docs.doccupine.com/logo-dark.svg",
+    "light": "https://docs.doccupine.com/logo-light.svg"
   }
 }
 \`\`\`
