@@ -27,7 +27,9 @@ This will start the development server on port 3000. Open your browser and navig
 npx doccupine --verbose
 \`\`\`
 
-This will show Next.js errors in the terminal console logs, providing more detailed output useful for debugging during development.
+<Callout type="note">
+  This will show Next.js errors in the terminal console logs, providing more detailed output useful for debugging during development.
+</Callout>
 
 ## Generate the website
 

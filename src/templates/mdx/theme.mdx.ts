@@ -4,7 +4,7 @@ description: "Customize the documentation UI colors with a theme.json file."
 date: "2025-01-15"
 category: "Configuration"
 categoryOrder: 3
-order: 4
+order: 5
 ---
 # Theme
 Define your site’s color system with a \`theme.json\` file. This lets you tailor the look and feel of your documentation without changing content.
@@ -89,9 +89,12 @@ Place a \`theme.json\` at your project root (the same folder where you execute \
 
 ## Behavior
 - **Placement**: Put \`theme.json\` in the project root alongside \`config.json\`.
-- **Validation**: Use valid hex colors (e.g., \`#22c55e\`).
 - **Partial palettes**: If a key is missing in a mode, consumers may fall back to the \`default\` value.
 - **Logo size**: Recommended dimensions are 164px width and 30px height.
+
+<Callout type="warning">
+  Use valid hex colors (e.g., \`#22c55e\`). Invalid color values may cause unexpected rendering.
+</Callout>
 
 ## Tips
 - **Contrast**: Ensure sufficient contrast between text and backgrounds for readability.

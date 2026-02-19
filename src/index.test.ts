@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { generateSlug, escapeTemplateContent } from "./index.js";
+import { generateSlug, escapeTemplateContent, getFullSlug } from "./index.js";
 
 describe("generateSlug", () => {
   it("returns empty string for index.mdx", () => {
@@ -29,6 +29,38 @@ describe("generateSlug", () => {
 
   it("preserves underscores and hyphens", () => {
     expect(generateSlug("my_page-name.mdx")).toBe("my_page-name");
+  });
+
+  it("strips trailing /index for subdirectory index files", () => {
+    expect(generateSlug("platform/index.mdx")).toBe("platform");
+  });
+
+  it("strips trailing /index for deeply nested index files", () => {
+    expect(generateSlug("guides/getting-started/index.mdx")).toBe(
+      "guides/getting-started",
+    );
+  });
+});
+
+describe("getFullSlug", () => {
+  it("returns page slug when section slug is empty", () => {
+    expect(getFullSlug("getting-started", "")).toBe("getting-started");
+  });
+
+  it("returns page slug when section slug is falsy", () => {
+    expect(getFullSlug("getting-started", "")).toBe("getting-started");
+  });
+
+  it("combines section and page slugs", () => {
+    expect(getFullSlug("authentication", "api")).toBe("api/authentication");
+  });
+
+  it("returns section slug when page slug is empty (section index)", () => {
+    expect(getFullSlug("", "api")).toBe("api");
+  });
+
+  it("returns empty string when both slugs are empty", () => {
+    expect(getFullSlug("", "")).toBe("");
   });
 });
 

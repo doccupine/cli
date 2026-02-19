@@ -17,7 +17,7 @@ interface DocsProps {
   children: React.ReactNode;
 }
 
-const StyledDocsWrapper = styled.div<{ theme: Theme }>\`
+const StyledDocsWrapper = styled.div<{ theme: Theme; $hasSections?: boolean }>\`
   position: relative;
 \`;
 
@@ -93,13 +93,13 @@ interface Props {
   $isActive?: boolean;
 }
 
-export const StyledSidebar = styled.nav<Props>\`
+export const StyledSidebar = styled.nav<Props & { $hasSections?: boolean }>\`
   position: fixed;
   overflow-y: auto;
-  max-height: calc(100svh - 70px);
+  max-height: calc(100svh - \${({ $hasSections }) => ($hasSections ? "118px" : "70px")});
   width: 100%;
   z-index: 99;
-  top: 70px;
+  top: \${({ $hasSections }) => ($hasSections ? "118px" : "70px")};
   height: 100%;
   padding: 20px 20px 80px 20px;
   opacity: 0;
@@ -115,7 +115,7 @@ export const StyledSidebar = styled.nav<Props>\`
     max-height: 100svh;
     width: 220px;
     background: transparent;
-    padding: 90px 40px 40px;
+    padding: \${({ $hasSections }) => ($hasSections ? "138px" : "90px")} 40px 40px;
     opacity: 1;
     pointer-events: all;
     transform: translateY(0);
@@ -302,8 +302,13 @@ export const StyledMobileBurger = styled.span<Props>\`
     \`};
 \`;
 
-function DocsWrapper({ children }: DocsProps) {
-  return <StyledDocsWrapper>{children}</StyledDocsWrapper>;
+interface DocsWrapperProps {
+  children: React.ReactNode;
+  $hasSections?: boolean;
+}
+
+function DocsWrapper({ children, $hasSections }: DocsWrapperProps) {
+  return <StyledDocsWrapper $hasSections={$hasSections}>{children}</StyledDocsWrapper>;
 }
 
 function DocsSidebar({ children }: DocsProps) {

@@ -4,7 +4,7 @@ description: "Customize the documentation typography with a fonts.json file (Goo
 date: "2025-01-15"
 category: "Configuration"
 categoryOrder: 3
-order: 6
+order: 7
 ---
 # Fonts
 Define your site’s typography with a \`fonts.json\` file. You can load fonts from Google Fonts or from local font files bundled with your project.
@@ -30,6 +30,10 @@ Use this when your font is hosted by Google Fonts.
   - Example: "Work Sans" → \`Work_Sans\`
 - **subsets**: Pick the subsets you need (for example, \`latin\`).
 - **weight**: The font weight to load - a single string (for example, \`"400"\`) or an array of strings (for example, \`["400", "500", "700"]\`).
+
+<Callout type="warning">
+  The \`fontName\` must match the Google Fonts name exactly - capitalize each word and replace spaces with underscores.
+</Callout>
 
 ### Tips
 - **One primary family**: Start with a single family and weight, then add more if needed.
@@ -89,7 +93,10 @@ If you have only one file, you can use:
 ## Behavior
 - **Placement**: Put \`fonts.json\` in the project root alongside \`config.json\` and (optionally) \`theme.json\`.
 - **Validation**: Follow the naming rule for \`googleFont.fontName\` (capitalize, replace spaces with \`_\`).
-- **Local files**: Ensure the referenced files exist under the Next.js \`public\` directory.
+
+<Callout type="note">
+  When using local fonts, ensure the referenced files exist under the Next.js \`public\` directory. The paths in \`fonts.json\` are relative to where they are consumed by the build tooling.
+</Callout>
 
 ## Examples
 - **Google Fonts (single weight)**

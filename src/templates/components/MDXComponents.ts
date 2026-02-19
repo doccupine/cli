@@ -1,4 +1,5 @@
 export const mdxComponentsTemplate = `import React from "react";
+import Link from "next/link";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type MDXComponents = Record<string, React.ComponentType<any>>;
@@ -121,6 +122,14 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
           {children}
         </h6>
       );
+    },
+
+    // Links - use Next.js Link for internal paths
+    a: ({ href, children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
+      if (href && href.startsWith("/")) {
+        return <Link href={href} {...props}>{children}</Link>;
+      }
+      return <a href={href} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>;
     },
 
     // Code blocks

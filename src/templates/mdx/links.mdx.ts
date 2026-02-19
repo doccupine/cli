@@ -4,7 +4,7 @@ description: "Add static links at the top of the documentation website."
 date: "2025-01-15"
 category: "Configuration"
 categoryOrder: 3
-order: 3
+order: 4
 ---
 # Links
 Add a row of static links at the top of your documentation. Links open in a new tab and are useful for pointing users to related resources, repositories, or external docs.
