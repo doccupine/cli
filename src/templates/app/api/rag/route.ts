@@ -9,8 +9,14 @@ import {
 import { rateLimit } from "@/utils/rateLimit";
 import { config } from "@/utils/config";
 
+const messageSchema = z.object({
+  role: z.enum(["user", "assistant"]),
+  content: z.string().max(4000),
+});
+
 const ragSchema = z.object({
   question: z.string().min(1).max(2000),
+  history: z.array(messageSchema).max(20).optional(),
   refresh: z.boolean().optional(),
 });
 
@@ -58,7 +64,7 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
-    const { question, refresh } = parsed.data;
+    const { question, history, refresh } = parsed.data;
 
     let llmConfig;
     try {
@@ -85,16 +91,28 @@ export async function POST(req: Request) {
 
     // Create chat model and stream response
     const llm = createChatModel(llmConfig);
-    const prompt = [
-      {
-        role: "system" as const,
-        content: systemContext,
-      },
-      {
-        role: "user" as const,
-        content: \`Question: \${question}\\n\\nContext:\\n\${context}\`,
-      },
-    ];
+    const prompt: { role: "system" | "user" | "assistant"; content: string }[] =
+      [
+        {
+          role: "system" as const,
+          content: systemContext,
+        },
+      ];
+
+    // Include conversation history for multi-turn context
+    if (history && history.length > 0) {
+      for (const msg of history) {
+        prompt.push({
+          role: msg.role,
+          content: msg.content,
+        });
+      }
+    }
+
+    prompt.push({
+      role: "user" as const,
+      content: \`Question: \${question}\\n\\nContext:\\n\${context}\`,
+    });
 
     const stream = await llm.stream(prompt);
 

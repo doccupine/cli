@@ -726,10 +726,18 @@ function Chat() {
     abortRef.current = controller;
 
     try {
+      // Build conversation history from previous Q&A pairs
+      const history = answer
+        .filter((a) => a.text.trim() !== "")
+        .map((a) => ({
+          role: a.answer ? ("assistant" as const) : ("user" as const),
+          content: a.text,
+        }));
+
       const res = await fetch("/api/rag", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: currentQuestion }),
+        body: JSON.stringify({ question: currentQuestion, history }),
         signal: controller.signal,
       });
 
