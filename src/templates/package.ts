@@ -30,7 +30,7 @@ export const packageJsonTemplate =
         "rehype-parse": "^9.0.1",
         "rehype-stringify": "^10.0.1",
         "remark-gfm": "^4.0.1",
-        "styled-components": "6.3.9",
+        "styled-components": "^6.3.11",
         unified: "^11.0.5",
         zod: "^4.3.6",
       },
