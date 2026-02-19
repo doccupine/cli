@@ -42,7 +42,10 @@ function SideBar({ result }: SideBarProps) {
         <StyledMobileBurger $isActive={isMobileMenuOpen} />
       </StyleMobileBar>
 
-      <StyledSidebar $isActive={isMobileMenuOpen} $hasSectionBar={hasSectionBar}>
+      <StyledSidebar
+        $isActive={isMobileMenuOpen}
+        $hasSectionBar={hasSectionBar}
+      >
         {result &&
           result.map((item: NavItem, index: number) => {
             return (

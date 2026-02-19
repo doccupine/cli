@@ -17,14 +17,13 @@ const customThemeJson = themeJson as typeof themeJson & {
   logo?: { dark: string; light: string };
 };
 
-const StyledHeader = styled.header<{ theme: Theme, $hasChildren: boolean }>\`
+const StyledHeader = styled.header<{ theme: Theme; $hasChildren: boolean }>\`
   position: sticky;
   top: 0;
   margin: 0;
   z-index: 1000;
   width: 100%;
   border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
-
 
   \${({ $hasChildren }) =>
     !$hasChildren &&

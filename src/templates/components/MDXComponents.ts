@@ -125,11 +125,23 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     },
 
     // Links - use Next.js Link for internal paths
-    a: ({ href, children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
+    a: ({
+      href,
+      children,
+      ...props
+    }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
       if (href && href.startsWith("/")) {
-        return <Link href={href} {...props}>{children}</Link>;
+        return (
+          <Link href={href} {...props}>
+            {children}
+          </Link>
+        );
       }
-      return <a href={href} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>;
+      return (
+        <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
+          {children}
+        </a>
+      );
     },
 
     // Code blocks

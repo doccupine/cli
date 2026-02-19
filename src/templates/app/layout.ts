@@ -208,9 +208,10 @@ ${
   ];
 
   const pages: PagesProps[] = doccupinePages;
-  const result = Array.isArray(navigation) && navigation.length
-    ? navigation
-    : transformPagesToGroupedStructure(pages);
+  const result =
+    Array.isArray(navigation) && navigation.length
+      ? navigation
+      : transformPagesToGroupedStructure(pages);
   const defaultResults = transformPagesToGroupedStructure(defaultPages);
 
   return (
