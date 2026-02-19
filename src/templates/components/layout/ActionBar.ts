@@ -6,7 +6,6 @@ import { mq, Theme } from "@/app/theme";
 import { rgba } from "polished";
 import { resetButton, Textarea } from "cherry-styled-components";
 import { ChatContext } from "@/components/Chat";
-import links from "@/links.json";
 
 interface ActionBarProps {
   children: React.ReactNode;
@@ -16,36 +15,23 @@ interface ActionBarProps {
 const StyledActionBar = styled.div<{
   theme: Theme;
   $isChatOpen?: boolean;
-  $hasLinks?: boolean;
 }>\`
   position: absolute;
   border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
   left: 0;
-  padding: 70px 20px 20px 20px;
+  padding: 0 20px 20px;
   display: flex;
   justify-content: space-between;
   width: 100%;
   transition: all 0.3s ease;
-
-  \${({ $hasLinks }) =>
-    $hasLinks &&
-    css\`
-      margin-top: 49px;
-    \`}
 
   \${mq("lg")} {
     left: 50%;
     transform: translateX(-50%);
     max-width: calc(100vw - 640px);
     width: 100%;
-    padding: 0 20px 20px 20px;
+    padding: 0 20px 20px;
     margin: 0;
-
-    \${({ $hasLinks }) =>
-      $hasLinks &&
-      css\`
-        margin-top: 73px;
-      \`}
 
     \${({ $isChatOpen }) =>
       $isChatOpen &&
@@ -165,26 +151,11 @@ const StyledContent = styled.div<{
   theme: Theme;
   $isChatActive?: boolean;
   $isChatOpen?: boolean;
-  $hasLinks?: boolean;
 }>\`
-  padding-top: 140px;
+  padding-top: 74px;
   transition: all 0.3s ease;
 
-  \${({ $hasLinks }) =>
-    $hasLinks &&
-    css\`
-      padding-top: calc(49px + 140px);
-    \`}
-
   \${mq("lg")} {
-    padding-top: 70px;
-
-    \${({ $hasLinks }) =>
-      $hasLinks &&
-      css\`
-        padding-top: calc(73px + 70px);
-      \`}
-
     \${({ $isChatActive }) =>
       $isChatActive &&
       css\`
@@ -197,18 +168,6 @@ const StyledContent = styled.div<{
       css\`
         padding-top: 70px;
       \`}
-
-    \${({ $isChatActive, $hasLinks, $isChatOpen }) =>
-      $isChatActive &&
-      $hasLinks &&
-      css\`
-        padding-top: calc(73px + 140px);
-
-        \${$isChatOpen &&
-        css\`
-          padding-top: calc(73px + 70px);
-        \`}
-      \`}
   }
 
   & textarea {
@@ -216,45 +175,23 @@ const StyledContent = styled.div<{
     margin: auto;
     width: 100%;
     height: 100%;
-    min-height: calc(100vh - 180px);
+    min-height: calc(100vh - 243px);
 
-    \${({ $hasLinks }) =>
-      $hasLinks &&
-      css\`
-        min-height: calc(100vh - 229px);
-      \`}
-
-    \${({ $isChatOpen, $isChatActive, $hasLinks }) =>
+    \${({ $isChatOpen, $isChatActive }) =>
       !$isChatOpen &&
       $isChatActive &&
       css\`
-        min-height: calc(100vh - 250px);
-
-        \${$hasLinks &&
-        css\`
-          min-height: calc(100vh - 299px);
-        \`}
+        min-height: calc(100vh - 312px);
       \`}
 
     \${mq("lg")} {
-      min-height: calc(100vh - 110px);
+      min-height: calc(100vh - 176px);
 
-      \${({ $hasLinks }) =>
-        $hasLinks &&
-        css\`
-          min-height: calc(100vh - 183px);
-        \`}
-
-      \${({ $isChatOpen, $isChatActive, $hasLinks }) =>
+      \${({ $isChatOpen, $isChatActive }) =>
         !$isChatOpen &&
         $isChatActive &&
         css\`
-          min-height: calc(100vh - 180px);
-
-          \${$hasLinks &&
-          css\`
-            min-height: calc(100vh - 253px);
-          \`}
+          min-height: calc(100vh - 242px);
         \`}
     }
   }
@@ -277,7 +214,7 @@ function ActionBar({ children, content }: ActionBarProps) {
 
   return (
     <>
-      <StyledActionBar $isChatOpen={isOpen} $hasLinks={links.length > 0}>
+      <StyledActionBar $isChatOpen={isOpen}>
         <StyledCopyButton onClick={handleCopyContent} $copied={copied}>
           {copied ? (
             <>
@@ -303,20 +240,12 @@ function ActionBar({ children, content }: ActionBarProps) {
         </StyledActionBarContent>
       </StyledActionBar>
       {isView && (
-        <StyledContent
-          $isChatActive={isChatActive}
-          $isChatOpen={isOpen}
-          $hasLinks={links.length > 0}
-        >
+        <StyledContent $isChatActive={isChatActive} $isChatOpen={isOpen}>
           {children}
         </StyledContent>
       )}
       {!isView && (
-        <StyledContent
-          $isChatActive={isChatActive}
-          $isChatOpen={isOpen}
-          $hasLinks={links.length > 0}
-        >
+        <StyledContent $isChatActive={isChatActive} $isChatOpen={isOpen}>
           <Textarea defaultValue={content} $fullWidth />
         </StyledContent>
       )}

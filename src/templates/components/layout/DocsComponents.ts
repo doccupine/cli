@@ -17,7 +17,7 @@ interface DocsProps {
   children: React.ReactNode;
 }
 
-const StyledDocsWrapper = styled.div<{ theme: Theme; $hasSections?: boolean }>\`
+const StyledDocsWrapper = styled.div<{ theme: Theme }>\`
   position: relative;
 \`;
 
@@ -93,13 +93,13 @@ interface Props {
   $isActive?: boolean;
 }
 
-export const StyledSidebar = styled.nav<Props & { $hasSections?: boolean }>\`
+export const StyledSidebar = styled.nav<Props>\`
   position: fixed;
   overflow-y: auto;
-  max-height: calc(100svh - \${({ $hasSections }) => ($hasSections ? "118px" : "70px")});
+  max-height: calc(100svh - 110px);
   width: 100%;
   z-index: 99;
-  top: \${({ $hasSections }) => ($hasSections ? "118px" : "70px")};
+  top: 110px;
   height: 100%;
   padding: 20px 20px 80px 20px;
   opacity: 0;
@@ -115,7 +115,7 @@ export const StyledSidebar = styled.nav<Props & { $hasSections?: boolean }>\`
     max-height: 100svh;
     width: 220px;
     background: transparent;
-    padding: \${({ $hasSections }) => ($hasSections ? "138px" : "90px")} 40px 40px;
+    padding: 87px 40px 40px;
     opacity: 1;
     pointer-events: all;
     transform: translateY(0);
@@ -139,13 +139,13 @@ export const StyledIndexSidebar = styled.ul<{ theme: Theme }>\`
   margin: 0;
   padding: 0;
   position: fixed;
-  top: 0;
+  top: 61px;
   right: 0;
   width: 320px;
-  height: 100vh;
+  height: calc(100vh - 61px);
   overflow-y: auto;
   z-index: 1;
-  padding: 25px 40px;
+  padding: 27px 40px 40px;
   background: \${({ theme }) => theme.colors.light};
   border-left: solid 1px \${({ theme }) => theme.colors.grayLight};
 
@@ -304,11 +304,10 @@ export const StyledMobileBurger = styled.span<Props>\`
 
 interface DocsWrapperProps {
   children: React.ReactNode;
-  $hasSections?: boolean;
 }
 
-function DocsWrapper({ children, $hasSections }: DocsWrapperProps) {
-  return <StyledDocsWrapper $hasSections={$hasSections}>{children}</StyledDocsWrapper>;
+function DocsWrapper({ children }: DocsWrapperProps) {
+  return <StyledDocsWrapper>{children}</StyledDocsWrapper>;
 }
 
 function DocsSidebar({ children }: DocsProps) {

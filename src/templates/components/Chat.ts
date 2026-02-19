@@ -385,7 +385,7 @@ const StyledChatFixedForm = styled.form<{
     \${({ $hasLinks }) =>
       $hasLinks &&
       css\`
-        top: 164px;
+        top: 153px;
       \`}
   }
 

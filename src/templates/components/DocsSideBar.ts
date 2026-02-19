@@ -13,17 +13,13 @@ export interface Heading {
   level: number;
 }
 
+const OFFSET = 80;
+
 export function DocsSideBar({ headings }: { headings: Heading[] }) {
   const [activeId, setActiveId] = useState<string>("");
 
-  const getScrollOffset = useCallback(() => {
-    return document.getElementById("static-links") ? 90 : 18;
-  }, []);
-
   const handleScroll = useCallback(() => {
     if (headings.length === 0) return;
-
-    const offset = getScrollOffset();
 
     const headingElements = headings
       .map((heading) => document.getElementById(heading.id))
@@ -43,10 +39,10 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
     if (visibleHeadings.length > 0) {
       let closestHeading = visibleHeadings[0];
       let closestDistance = Math.abs(
-        closestHeading.getBoundingClientRect().top - offset,
+        closestHeading.getBoundingClientRect().top - OFFSET,
       );
       for (const heading of visibleHeadings) {
-        const distance = Math.abs(heading.getBoundingClientRect().top - offset);
+        const distance = Math.abs(heading.getBoundingClientRect().top - OFFSET);
         if (
           distance < closestDistance &&
           heading.getBoundingClientRect().top <= windowHeight * 0.3
@@ -62,14 +58,14 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
     let currentActiveId = headings[0].id;
     for (const element of headingElements) {
       const rect = element.getBoundingClientRect();
-      if (rect.top <= offset) {
+      if (rect.top <= OFFSET) {
         currentActiveId = element.id;
       } else {
         break;
       }
     }
     setActiveId(currentActiveId);
-  }, [headings, getScrollOffset]);
+  }, [headings]);
 
   useEffect(() => {
     if (headings.length === 0) return;
@@ -93,10 +89,9 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
   const handleHeadingClick = (headingId: string) => {
     const element = document.getElementById(headingId);
     if (element) {
-      const offset = getScrollOffset();
       const elementPosition =
         element.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo({ top: elementPosition - offset, behavior: "smooth" });
+      window.scrollTo({ top: elementPosition - OFFSET, behavior: "smooth" });
     }
   };
 

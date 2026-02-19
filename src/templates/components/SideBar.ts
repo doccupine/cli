@@ -25,10 +25,9 @@ type NavItemLink = {
 
 interface SideBarProps {
   result: NavItem[];
-  hasSections?: boolean;
 }
 
-function SideBar({ result, hasSections }: SideBarProps) {
+function SideBar({ result }: SideBarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
@@ -41,7 +40,7 @@ function SideBar({ result, hasSections }: SideBarProps) {
         <StyledMobileBurger $isActive={isMobileMenuOpen} />
       </StyleMobileBar>
 
-      <StyledSidebar $isActive={isMobileMenuOpen} $hasSections={hasSections}>
+      <StyledSidebar $isActive={isMobileMenuOpen}>
         {result &&
           result.map((item: NavItem, index: number) => {
             return (

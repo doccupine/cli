@@ -1,5 +1,5 @@
 export const headerTemplate = `"use client";
-import { Flex, MaxWidth } from "cherry-styled-components";
+import React from "react";
 import { useCallback, useRef, useState, Suspense } from "react";
 import styled, { useTheme } from "styled-components";
 import Link from "next/link";
@@ -18,17 +18,12 @@ const customThemeJson = themeJson as typeof themeJson & {
 };
 
 const StyledHeader = styled.header<{ theme: Theme }>\`
-  position: fixed;
+  position: sticky;
   top: 0;
-  padding: 20px;
   margin: 0;
   z-index: 1000;
   width: 100%;
-
-  \${mq("lg")} {
-    width: 320px;
-    border-right: solid 1px \${({ theme }) => theme.colors.grayLight};
-  }
+  border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
 
   &::before,
   &::after {
@@ -67,7 +62,34 @@ const StyledHeader = styled.header<{ theme: Theme }>\`
   }
 \`;
 
-function Header() {
+const StyledHeaderInner = styled.div\`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 20px 0 0 20px;
+
+  \${mq("md")} {
+    flex-wrap: nowrap;
+    padding: 0 20px;
+  }
+\`;
+
+const StyledThemeWrapper = styled.div\`
+  display: block;
+  min-width: fit-content;
+  padding-right: 20px;
+
+  \${mq("md")} {
+    padding-right: 0;
+  }
+\`;
+
+interface HeaderProps {
+  children?: React.ReactNode;
+}
+
+function Header({ children }: HeaderProps) {
   const [isOptionActive, setIsOptionActive] = useState(false);
   const [isLangActive, setIsLangActive] = useState(false);
 
@@ -87,40 +109,39 @@ function Header() {
   const theme = useTheme() as Theme;
 
   return (
-    <>
-      <StyledHeader>
-        <MaxWidth $size={1000}>
-          <Flex $justifyContent="space-between" $wrap="nowrap">
-            <Link href="/" className="logo" aria-label="Logo">
-              {customThemeJson.logo ? (
-                theme.isDark ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={customThemeJson.logo.dark}
-                    alt="Logo"
-                    width="100"
-                    height="100"
-                  />
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={customThemeJson.logo.light}
-                    alt="Logo"
-                    width="100"
-                    height="100"
-                  />
-                )
-              ) : (
-                <Logo />
-              )}
-            </Link>
-            <Suspense fallback={<ToggleThemeLoading />}>
-              <ToggleTheme />
-            </Suspense>
-          </Flex>
-        </MaxWidth>
-      </StyledHeader>
-    </>
+    <StyledHeader>
+      <StyledHeaderInner>
+        <Link href="/" className="logo" aria-label="Logo">
+          {customThemeJson.logo ? (
+            theme.isDark ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={customThemeJson.logo.dark}
+                alt="Logo"
+                width="100"
+                height="100"
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={customThemeJson.logo.light}
+                alt="Logo"
+                width="100"
+                height="100"
+              />
+            )
+          ) : (
+            <Logo />
+          )}
+        </Link>
+        {children}
+        <StyledThemeWrapper>
+          <Suspense fallback={<ToggleThemeLoading />}>
+            <ToggleTheme />
+          </Suspense>
+        </StyledThemeWrapper>
+      </StyledHeaderInner>
+    </StyledHeader>
   );
 }
 

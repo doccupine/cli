@@ -1,9 +1,7 @@
 export const staticLinksTemplate = `"use client";
-import { useContext } from "react";
 import styled, { css } from "styled-components";
 import { rgba } from "polished";
 import { mq, Theme } from "@/app/theme";
-import { ChatContext } from "@/components/Chat";
 import { interactiveStyles } from "@/components/layout/SharedStyled";
 import { Icon } from "@/components/layout/Icon";
 import linksData from "@/links.json";
@@ -16,35 +14,15 @@ interface LinkProps {
 
 const links = linksData as LinkProps[];
 
-const StyledStaticLinks = styled.div<{ theme: Theme; $isChatOpen?: boolean }>\`
-  position: fixed;
-  border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
-  top: 70px;
-  padding: 10px 20px;
+const StyledStaticLinks = styled.div<{ theme: Theme }>\`
+  padding: 20px;
   display: flex;
-  justify-content: space-between;
-  width: 100%;
-  z-index: 999;
-  transition: all 0.3s ease;
-  margin: auto;
-  background: \${({ theme }) => theme.colors.light};
+  max-width: 640px;
+  margin: 0 auto;
   overflow-x: auto;
-  left: 50%;
-  transform: translateX(-50%);
 
   \${mq("lg")} {
-    padding: 20px;
-    height: 73px;
-    top: 0;
-    max-width: calc(100vw - 640px);
-    width: 100%;
-    margin: auto;
-
-    \${({ $isChatOpen }) =>
-      $isChatOpen &&
-      css\`
-        padding: 20px 120px 20px 20px;
-      \`}
+    padding: 20px 0;
   }
 \`;
 
@@ -106,15 +84,13 @@ const StyledEmpty = styled.div\`
 \`;
 
 function StaticLinks() {
-  const { isOpen } = useContext(ChatContext);
-
   if (links.length === 0) {
     return null;
   }
 
   return (
     <>
-      <StyledStaticLinks $isChatOpen={isOpen} id="static-links">
+      <StyledStaticLinks id="static-links">
         <StyledStaticLinksContent>
           {links.map((link, index) => (
             <StyledLink

@@ -16,24 +16,25 @@ interface SectionBarProps {
 }
 
 const StyledSectionBar = styled.nav<{ theme: Theme }>\`
-  position: fixed;
-  top: 70px;
-  left: 0;
-  width: 100%;
-  z-index: 999;
   display: flex;
-  padding: 0 20px;
-  background: \${({ theme }) => theme.colors.light};
-  border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
+  order: 3;
+  width: calc(100% + 20px);
+  margin: 0 0 0 -20px;
+  padding: 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  position: relative;
 
   &::-webkit-scrollbar {
     display: none;
   }
 
-  \${mq("lg")} {
-    padding: 0 40px;
+  \${mq("md")} {
+    padding: 0 20px;
+    order: unset;
+    width: 100%;
+    margin: 0;
+    justify-content: flex-end;
   }
 \`;
 
@@ -43,15 +44,16 @@ const StyledSectionLink = styled(Link)<{
 }>\`
   \${({ theme }) => styledText(theme)};
   text-decoration: none;
-  padding: 12px 16px;
+  padding: 16px 20px;
   white-space: nowrap;
-  font-weight: \${({ $isActive }) => ($isActive ? "600" : "400")};
+  font-weight: \${({ $isActive }) => ($isActive ? "600" : "500")};
   color: \${({ theme, $isActive }) =>
-    $isActive ? theme.colors.primary : theme.colors.grayDark};
+    $isActive ? theme.colors.primary : theme.colors.gray};
   border-bottom: solid 2px
     \${({ theme, $isActive }) =>
       $isActive ? theme.colors.primary : "transparent"};
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  min-width: fit-content;
 
   &:hover {
     color: \${({ theme }) => theme.colors.primary};

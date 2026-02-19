@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { SideBar } from "@/components/SideBar";
 import { DocsNavigation } from "@/components/layout/DocsNavigation";
 import { Footer } from "@/components/layout/Footer";
+import { StaticLinks } from "@/components/layout/StaticLinks";
 import {
   transformPagesToGroupedStructure,
   type PagesProps,
@@ -87,9 +88,10 @@ function SectionNavProvider({
 
   return (
     <>
-      <SideBar result={result.length ? result : defaultResults} hasSections />
+      <SideBar result={result.length ? result : defaultResults} />
       {children}
       <DocsNavigation result={result.length ? result : defaultResults} />
+      <StaticLinks />
       <Footer hideBranding={hideBranding} />
     </>
   );

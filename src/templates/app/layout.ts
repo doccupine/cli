@@ -109,8 +109,12 @@ import { DocsNavigation } from "@/components/layout/DocsNavigation";
   transformPagesToGroupedStructure,
   type PagesProps,
 } from "@/utils/orderNavItems";
-import { StaticLinks } from "@/components/layout/StaticLinks";
-import { config } from "@/utils/config";
+${
+  hasSections
+    ? ""
+    : `import { StaticLinks } from "@/components/layout/StaticLinks";
+`
+}import { config } from "@/utils/config";
 import { verifyBrandingKey } from "@/utils/branding";
 import navigation from "@/navigation.json";
 ${
@@ -166,9 +170,9 @@ ${
         <StyledComponentsRegistry>
           <CherryThemeProvider theme={theme} themeDark={themeDark}>
             <ChtProvider isChatActive={process.env.LLM_PROVIDER ? true : false}>
-              <Header />
-              <SectionBar sections={doccupineSections} />
-              <StaticLinks />
+              <Header>
+                <SectionBar sections={doccupineSections} />
+              </Header>
               {process.env.LLM_PROVIDER && <Chat />}
               <DocsWrapper>
                 <SectionNavProvider
@@ -213,7 +217,6 @@ ${
           <CherryThemeProvider theme={theme} themeDark={themeDark}>
             <ChtProvider isChatActive={process.env.LLM_PROVIDER ? true : false}>
               <Header />
-              <StaticLinks />
               {process.env.LLM_PROVIDER && <Chat />}
               <DocsWrapper>
                 <SideBar result={result.length ? result : defaultResults} />
@@ -221,6 +224,7 @@ ${
                 <DocsNavigation
                   result={result.length ? result : defaultResults}
                 />
+                <StaticLinks />
                 <Footer hideBranding={hideBranding} />
               </DocsWrapper>
             </ChtProvider>
