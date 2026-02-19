@@ -6,6 +6,7 @@ import { mq, Theme } from "@/app/theme";
 import { rgba } from "polished";
 import { resetButton, Textarea } from "cherry-styled-components";
 import { ChatContext } from "@/components/Chat";
+import { SectionBarContext } from "@/components/layout/DocsComponents";
 
 interface ActionBarProps {
   children: React.ReactNode;
@@ -151,6 +152,7 @@ const StyledContent = styled.div<{
   theme: Theme;
   $isChatActive?: boolean;
   $isChatOpen?: boolean;
+  $hasSectionBar?: boolean;
 }>\`
   padding-top: 74px;
   transition: all 0.3s ease;
@@ -175,13 +177,15 @@ const StyledContent = styled.div<{
     margin: auto;
     width: 100%;
     height: 100%;
-    min-height: calc(100vh - 243px);
+    min-height: calc(
+      100vh - \${({ $hasSectionBar }) => ($hasSectionBar ? 219 : 178)}px
+    );
 
-    \${({ $isChatOpen, $isChatActive }) =>
+    \${({ $isChatOpen, $isChatActive, $hasSectionBar }) =>
       !$isChatOpen &&
       $isChatActive &&
       css\`
-        min-height: calc(100vh - 312px);
+        min-height: calc(100vh - \${$hasSectionBar ? 288 : 246}px);
       \`}
 
     \${mq("lg")} {
@@ -201,6 +205,7 @@ function ActionBar({ children, content }: ActionBarProps) {
   const [isView, setIsView] = useState(true);
   const [copied, setCopied] = useState(false);
   const { isOpen, isChatActive } = useContext(ChatContext);
+  const hasSectionBar = useContext(SectionBarContext);
 
   const handleCopyContent = async () => {
     try {
@@ -240,12 +245,20 @@ function ActionBar({ children, content }: ActionBarProps) {
         </StyledActionBarContent>
       </StyledActionBar>
       {isView && (
-        <StyledContent $isChatActive={isChatActive} $isChatOpen={isOpen}>
+        <StyledContent
+          $isChatActive={isChatActive}
+          $isChatOpen={isOpen}
+          $hasSectionBar={hasSectionBar}
+        >
           {children}
         </StyledContent>
       )}
       {!isView && (
-        <StyledContent $isChatActive={isChatActive} $isChatOpen={isOpen}>
+        <StyledContent
+          $isChatActive={isChatActive}
+          $isChatOpen={isOpen}
+          $hasSectionBar={hasSectionBar}
+        >
           <Textarea defaultValue={content} $fullWidth />
         </StyledContent>
       )}

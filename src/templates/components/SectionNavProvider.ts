@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { SideBar } from "@/components/SideBar";
 import { DocsNavigation } from "@/components/layout/DocsNavigation";
+import { SectionBarProvider } from "@/components/layout/DocsComponents";
 import { Footer } from "@/components/layout/Footer";
 import { StaticLinks } from "@/components/layout/StaticLinks";
 import {
@@ -87,13 +88,13 @@ function SectionNavProvider({
   const defaultResults = transformPagesToGroupedStructure(defaultPages);
 
   return (
-    <>
+    <SectionBarProvider hasSectionBar={true}>
       <SideBar result={result.length ? result : defaultResults} />
       {children}
       <DocsNavigation result={result.length ? result : defaultResults} />
       <StaticLinks />
       <Footer hideBranding={hideBranding} />
-    </>
+    </SectionBarProvider>
   );
 }
 

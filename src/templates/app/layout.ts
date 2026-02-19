@@ -98,7 +98,7 @@ ${
     : `import { Footer } from "@/components/layout/Footer";
 `
 }import { Header } from "@/components/layout/Header";
-import { DocsWrapper } from "@/components/layout/DocsComponents";
+import { DocsWrapper, SectionBarProvider } from "@/components/layout/DocsComponents";
 ${
   hasSections
     ? ""
@@ -218,15 +218,17 @@ ${
             <ChtProvider isChatActive={process.env.LLM_PROVIDER ? true : false}>
               <Header />
               {process.env.LLM_PROVIDER && <Chat />}
-              <DocsWrapper>
-                <SideBar result={result.length ? result : defaultResults} />
-                {children}
-                <DocsNavigation
-                  result={result.length ? result : defaultResults}
-                />
-                <StaticLinks />
-                <Footer hideBranding={hideBranding} />
-              </DocsWrapper>
+              <SectionBarProvider hasSectionBar={false}>
+                <DocsWrapper>
+                  <SideBar result={result.length ? result : defaultResults} />
+                  {children}
+                  <DocsNavigation
+                    result={result.length ? result : defaultResults}
+                  />
+                  <StaticLinks />
+                  <Footer hideBranding={hideBranding} />
+                </DocsWrapper>
+              </SectionBarProvider>
             </ChtProvider>
           </CherryThemeProvider>
         </StyledComponentsRegistry>

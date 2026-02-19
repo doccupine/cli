@@ -29,9 +29,10 @@ const StyledHeader = styled.header<{ theme: Theme, $hasChildren: boolean }>\`
   \${({ $hasChildren }) =>
     !$hasChildren &&
     css\`
-      padding-top: 15px;
-      padding-bottom: 15px;
-      height: 62px;
+      \${mq("lg")} {
+        padding-bottom: 16px;
+        padding-top: 16px;
+      }
     \`}
 
   &::before,
@@ -59,8 +60,9 @@ const StyledHeader = styled.header<{ theme: Theme, $hasChildren: boolean }>\`
     & svg,
     & img {
       margin: auto;
-      width: fit-content;
       height: auto;
+      width: fit-content;
+      min-width: fit-content;
       max-width: 182px;
       max-height: 30px;
 
@@ -71,14 +73,20 @@ const StyledHeader = styled.header<{ theme: Theme, $hasChildren: boolean }>\`
   }
 \`;
 
-const StyledHeaderInner = styled.div\`
+const StyledHeaderInner = styled.div<{ $hasChildren: boolean }>\`
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  padding: 20px 0 0 20px;
+  padding: 16px 0 0 20px;
 
-  \${mq("md")} {
+  \${({ $hasChildren }) =>
+    !$hasChildren &&
+    css\`
+      padding-bottom: 16px;
+    \`}
+
+  \${mq("lg")} {
     flex-wrap: nowrap;
     padding: 0 20px;
   }
@@ -89,7 +97,7 @@ const StyledThemeWrapper = styled.div\`
   min-width: fit-content;
   padding-right: 20px;
 
-  \${mq("md")} {
+  \${mq("lg")} {
     padding-right: 0;
   }
 \`;
@@ -118,8 +126,8 @@ function Header({ children }: HeaderProps) {
   const theme = useTheme() as Theme;
 
   return (
-    <StyledHeader $hasChildren={children ? true : false}>
-      <StyledHeaderInner>
+    <StyledHeader $hasChildren={children ? true : false} id="header">
+      <StyledHeaderInner $hasChildren={children ? true : false}>
         <Link href="/" className="logo" aria-label="Logo">
           {customThemeJson.logo ? (
             theme.isDark ? (

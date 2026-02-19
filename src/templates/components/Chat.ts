@@ -45,6 +45,11 @@ const StyledChat = styled.div<{ theme: Theme; $isVisible: boolean }>\`
   transition: all 0.3s ease;
   transform: translateX(0);
   background: \${({ theme }) => theme.colors.light};
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   \${({ $isVisible }) =>
     !$isVisible &&
@@ -558,8 +563,8 @@ const StyledChatTitle = styled.div<{ theme: Theme }>\`
   justify-content: space-between;
   position: sticky;
   margin: 0 -20px;
-  padding: 25px 20px;
-  height: 73px;
+  padding: 16px 20px;
+  height: 62px;
   top: 0;
   background: \${({ theme }) => theme.colors.light};
   border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};

@@ -1,6 +1,6 @@
 export const docsComponentsTemplate = `"use client";
 import { darken, lighten, rgba } from "polished";
-import React, { useContext } from "react";
+import React, { createContext, useContext } from "react";
 import styled, { css } from "styled-components";
 import {
   resetButton,
@@ -12,6 +12,22 @@ import Link from "next/link";
 import { mq, Theme } from "@/app/theme";
 import { styledTable, stylesLists } from "@/components/layout/SharedStyled";
 import { ChatContext } from "@/components/Chat";
+
+export const SectionBarContext = createContext(false);
+
+export function SectionBarProvider({
+  hasSectionBar,
+  children,
+}: {
+  hasSectionBar: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <SectionBarContext.Provider value={hasSectionBar}>
+      {children}
+    </SectionBarContext.Provider>
+  );
+}
 
 interface DocsProps {
   children: React.ReactNode;
@@ -91,15 +107,18 @@ export const StyledMarkdownContainer = styled.div\`
 interface Props {
   theme?: Theme;
   $isActive?: boolean;
+  $hasSectionBar?: boolean;
 }
 
 export const StyledSidebar = styled.nav<Props>\`
   position: fixed;
   overflow-y: auto;
-  max-height: calc(100svh - 110px);
+  max-height: calc(
+    100svh - \${({ $hasSectionBar }) => ($hasSectionBar ? 105 : 63)}px
+  );
   width: 100%;
   z-index: 99;
-  top: 110px;
+  top: \${({ $hasSectionBar }) => ($hasSectionBar ? 105 : 63)}px;
   height: 100%;
   padding: 20px 20px 80px 20px;
   opacity: 0;
@@ -117,15 +136,15 @@ export const StyledSidebar = styled.nav<Props>\`
 
   \${mq("lg")} {
     transition: none;
-    max-height: 100svh;
+    max-height: calc(100svh - 62px);
     width: 220px;
     background: transparent;
-    padding: 87px 40px 40px;
+    padding: 25px 40px 40px;
     opacity: 1;
     pointer-events: all;
     transform: translateY(0);
     background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.05)};
-    top: 0;
+    top: 62px;
     width: 320px;
   }
 
@@ -332,5 +351,5 @@ function DocsContainer({ children }: DocsProps) {
   );
 }
 
-export { DocsWrapper, DocsSidebar, DocsContainer };
+export { DocsWrapper, DocsSidebar, DocsContainer, SectionBarContext, SectionBarProvider };
 `;

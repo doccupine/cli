@@ -29,7 +29,7 @@ const StyledSectionBar = styled.nav<{ theme: Theme }>\`
     display: none;
   }
 
-  \${mq("md")} {
+  \${mq("lg")} {
     padding: 0 20px;
     order: unset;
     width: 100%;
