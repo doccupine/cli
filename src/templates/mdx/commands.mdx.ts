@@ -1,7 +1,7 @@
 export const commandsMdxTemplate = `---
 title: "Commands"
 description: "In this page, you can find all the commands available in Doccupine CLI."
-date: "2025-01-15"
+date: "2026-02-19"
 category: "General"
 categoryOrder: 0
 order: 1
@@ -52,5 +52,5 @@ This will show the current configuration for Doccupine.
 \`\`\`bash
 npx doccupine config --reset
 \`\`\`
-  
+
 This will reset the current configuration for Doccupine.`;

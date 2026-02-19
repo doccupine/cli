@@ -1,7 +1,7 @@
 export const themeMdxTemplate = `---
 title: "Theme"
 description: "Customize the documentation UI colors with a theme.json file."
-date: "2025-01-15"
+date: "2026-02-19"
 category: "Configuration"
 categoryOrder: 3
 order: 5

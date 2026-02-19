@@ -105,6 +105,23 @@ import { tabsMdxTemplate } from "./templates/mdx/tabs.mdx.js";
 import { themeMdxTemplate } from "./templates/mdx/theme.mdx.js";
 import { updateMdxTemplate } from "./templates/mdx/update.mdx.js";
 
+import { platformIndexMdxTemplate } from "./templates/mdx/platform/index.mdx.js";
+import { platformFileEditorMdxTemplate } from "./templates/mdx/platform/file-editor.mdx.js";
+import { platformPublishingMdxTemplate } from "./templates/mdx/platform/publishing.mdx.js";
+import { platformCreatingAProjectMdxTemplate } from "./templates/mdx/platform/creating-a-project.mdx.js";
+import { platformSiteSettingsMdxTemplate } from "./templates/mdx/platform/site-settings.mdx.js";
+import { platformThemeSettingsMdxTemplate } from "./templates/mdx/platform/theme-settings.mdx.js";
+import { platformNavigationSettingsMdxTemplate } from "./templates/mdx/platform/navigation-settings.mdx.js";
+import { platformSectionsSettingsMdxTemplate } from "./templates/mdx/platform/sections-settings.mdx.js";
+import { platformFontsSettingsMdxTemplate } from "./templates/mdx/platform/fonts-settings.mdx.js";
+import { platformExternalLinksMdxTemplate } from "./templates/mdx/platform/external-links.mdx.js";
+import { platformAiAssistantMdxTemplate } from "./templates/mdx/platform/ai-assistant.mdx.js";
+import { platformCustomDomainsMdxTemplate } from "./templates/mdx/platform/custom-domains.mdx.js";
+import { platformDeploymentsMdxTemplate } from "./templates/mdx/platform/deployments.mdx.js";
+import { platformTeamMembersMdxTemplate } from "./templates/mdx/platform/team-members.mdx.js";
+import { platformBillingMdxTemplate } from "./templates/mdx/platform/billing.mdx.js";
+import { platformProjectSettingsMdxTemplate } from "./templates/mdx/platform/project-settings.mdx.js";
+
 async function findAvailablePort(startPort: number): Promise<number> {
   const net = await import("net");
 
@@ -458,6 +475,22 @@ class MDXToNextJSGenerator {
       "tabs.mdx": tabsMdxTemplate,
       "theme.mdx": themeMdxTemplate,
       "update.mdx": updateMdxTemplate,
+      "platform/index.mdx": platformIndexMdxTemplate,
+      "platform/file-editor.mdx": platformFileEditorMdxTemplate,
+      "platform/publishing.mdx": platformPublishingMdxTemplate,
+      "platform/creating-a-project.mdx": platformCreatingAProjectMdxTemplate,
+      "platform/site-settings.mdx": platformSiteSettingsMdxTemplate,
+      "platform/theme-settings.mdx": platformThemeSettingsMdxTemplate,
+      "platform/navigation-settings.mdx": platformNavigationSettingsMdxTemplate,
+      "platform/sections-settings.mdx": platformSectionsSettingsMdxTemplate,
+      "platform/fonts-settings.mdx": platformFontsSettingsMdxTemplate,
+      "platform/external-links.mdx": platformExternalLinksMdxTemplate,
+      "platform/ai-assistant.mdx": platformAiAssistantMdxTemplate,
+      "platform/custom-domains.mdx": platformCustomDomainsMdxTemplate,
+      "platform/deployments.mdx": platformDeploymentsMdxTemplate,
+      "platform/team-members.mdx": platformTeamMembersMdxTemplate,
+      "platform/billing.mdx": platformBillingMdxTemplate,
+      "platform/project-settings.mdx": platformProjectSettingsMdxTemplate,
     };
 
     const indexMdxExists = await fs.pathExists(

@@ -1,7 +1,7 @@
 export const tabsMdxTemplate = `---
 title: "Tabs"
 description: "Use the Tabs component to display different content sections in a switchable panel layout."
-date: "2025-01-15"
+date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
 order: 5

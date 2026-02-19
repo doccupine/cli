@@ -1,7 +1,7 @@
 export const fontsMdxTemplate = `---
 title: "Fonts"
 description: "Customize the documentation typography with a fonts.json file (Google Fonts or local custom fonts)."
-date: "2025-01-15"
+date: "2026-02-19"
 category: "Configuration"
 categoryOrder: 3
 order: 7

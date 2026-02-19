@@ -1,7 +1,7 @@
 export const iconsMdxTemplate = `---
 title: "Icons"
 description: "Integrate visual icons from well-known libraries to enrich your documentation."
-date: "2025-01-15"
+date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
 order: 9

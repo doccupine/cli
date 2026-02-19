@@ -1,7 +1,7 @@
 export const updateMdxTemplate = `---
 title: "Update"
 description: "Easily manage and present change history."
-date: "2025-01-15"
+date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
 order: 11
@@ -16,7 +16,7 @@ The \`Update\` component helps you display release notes, version details, and c
 
   You can include anything here—images, code snippets, or a bullet list of modifications.
 
-  ![Demo Image](https://doccupine.com/demo.png)
+  ![Demo Image](https://docs.doccupine.com/demo.png)
 
   ### Key additions
 
@@ -34,7 +34,7 @@ You can combine multiple \`Update\` components to build complete changelogs.
 
   You can include anything here—images, code snippets, or a bullet list of modifications.
 
-  ![Demo Image](https://doccupine.com/demo.png)
+  ![Demo Image](https://docs.doccupine.com/demo.png)
 
   ### Key additions
 

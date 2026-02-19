@@ -14,7 +14,7 @@ const PROVIDER_DEFAULTS: ProviderDefaults = {
   },
   google: {
     chat: "gemini-2.5-flash-lite",
-    embedding: "text-embedding-004",
+    embedding: "gemini-embedding-001",
   },
 };
 function validateAPIKeys(provider: LLMProvider): void {

@@ -1,7 +1,7 @@
 export const calloutsMdxTemplate = `---
 title: "Callouts"
 description: "Make your content stand out by using callouts for extra emphasis."
-date: "2025-01-15"
+date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
 order: 7

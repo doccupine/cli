@@ -1,7 +1,7 @@
 export const buttonsMdxTemplate = `---
 title: "Buttons"
 description: "A flexible action component supporting variants, sizes, icons, and links."
-date: "2025-01-15"
+date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
 order: 7

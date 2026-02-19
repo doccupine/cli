@@ -1,7 +1,7 @@
 export const imageAndEmbedsMdxTemplate = `---
 title: "Images and embeds"
 description: "Enrich your documentation with visuals, videos, and interactive embeds."
-date: "2025-01-15"
+date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
 order: 8
@@ -11,7 +11,7 @@ Enrich your documentation with visuals, videos, and interactive embeds.
 
 Display images, embed video content, or add interactive frames via iframes to supplement your docs.
 
-![Demo Image](https://doccupine.com/demo.png)
+![Demo Image](https://docs.doccupine.com/demo.png)
 
 ## Images
 Images enhance documentation with context, illustration, or decorative visual cues.
@@ -20,7 +20,7 @@ Images enhance documentation with context, illustration, or decorative visual cu
 Include an image in Markdown using the syntax below:
 
 \`\`\`md
-![Alt text](https://doccupine.com/demo.png)
+![Alt text](https://docs.doccupine.com/demo.png)
 \`\`\`
 
 <Callout type="note">
@@ -31,7 +31,7 @@ Include an image in Markdown using the syntax below:
 Embed images in your Markdown content using HTML syntax.
 
 \`\`\`md
-<img src="https://doccupine.com/demo.png" alt="Alt text">
+<img src="https://docs.doccupine.com/demo.png" alt="Alt text">
 \`\`\`
 
 ## Videos

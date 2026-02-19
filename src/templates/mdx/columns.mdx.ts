@@ -1,7 +1,7 @@
 export const columnsMdxTemplate = `---
 title: "Columns"
 description: "Columns are used to organize content in a grid-like structure."
-date: "2025-01-15"
+date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
 order: 12

@@ -1,7 +1,7 @@
 export const mcpMdxTemplate = `---
 title: "Model Context Protocol"
 description: "Connect your Doccupine documentation to AI tools with an MCP server for enhanced AI-powered documentation search."
-date: "2025-01-24"
+date: "2026-02-19"
 category: "Configuration"
 categoryOrder: 3
 order: 9
@@ -9,7 +9,11 @@ order: 9
 # Model Context Protocol
 Connect your documentation to AI tools with a hosted MCP server.
 
-Doccupine automatically generates a Model Context Protocol (MCP) server from your documentation, making your content accessible to AI applications like Claude, Cursor, VS Code, and other MCP-compatible tools. Your MCP server exposes semantic search capabilities, allowing AI tools to query your documentation directly and provide accuraxte, context-aware answers.
+Doccupine automatically generates a Model Context Protocol (MCP) server from your documentation, making your content accessible to AI applications like Claude, Cursor, VS Code, and other MCP-compatible tools. Your MCP server exposes semantic search capabilities, allowing AI tools to query your documentation directly and provide accurate, context-aware answers.
+
+<Callout type="warning">
+  The MCP server requires the [AI Assistant](/ai-assistant) to be configured. Make sure you have set up your LLM provider and API keys before using the MCP server.
+</Callout>
 
 ## About MCP servers
 

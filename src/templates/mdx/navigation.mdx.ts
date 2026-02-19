@@ -1,7 +1,7 @@
 export const navigationMdxTemplate = `---
 title: "Navigation"
 description: "Organize and structure your navigation."
-date: "2025-01-15"
+date: "2026-02-19"
 category: "Configuration"
 categoryOrder: 3
 order: 2

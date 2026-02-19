@@ -1,7 +1,7 @@
 export const fieldsMdxTemplate = `---
 title: "Fields"
 description: "Configure parameters for your API or SDK documentation."
-date: "2025-01-15"
+date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
 order: 10

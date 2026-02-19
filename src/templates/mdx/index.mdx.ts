@@ -1,7 +1,7 @@
 export const indexMdxTemplate = `---
 title: "Getting Started"
 description: "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease. AI-ready."
-date: "2025-01-15"
+date: "2026-02-19"
 category: "General"
 categoryOrder: 0
 order: 0

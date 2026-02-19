@@ -1,7 +1,7 @@
 export const listAndTablesMdxTemplate = `---
 title: "Lists and tables"
 description: "Present structured information using lists or tables."
-date: "2025-01-15"
+date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
 order: 2
@@ -48,16 +48,16 @@ Indent items under another to create nested lists.
 
 \`\`\`md
 - First item
-- Second item  
-  - Additional item  
-  - Additional item  
+- Second item
+  - Additional item
+  - Additional item
 - Third item
 \`\`\`
 
 - First item
-- Second item  
-  - Additional item  
-  - Additional item  
+- Second item
+  - Additional item
+  - Additional item
 - Third item
 
 ## Tables

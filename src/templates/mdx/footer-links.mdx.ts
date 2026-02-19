@@ -1,7 +1,7 @@
 export const footerLinksMdxTemplate = `---
 title: "Footer Links"
 description: "Add static links at the bottom of the documentation pages."
-date: "2025-01-15"
+date: "2026-02-19"
 category: "Configuration"
 categoryOrder: 3
 order: 4
