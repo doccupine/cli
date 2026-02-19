@@ -19,7 +19,7 @@ const StyledSectionBar = styled.nav<{ theme: Theme }>\`
   display: flex;
   order: 3;
   width: calc(100% + 20px);
-  margin: 0 0 0 -20px;
+  margin: 0 0 0 -10px;
   padding: 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -30,7 +30,7 @@ const StyledSectionBar = styled.nav<{ theme: Theme }>\`
   }
 
   \${mq("lg")} {
-    padding: 0 20px;
+    padding: 0 10px;
     order: unset;
     width: 100%;
     margin: 0;
@@ -44,7 +44,7 @@ const StyledSectionLink = styled(Link)<{
 }>\`
   \${({ theme }) => styledText(theme)};
   text-decoration: none;
-  padding: 16px 20px;
+  padding: 16px 10px;
   white-space: nowrap;
   font-weight: \${({ $isActive }) => ($isActive ? "600" : "500")};
   color: \${({ theme, $isActive }) =>
