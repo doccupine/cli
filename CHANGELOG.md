@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.62
+
+- Add multi-turn conversation history support for AI chat
+- Update dependencies
+
 ## 0.0.60
 
 - Add sections support for organizing docs into multiple areas via `sections.json` or frontmatter fields (`section`, `sectionOrder`, `sectionLabel`)
