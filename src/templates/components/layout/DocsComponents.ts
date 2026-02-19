@@ -13,9 +13,9 @@ import { mq, Theme } from "@/app/theme";
 import { styledTable, stylesLists } from "@/components/layout/SharedStyled";
 import { ChatContext } from "@/components/Chat";
 
-export const SectionBarContext = createContext(false);
+const SectionBarContext = createContext(false);
 
-export function SectionBarProvider({
+function SectionBarProvider({
   hasSectionBar,
   children,
 }: {
@@ -351,5 +351,11 @@ function DocsContainer({ children }: DocsProps) {
   );
 }
 
-export { DocsWrapper, DocsSidebar, DocsContainer, SectionBarContext, SectionBarProvider };
+export {
+  DocsWrapper,
+  DocsSidebar,
+  DocsContainer,
+  SectionBarContext,
+  SectionBarProvider,
+};
 `;

@@ -382,7 +382,7 @@ const StyledChatFixedForm = styled.form<{
     transform: translateX(-50%) translateY(0);
     bottom: initial;
     position: absolute;
-        top: 153px;
+    top: 153px;
     width: calc(100% - 320px * 2 - 40px);
     opacity: 1;
   }
@@ -828,10 +828,7 @@ function Chat() {
 
   return (
     <>
-      <StyledChatFixedForm
-        onSubmit={ask}
-        $hide={answer?.length > 0}
-      >
+      <StyledChatFixedForm onSubmit={ask} $hide={answer?.length > 0}>
         <StyledChatFixedInner>
           <RainbowInput
             value={question}
