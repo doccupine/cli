@@ -4,11 +4,11 @@ interface SectionConfig {
   directory?: string;
 }
 
-function formatPagesArray(pages: PageData[]): string {
+function formatObjectArray<T extends object>(items: T[]): string {
   const MAX_WIDTH = 80;
-  const items = pages.map((page) => {
+  const formatted = items.map((item) => {
     const lines: string[] = ["  {"];
-    const entries = Object.entries(page) as [string, unknown][];
+    const entries = Object.entries(item) as [string, unknown][];
     for (const [key, value] of entries) {
       const valueStr = JSON.stringify(value);
       const line = `    ${key}: ${valueStr},`;
@@ -22,11 +22,7 @@ function formatPagesArray(pages: PageData[]): string {
     lines.push("  },");
     return lines.join("\n");
   });
-  return "[\n" + items.join("\n") + "\n]";
-}
-
-function formatSectionsArray(sections: SectionConfig[]): string {
-  return JSON.stringify(sections, null, 2);
+  return "[\n" + formatted.join("\n") + "\n]";
 }
 
 interface PageData {
@@ -153,8 +149,7 @@ export const metadata: Metadata = {
   },
 };
 
-const doccupinePages = ${formatPagesArray(pages)};
-${hasSections ? `\nconst doccupineSections = ${formatSectionsArray(sectionsConfig!)};` : ""}
+const doccupinePages = ${formatObjectArray(pages)};${hasSections ? `\nconst doccupineSections = ${formatObjectArray(sectionsConfig!)};` : ""}
 
 export default async function RootLayout({
   children,
