@@ -39,7 +39,7 @@ docs/
   index.mdx
   getting-started.mdx
   platform/
-    index.mdx       -> /platform
+    index.mdx        -> /platform
     auth.mdx         -> /platform/auth
 \`\`\`
 
