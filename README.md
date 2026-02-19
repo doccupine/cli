@@ -159,9 +159,9 @@ If `LLM_PROVIDER` is not set, the chat component is hidden automatically.
 ### Optional overrides
 
 ```env
-LLM_CHAT_MODEL=gpt-4.1-nano       # Override the default chat model
+LLM_CHAT_MODEL=gpt-4.1-nano                 # Override the default chat model
 LLM_EMBEDDING_MODEL=text-embedding-3-small  # Override the default embedding model
-LLM_TEMPERATURE=0                  # Set temperature (0-1, default: 0)
+LLM_TEMPERATURE=0                           # Set temperature (0-1, default: 0)
 ```
 
 Default models per provider:
