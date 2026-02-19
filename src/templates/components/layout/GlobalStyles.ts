@@ -7,9 +7,12 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  scroll-behavior: smooth;
   background-color: \${({ theme }) => theme.colors.light};
-  scroll-padding-top: 20px;
+  scroll-padding-top: 80px;
+}
+
+html:has(:target) {
+  scroll-behavior: smooth;
 }
 
 body {
