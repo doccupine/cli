@@ -69,8 +69,14 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
 
   useEffect(() => {
     if (headings.length === 0) return;
+    // Set active heading from URL hash immediately on mount
+    if (window.location.hash) {
+      setActiveId(window.location.hash.slice(1));
+    }
     // Run initial scroll check on next frame to avoid synchronous setState in effect
     const rafId = requestAnimationFrame(handleScroll);
+    // Re-check after browser finishes scrolling to hash target on new tab/page load
+    const delayedId = setTimeout(handleScroll, 300);
     let timeoutId: NodeJS.Timeout;
     const throttledHandleScroll = () => {
       clearTimeout(timeoutId);
@@ -82,18 +88,10 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
       window.removeEventListener("scroll", throttledHandleScroll);
       window.removeEventListener("resize", handleScroll);
       cancelAnimationFrame(rafId);
+      clearTimeout(delayedId);
       clearTimeout(timeoutId);
     };
   }, [handleScroll, headings]);
-
-  const handleHeadingClick = (headingId: string) => {
-    const element = document.getElementById(headingId);
-    if (element) {
-      const elementPosition =
-        element.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo({ top: elementPosition - OFFSET, behavior: "smooth" });
-    }
-  };
 
   return (
     <StyledIndexSidebar>
