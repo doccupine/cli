@@ -93,6 +93,15 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
     };
   }, [handleScroll, headings]);
 
+  const handleHeadingClick = (headingId: string) => {
+    const element = document.getElementById(headingId);
+    if (element) {
+      const elementPosition =
+        element.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top: elementPosition - OFFSET, behavior: "smooth" });
+    }
+  };
+
   return (
     <StyledIndexSidebar>
       {headings?.length > 0 && (
