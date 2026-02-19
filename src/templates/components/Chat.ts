@@ -364,7 +364,6 @@ const StyledChatForm = styled.form<{ theme: Theme; $isVisible: boolean }>\`
 const StyledChatFixedForm = styled.form<{
   theme: Theme;
   $hide: boolean;
-  $hasLinks: boolean;
 }>\`
   transition: all 0.3s ease;
   position: fixed;
@@ -378,15 +377,9 @@ const StyledChatFixedForm = styled.form<{
     transform: translateX(-50%) translateY(0);
     bottom: initial;
     position: absolute;
-    top: 90px;
+        top: 153px;
     width: calc(100% - 320px * 2 - 40px);
     opacity: 1;
-
-    \${({ $hasLinks }) =>
-      $hasLinks &&
-      css\`
-        top: 153px;
-      \`}
   }
 
   \${({ $hide }) =>
@@ -833,7 +826,6 @@ function Chat() {
       <StyledChatFixedForm
         onSubmit={ask}
         $hide={answer?.length > 0}
-        $hasLinks={links.length > 0}
       >
         <StyledChatFixedInner>
           <RainbowInput

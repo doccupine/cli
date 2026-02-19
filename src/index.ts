@@ -94,7 +94,7 @@ import { headersAndTextMdxTemplate } from "./templates/mdx/headers-and-text.mdx.
 import { iconsMdxTemplate } from "./templates/mdx/icons.mdx.js";
 import { imageAndEmbedsMdxTemplate } from "./templates/mdx/image-and-embeds.mdx.js";
 import { indexMdxTemplate } from "./templates/mdx/index.mdx.js";
-import { linksMdxTemplate } from "./templates/mdx/links.mdx.js";
+import { footerLinksMdxTemplate } from "./templates/mdx/footer-links.mdx.js";
 import { listAndTablesMdxTemplate } from "./templates/mdx/list-and-tables.mdx.js";
 import { mediaAndAssetsMdxTemplate } from "./templates/mdx/media-and-assets.mdx.js";
 import { mcpMdxTemplate } from "./templates/mdx/model-context-protocol.mdx.js";
@@ -448,7 +448,7 @@ class MDXToNextJSGenerator {
       "icons.mdx": iconsMdxTemplate,
       "image-and-embeds.mdx": imageAndEmbedsMdxTemplate,
       "index.mdx": indexMdxTemplate,
-      "links.mdx": linksMdxTemplate,
+      "footer-links.mdx": footerLinksMdxTemplate,
       "lists-and-tables.mdx": listAndTablesMdxTemplate,
       "media-and-assets.mdx": mediaAndAssetsMdxTemplate,
       "model-context-protocol.mdx": mcpMdxTemplate,

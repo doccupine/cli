@@ -1,7 +1,7 @@
 export const headerTemplate = `"use client";
 import React from "react";
 import { useCallback, useRef, useState, Suspense } from "react";
-import styled, { useTheme } from "styled-components";
+import styled, { css, useTheme } from "styled-components";
 import Link from "next/link";
 import { rgba } from "polished";
 import { mq, Theme } from "@/app/theme";
@@ -17,13 +17,22 @@ const customThemeJson = themeJson as typeof themeJson & {
   logo?: { dark: string; light: string };
 };
 
-const StyledHeader = styled.header<{ theme: Theme }>\`
+const StyledHeader = styled.header<{ theme: Theme, $hasChildren: boolean }>\`
   position: sticky;
   top: 0;
   margin: 0;
   z-index: 1000;
   width: 100%;
   border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
+
+
+  \${({ $hasChildren }) =>
+    !$hasChildren &&
+    css\`
+      padding-top: 15px;
+      padding-bottom: 15px;
+      height: 62px;
+    \`}
 
   &::before,
   &::after {
@@ -109,7 +118,7 @@ function Header({ children }: HeaderProps) {
   const theme = useTheme() as Theme;
 
   return (
-    <StyledHeader>
+    <StyledHeader $hasChildren={children ? true : false}>
       <StyledHeaderInner>
         <Link href="/" className="logo" aria-label="Logo">
           {customThemeJson.logo ? (
