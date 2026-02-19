@@ -98,7 +98,10 @@ ${
     : `import { Footer } from "@/components/layout/Footer";
 `
 }import { Header } from "@/components/layout/Header";
-import { DocsWrapper, SectionBarProvider } from "@/components/layout/DocsComponents";
+import {
+  DocsWrapper,
+  SectionBarProvider,
+} from "@/components/layout/DocsComponents";
 ${
   hasSections
     ? ""
@@ -205,7 +208,7 @@ ${
   ];
 
   const pages: PagesProps[] = doccupinePages;
-  const result = navigation.length
+  const result = Array.isArray(navigation) && navigation.length
     ? navigation
     : transformPagesToGroupedStructure(pages);
   const defaultResults = transformPagesToGroupedStructure(defaultPages);
