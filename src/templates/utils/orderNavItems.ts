@@ -7,6 +7,7 @@ export const orderNavItemsTemplate = `export interface PagesProps {
   path?: string;
   categoryOrder?: number;
   order?: number;
+  section?: string;
 }
 
 interface AccProps {

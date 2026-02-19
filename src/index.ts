@@ -32,8 +32,10 @@ import { clickOutsideTemplate } from "./templates/components/ClickOutside.js";
 import { docsTemplate } from "./templates/components/Docs.js";
 import { docsSideBarTemplate } from "./templates/components/DocsSideBar.js";
 import { mdxComponentsTemplate } from "./templates/components/MDXComponents.js";
+import { sectionNavProviderTemplate } from "./templates/components/SectionNavProvider.js";
 import { sideBarTemplate } from "./templates/components/SideBar.js";
 
+import { sectionBarTemplate } from "./templates/components/layout/SectionBar.js";
 import { accordionTemplate } from "./templates/components/layout/Accordion.js";
 import { actionBarTemplate } from "./templates/components/layout/ActionBar.js";
 import { buttonTemplate } from "./templates/components/layout/Button.js";
@@ -92,11 +94,12 @@ import { headersAndTextMdxTemplate } from "./templates/mdx/headers-and-text.mdx.
 import { iconsMdxTemplate } from "./templates/mdx/icons.mdx.js";
 import { imageAndEmbedsMdxTemplate } from "./templates/mdx/image-and-embeds.mdx.js";
 import { indexMdxTemplate } from "./templates/mdx/index.mdx.js";
-import { linksMdxTemplate } from "./templates/mdx/links.mdx.js";
+import { footerLinksMdxTemplate } from "./templates/mdx/footer-links.mdx.js";
 import { listAndTablesMdxTemplate } from "./templates/mdx/list-and-tables.mdx.js";
 import { mediaAndAssetsMdxTemplate } from "./templates/mdx/media-and-assets.mdx.js";
 import { mcpMdxTemplate } from "./templates/mdx/model-context-protocol.mdx.js";
 import { navigationMdxTemplate } from "./templates/mdx/navigation.mdx.js";
+import { sectionsMdxTemplate } from "./templates/mdx/sections.mdx.js";
 import { stepsMdxTemplate } from "./templates/mdx/steps.mdx.js";
 import { tabsMdxTemplate } from "./templates/mdx/tabs.mdx.js";
 import { themeMdxTemplate } from "./templates/mdx/theme.mdx.js";
@@ -121,11 +124,24 @@ export function generateSlug(filePath: string): string {
     return "";
   }
 
-  return filePath
+  const normalized = filePath
     .replace(/\.mdx$/, "")
     .replace(/\\/g, "/")
     .replace(/[^a-zA-Z0-9\/\-_]/g, "-")
     .toLowerCase();
+
+  // Strip trailing /index for subdirectory index files
+  if (normalized.endsWith("/index")) {
+    return normalized.slice(0, -"/index".length);
+  }
+
+  return normalized;
+}
+
+export function getFullSlug(pageSlug: string, sectionSlug: string): string {
+  if (!sectionSlug) return pageSlug;
+  if (pageSlug === "") return sectionSlug;
+  return `${sectionSlug}/${pageSlug}`;
 }
 
 export function escapeTemplateContent(content: string): string {
@@ -158,6 +174,13 @@ interface PageMeta {
   path: string;
   categoryOrder: number;
   order: number;
+  section: string;
+}
+
+interface SectionConfig {
+  label: string;
+  slug: string;
+  directory?: string;
 }
 
 interface DoccupineConfig {
@@ -279,8 +302,12 @@ class MDXToNextJSGenerator {
     "navigation.json",
     "config.json",
     "links.json",
+    "sections.json",
   ];
   private fontConfigFile = "fonts.json";
+  private sectionsConfig: SectionConfig[] | null = null;
+  /** Guards against recursive reprocessing when maybeUpdateSections() triggers processAllMDXFiles() */
+  private isReprocessing = false;
 
   constructor(watchDir: string, outputDir: string) {
     this.watchDir = path.resolve(watchDir);
@@ -294,12 +321,23 @@ class MDXToNextJSGenerator {
     await fs.ensureDir(this.watchDir);
     await fs.ensureDir(this.outputDir);
 
+    this.sectionsConfig = await this.resolveSections();
+
+    if (this.sectionsConfig) {
+      console.log(
+        chalk.blue(
+          `📑 Found ${this.sectionsConfig.length} section(s): ${this.sectionsConfig.map((s) => s.label).join(", ")}`,
+        ),
+      );
+    }
+
     await this.createNextJSStructure();
     await this.createStartingDocs();
     await this.copyCustomConfigFiles();
     await this.copyFontConfig();
     await this.copyPublicFiles();
     await this.processAllMDXFiles();
+    await this.generateSectionIndexPages();
 
     console.log(chalk.green("✅ Initial setup complete!"));
     console.log(chalk.cyan("💡 To start the Next.js dev server:"));
@@ -319,6 +357,7 @@ class MDXToNextJSGenerator {
       "eslint.config.mjs": eslintConfigTemplate,
       "links.json": `[]`,
       "navigation.json": `[]`,
+      "sections.json": `[]`,
       "next.config.ts": nextConfigTemplate,
       "package.json": packageJsonTemplate,
       "proxy.ts": proxyTemplate,
@@ -353,6 +392,7 @@ class MDXToNextJSGenerator {
       "components/Docs.tsx": docsTemplate,
       "components/DocsSideBar.tsx": docsSideBarTemplate,
       "components/MDXComponents.tsx": mdxComponentsTemplate,
+      "components/SectionNavProvider.tsx": sectionNavProviderTemplate,
       "components/SideBar.tsx": sideBarTemplate,
 
       "components/layout/Accordion.tsx": accordionTemplate,
@@ -367,6 +407,7 @@ class MDXToNextJSGenerator {
       "components/layout/DemoTheme.tsx": demoThemeTemplate,
       "components/layout/DocsComponents.tsx": docsComponentsTemplate,
       "components/layout/DocsNavigation.tsx": docsNavigationTemplate,
+      "components/layout/SectionBar.tsx": sectionBarTemplate,
       "components/layout/Field.tsx": fieldTemplate,
       "components/layout/Footer.tsx": footerTemplate,
       "components/layout/GlobalStyles.ts": globalStylesTemplate,
@@ -407,11 +448,12 @@ class MDXToNextJSGenerator {
       "icons.mdx": iconsMdxTemplate,
       "image-and-embeds.mdx": imageAndEmbedsMdxTemplate,
       "index.mdx": indexMdxTemplate,
-      "links.mdx": linksMdxTemplate,
+      "footer-links.mdx": footerLinksMdxTemplate,
       "lists-and-tables.mdx": listAndTablesMdxTemplate,
       "media-and-assets.mdx": mediaAndAssetsMdxTemplate,
       "model-context-protocol.mdx": mcpMdxTemplate,
       "navigation.mdx": navigationMdxTemplate,
+      "sections.mdx": sectionsMdxTemplate,
       "steps.mdx": stepsMdxTemplate,
       "tabs.mdx": tabsMdxTemplate,
       "theme.mdx": themeMdxTemplate,
@@ -485,6 +527,181 @@ class MDXToNextJSGenerator {
     return null;
   }
 
+  async loadSectionsConfig(): Promise<SectionConfig[] | null> {
+    const sectionsPath = path.join(this.rootDir, "sections.json");
+
+    try {
+      if (await fs.pathExists(sectionsPath)) {
+        const content = await fs.readFile(sectionsPath, "utf8");
+        const parsed = JSON.parse(content) as SectionConfig[];
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (error) {
+      console.warn(chalk.yellow("⚠️ Error reading sections.json"), error);
+    }
+
+    return null;
+  }
+
+  async discoverSectionsFromFrontmatter(): Promise<SectionConfig[] | null> {
+    const files = await this.getAllMDXFiles();
+    const sectionMap = new Map<string, { label: string; order: number }>();
+    let hasUnsectionedPages = false;
+    let defaultSectionLabel = "Docs";
+
+    for (const file of files) {
+      const fullPath = path.join(this.watchDir, file);
+      const content = await fs.readFile(fullPath, "utf8");
+      const { data: frontmatter } = matter(content);
+
+      if (frontmatter.section) {
+        const label = frontmatter.section as string;
+        const order = (frontmatter.sectionOrder as number) || 0;
+        const existing = sectionMap.get(label);
+        if (!existing || order < existing.order) {
+          sectionMap.set(label, { label, order });
+        }
+      } else {
+        hasUnsectionedPages = true;
+      }
+
+      if (
+        (file === "index.mdx" || file === "./index.mdx") &&
+        frontmatter.sectionLabel
+      ) {
+        defaultSectionLabel = frontmatter.sectionLabel as string;
+      }
+    }
+
+    if (sectionMap.size === 0) return null;
+
+    const sorted = [...sectionMap.values()].sort((a, b) => a.order - b.order);
+
+    const sections: SectionConfig[] = [];
+
+    // Implicit root entry for pages without a section field
+    if (hasUnsectionedPages) {
+      sections.push({ label: defaultSectionLabel, slug: "" });
+    }
+
+    for (const s of sorted) {
+      sections.push({
+        label: s.label,
+        slug: s.label.toLowerCase().replace(/\s+/g, "-"),
+      });
+    }
+
+    return sections;
+  }
+
+  async resolveSections(): Promise<SectionConfig[] | null> {
+    const fromFile = await this.loadSectionsConfig();
+    if (fromFile) return fromFile;
+    return this.discoverSectionsFromFrontmatter();
+  }
+
+  private async reloadSections(): Promise<void> {
+    console.log(chalk.cyan("📑 Sections configuration changed"));
+    this.sectionsConfig = await this.resolveSections();
+    await this.processAllMDXFiles();
+    await this.generateSectionIndexPages();
+  }
+
+  private async maybeUpdateSections(): Promise<void> {
+    if (this.isReprocessing) return;
+
+    // Skip if sections.json exists (explicit config takes priority)
+    const fromFile = await this.loadSectionsConfig();
+    if (fromFile) return;
+
+    const newSections = await this.discoverSectionsFromFrontmatter();
+    const changed =
+      JSON.stringify(newSections) !== JSON.stringify(this.sectionsConfig);
+
+    if (changed) {
+      console.log(
+        chalk.cyan(
+          newSections
+            ? `📑 Sections updated from frontmatter: ${newSections.map((s) => s.label).join(", ")}`
+            : "📑 Sections cleared (no section frontmatter found)",
+        ),
+      );
+      this.sectionsConfig = newSections;
+      this.isReprocessing = true;
+      try {
+        await this.processAllMDXFiles();
+        await this.generateSectionIndexPages();
+      } finally {
+        this.isReprocessing = false;
+      }
+    }
+  }
+
+  private determineSectionForFile(
+    filePath: string,
+    frontmatter: Record<string, any>,
+  ): { sectionSlug: string; pageSlug: string } {
+    if (!this.sectionsConfig || this.sectionsConfig.length === 0) {
+      return { sectionSlug: "", pageSlug: generateSlug(filePath) };
+    }
+
+    const normalizedPath = filePath.replace(/\\/g, "/");
+
+    const firstDir = normalizedPath.includes("/")
+      ? normalizedPath.split("/")[0]
+      : "";
+
+    // Explicit directory matching (entries with a directory field)
+    for (const section of this.sectionsConfig) {
+      if (!section.directory) continue;
+      const dirPrefix = section.directory + "/";
+      if (normalizedPath.startsWith(dirPrefix)) {
+        return {
+          sectionSlug: section.slug,
+          pageSlug: generateSlug(normalizedPath.slice(dirPrefix.length)),
+        };
+      }
+    }
+
+    // Directory matches section slug (auto-detect)
+    if (firstDir) {
+      const match = this.sectionsConfig.find((s) => s.slug === firstDir);
+      if (match) {
+        const pathForSlug = normalizedPath.slice(firstDir.length + 1);
+        return {
+          sectionSlug: match.slug,
+          pageSlug: generateSlug(pathForSlug),
+        };
+      }
+    }
+
+    // Frontmatter section field
+    if (frontmatter.section) {
+      const label = frontmatter.section as string;
+      const match = this.sectionsConfig.find((s) => s.label === label);
+      if (match) {
+        // Strip the directory if it matches the section slug
+        let pathForSlug = filePath;
+        if (firstDir && firstDir === match.slug) {
+          pathForSlug = normalizedPath.slice(firstDir.length + 1);
+        }
+
+        return {
+          sectionSlug: match.slug,
+          pageSlug: generateSlug(pathForSlug),
+        };
+      }
+    }
+
+    // No section match - page stays at root
+    return {
+      sectionSlug: "",
+      pageSlug: generateSlug(filePath),
+    };
+  }
+
   async handleConfigFileChange(filePath: string) {
     const fileName = path.basename(filePath);
 
@@ -495,6 +712,10 @@ class MDXToNextJSGenerator {
       try {
         await fs.copy(sourcePath, destPath);
         console.log(chalk.green(`📋 Updated ${fileName} in Next.js app`));
+
+        if (fileName === "sections.json") {
+          await this.reloadSections();
+        }
       } catch (error) {
         console.error(chalk.red(`❌ Error copying ${fileName}:`), error);
       }
@@ -511,6 +732,10 @@ class MDXToNextJSGenerator {
         if (await fs.pathExists(destPath)) {
           await fs.remove(destPath);
           console.log(chalk.yellow(`🗑️ Removed ${fileName} from Next.js app`));
+        }
+
+        if (fileName === "sections.json") {
+          await this.reloadSections();
         }
       } catch (error) {
         console.error(chalk.red(`❌ Error removing ${fileName}:`), error);
@@ -751,8 +976,14 @@ class MDXToNextJSGenerator {
     const content = await fs.readFile(fullPath, "utf8");
     const { data: frontmatter } = matter(content);
 
+    const { sectionSlug, pageSlug } = this.determineSectionForFile(
+      file,
+      frontmatter,
+    );
+    const fullSlug = getFullSlug(pageSlug, sectionSlug);
+
     return {
-      slug: this.generateSlug(file),
+      slug: fullSlug,
       title: frontmatter.title || "Untitled",
       description: frontmatter.description || "",
       date: frontmatter.date || null,
@@ -760,6 +991,7 @@ class MDXToNextJSGenerator {
       path: file,
       categoryOrder: frontmatter.categoryOrder || 0,
       order: frontmatter.order || 0,
+      section: sectionSlug,
     };
   }
 
@@ -777,23 +1009,40 @@ class MDXToNextJSGenerator {
       const content = await fs.readFile(fullPath, "utf8");
       const { data: frontmatter, content: mdxContent } = matter(content);
 
-      if (filePath === "index.mdx" || filePath === "./index.mdx") {
+      const { sectionSlug, pageSlug } = this.determineSectionForFile(
+        filePath,
+        frontmatter,
+      );
+      const fullSlug = getFullSlug(pageSlug, sectionSlug);
+
+      const isIndex = filePath === "index.mdx" || filePath === "./index.mdx";
+      const isSectionIndex =
+        this.sectionsConfig && pageSlug === "" && sectionSlug !== "";
+
+      if (isIndex) {
         console.log(chalk.blue("🏠 Updating homepage with index.mdx content"));
       } else {
         const mdxFile: MDXFile = {
           path: filePath,
           content: mdxContent,
           frontmatter,
-          slug: this.generateSlug(filePath),
+          slug: fullSlug,
         };
 
         await this.generatePageFromMDX(mdxFile);
       }
 
+      if (isSectionIndex) {
+        await this.updateSectionIndex(sectionSlug, frontmatter, mdxContent);
+      }
+
       await this.updatePagesIndex();
       await this.updateRootLayout();
+      await this.generateSectionIndexPages();
 
       console.log(chalk.green(`✅ Generated page for: ${filePath}`));
+
+      await this.maybeUpdateSections();
     } catch (error) {
       console.error(chalk.red(`❌ Error processing ${filePath}:`), error);
     }
@@ -806,8 +1055,13 @@ class MDXToNextJSGenerator {
       if (filePath === "index.mdx" || filePath === "./index.mdx") {
         console.log(chalk.blue("🏠 Updating homepage - index.mdx deleted"));
       } else {
-        const slug = this.generateSlug(filePath);
-        const pagePath = path.join(this.outputDir, "app", slug);
+        // We don't have frontmatter for deleted files, so use directory-based matching
+        const { sectionSlug, pageSlug } = this.determineSectionForFile(
+          filePath,
+          {},
+        );
+        const fullSlug = getFullSlug(pageSlug, sectionSlug);
+        const pagePath = path.join(this.outputDir, "app", fullSlug);
         await fs.remove(pagePath);
       }
 
@@ -815,6 +1069,8 @@ class MDXToNextJSGenerator {
       await this.updateRootLayout();
 
       console.log(chalk.green(`✅ Removed page for: ${filePath}`));
+
+      await this.maybeUpdateSections();
     } catch (error) {
       console.error(
         chalk.red(`❌ Error removing page for ${filePath}:`),
@@ -853,14 +1109,57 @@ class MDXToNextJSGenerator {
     return files;
   }
 
-  generateSlug(filePath: string): string {
-    return generateSlug(filePath);
-  }
-
   async generateRootLayout(): Promise<string> {
     const pages = await this.buildAllPagesMeta();
     const fontConfig = await this.loadFontConfig();
-    return layoutTemplate(pages, fontConfig);
+    return layoutTemplate(pages, fontConfig, this.sectionsConfig);
+  }
+
+  async generateSectionIndexPages() {
+    if (!this.sectionsConfig || this.sectionsConfig.length === 0) return;
+
+    const pages = await this.buildAllPagesMeta();
+
+    for (const section of this.sectionsConfig) {
+      if (section.slug === "") continue;
+
+      // Check if a page already exists at the section root
+      const hasIndex = pages.some((p) => p.slug === section.slug);
+      if (hasIndex) continue;
+
+      // Find the first page in this section
+      const sectionPages = pages
+        .filter((p) => p.section === section.slug)
+        .sort((a, b) => {
+          if (a.categoryOrder !== b.categoryOrder)
+            return a.categoryOrder - b.categoryOrder;
+          return a.order - b.order;
+        });
+
+      if (sectionPages.length === 0) continue;
+
+      const firstPage = sectionPages[0];
+      const redirectContent = `import { redirect } from "next/navigation";
+
+export default function SectionIndex() {
+  redirect("/${firstPage.slug}");
+}
+`;
+
+      const pagePath = path.join(
+        this.outputDir,
+        "app",
+        section.slug,
+        "page.tsx",
+      );
+      await fs.ensureDir(path.dirname(pagePath));
+      await fs.writeFile(pagePath, redirectContent, "utf8");
+      console.log(
+        chalk.blue(
+          `🔀 Generated section index redirect: /${section.slug} -> /${firstPage.slug}`,
+        ),
+      );
+    }
   }
 
   async generatePageFromMDX(mdxFile: MDXFile) {
@@ -958,6 +1257,38 @@ export default function Home() {
       indexContent,
       "utf8",
     );
+  }
+
+  async updateSectionIndex(
+    sectionSlug: string,
+    frontmatter: Record<string, any>,
+    mdxContent: string,
+  ) {
+    const indexContent = `import { Metadata } from "next";
+import { Docs } from "@/components/Docs";
+import { config } from "@/utils/config";
+
+const content = \`${escapeTemplateContent(mdxContent)}\`;
+
+export const metadata: Metadata = {
+  title: \`\${config.name ? config.name + " -" : "Doccupine -"} ${frontmatter.title || "Section"}\`,
+  description: \`${frontmatter.description ? frontmatter.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
+  icons: \`${frontmatter.icon ? frontmatter.icon : '\${config.icon || "https://doccupine.com/favicon.ico"}'}\`,
+  openGraph: {
+    title: \`\${config.name ? config.name + " -" : "Doccupine -"} ${frontmatter.title || "Section"}\`,
+    description: \`${frontmatter.description ? frontmatter.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
+    images: \`${frontmatter.image ? frontmatter.image : '\${config.preview || "https://doccupine.com/preview.png"}'}\`,
+  },
+};
+
+export default function Page() {
+  return <Docs content={content} />;
+}
+`;
+
+    const pagePath = path.join(this.outputDir, "app", sectionSlug, "page.tsx");
+    await fs.ensureDir(path.dirname(pagePath));
+    await fs.writeFile(pagePath, indexContent, "utf8");
   }
 
   async updateRootLayout() {

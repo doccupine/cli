@@ -4,7 +4,7 @@ description: "Serve static files like images, favicons, fonts, and Open Graph pr
 date: "2025-01-15"
 category: "Configuration"
 categoryOrder: 3
-order: 5
+order: 6
 ---
 # Media and assets
 Doccupine watches a \`public\` directory in your project root (the same folder where you execute \`npx doccupine\`) and copies its contents into the generated Next.js \`public\` folder. Use it to serve static files such as favicons, Open Graph preview images, custom fonts, or any other media your documentation needs.
@@ -66,10 +66,13 @@ Any image or file you want to reference in your MDX pages can live in \`public\`
 \`\`\`
 
 ## Live syncing
-Doccupine watches the \`public\` directory for changes while running. When you add, update, or remove a file, the generated site is updated automatically — no restart required.
+
+<Callout type="info">
+  Doccupine watches the \`public\` directory for changes while running. When you add, update, or remove a file, the generated site is updated automatically - no restart required.
+</Callout>
 
 ## Tips
 - **Keep it flat**: For a small number of files, placing them directly in \`public\` keeps paths short and simple.
 - **Use subfolders for organization**: For larger projects, group assets into folders like \`public/fonts\`, \`public/images\`, or \`public/icons\`.
-- **Mind file size**: Large files increase deployment size and load times. Optimize images before adding them.
+- **Mind file size**: Optimize images before adding them to keep deployment size and load times low.
 - **Consistent naming**: Use lowercase, hyphen-separated filenames (e.g., \`og-image.png\`) for predictable URLs.`;

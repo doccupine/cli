@@ -28,7 +28,11 @@ Place a \`config.json\` at your project root (the same folder where you execute 
 - **preview**: The Open Graph image used when links to your docs are shared. Accepts a full URL or a relative path.
 
 ## Per‑page overrides
-Any page can override these global values by defining the same keys in its frontmatter. When present, the page’s values take precedence over \`config.json\` for that page only.
+Any page can override these global values by defining the same keys in its frontmatter. When present, the page's values take precedence over \`config.json\` for that page only.
+
+<Callout type="note">
+  If a key is not specified in a page's frontmatter, Doccupine falls back to the corresponding value in \`config.json\`.
+</Callout>
 
 Example frontmatter in an \`.mdx\` file:
 
@@ -44,4 +48,4 @@ category: "Guides"
 ---
 \`\`\`
 
-If a key is not specified in a page’s frontmatter, Doccupine falls back to the corresponding value in \`config.json\`.`;
+`;

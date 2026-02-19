@@ -1,9 +1,10 @@
 export const sideBarTemplate = `"use client";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Space } from "cherry-styled-components";
 import {
   DocsSidebar,
+  SectionBarContext,
   StyledSidebar,
   StyledSidebarList,
   StyledSidebarListItem,
@@ -29,6 +30,7 @@ interface SideBarProps {
 
 function SideBar({ result }: SideBarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const hasSectionBar = useContext(SectionBarContext);
   const pathname = usePathname();
 
   return (
@@ -40,7 +42,10 @@ function SideBar({ result }: SideBarProps) {
         <StyledMobileBurger $isActive={isMobileMenuOpen} />
       </StyleMobileBar>
 
-      <StyledSidebar $isActive={isMobileMenuOpen}>
+      <StyledSidebar
+        $isActive={isMobileMenuOpen}
+        $hasSectionBar={hasSectionBar}
+      >
         {result &&
           result.map((item: NavItem, index: number) => {
             return (

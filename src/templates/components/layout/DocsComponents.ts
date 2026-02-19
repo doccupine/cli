@@ -1,6 +1,6 @@
 export const docsComponentsTemplate = `"use client";
 import { darken, lighten, rgba } from "polished";
-import React, { useContext } from "react";
+import React, { createContext, useContext } from "react";
 import styled, { css } from "styled-components";
 import {
   resetButton,
@@ -12,6 +12,22 @@ import Link from "next/link";
 import { mq, Theme } from "@/app/theme";
 import { styledTable, stylesLists } from "@/components/layout/SharedStyled";
 import { ChatContext } from "@/components/Chat";
+
+const SectionBarContext = createContext(false);
+
+function SectionBarProvider({
+  hasSectionBar,
+  children,
+}: {
+  hasSectionBar: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <SectionBarContext.Provider value={hasSectionBar}>
+      {children}
+    </SectionBarContext.Provider>
+  );
+}
 
 interface DocsProps {
   children: React.ReactNode;
@@ -91,15 +107,18 @@ export const StyledMarkdownContainer = styled.div\`
 interface Props {
   theme?: Theme;
   $isActive?: boolean;
+  $hasSectionBar?: boolean;
 }
 
 export const StyledSidebar = styled.nav<Props>\`
   position: fixed;
   overflow-y: auto;
-  max-height: calc(100svh - 70px);
+  max-height: calc(
+    100svh - \${({ $hasSectionBar }) => ($hasSectionBar ? 105 : 63)}px
+  );
   width: 100%;
   z-index: 99;
-  top: 70px;
+  top: \${({ $hasSectionBar }) => ($hasSectionBar ? 105 : 63)}px;
   height: 100%;
   padding: 20px 20px 80px 20px;
   opacity: 0;
@@ -109,18 +128,23 @@ export const StyledSidebar = styled.nav<Props>\`
   left: 0;
   background: \${({ theme }) => theme.colors.light};
   border-right: solid 1px \${({ theme }) => theme.colors.grayLight};
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   \${mq("lg")} {
     transition: none;
-    max-height: 100svh;
+    max-height: calc(100svh - 62px);
     width: 220px;
     background: transparent;
-    padding: 90px 40px 40px;
+    padding: 25px 40px 40px;
     opacity: 1;
     pointer-events: all;
     transform: translateY(0);
     background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.05)};
-    top: 0;
+    top: 62px;
     width: 320px;
   }
 
@@ -139,15 +163,20 @@ export const StyledIndexSidebar = styled.ul<{ theme: Theme }>\`
   margin: 0;
   padding: 0;
   position: fixed;
-  top: 0;
+  top: 61px;
   right: 0;
   width: 320px;
-  height: 100vh;
+  height: calc(100vh - 61px);
   overflow-y: auto;
   z-index: 1;
-  padding: 25px 40px;
+  padding: 27px 40px 40px;
   background: \${({ theme }) => theme.colors.light};
   border-left: solid 1px \${({ theme }) => theme.colors.grayLight};
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   \${mq("lg")} {
     display: block;
@@ -302,7 +331,11 @@ export const StyledMobileBurger = styled.span<Props>\`
     \`};
 \`;
 
-function DocsWrapper({ children }: DocsProps) {
+interface DocsWrapperProps {
+  children: React.ReactNode;
+}
+
+function DocsWrapper({ children }: DocsWrapperProps) {
   return <StyledDocsWrapper>{children}</StyledDocsWrapper>;
 }
 
@@ -318,5 +351,11 @@ function DocsContainer({ children }: DocsProps) {
   );
 }
 
-export { DocsWrapper, DocsSidebar, DocsContainer };
+export {
+  DocsWrapper,
+  DocsSidebar,
+  DocsContainer,
+  SectionBarContext,
+  SectionBarProvider,
+};
 `;

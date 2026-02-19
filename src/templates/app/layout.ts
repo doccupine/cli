@@ -1,8 +1,14 @@
-function formatPagesArray(pages: Record<string, unknown>[]): string {
+interface SectionConfig {
+  label: string;
+  slug: string;
+  directory?: string;
+}
+
+function formatObjectArray<T extends object>(items: T[]): string {
   const MAX_WIDTH = 80;
-  const items = pages.map((page) => {
+  const formatted = items.map((item) => {
     const lines: string[] = ["  {"];
-    const entries = Object.entries(page);
+    const entries = Object.entries(item) as [string, unknown][];
     for (const [key, value] of entries) {
       const valueStr = JSON.stringify(value);
       const line = `    ${key}: ${valueStr},`;
@@ -16,40 +22,114 @@ function formatPagesArray(pages: Record<string, unknown>[]): string {
     lines.push("  },");
     return lines.join("\n");
   });
-  return "[\n" + items.join("\n") + "\n]";
+  return "[\n" + formatted.join("\n") + "\n]";
+}
+
+interface PageData {
+  slug: string;
+  title: string;
+  description: string;
+  date: string | null;
+  category: string;
+  path: string;
+  categoryOrder: number;
+  order: number;
+  section: string;
+}
+
+interface GoogleFontConfig {
+  fontName?: string;
+  subsets?: string[];
+  weight?: string | string[];
+}
+
+interface LocalFontSrc {
+  path: string;
+  weight: string;
+  style: string;
+}
+
+interface FontConfig {
+  googleFont?: GoogleFontConfig;
+  localFonts?: string | { src?: LocalFontSrc[] };
+}
+
+function isGoogleFont(
+  fc: FontConfig | null,
+): fc is FontConfig & { googleFont: GoogleFontConfig } {
+  return !!fc?.googleFont?.fontName;
+}
+
+function isLocalFont(fc: FontConfig | null): boolean {
+  if (!fc?.localFonts) return false;
+  if (typeof fc.localFonts === "string") return true;
+  return !!fc.localFonts.src?.length;
+}
+
+function getLocalFontSrc(fc: FontConfig): string {
+  if (typeof fc.localFonts === "string") return `"${fc.localFonts}"`;
+  return JSON.stringify(fc.localFonts?.src, null, 2).replace(
+    /"([^"]+)":/g,
+    "$1:",
+  );
 }
 
 export const layoutTemplate = (
-  pages: any[],
-  fontConfig: any,
-): string => `import type { Metadata } from "next";
-${fontConfig?.googleFont?.fontName?.length ? `import { ${fontConfig.googleFont.fontName} } from "next/font/google";` : fontConfig?.localFonts?.length || fontConfig?.localFonts?.src?.length ? 'import localFont from "next/font/local";' : 'import { Inter } from "next/font/google";'}
+  pages: PageData[],
+  fontConfig: FontConfig | null,
+  sectionsConfig: SectionConfig[] | null = null,
+): string => {
+  const hasSections = sectionsConfig !== null && sectionsConfig.length > 0;
+
+  return `import type { Metadata } from "next";
+${isGoogleFont(fontConfig) ? `import { ${fontConfig.googleFont.fontName} } from "next/font/google";` : isLocalFont(fontConfig) ? 'import localFont from "next/font/local";' : 'import { Inter } from "next/font/google";'}
 import dynamic from "next/dynamic";
 import { StyledComponentsRegistry } from "cherry-styled-components";
 import { theme, themeDark } from "@/app/theme";
 import { CherryThemeProvider } from "@/components/layout/CherryThemeProvider";
 import { ChtProvider } from "@/components/Chat";
-import { Footer } from "@/components/layout/Footer";
-import { Header } from "@/components/layout/Header";
-import { DocsWrapper } from "@/components/layout/DocsComponents";
-import { SideBar } from "@/components/SideBar";
-import { DocsNavigation } from "@/components/layout/DocsNavigation";
+${
+  hasSections
+    ? ""
+    : `import { Footer } from "@/components/layout/Footer";
+`
+}import { Header } from "@/components/layout/Header";
 import {
+  DocsWrapper,
+  SectionBarProvider,
+} from "@/components/layout/DocsComponents";
+${
+  hasSections
+    ? ""
+    : `import { SideBar } from "@/components/SideBar";
+import { DocsNavigation } from "@/components/layout/DocsNavigation";
+`
+}import {
   transformPagesToGroupedStructure,
   type PagesProps,
 } from "@/utils/orderNavItems";
-import { StaticLinks } from "@/components/layout/StaticLinks";
-import { config } from "@/utils/config";
+${
+  hasSections
+    ? ""
+    : `import { StaticLinks } from "@/components/layout/StaticLinks";
+`
+}import { config } from "@/utils/config";
 import { verifyBrandingKey } from "@/utils/branding";
 import navigation from "@/navigation.json";
-const Chat = dynamic(() => import("@/components/Chat").then((mod) => mod.Chat));
+${
+  hasSections
+    ? `import { SectionBar } from "@/components/layout/SectionBar";
+import { SectionNavProvider } from "@/components/SectionNavProvider";
+`
+    : ""
+}const Chat = dynamic(() => import("@/components/Chat").then((mod) => mod.Chat));
 
 ${
-  fontConfig?.googleFont?.fontName?.length
-    ? `const font = ${fontConfig.googleFont.fontName}({ ${[fontConfig?.googleFont?.subsets?.length ? `subsets: ${JSON.stringify(fontConfig.googleFont.subsets)}` : "", fontConfig.googleFont?.weight?.length ? `weight: ${Array.isArray(fontConfig.googleFont.weight) ? JSON.stringify(fontConfig.googleFont.weight) : `"${fontConfig.googleFont.weight}"`}` : ""].filter(Boolean).join(", ")} });`
-    : fontConfig?.localFonts?.length || fontConfig?.localFonts?.src?.length
+  isGoogleFont(fontConfig)
+    ? `const font = ${fontConfig.googleFont.fontName}({ ${[fontConfig.googleFont.subsets?.length ? `subsets: ${JSON.stringify(fontConfig.googleFont.subsets)}` : "", fontConfig.googleFont.weight?.length ? `weight: ${Array.isArray(fontConfig.googleFont.weight) ? JSON.stringify(fontConfig.googleFont.weight) : `"${fontConfig.googleFont.weight}"`}` : ""].filter(Boolean).join(", ")} });`
+    : isLocalFont(fontConfig)
       ? `const font = localFont({
-  src: ${fontConfig.localFonts?.src?.length ? JSON.stringify(fontConfig?.localFonts.src, null, 2).replace(/"([^"]+)":/g, "$1:") : `"${fontConfig?.localFonts}"`},
+  src: ${getLocalFontSrc(fontConfig!)},
 });`
       : 'const font = Inter({ subsets: ["latin"] });'
 }
@@ -69,7 +149,7 @@ export const metadata: Metadata = {
   },
 };
 
-const doccupinePages = ${formatPagesArray(pages)};
+const doccupinePages = ${formatObjectArray(pages)};${hasSections ? `\nconst doccupineSections = ${formatObjectArray(sectionsConfig!)};` : ""}
 
 export default async function RootLayout({
   children,
@@ -77,7 +157,38 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const hideBranding = verifyBrandingKey();
+${
+  hasSections
+    ? `
+  const pages: PagesProps[] = doccupinePages;
 
+  return (
+    <html lang="en">
+      <body className={font.className}>
+        <StyledComponentsRegistry>
+          <CherryThemeProvider theme={theme} themeDark={themeDark}>
+            <ChtProvider isChatActive={process.env.LLM_PROVIDER ? true : false}>
+              <Header>
+                <SectionBar sections={doccupineSections} />
+              </Header>
+              {process.env.LLM_PROVIDER && <Chat />}
+              <DocsWrapper>
+                <SectionNavProvider
+                  sections={doccupineSections}
+                  allPages={pages}
+                  hideBranding={hideBranding}
+                >
+                  {children}
+                </SectionNavProvider>
+              </DocsWrapper>
+            </ChtProvider>
+          </CherryThemeProvider>
+        </StyledComponentsRegistry>
+      </body>
+    </html>
+  );
+}`
+    : `
   const defaultPages = [
     {
       slug: "",
@@ -92,9 +203,10 @@ export default async function RootLayout({
   ];
 
   const pages: PagesProps[] = doccupinePages;
-  const result = navigation.length
-    ? navigation
-    : transformPagesToGroupedStructure(pages);
+  const result =
+    Array.isArray(navigation) && navigation.length
+      ? navigation
+      : transformPagesToGroupedStructure(pages);
   const defaultResults = transformPagesToGroupedStructure(defaultPages);
 
   return (
@@ -104,21 +216,25 @@ export default async function RootLayout({
           <CherryThemeProvider theme={theme} themeDark={themeDark}>
             <ChtProvider isChatActive={process.env.LLM_PROVIDER ? true : false}>
               <Header />
-              <StaticLinks />
               {process.env.LLM_PROVIDER && <Chat />}
-              <DocsWrapper>
-                <SideBar result={result.length ? result : defaultResults} />
-                {children}
-                <DocsNavigation
-                  result={result.length ? result : defaultResults}
-                />
-                <Footer hideBranding={hideBranding} />
-              </DocsWrapper>
+              <SectionBarProvider hasSectionBar={false}>
+                <DocsWrapper>
+                  <SideBar result={result.length ? result : defaultResults} />
+                  {children}
+                  <DocsNavigation
+                    result={result.length ? result : defaultResults}
+                  />
+                  <StaticLinks />
+                  <Footer hideBranding={hideBranding} />
+                </DocsWrapper>
+              </SectionBarProvider>
             </ChtProvider>
           </CherryThemeProvider>
         </StyledComponentsRegistry>
       </body>
     </html>
   );
+}`
 }
 `;
+};

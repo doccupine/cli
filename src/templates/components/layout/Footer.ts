@@ -1,7 +1,7 @@
 export const footerTemplate = `"use client";
 import { useContext } from "react";
 import styled, { css } from "styled-components";
-import { styledSmall } from "cherry-styled-components";
+import { Space, styledSmall } from "cherry-styled-components";
 import { ChatContext } from "@/components/Chat";
 import { mq, Theme } from "@/app/theme";
 import { GitHubLogo } from "@/components/layout/Pictograms";
@@ -58,7 +58,7 @@ const StyledFooterFlex = styled.div\`
 function Footer({ hideBranding }: { hideBranding?: boolean }) {
   const { isOpen } = useContext(ChatContext);
 
-  if (hideBranding) return null;
+  if (hideBranding) return <Space $xs={70} $lg="none" />;
 
   return (
     <StyledFooter $isChatOpen={isOpen}>
@@ -67,7 +67,7 @@ function Footer({ hideBranding }: { hideBranding?: boolean }) {
           <span>
             Powered by <a href="https://doccupine.com">Doccupine</a>
           </span>
-          <a href="https://github.com/doccupine/" target="_blank">
+          <a href="https://github.com/doccupine/cli" target="_blank">
             <GitHubLogo />
           </a>
         </StyledFooterFlex>

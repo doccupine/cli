@@ -1,25 +1,36 @@
 export const deploymentMdxTemplate = `---
 title: "Deployment"
-description: "Deploy your documentation site with Doccupine or self-host on any platform that supports Next.js."
+description: "Deploy your documentation site with the Doccupine Platform or self-host on any platform that supports Next.js."
 date: "2025-01-15"
 category: "Configuration"
 categoryOrder: 3
-order: 9
+order: 10
 ---
 # Deployment
+The fastest way to deploy your documentation is with the [Doccupine Platform](https://www.doccupine.com). If you prefer to manage your own infrastructure, you can self-host the generated Next.js app on any platform.
 
-## Deploy with Doccupine
+## Doccupine Platform
 
-Sign up for an account at [Doccupine](https://www.doccupine.com) and create your docs instantly - no build configuration, no infrastructure to manage.
+Sign up at [doccupine.com](https://www.doccupine.com) and connect your repository. Your documentation site is live in minutes - no build configuration, no infrastructure to manage.
 
-Doccupine gives you:
+<Callout type="success">
+  The Doccupine Platform is the recommended way to deploy. It handles builds, hosting, SSL, and updates automatically so you can focus on writing documentation.
+</Callout>
+
+### What you get
 - **Automatic deployments** on every push to your repository
 - **Site customization** through a visual dashboard - no code changes needed
 - **Team collaboration** so your whole team can manage docs together
 - **Custom domains** with automatic SSL
 - **AI Assistant and MCP server** included out of the box, no API key required
+- **Zero maintenance** - no servers, no build pipelines, no dependency updates
 
-Get started at [doccupine.com](https://www.doccupine.com).
+### Getting started
+1. Create an account at [doccupine.com](https://www.doccupine.com).
+2. Connect your GitHub repository.
+3. Your site is deployed automatically.
+
+Every push to your repository triggers a new deployment. You can customize your site's appearance, domain, and settings from the dashboard.
 
 ---
 
@@ -29,6 +40,10 @@ Doccupine generates a standard Next.js app, so you can deploy it anywhere that s
 
 <Callout type="warning">
   Deploy the generated website directory (the Next.js app), not your MDX source folder. In a monorepo, set the root directory to the generated site folder.
+</Callout>
+
+<Callout type="note">
+  Self-hosting requires you to manage your own build pipeline, hosting, SSL certificates, and AI provider API keys. For a hands-off experience, consider the [Doccupine Platform](https://www.doccupine.com).
 </Callout>
 
 ### Popular hosting options

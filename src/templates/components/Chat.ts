@@ -45,6 +45,11 @@ const StyledChat = styled.div<{ theme: Theme; $isVisible: boolean }>\`
   transition: all 0.3s ease;
   transform: translateX(0);
   background: \${({ theme }) => theme.colors.light};
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   \${({ $isVisible }) =>
     !$isVisible &&
@@ -364,7 +369,6 @@ const StyledChatForm = styled.form<{ theme: Theme; $isVisible: boolean }>\`
 const StyledChatFixedForm = styled.form<{
   theme: Theme;
   $hide: boolean;
-  $hasLinks: boolean;
 }>\`
   transition: all 0.3s ease;
   position: fixed;
@@ -378,15 +382,9 @@ const StyledChatFixedForm = styled.form<{
     transform: translateX(-50%) translateY(0);
     bottom: initial;
     position: absolute;
-    top: 90px;
+    top: 153px;
     width: calc(100% - 320px * 2 - 40px);
     opacity: 1;
-
-    \${({ $hasLinks }) =>
-      $hasLinks &&
-      css\`
-        top: 164px;
-      \`}
   }
 
   \${({ $hide }) =>
@@ -565,8 +563,8 @@ const StyledChatTitle = styled.div<{ theme: Theme }>\`
   justify-content: space-between;
   position: sticky;
   margin: 0 -20px;
-  padding: 25px 20px;
-  height: 73px;
+  padding: 16px 20px;
+  height: 62px;
   top: 0;
   background: \${({ theme }) => theme.colors.light};
   border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
@@ -830,11 +828,7 @@ function Chat() {
 
   return (
     <>
-      <StyledChatFixedForm
-        onSubmit={ask}
-        $hide={answer?.length > 0}
-        $hasLinks={links.length > 0}
-      >
+      <StyledChatFixedForm onSubmit={ask} $hide={answer?.length > 0}>
         <StyledChatFixedInner>
           <RainbowInput
             value={question}

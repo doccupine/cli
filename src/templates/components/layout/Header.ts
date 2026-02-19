@@ -1,7 +1,7 @@
 export const headerTemplate = `"use client";
-import { Flex, MaxWidth } from "cherry-styled-components";
+import React from "react";
 import { useCallback, useRef, useState, Suspense } from "react";
-import styled, { useTheme } from "styled-components";
+import styled, { css, useTheme } from "styled-components";
 import Link from "next/link";
 import { rgba } from "polished";
 import { mq, Theme } from "@/app/theme";
@@ -17,18 +17,22 @@ const customThemeJson = themeJson as typeof themeJson & {
   logo?: { dark: string; light: string };
 };
 
-const StyledHeader = styled.header<{ theme: Theme }>\`
-  position: fixed;
+const StyledHeader = styled.header<{ theme: Theme; $hasChildren: boolean }>\`
+  position: sticky;
   top: 0;
-  padding: 20px;
   margin: 0;
   z-index: 1000;
   width: 100%;
+  border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
 
-  \${mq("lg")} {
-    width: 320px;
-    border-right: solid 1px \${({ theme }) => theme.colors.grayLight};
-  }
+  \${({ $hasChildren }) =>
+    !$hasChildren &&
+    css\`
+      \${mq("lg")} {
+        padding-bottom: 16px;
+        padding-top: 16px;
+      }
+    \`}
 
   &::before,
   &::after {
@@ -55,8 +59,9 @@ const StyledHeader = styled.header<{ theme: Theme }>\`
     & svg,
     & img {
       margin: auto;
-      width: fit-content;
       height: auto;
+      width: fit-content;
+      min-width: fit-content;
       max-width: 182px;
       max-height: 30px;
 
@@ -67,7 +72,40 @@ const StyledHeader = styled.header<{ theme: Theme }>\`
   }
 \`;
 
-function Header() {
+const StyledHeaderInner = styled.div<{ $hasChildren: boolean }>\`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 16px 0 0 20px;
+
+  \${({ $hasChildren }) =>
+    !$hasChildren &&
+    css\`
+      padding-bottom: 16px;
+    \`}
+
+  \${mq("lg")} {
+    flex-wrap: nowrap;
+    padding: 0 20px;
+  }
+\`;
+
+const StyledThemeWrapper = styled.div\`
+  display: block;
+  min-width: fit-content;
+  padding-right: 20px;
+
+  \${mq("lg")} {
+    padding-right: 0;
+  }
+\`;
+
+interface HeaderProps {
+  children?: React.ReactNode;
+}
+
+function Header({ children }: HeaderProps) {
   const [isOptionActive, setIsOptionActive] = useState(false);
   const [isLangActive, setIsLangActive] = useState(false);
 
@@ -87,40 +125,39 @@ function Header() {
   const theme = useTheme() as Theme;
 
   return (
-    <>
-      <StyledHeader>
-        <MaxWidth $size={1000}>
-          <Flex $justifyContent="space-between" $wrap="nowrap">
-            <Link href="/" className="logo" aria-label="Logo">
-              {customThemeJson.logo ? (
-                theme.isDark ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={customThemeJson.logo.dark}
-                    alt="Logo"
-                    width="100"
-                    height="100"
-                  />
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={customThemeJson.logo.light}
-                    alt="Logo"
-                    width="100"
-                    height="100"
-                  />
-                )
-              ) : (
-                <Logo />
-              )}
-            </Link>
-            <Suspense fallback={<ToggleThemeLoading />}>
-              <ToggleTheme />
-            </Suspense>
-          </Flex>
-        </MaxWidth>
-      </StyledHeader>
-    </>
+    <StyledHeader $hasChildren={children ? true : false} id="header">
+      <StyledHeaderInner $hasChildren={children ? true : false}>
+        <Link href="/" className="logo" aria-label="Logo">
+          {customThemeJson.logo ? (
+            theme.isDark ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={customThemeJson.logo.dark}
+                alt="Logo"
+                width="100"
+                height="100"
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={customThemeJson.logo.light}
+                alt="Logo"
+                width="100"
+                height="100"
+              />
+            )
+          ) : (
+            <Logo />
+          )}
+        </Link>
+        {children}
+        <StyledThemeWrapper>
+          <Suspense fallback={<ToggleThemeLoading />}>
+            <ToggleTheme />
+          </Suspense>
+        </StyledThemeWrapper>
+      </StyledHeaderInner>
+    </StyledHeader>
   );
 }
 
