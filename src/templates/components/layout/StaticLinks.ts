@@ -20,6 +20,11 @@ const StyledStaticLinks = styled.div<{ theme: Theme }>\`
   max-width: 640px;
   margin: 0 auto;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   \${mq("lg")} {
     padding: 20px 0;

@@ -109,6 +109,11 @@ export const StyledSidebar = styled.nav<Props>\`
   left: 0;
   background: \${({ theme }) => theme.colors.light};
   border-right: solid 1px \${({ theme }) => theme.colors.grayLight};
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   \${mq("lg")} {
     transition: none;
@@ -148,6 +153,11 @@ export const StyledIndexSidebar = styled.ul<{ theme: Theme }>\`
   padding: 27px 40px 40px;
   background: \${({ theme }) => theme.colors.light};
   border-left: solid 1px \${({ theme }) => theme.colors.grayLight};
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   \${mq("lg")} {
     display: block;
