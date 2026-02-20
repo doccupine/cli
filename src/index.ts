@@ -10,8 +10,8 @@ import matter from "gray-matter";
 import chalk from "chalk";
 import prompts from "prompts";
 
-import { appStructure, startingDocsStructure } from "./templates/structures.js";
-import { layoutTemplate } from "./templates/app/layout.js";
+import { appStructure, startingDocsStructure } from "./lib/structures.js";
+import { layoutTemplate } from "./lib/layout.js";
 
 import {
   generateMetadataBlock,

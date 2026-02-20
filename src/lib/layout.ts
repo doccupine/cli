@@ -3,7 +3,7 @@ import {
   DEFAULT_FAVICON,
   DEFAULT_OG_IMAGE,
   DEFAULT_SITE_NAME,
-} from "../../lib/constants.js";
+} from "./constants.js";
 
 interface SectionConfig {
   label: string;
