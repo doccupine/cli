@@ -1069,7 +1069,9 @@ program
           chalk.green(`🌐 Next.js ready at http://localhost:${port}`),
         );
       }
-      if (
+      if (options.verbose) {
+        process.stdout.write(chalk.gray("[Next.js] ") + output);
+      } else if (
         output.includes("compiled") ||
         output.includes("error") ||
         output.includes("Ready")
