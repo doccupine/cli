@@ -78,6 +78,11 @@ import { rateLimitTemplate } from "./templates/utils/rateLimit.js";
 import { brandingTemplate } from "./templates/utils/branding.js";
 import { configTemplate } from "./templates/utils/config.js";
 
+import {
+  generateMetadataBlock,
+  generateRuntimeOnlyMetadataBlock,
+} from "./lib/metadata.js";
+
 import { accordionMdxTemplate } from "./templates/mdx/accordion.mdx.js";
 import { aiAssistantMdxTemplate } from "./templates/mdx/ai-assistant.mdx.js";
 import { buttonsMdxTemplate } from "./templates/mdx/buttons.mdx.js";
@@ -1197,10 +1202,16 @@ export default function SectionIndex() {
 
   async generatePageFromMDX(mdxFile: MDXFile) {
     const fm = mdxFile.frontmatter;
-    const titleSuffix = fm.name
-      ? `- ${fm.name}`
-      : '\${config.name ? "- " + config.name : "- Doccupine"}';
-    const ogImage = fm.image;
+
+    const metadataBlock = generateMetadataBlock({
+      title: fm.title,
+      titleFallback: "Generated with Doccupine",
+      name: fm.name,
+      titleOrder: "page-first",
+      description: fm.description,
+      icon: fm.icon,
+      image: fm.image,
+    });
 
     const pageContent = `import { Metadata } from "next";
 import { Docs } from "@/components/Docs";
@@ -1208,16 +1219,7 @@ import { config } from "@/utils/config";
 
 const content = \`${escapeTemplateContent(mdxFile.content)}\`;
 
-export const metadata: Metadata = {
-  title: \`${fm.title || "Generated with Doccupine"} ${titleSuffix}\`,
-  description: \`${fm.description ? fm.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
-  icons: \`${fm.icon ? fm.icon : '\${config.icon || "https://docs.doccupine.com/favicon.ico"}'}\`,
-  openGraph: {
-    title: \`${fm.title || "Generated with Doccupine"} ${titleSuffix}\`,
-    description: \`${fm.description ? fm.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
-    images: \`${ogImage ? ogImage : '\${config.image || "https://docs.doccupine.com/preview.png"}'}\`,
-  },
-};
+${metadataBlock}
 
 export default function Page() {
   return <Docs content={content} />;
@@ -1258,40 +1260,25 @@ export default function Page() {
       }
     }
 
+    const metadataBlock = indexMDX
+      ? generateMetadataBlock({
+          title: indexMDX.title,
+          titleFallback: "Welcome",
+          name: indexMDX.name,
+          titleOrder: "name-first",
+          description: indexMDX.description || undefined,
+          icon: indexMDX.icon,
+          image: indexMDX.image,
+        })
+      : generateRuntimeOnlyMetadataBlock();
+
     const indexContent = `import { Metadata } from "next";
 import { Docs } from "@/components/Docs";
 import { config } from "@/utils/config";
 
 ${indexMDX ? `const content = \`${escapeTemplateContent(indexMDX.content)}\`;` : `const content = null;`}
 
-${
-  indexMDX
-    ? (() => {
-        const namePart = indexMDX.name
-          ? `${indexMDX.name} -`
-          : '\${config.name ? config.name + " -" : "Doccupine -"}';
-        return `export const metadata: Metadata = {
-  title: \`${namePart} ${indexMDX.title}\`,
-  description: \`${indexMDX.description ? indexMDX.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
-  icons: \`${indexMDX.icon ? indexMDX.icon : '\${config.icon || "https://docs.doccupine.com/favicon.ico"}'}\`,
-  openGraph: {
-    title: \`${namePart} ${indexMDX.title}\`,
-    description: \`${indexMDX.description ? indexMDX.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
-    images: \`${indexMDX.image ? indexMDX.image : '\${config.image || "https://docs.doccupine.com/preview.png"}'}\`,
-  },
-};`;
-      })()
-    : `export const metadata: Metadata = {
-  title: \`\${config.name || "Doccupine"}\`,
-  description: \`\${config.description || "Generated with Doccupine"}\`,
-  icons: \`\${config.icon || "https://docs.doccupine.com/favicon.ico"}\`,
-  openGraph: {
-    title: \`\${config.name || "Doccupine"}\`,
-    description: \`\${config.description || "Generated with Doccupine"}\`,
-    images: \`\${config.image || "https://docs.doccupine.com/preview.png"}\`,
-  },
-};`
-}
+${metadataBlock}
 
 export default function Home() {
   return <Docs content={content} />;
@@ -1310,10 +1297,15 @@ export default function Home() {
     frontmatter: Record<string, any>,
     mdxContent: string,
   ) {
-    const sectionNamePart = frontmatter.name
-      ? `${frontmatter.name} -`
-      : '\${config.name ? config.name + " -" : "Doccupine -"}';
-    const sectionOgImage = frontmatter.image;
+    const metadataBlock = generateMetadataBlock({
+      title: frontmatter.title,
+      titleFallback: "Section",
+      name: frontmatter.name,
+      titleOrder: "name-first",
+      description: frontmatter.description || undefined,
+      icon: frontmatter.icon,
+      image: frontmatter.image,
+    });
 
     const indexContent = `import { Metadata } from "next";
 import { Docs } from "@/components/Docs";
@@ -1321,16 +1313,7 @@ import { config } from "@/utils/config";
 
 const content = \`${escapeTemplateContent(mdxContent)}\`;
 
-export const metadata: Metadata = {
-  title: \`${sectionNamePart} ${frontmatter.title || "Section"}\`,
-  description: \`${frontmatter.description ? frontmatter.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
-  icons: \`${frontmatter.icon ? frontmatter.icon : '\${config.icon || "https://docs.doccupine.com/favicon.ico"}'}\`,
-  openGraph: {
-    title: \`${sectionNamePart} ${frontmatter.title || "Section"}\`,
-    description: \`${frontmatter.description ? frontmatter.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
-    images: \`${sectionOgImage ? sectionOgImage : '\${config.image || "https://docs.doccupine.com/preview.png"}'}\`,
-  },
-};
+${metadataBlock}
 
 export default function Page() {
   return <Docs content={content} />;

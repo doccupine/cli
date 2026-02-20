@@ -1,4 +1,9 @@
-import { DEFAULT_DESCRIPTION } from "../constants.js";
+import {
+  DEFAULT_DESCRIPTION,
+  DEFAULT_FAVICON,
+  DEFAULT_OG_IMAGE,
+  DEFAULT_SITE_NAME,
+} from "../../lib/constants.js";
 
 interface SectionConfig {
   label: string;
@@ -137,17 +142,17 @@ ${
 }
 
 export const metadata: Metadata = {
-  title: config.name || "Doccupine",
+  title: config.name || "${DEFAULT_SITE_NAME}",
   description:
     config.description ||
     "${DEFAULT_DESCRIPTION}",
-  icons: config.icon || "https://docs.doccupine.com/favicon.ico",
+  icons: config.icon || "${DEFAULT_FAVICON}",
   openGraph: {
-    title: config.name || "Doccupine",
+    title: config.name || "${DEFAULT_SITE_NAME}",
     description:
       config.description ||
       "${DEFAULT_DESCRIPTION}",
-    images: config.image || "https://docs.doccupine.com/preview.png",
+    images: config.image || "${DEFAULT_OG_IMAGE}",
   },
 };
 

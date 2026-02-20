@@ -1,4 +1,4 @@
-import { DEFAULT_DESCRIPTION } from "../constants.js";
+import { DEFAULT_DESCRIPTION } from "../../lib/constants.js";
 
 export const notFoundTemplate = `import { Metadata } from "next";
 import { Docs } from "@/components/Docs";

@@ -1,4 +1,8 @@
-import { DEFAULT_DESCRIPTION } from "../constants.js";
+import {
+  DEFAULT_DESCRIPTION,
+  DEFAULT_FAVICON,
+  DEFAULT_OG_IMAGE,
+} from "../../lib/constants.js";
 
 export const globalsMdxTemplate = `---
 title: "Globals"
@@ -18,8 +22,8 @@ Place a \`config.json\` at your project root (the same folder where you execute 
 {
   "name": "Doccupine",
   "description": "${DEFAULT_DESCRIPTION}",
-  "icon": "https://docs.doccupine.com/favicon.ico",
-  "image": "https://docs.doccupine.com/preview.png"
+  "icon": "${DEFAULT_FAVICON}",
+  "image": "${DEFAULT_OG_IMAGE}"
 }
 \`\`\`
 
