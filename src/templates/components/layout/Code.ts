@@ -7,7 +7,6 @@ import { unified } from "unified";
 import rehypeParse from "rehype-parse";
 import rehypeHighlight from "rehype-highlight";
 import rehypeStringify from "rehype-stringify";
-import { editableContent } from "@/components/layout/SharedStyled";
 import { Icon } from "@/components/layout/Icon";
 
 interface CodeProps extends Omit<
@@ -143,12 +142,6 @@ const Body = styled.div<{ theme: Theme }>\`
   overflow-y: auto;
   max-height: calc(100svh - 400px);
   \${({ theme }) => styledCode(theme)};
-
-  &[contenteditable="true"] {
-    \${editableContent};
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-  }
 
   /* Dark mode syntax highlighting (GitHub Dark) */
   \${({ theme }) =>

@@ -16,8 +16,11 @@ import { MDXRemote, MDXRemoteSerializeResult } from "next-mdx-remote";
 import { serialize } from "next-mdx-remote/serialize";
 import { mq, Theme } from "@/app/theme";
 import { useMDXComponents as getMDXComponents } from "@/components/MDXComponents";
-import { styledTable, stylesLists } from "@/components/layout/SharedStyled";
-import links from "@/links.json";
+import {
+  styledAnchor,
+  styledTable,
+  stylesLists,
+} from "@/components/layout/SharedStyled";
 
 const mdxComponents = getMDXComponents({});
 
@@ -493,6 +496,7 @@ const StyledAnswer = styled.div<{ theme: Theme; $isAnswer: boolean }>\`
     white-space: pre;
   }
 
+  \${styledAnchor};
   \${stylesLists};
   \${styledTable};
 

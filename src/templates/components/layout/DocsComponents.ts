@@ -10,7 +10,11 @@ import {
 } from "cherry-styled-components";
 import Link from "next/link";
 import { mq, Theme } from "@/app/theme";
-import { styledTable, stylesLists } from "@/components/layout/SharedStyled";
+import {
+  styledAnchor,
+  styledTable,
+  stylesLists,
+} from "@/components/layout/SharedStyled";
 import { ChatContext } from "@/components/Chat";
 
 const SectionBarContext = createContext(false);
@@ -66,19 +70,7 @@ const StyledDocsContainer = styled.div<{ theme: Theme; $isChatOpen?: boolean }>\
     max-width: 100%;
   }
 
-  & a:not([class]) {
-    color: inherit;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    box-shadow: 0 2px 0 0 \${({ theme }) => theme.colors.primary};
-
-    &:hover {
-      color: \${({ theme }) =>
-        theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
-      box-shadow: 0 1px 0 0 \${({ theme }) => theme.colors.primary};
-    }
-  }
-
+  \${styledAnchor};
   \${stylesLists};
   \${styledTable};
 
