@@ -1,9 +1,11 @@
 export const cardTemplate = `"use client";
-import styled, { useTheme } from "styled-components";
+import Link from "next/link";
+import styled, { css, useTheme } from "styled-components";
 import { styledText, Theme } from "cherry-styled-components";
 import { Icon, IconProps } from "@/components/layout/Icon";
+import { interactiveStyles } from "@/components/layout/SharedStyled";
 
-const StyledCard = styled.div<{ theme: Theme }>\`
+const cardStyles = css<{ theme: Theme }>\`
   background: \${({ theme }) => theme.colors.light};
   border: solid 1px \${({ theme }) => theme.colors.grayLight};
   border-radius: \${({ theme }) => theme.spacing.radius.lg};
@@ -11,6 +13,16 @@ const StyledCard = styled.div<{ theme: Theme }>\`
   margin: 0;
   \${({ theme }) => styledText(theme)}
   color: \${({ theme }) => theme.colors.grayDark};
+\`;
+
+const StyledCard = styled.div<{ theme: Theme }>\`
+  \${cardStyles}
+\`;
+
+const StyledCardLink = styled(Link)<{ theme: Theme }>\`
+  \${interactiveStyles};
+  \${cardStyles}
+  text-decoration: none;
 \`;
 
 const StyledCardTitle = styled.h3<{ theme: Theme }>\`
@@ -23,18 +35,25 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   title: string;
   icon?: IconProps;
+  href?: string;
 }
 
-function Card({ children, title, icon }: CardProps) {
+function Card({ children, title, icon, href }: CardProps) {
   const theme = useTheme() as Theme;
 
-  return (
-    <StyledCard>
+  const content = (
+    <>
       {icon && <Icon name={icon} color={theme.colors.primary} />}
       <StyledCardTitle>{title}</StyledCardTitle>
       {children}
-    </StyledCard>
+    </>
   );
+
+  if (href) {
+    return <StyledCardLink href={href}>{content}</StyledCardLink>;
+  }
+
+  return <StyledCard>{content}</StyledCard>;
 }
 
 export { Card };
