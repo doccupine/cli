@@ -5,7 +5,7 @@ const configSchema = z.object({
   name: z.string().optional(),
   description: z.string().optional(),
   icon: z.string().optional(),
-  preview: z.string().optional(),
+  image: z.string().optional(),
 });
 
 export type Config = z.infer<typeof configSchema>;

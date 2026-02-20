@@ -1196,6 +1196,12 @@ export default function SectionIndex() {
   }
 
   async generatePageFromMDX(mdxFile: MDXFile) {
+    const fm = mdxFile.frontmatter;
+    const titleSuffix = fm.name
+      ? `- ${fm.name}`
+      : '\${config.name ? "- " + config.name : "- Doccupine"}';
+    const ogImage = fm.image;
+
     const pageContent = `import { Metadata } from "next";
 import { Docs } from "@/components/Docs";
 import { config } from "@/utils/config";
@@ -1203,13 +1209,13 @@ import { config } from "@/utils/config";
 const content = \`${escapeTemplateContent(mdxFile.content)}\`;
 
 export const metadata: Metadata = {
-  title: \`${mdxFile.frontmatter.title || "Generated with Doccupine"} \${config.name ? "- " + config.name : "- Doccupine"}\`,
-  description: \`${mdxFile.frontmatter.description ? mdxFile.frontmatter.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
-  icons: \`${mdxFile.frontmatter.icon ? mdxFile.frontmatter.icon : '\${config.icon || "https://docs.doccupine.com/favicon.ico"}'}\`,
+  title: \`${fm.title || "Generated with Doccupine"} ${titleSuffix}\`,
+  description: \`${fm.description ? fm.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
+  icons: \`${fm.icon ? fm.icon : '\${config.icon || "https://docs.doccupine.com/favicon.ico"}'}\`,
   openGraph: {
-    title: \`${mdxFile.frontmatter.title || "Generated with Doccupine"} \${config.name ? "- " + config.name : "- Doccupine"}\`,
-    description: \`${mdxFile.frontmatter.description ? mdxFile.frontmatter.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
-    images: \`${mdxFile.frontmatter.image ? mdxFile.frontmatter.image : '\${config.preview || "https://docs.doccupine.com/preview.png"}'}\`,
+    title: \`${fm.title || "Generated with Doccupine"} ${titleSuffix}\`,
+    description: \`${fm.description ? fm.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
+    images: \`${ogImage ? ogImage : '\${config.image || "https://docs.doccupine.com/preview.png"}'}\`,
   },
 };
 
@@ -1231,6 +1237,7 @@ export default function Page() {
       description: string;
       icon?: string;
       image?: string;
+      name?: string;
     } | null = null;
 
     for (const file of files) {
@@ -1245,6 +1252,7 @@ export default function Page() {
           description: frontmatter.description || "",
           icon: frontmatter.icon,
           image: frontmatter.image,
+          name: frontmatter.name,
         };
         break;
       }
@@ -1258,16 +1266,21 @@ ${indexMDX ? `const content = \`${escapeTemplateContent(indexMDX.content)}\`;` :
 
 ${
   indexMDX
-    ? `export const metadata: Metadata = {
-  title: \`\${config.name ? config.name + " -" : "Doccupine -"} ${indexMDX.title}\`,
+    ? (() => {
+        const namePart = indexMDX.name
+          ? `${indexMDX.name} -`
+          : '\${config.name ? config.name + " -" : "Doccupine -"}';
+        return `export const metadata: Metadata = {
+  title: \`${namePart} ${indexMDX.title}\`,
   description: \`${indexMDX.description ? indexMDX.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
   icons: \`${indexMDX.icon ? indexMDX.icon : '\${config.icon || "https://docs.doccupine.com/favicon.ico"}'}\`,
   openGraph: {
-    title: \`\${config.name ? config.name + " -" : "Doccupine -"} ${indexMDX.title}\`,
+    title: \`${namePart} ${indexMDX.title}\`,
     description: \`${indexMDX.description ? indexMDX.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
-    images: \`${indexMDX.image ? indexMDX.image : '\${config.preview || "https://docs.doccupine.com/preview.png"}'}\`,
+    images: \`${indexMDX.image ? indexMDX.image : '\${config.image || "https://docs.doccupine.com/preview.png"}'}\`,
   },
-};`
+};`;
+      })()
     : `export const metadata: Metadata = {
   title: \`\${config.name || "Doccupine"}\`,
   description: \`\${config.description || "Generated with Doccupine"}\`,
@@ -1275,7 +1288,7 @@ ${
   openGraph: {
     title: \`\${config.name || "Doccupine"}\`,
     description: \`\${config.description || "Generated with Doccupine"}\`,
-    images: \`\${config.preview || "https://docs.doccupine.com/preview.png"}\`,
+    images: \`\${config.image || "https://docs.doccupine.com/preview.png"}\`,
   },
 };`
 }
@@ -1297,6 +1310,11 @@ export default function Home() {
     frontmatter: Record<string, any>,
     mdxContent: string,
   ) {
+    const sectionNamePart = frontmatter.name
+      ? `${frontmatter.name} -`
+      : '\${config.name ? config.name + " -" : "Doccupine -"}';
+    const sectionOgImage = frontmatter.image;
+
     const indexContent = `import { Metadata } from "next";
 import { Docs } from "@/components/Docs";
 import { config } from "@/utils/config";
@@ -1304,13 +1322,13 @@ import { config } from "@/utils/config";
 const content = \`${escapeTemplateContent(mdxContent)}\`;
 
 export const metadata: Metadata = {
-  title: \`\${config.name ? config.name + " -" : "Doccupine -"} ${frontmatter.title || "Section"}\`,
+  title: \`${sectionNamePart} ${frontmatter.title || "Section"}\`,
   description: \`${frontmatter.description ? frontmatter.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
   icons: \`${frontmatter.icon ? frontmatter.icon : '\${config.icon || "https://docs.doccupine.com/favicon.ico"}'}\`,
   openGraph: {
-    title: \`\${config.name ? config.name + " -" : "Doccupine -"} ${frontmatter.title || "Section"}\`,
+    title: \`${sectionNamePart} ${frontmatter.title || "Section"}\`,
     description: \`${frontmatter.description ? frontmatter.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
-    images: \`${frontmatter.image ? frontmatter.image : '\${config.preview || "https://docs.doccupine.com/preview.png"}'}\`,
+    images: \`${sectionOgImage ? sectionOgImage : '\${config.image || "https://docs.doccupine.com/preview.png"}'}\`,
   },
 };
 

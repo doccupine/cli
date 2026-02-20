@@ -147,7 +147,7 @@ export const metadata: Metadata = {
     description:
       config.description ||
       "${DEFAULT_DESCRIPTION}",
-    images: config.preview || "https://docs.doccupine.com/preview.png",
+    images: config.image || "https://docs.doccupine.com/preview.png",
   },
 };
 

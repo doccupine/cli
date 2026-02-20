@@ -19,7 +19,7 @@ Place a \`config.json\` at your project root (the same folder where you execute 
   "name": "Doccupine",
   "description": "${DEFAULT_DESCRIPTION}",
   "icon": "https://docs.doccupine.com/favicon.ico",
-  "preview": "https://docs.doccupine.com/preview.png"
+  "image": "https://docs.doccupine.com/preview.png"
 }
 \`\`\`
 
@@ -27,10 +27,18 @@ Place a \`config.json\` at your project root (the same folder where you execute 
 - **name**: The primary name of your documentation website. Displayed in the site title and used in various UI elements.
 - **description**: A concise summary of your project, used in site metadata (e.g., HTML meta description) and social previews when not overridden.
 - **icon**: The favicon for your site. You can provide a full URL or a relative path to an asset in your project.
-- **preview**: The Open Graph image used when links to your docs are shared. Accepts a full URL or a relative path.
+- **image**: The Open Graph image used when links to your docs are shared on social platforms. Accepts a full URL or a relative path.
 
-## Per‑page overrides
-Any page can override these global values by defining the same keys in its frontmatter. When present, the page's values take precedence over \`config.json\` for that page only.
+## Per-page overrides
+Any page can override global values by defining the matching key in its frontmatter. When present, the page's value takes precedence over \`config.json\` for that page only.
+
+| Frontmatter field | Overrides | Effect |
+|---|---|---|
+| **title** | - | Page title in metadata and Open Graph |
+| **description** | \`description\` | Meta description and Open Graph description |
+| **name** | \`name\` | Site name shown in the title suffix (e.g. "Page - My Docs") |
+| **icon** | \`icon\` | Favicon for this page |
+| **image** | \`image\` | Open Graph preview image |
 
 <Callout type="note">
   If a key is not specified in a page's frontmatter, Doccupine falls back to the corresponding value in \`config.json\`.
@@ -43,8 +51,8 @@ Example frontmatter in an \`.mdx\` file:
 title: "My Feature"
 description: "A focused description just for this page."
 name: "My Product Docs"
-icon: "https://docs.doccupine.com/favicon.ico"
-preview: "https://docs.doccupine.com/preview.png"
+icon: "/custom-favicon.ico"
+image: "/custom-preview.png"
 date: "2026-02-19"
 category: "Guides"
 ---
