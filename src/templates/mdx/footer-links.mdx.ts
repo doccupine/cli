@@ -42,4 +42,4 @@ Place a \`links.json\` at your project root (the same folder where you execute \
 ## Behavior
 - **Empty or missing file**: If \`links.json\` is empty or not present, the footer links are hidden.
 - **Order**: Links appear in the same order as in the array.
-- **No limit**: Add as many links as you want; the row scrolls horizontally on smaller screens if needed.`;
+- **No limit**: Add as many links as you want; they wrap automatically on smaller screens.`;
