@@ -126,7 +126,7 @@ export const styledTable = css<{ theme: Theme }>\`
 
     & th {
       border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
-      padding: 10px 0;
+      padding: 10px 10px 10px 0;
       \${({ theme }) => styledSmall(theme)};
       font-weight: 600;
       color: \${({ theme }) => theme.colors.dark};
