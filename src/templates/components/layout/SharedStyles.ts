@@ -116,6 +116,8 @@ export const styledTable = css<{ theme: Theme }>\`
     border-collapse: collapse;
     width: 100%;
     text-align: left;
+    display: block;
+    overflow-x: auto;
 
     & tr {
       margin: 0;

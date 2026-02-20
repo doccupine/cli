@@ -59,6 +59,9 @@ const StyledStepTitle = styled.h3<{ theme: Theme }>\`
   padding: 2px 0 0 0;
   color: \${({ theme }) => theme.colors.dark};
   \${({ theme }) => styledText(theme)};
+  display: flex;
+  align-items: center;
+  gap: 10px;
 \`;
 
 const StepContent = styled.div<{ theme: Theme }>\`
@@ -100,8 +103,10 @@ function Steps({ children }: StepsProps) {
         return (
           <StyledStep key={index} theme={theme}>
             <StepNumber theme={theme}>{index + 1}</StepNumber>
-            {icon && <Icon name={icon} color={theme.colors.primary} />}
-            <StyledStepTitle theme={theme}>{title}</StyledStepTitle>
+            <StyledStepTitle theme={theme}>
+              {icon && <Icon name={icon} color={theme.colors.primary} />}
+              {title}
+            </StyledStepTitle>
             <StepContent theme={theme}>{stepContent}</StepContent>
           </StyledStep>
         );
