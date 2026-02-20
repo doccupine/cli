@@ -7,7 +7,7 @@ export interface LLMConfig {
   temperature: number;
 }
 
-export interface ProviderModels {
+interface ProviderModels {
   chat: string;
   embedding: string;
 }

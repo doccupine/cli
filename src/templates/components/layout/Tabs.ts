@@ -4,11 +4,11 @@ import { styledText } from "cherry-styled-components";
 import { rgba } from "polished";
 import React, { useState, ReactNode } from "react";
 import styled, { css } from "styled-components";
-export interface TabContentProps {
+interface TabContentProps {
   title: string;
   children: ReactNode;
 }
-export interface TabsProps {
+interface TabsProps {
   children: React.ReactElement<TabContentProps>[];
 }
 const TabsContainer = styled.div\`

@@ -8,7 +8,7 @@ interface CustomTheme {
 
 const customTheme = customThemeJson as CustomTheme;
 
-export const breakpoints: Breakpoints = {
+const breakpoints: Breakpoints = {
   xs: 0,
   sm: 576,
   md: 768,
@@ -22,14 +22,14 @@ export function mq(minWidth: keyof Breakpoints) {
   return \`@media screen and (min-width: \${breakpoints[minWidth]}px)\`;
 }
 
-export const spacing: Spacing = {
+const spacing: Spacing = {
   maxWidth: { xs: "1280px", xxxl: "1440px" },
   padding: { xs: "20px", lg: "40px" },
   radius: { xs: "6px", lg: "12px", xl: "30px" },
   gridGap: { xs: "20px", lg: "40px" },
 };
 
-export const colors: Colors = {
+const colors: Colors = {
   primaryLight: "#d1d5db",
   primary: "#6b7280",
   primaryDark: "#374151",
@@ -51,7 +51,7 @@ export const colors: Colors = {
   ...(customTheme.default ? (customTheme.default as Partial<Colors>) : {}),
 };
 
-export const colorsDark: Colors = {
+const colorsDark: Colors = {
   primaryLight: "#9ca3af",
   primary: "#6b7280",
   primaryDark: "#374151",
@@ -73,7 +73,7 @@ export const colorsDark: Colors = {
   ...(customTheme.dark ? (customTheme.dark as Partial<Colors>) : {}),
 };
 
-export const shadows: Shadows = {
+const shadows: Shadows = {
   xs: "0px 4px 4px 0px rgba(18, 18, 18, 0.04), 0px 1px 3px 0px rgba(39, 41, 45, 0.02)",
   sm: "0px 4px 4px 0px rgba(18, 18, 18, 0.08), 0px 1px 3px 0px rgba(39, 41, 45, 0.04)",
   md: "0px 8px 8px 0px rgba(18, 18, 18, 0.16), 0px 2px 3px 0px rgba(39, 41, 45, 0.06)",
@@ -81,7 +81,7 @@ export const shadows: Shadows = {
   xl: "0px 24px 32px 0px rgba(18, 18, 18, 0.24), 0px 2px 3px 0px rgba(39, 41, 45, 0.12)",
 };
 
-export const shadowsDark: Shadows = {
+const shadowsDark: Shadows = {
   xs: "0px 4px 4px 0px rgba(255, 255, 255, 0.04), 0px 1px 3px 0px rgba(255, 255, 255, 0.02)",
   sm: "0px 4px 4px 0px rgba(255, 255, 255, 0.08), 0px 1px 3px 0px rgba(255, 255, 255, 0.04)",
   md: "0px 8px 8px 0px rgba(255, 255, 255, 0.16), 0px 2px 3px 0px rgba(255, 255, 255, 0.06)",
@@ -89,13 +89,13 @@ export const shadowsDark: Shadows = {
   xl: "0px 24px 32px 0px rgba(255, 255, 255, 0.24), 0px 2px 3px 0px rgba(255, 255, 255, 0.12)",
 };
 
-export const fonts: Fonts = {
+const fonts: Fonts = {
   text: "Inter",
   head: "Inter",
   mono: "Roboto Mono, monospace",
 };
 
-export const fontSizes: FontSizes = {
+const fontSizes: FontSizes = {
   hero1: { xs: "72px", lg: "128px" },
   hero2: { xs: "60px", lg: "96px" },
   hero3: { xs: "36px", lg: "72px" },
@@ -123,7 +123,7 @@ export const fontSizes: FontSizes = {
   inputSmall: { xs: "14px", lg: "14px" },
 };
 
-export const lineHeights: LineHeights = {
+const lineHeights: LineHeights = {
   hero1: { xs: "1.1", lg: "1.1" },
   hero2: { xs: "1.1", lg: "1.1" },
   hero3: { xs: "1.17", lg: "1.1" },
@@ -173,7 +173,7 @@ export const themeDark: Theme = {
   isDark: true,
 };
 
-export interface Breakpoints<TNumber = number> {
+interface Breakpoints<TNumber = number> {
   xs: TNumber;
   sm: TNumber;
   md: TNumber;
@@ -183,14 +183,14 @@ export interface Breakpoints<TNumber = number> {
   xxxl: TNumber;
 }
 
-export interface Spacing<TString = string> {
+interface Spacing<TString = string> {
   maxWidth: { xs: TString; xxxl: TString };
   padding: { xs: TString; lg: TString };
   radius: { xs: TString; lg: TString; xl: TString };
   gridGap: { xs: TString; lg: TString };
 }
 
-export interface Colors<TString = string> {
+interface Colors<TString = string> {
   primaryLight: TString;
   primary: TString;
   primaryDark: TString;
@@ -224,13 +224,13 @@ interface Shadows<TString = string> {
   xl: TString;
 }
 
-export interface Fonts<TString = string> {
+interface Fonts<TString = string> {
   head: TString;
   text: TString;
   mono: TString;
 }
 
-export interface FontSizes<TString = string> {
+interface FontSizes<TString = string> {
   hero1: { xs: TString; lg: TString };
   hero2: { xs: TString; lg: TString };
   hero3: { xs: TString; lg: TString };
@@ -258,7 +258,7 @@ export interface FontSizes<TString = string> {
   inputSmall: { xs: TString; lg: TString };
 }
 
-export interface LineHeights<TString = string> {
+interface LineHeights<TString = string> {
   hero1: { xs: TString; lg: TString };
   hero2: { xs: TString; lg: TString };
   hero3: { xs: TString; lg: TString };

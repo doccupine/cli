@@ -46,7 +46,7 @@ const StyledUpdateChildren = styled.div\`
   gap: 20px;
 \`;
 
-export interface UpdateProps extends React.HTMLAttributes<HTMLDivElement> {
+interface UpdateProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   label: string;
   description: string;

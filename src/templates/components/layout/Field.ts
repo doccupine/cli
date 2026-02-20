@@ -38,7 +38,7 @@ const StyledFieldRequired = styled.span<{ theme: Theme }>\`
   border-radius: \${({ theme }) => theme.spacing.radius.xs};
 \`;
 
-export interface FieldProps extends React.HTMLAttributes<HTMLDivElement> {
+interface FieldProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   value: string;
   type: string;

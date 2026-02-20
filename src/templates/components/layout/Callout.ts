@@ -84,7 +84,7 @@ const StyledCallout = styled.div<{ theme: Theme; $type?: CalloutType }>\`
     \`}
 \`;
 
-export interface CalloutProps extends React.HTMLAttributes<HTMLDivElement> {
+interface CalloutProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   icon?: IconProps;
   type?: CalloutType;

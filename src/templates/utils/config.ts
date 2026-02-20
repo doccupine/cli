@@ -8,7 +8,7 @@ const configSchema = z.object({
   image: z.string().optional(),
 });
 
-export type Config = z.infer<typeof configSchema>;
+type Config = z.infer<typeof configSchema>;
 
 export const config: Config = configSchema.parse(configData);
 `;

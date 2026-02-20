@@ -47,7 +47,7 @@ function cosineSim(a: number[], b: number[]): number {
 /**
  * Build or rebuild the documentation index
  */
-export async function buildDocsIndex(force = false): Promise<void> {
+async function buildDocsIndex(force = false): Promise<void> {
   if (docsIndex.building) return;
   if (docsIndex.ready && !force) return;
 

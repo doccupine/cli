@@ -62,7 +62,7 @@ const StyledAccordionContent = styled.div<{ theme: Theme; $isOpen: boolean }>\`
     \`}
 \`;
 
-export interface AccordionProps extends React.HTMLAttributes<HTMLDivElement> {
+interface AccordionProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   title: string;
 }

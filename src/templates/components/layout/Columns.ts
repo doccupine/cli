@@ -13,7 +13,7 @@ const StyledColumns = styled.div<{ theme: Theme; $columns?: number }>\`
   }
 \`;
 
-export interface ColumnsProps extends React.HTMLAttributes<HTMLDivElement> {
+interface ColumnsProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   cols?: number;
 }

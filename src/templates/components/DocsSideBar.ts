@@ -7,7 +7,7 @@ import {
   StyledIndexSidebarLabel,
 } from "@/components/layout/DocsComponents";
 
-export interface Heading {
+interface Heading {
   id: string;
   text: string;
   level: number;

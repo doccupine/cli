@@ -19,7 +19,7 @@ const StyledCardTitle = styled.h3<{ theme: Theme }>\`
   \${({ theme }) => styledText(theme)};
 \`;
 
-export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   title: string;
   icon?: IconProps;
