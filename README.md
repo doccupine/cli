@@ -59,6 +59,7 @@ description: "Page description for SEO"
 category: "Getting Started"
 categoryOrder: 0 # Sort order for the category group
 order: 1 # Sort order within the category
+name: "My Docs" # Override site name in title suffix
 icon: "https://..." # Page favicon URL
 image: "https://..." # OpenGraph image URL
 date: "2025-01-01" # Page date metadata
@@ -128,7 +129,7 @@ Place these JSON files in your project root (where you run `doccupine`). They ar
 | File              | Purpose                                                                                                   |
 | ----------------- | --------------------------------------------------------------------------------------------------------- |
 | `doccupine.json`  | CLI config (watchDir, outputDir, port). Auto-generated on first run.                                      |
-| `config.json`     | Site metadata: `name`, `description`, `icon`, `preview` image URL                                         |
+| `config.json`     | Site metadata: `name`, `description`, `icon`, `image` URL                                                 |
 | `theme.json`      | Theme overrides for [cherry-styled-components](https://github.com/cherry-design-system/styled-components) |
 | `navigation.json` | Manual navigation structure (overrides auto-generated)                                                    |
 | `links.json`      | Static header/footer links                                                                                |
