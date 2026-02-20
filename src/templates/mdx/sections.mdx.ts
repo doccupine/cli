@@ -50,7 +50,7 @@ Where \`platform/index.mdx\` has:
 title: "Platform Overview"
 section: "Platform"
 sectionOrder: 1
-category: "Overview"
+category: "Getting Started"
 ---
 \`\`\`
 
