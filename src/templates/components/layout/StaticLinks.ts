@@ -1,6 +1,8 @@
 export const staticLinksTemplate = `"use client";
 import styled, { css } from "styled-components";
 import { rgba } from "polished";
+import { useContext } from "react";
+import { ChatContext } from "@/components/Chat";
 import { mq, Theme } from "@/app/theme";
 import { interactiveStyles } from "@/components/layout/SharedStyled";
 import { Icon } from "@/components/layout/Icon";
@@ -14,28 +16,30 @@ interface LinkProps {
 
 const links = linksData as LinkProps[];
 
-const StyledStaticLinks = styled.div<{ theme: Theme }>\`
-  padding: 20px;
+const StyledStaticLinks = styled.div<{ theme: Theme; $isChatOpen: boolean }>\`
   display: flex;
-  max-width: 640px;
   margin: 0 auto;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
+  transition: all 0.3s ease;
+  padding: 0 20px 20px 20px;
 
   \${mq("lg")} {
-    padding: 20px 0;
+    padding: 0 340px 20px 340px;
+    \${({ $isChatOpen }) =>
+      $isChatOpen &&
+      css\`
+        padding: 0 440px 20px 340px;
+      \`}
   }
 \`;
 
 const StyledStaticLinksContent = styled.div\`
+  max-width: 640px;
   margin: auto 0;
   display: flex;
   gap: 16px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
+  width: 100%;
+  margin: 0 auto;
 \`;
 
 const StyledLink = styled.a<{ theme: Theme; $hasIcon?: boolean }>\`
@@ -80,22 +84,16 @@ const StyledLink = styled.a<{ theme: Theme; $hasIcon?: boolean }>\`
   }
 \`;
 
-const StyledEmpty = styled.div\`
-  width: 1px;
-  max-width: 1px;
-  min-width: 1px;
-  overflow: hidden;
-  text-indent: -9999px;
-\`;
-
 function StaticLinks() {
   if (links.length === 0) {
     return null;
   }
 
+  const { isOpen } = useContext(ChatContext);
+
   return (
     <>
-      <StyledStaticLinks id="static-links">
+      <StyledStaticLinks $isChatOpen={isOpen}>
         <StyledStaticLinksContent>
           {links.map((link, index) => (
             <StyledLink
@@ -109,7 +107,6 @@ function StaticLinks() {
               <span>{link.title}</span>
             </StyledLink>
           ))}
-          <StyledEmpty />
         </StyledStaticLinksContent>
       </StyledStaticLinks>
     </>
