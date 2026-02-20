@@ -50,6 +50,10 @@ You can use the \`Steps\` component to create a step-by-step guide. Each step is
   The title of the step.
 </Field>
 
+<Field value="icon" type="string">
+  A [Lucide](https://lucide.dev/icons) icon name shown next to the step title.
+</Field>
+
 <Field value="children" type="node" required>
   The content of the step.
 </Field>

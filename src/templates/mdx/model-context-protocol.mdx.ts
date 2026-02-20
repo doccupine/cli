@@ -183,7 +183,7 @@ Doccupine's MCP server uses semantic search powered by vector embeddings to prov
 
 1. **Document Discovery**: The server scans your \`app/\` directory for all \`page.tsx\`, \`page.ts\`, \`page.jsx\`, and \`page.js\` files.
 2. **Content Extraction**: It extracts content from \`const content =\` declarations in your page files.
-3. **Chunking**: Large documents are split into chunks of approximately 1500 characters with 200 character overlap for better context preservation.
+3. **Chunking**: Large documents are split into chunks of approximately 800 characters with 100 character overlap for better context preservation.
 4. **Embedding Generation**: Each chunk is converted to a vector embedding using your configured LLM provider's embedding model.
 5. **Index Building**: All embeddings are stored in memory for fast similarity search.
 
@@ -195,7 +195,7 @@ Doccupine's MCP server uses semantic search powered by vector embeddings to prov
 4. **Response**: The top N results (based on the limit parameter) are returned with their paths, URIs, scores, and text content.
 
 <Callout type="note">
-  The index is built automatically when the first search is performed. The index is stored in memory and persists for the lifetime of the server process. If you update your documentation, restart the server to rebuild the index.
+  The index is built automatically when the server starts. It is stored in memory and persists for the lifetime of the server process. If you update your documentation, restart the server to rebuild the index.
 </Callout>
 
 ## Use your MCP server

@@ -28,6 +28,8 @@ Place a \`config.json\` at your project root (the same folder where you execute 
 \`\`\`
 
 ## Fields
+All fields are optional. Doccupine uses sensible defaults when a field is not set.
+
 - **name**: The primary name of your documentation website. Displayed in the site title and used in various UI elements.
 - **description**: A concise summary of your project, used in site metadata (e.g., HTML meta description) and social previews when not overridden.
 - **icon**: The favicon for your site. You can provide a full URL or a relative path to an asset in your project.
@@ -43,6 +45,9 @@ Any page can override global values by defining the matching key in its frontmat
 | **name** | \`name\` | Site name shown in the title suffix (e.g. "Page - My Docs") |
 | **icon** | \`icon\` | Favicon for this page |
 | **image** | \`image\` | Open Graph preview image |
+| **section** | - | Assigns the page to a [section](/sections) |
+| **sectionOrder** | - | Controls section position in the tab bar |
+| **sectionLabel** | - | Renames the default "Docs" tab (use on \`index.mdx\`) |
 
 <Callout type="note">
   If a key is not specified in a page's frontmatter, Doccupine falls back to the corresponding value in \`config.json\`.

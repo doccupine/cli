@@ -50,7 +50,7 @@ You can use the Tabs component directly within your MDX files without any import
     }
     \`\`\`
   </TabContent>
-  <TabContent title="Second tab" icon="leaf">
+  <TabContent title="Second tab">
     ✌️ Content inside this second tab is separate from the first.
   </TabContent>
   <TabContent title="Third tab">

@@ -142,7 +142,7 @@ Place static assets (images, favicons, `robots.txt`, etc.) in a `public/` direct
 
 ## AI Chat Setup
 
-The generated app includes an AI chat assistant. To enable it, create a `.env.local` file in the generated app directory:
+The generated app includes an AI chat assistant. To enable it, create a `.env` file in the generated app directory:
 
 ```env
 LLM_PROVIDER=openai # openai | anthropic | google
@@ -171,7 +171,7 @@ Default models per provider:
 | --------- | ---------------------------- | ------------------------ |
 | OpenAI    | `gpt-4.1-nano`               | `text-embedding-3-small` |
 | Anthropic | `claude-sonnet-4-5-20250929` | OpenAI fallback          |
-| Google    | `gemini-2.5-flash-lite`      | `text-embedding-004`     |
+| Google    | `gemini-2.5-flash-lite`      | `gemini-embedding-001`   |
 
 ## MCP Server
 

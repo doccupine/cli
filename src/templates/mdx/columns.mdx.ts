@@ -38,8 +38,8 @@ You can use the \`Columns\` component to create a grid of cards with a specified
 
 ## Properties
 
-<Field value="cols" type="number" required>
-  The number of columns in the grid.
+<Field value="cols" type="number">
+  The number of columns in the grid. Defaults to 1.
 </Field>
 
 <Field value="children" type="node" required>

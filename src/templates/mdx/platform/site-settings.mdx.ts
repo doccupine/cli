@@ -1,6 +1,6 @@
 export const platformSiteSettingsMdxTemplate = `---
 title: "Site Settings"
-description: "Configure your documentation site's name, description, favicon, and preview image."
+description: "Configure your documentation site's name, description, icon, and image."
 date: "2026-02-19"
 category: "Configuration"
 categoryOrder: 2
@@ -29,13 +29,13 @@ Upload an image used for social media and OpenGraph previews. This is the image 
 </Callout>
 
 ## How it works
-Behind the scenes, the Site settings page reads and writes \`config.json\` in your repository. You can also edit this file directly in the file editor if you prefer.
+Behind the scenes, the Site settings page reads and writes \`config.json\` in your repository. You can also edit this file directly in the file editor if you prefer. See the [Globals](/globals) page for the full configuration reference.
 
 \`\`\`json
 {
   "name": "My Documentation",
   "description": "Documentation for my project",
-  "favicon": "/favicon.png",
-  "previewImage": "/preview.png"
+  "icon": "/favicon.png",
+  "image": "/preview.png"
 }
 \`\`\``;

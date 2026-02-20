@@ -21,6 +21,14 @@ After selecting the directory, Doccupine will ask you to enter the name of the d
 
 This will start the development server on port 3000. Open your browser and navigate to http://localhost:3000 to view your documentation.
 
+## Options
+
+| Flag | Description |
+|---|---|
+| \`--port <port>\` | Port for the dev server (default: \`3000\`). Auto-increments if taken. |
+| \`--verbose\` | Show all Next.js output including compilation details. |
+| \`--reset\` | Re-prompt for watch/output directories. |
+
 ## Verbose mode
 
 \`\`\`bash
@@ -28,7 +36,7 @@ npx doccupine --verbose
 \`\`\`
 
 <Callout type="note">
-  This will show Next.js errors in the terminal console logs, providing more detailed output useful for debugging during development.
+  This will show Next.js output in the terminal, providing detailed logs useful for debugging during development.
 </Callout>
 
 ## Generate the website
@@ -37,7 +45,7 @@ npx doccupine --verbose
 npx doccupine build
 \`\`\`
 
-This will generate the build files for your documentation website without starting the development server. You can then deploy the generated files to a hosting service of your choice.
+This scaffolds the Next.js app from your MDX files without starting the development server. To produce a production build, run \`npm install && npm run build\` in the generated output directory.
 
 ## Show current configuration
 

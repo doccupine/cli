@@ -36,9 +36,12 @@ Font settings are stored in \`fonts.json\` at the root of your repository. Here'
 
 \`\`\`json
 {
-  "type": "google",
-  "name": "Inter",
-  "weights": [400, 500, 600, 700],
-  "subsets": ["latin"]
+  "googleFont": {
+    "fontName": "Inter",
+    "subsets": ["latin"],
+    "weight": ["400", "500", "600", "700"]
+  }
 }
-\`\`\``;
+\`\`\`
+
+See the [Fonts](/fonts) page for the full configuration format, including local font support.`;

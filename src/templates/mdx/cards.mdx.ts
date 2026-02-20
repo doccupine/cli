@@ -30,11 +30,9 @@ You can use the Cards component directly within your MDX files without any impor
   The title of the card.
 </Field>
 
-<Field value="icon" type="string" required>
-  The icon to display in the card.
+<Field value="icon" type="string">
+  The [Lucide](https://lucide.dev/icons) icon name to display in the card.
 </Field>
-
-- [**Lucide icon**](https://lucide.dev/icons) name
 
 <Field value="children" type="node" required>
   The content of the card.

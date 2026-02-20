@@ -59,7 +59,11 @@ You can use the Callouts component directly within your MDX files without any im
 ## Properties
 
 <Field value="type" type="string" required>
-  The type of the callout.
+  The type of the callout: \`note\`, \`info\`, \`warning\`, \`danger\`, or \`success\`.
+</Field>
+
+<Field value="icon" type="string">
+  A custom [Lucide](https://lucide.dev/icons) icon name. Overrides the default icon for the callout type.
 </Field>
 
 <Field value="children" type="node" required>

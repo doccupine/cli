@@ -76,6 +76,14 @@ OPENAI_API_KEY=your_openai_api_key_here
 
 This hybrid approach allows you to leverage Anthropic's powerful chat models while still having access to embeddings functionality through OpenAI.
 
+## Default models
+
+| Provider | Chat model | Embedding model |
+|---|---|---|
+| OpenAI | \`gpt-4.1-nano\` | \`text-embedding-3-small\` |
+| Anthropic | \`claude-sonnet-4-5-20250929\` | OpenAI fallback |
+| Google | \`gemini-2.5-flash-lite\` | \`gemini-embedding-001\` |
+
 ## Optional Settings
 
 ### Chat Model

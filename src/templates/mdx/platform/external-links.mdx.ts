@@ -37,6 +37,8 @@ You can assign one of these icons to each link:
 
 Leave the icon unset for a text-only link.
 
+If you edit \`links.json\` directly, use [Lucide](https://lucide.dev/) icon names (e.g. \`github\`, \`message-circle\`, \`heart\`).
+
 ## How it works
 Link settings are stored in \`links.json\` at the root of your repository:
 
