@@ -4,12 +4,7 @@ import {
   DEFAULT_OG_IMAGE,
   DEFAULT_SITE_NAME,
 } from "./constants.js";
-
-interface SectionConfig {
-  label: string;
-  slug: string;
-  directory?: string;
-}
+import type { SectionConfig } from "./types.js";
 
 function formatObjectArray<T extends object>(items: T[]): string {
   const MAX_WIDTH = 80;

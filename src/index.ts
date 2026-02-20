@@ -8,61 +8,32 @@ import { fileURLToPath } from "url";
 
 import matter from "gray-matter";
 import chalk from "chalk";
-import prompts from "prompts";
 
 import { appStructure, startingDocsStructure } from "./lib/structures.js";
 import { layoutTemplate } from "./lib/layout.js";
-
+import { ConfigManager } from "./lib/config-manager.js";
+import {
+  findAvailablePort,
+  generateSlug,
+  getFullSlug,
+  escapeTemplateContent,
+} from "./lib/utils.js";
 import {
   generateMetadataBlock,
   generateRuntimeOnlyMetadataBlock,
 } from "./lib/metadata.js";
+import type {
+  MDXFile,
+  PageMeta,
+  SectionConfig,
+  FontConfig,
+} from "./lib/types.js";
 
-async function findAvailablePort(startPort: number): Promise<number> {
-  const net = await import("net");
-
-  return new Promise((resolve) => {
-    const server = net.createServer();
-    server.listen(startPort, () => {
-      server.close(() => resolve(startPort));
-    });
-    server.on("error", () => {
-      resolve(findAvailablePort(startPort + 1));
-    });
-  });
-}
-
-export function generateSlug(filePath: string): string {
-  if (filePath === "index.mdx" || filePath === "./index.mdx") {
-    return "";
-  }
-
-  const normalized = filePath
-    .replace(/\.mdx$/, "")
-    .replace(/\\/g, "/")
-    .replace(/[^a-zA-Z0-9\/\-_]/g, "-")
-    .toLowerCase();
-
-  // Strip trailing /index for subdirectory index files
-  if (normalized.endsWith("/index")) {
-    return normalized.slice(0, -"/index".length);
-  }
-
-  return normalized;
-}
-
-export function getFullSlug(pageSlug: string, sectionSlug: string): string {
-  if (!sectionSlug) return pageSlug;
-  if (pageSlug === "") return sectionSlug;
-  return `${sectionSlug}/${pageSlug}`;
-}
-
-export function escapeTemplateContent(content: string): string {
-  return content
-    .replace(/\\/g, "\\\\")
-    .replace(/`/g, "\\`")
-    .replace(/\$\{/g, "\\${");
-}
+export {
+  generateSlug,
+  getFullSlug,
+  escapeTemplateContent,
+} from "./lib/utils.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -70,137 +41,6 @@ const packageJson = JSON.parse(
   fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf8"),
 );
 const version = packageJson.version;
-
-interface MDXFile {
-  path: string;
-  content: string;
-  frontmatter: Record<string, any>;
-  slug: string;
-}
-
-interface PageMeta {
-  slug: string;
-  title: string;
-  description: string;
-  date: string | null;
-  category: string;
-  path: string;
-  categoryOrder: number;
-  order: number;
-  section: string;
-}
-
-interface SectionConfig {
-  label: string;
-  slug: string;
-  directory?: string;
-}
-
-interface DoccupineConfig {
-  watchDir: string;
-  outputDir: string;
-  port: string;
-}
-
-interface FontConfig {
-  [key: string]: any;
-}
-
-class ConfigManager {
-  private configPath: string;
-
-  constructor(configPath = "doccupine.json") {
-    this.configPath = path.resolve(process.cwd(), configPath);
-  }
-
-  async loadConfig(): Promise<DoccupineConfig | null> {
-    try {
-      if (await fs.pathExists(this.configPath)) {
-        const configContent = await fs.readFile(this.configPath, "utf8");
-        const config = JSON.parse(configContent) as DoccupineConfig;
-        console.log(
-          chalk.blue("📄 Using existing configuration from doccupine.json"),
-        );
-        return config;
-      }
-    } catch (error) {
-      console.warn(
-        chalk.yellow("⚠️ Error reading config file, will create new one"),
-      );
-    }
-    return null;
-  }
-
-  async saveConfig(config: DoccupineConfig): Promise<void> {
-    try {
-      await fs.writeFile(
-        this.configPath,
-        JSON.stringify(config, null, 2),
-        "utf8",
-      );
-      console.log(chalk.green("💾 Configuration saved to doccupine.json"));
-    } catch (error) {
-      console.error(chalk.red("❌ Error saving config file:"), error);
-    }
-  }
-
-  async promptForConfig(
-    existingConfig?: Partial<DoccupineConfig>,
-  ): Promise<DoccupineConfig> {
-    type PromptResult = { watchDir: string; outputDir: string };
-
-    const questions: prompts.PromptObject[] = [
-      {
-        type: "text",
-        name: "watchDir",
-        message: "Enter directory to watch for MDX files:",
-        initial: existingConfig?.watchDir || "docs",
-      },
-      {
-        type: "text",
-        name: "outputDir",
-        message: "Enter output directory for Next.js app:",
-        initial: existingConfig?.outputDir || "nextjs-app",
-      },
-    ];
-
-    const { watchDir, outputDir } = (await prompts(questions)) as PromptResult;
-
-    if (!watchDir || !outputDir) {
-      console.log(chalk.yellow("\n⚠️ Setup cancelled."));
-      process.exit(0);
-    }
-
-    return {
-      watchDir: path.resolve(process.cwd(), watchDir),
-      outputDir: path.resolve(process.cwd(), outputDir),
-      port: existingConfig?.port || "3000",
-    };
-  }
-
-  async getConfig(
-    options: { reset?: boolean; port?: string } = {},
-  ): Promise<DoccupineConfig> {
-    let config: DoccupineConfig | null = null;
-
-    if (!options.reset) {
-      config = await this.loadConfig();
-    }
-
-    if (!config || options.reset) {
-      console.log(chalk.blue("🔧 Setting up Doccupine configuration..."));
-      config = await this.promptForConfig(config || {});
-      await this.saveConfig(config);
-    }
-
-    if (options.port) {
-      config.port = options.port;
-      await this.saveConfig(config);
-    }
-
-    return config;
-  }
-}
 
 class MDXToNextJSGenerator {
   private watchDir: string;
