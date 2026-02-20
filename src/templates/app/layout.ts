@@ -1,3 +1,5 @@
+import { DEFAULT_DESCRIPTION } from "../constants.js";
+
 interface SectionConfig {
   label: string;
   slug: string;
@@ -138,14 +140,14 @@ export const metadata: Metadata = {
   title: config.name || "Doccupine",
   description:
     config.description ||
-    "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease. AI-ready.",
-  icons: config.icon || "https://doccupine.com/favicon.ico",
+    "${DEFAULT_DESCRIPTION}",
+  icons: config.icon || "https://docs.doccupine.com/favicon.ico",
   openGraph: {
     title: config.name || "Doccupine",
     description:
       config.description ||
-      "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease. AI-ready.",
-    images: config.preview || "https://doccupine.com/preview.png",
+      "${DEFAULT_DESCRIPTION}",
+    images: config.preview || "https://docs.doccupine.com/preview.png",
   },
 };
 
@@ -194,7 +196,7 @@ ${
       slug: "",
       title: "Getting Started",
       description:
-        "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease. AI-ready.",
+        "${DEFAULT_DESCRIPTION}",
       date: "2025-01-15",
       category: "Introduction",
       categoryOrder: 0,

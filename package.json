@@ -1,7 +1,7 @@
 {
   "name": "doccupine",
   "version": "0.0.62",
-  "description": "Document management system that allows you to store, organize, and share your documentation with ease. AI-ready.",
+  "description": "Free and open-source documentation platform. Write MDX, get a production-ready site with AI chat, built-in components, and an MCP server - in one command.",
   "main": "dist/index.js",
   "bin": {
     "doccupine": "dist/index.js"

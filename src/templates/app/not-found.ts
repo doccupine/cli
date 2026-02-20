@@ -1,3 +1,5 @@
+import { DEFAULT_DESCRIPTION } from "../constants.js";
+
 export const notFoundTemplate = `import { Metadata } from "next";
 import { Docs } from "@/components/Docs";
 
@@ -8,11 +10,11 @@ You just hit a route that doesn't exist.\`;
 export const metadata: Metadata = {
   title: "Not Found",
   description:
-    "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease. AI-ready.",
+    "${DEFAULT_DESCRIPTION}",
   openGraph: {
     title: "Not Found",
     description:
-      "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease. AI-ready.",
+      "${DEFAULT_DESCRIPTION}",
   },
 };
 

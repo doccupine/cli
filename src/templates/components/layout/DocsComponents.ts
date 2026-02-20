@@ -66,6 +66,19 @@ const StyledDocsContainer = styled.div<{ theme: Theme; $isChatOpen?: boolean }>\
     max-width: 100%;
   }
 
+  & a:not([class]) {
+    color: inherit;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    box-shadow: 0 2px 0 0 \${({ theme }) => theme.colors.primary};
+
+    &:hover {
+      color: \${({ theme }) =>
+        theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
+      box-shadow: 0 1px 0 0 \${({ theme }) => theme.colors.primary};
+    }
+  }
+
   \${stylesLists};
   \${styledTable};
 
@@ -204,7 +217,7 @@ export const StyledIndexSidebarLink = styled.a<{
   transition: all 0.3s ease;
 
   &:hover {
-    color: \${({ theme }) => theme.colors.primaryDark};
+    color: \${({ theme }) => theme.colors.primary};
   }
 \`;
 

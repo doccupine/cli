@@ -1,3 +1,5 @@
+import { DEFAULT_DESCRIPTION } from "../constants.js";
+
 export const globalsMdxTemplate = `---
 title: "Globals"
 description: "Configure global settings for your documentation."
@@ -15,9 +17,9 @@ Place a \`config.json\` at your project root (the same folder where you execute 
 \`\`\`json
 {
   "name": "Doccupine",
-  "description": "Doccupine is a free and open-source document management system that allows you to store, organize, and share your documentation with ease. AI-ready.",
-  "icon": "https://doccupine.com/favicon.ico",
-  "preview": "https://doccupine.com/preview.png"
+  "description": "${DEFAULT_DESCRIPTION}",
+  "icon": "https://docs.doccupine.com/favicon.ico",
+  "preview": "https://docs.doccupine.com/preview.png"
 }
 \`\`\`
 
@@ -41,9 +43,9 @@ Example frontmatter in an \`.mdx\` file:
 title: "My Feature"
 description: "A focused description just for this page."
 name: "My Product Docs"
-icon: "https://doccupine.com/favicon.ico"
-preview: "https://doccupine.com/preview.png"
-date: "2025-01-15"
+icon: "https://docs.doccupine.com/favicon.ico"
+preview: "https://docs.doccupine.com/preview.png"
+date: "2026-02-19"
 category: "Guides"
 ---
 \`\`\`

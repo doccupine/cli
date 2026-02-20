@@ -1205,11 +1205,11 @@ const content = \`${escapeTemplateContent(mdxFile.content)}\`;
 export const metadata: Metadata = {
   title: \`${mdxFile.frontmatter.title || "Generated with Doccupine"} \${config.name ? "- " + config.name : "- Doccupine"}\`,
   description: \`${mdxFile.frontmatter.description ? mdxFile.frontmatter.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
-  icons: \`${mdxFile.frontmatter.icon ? mdxFile.frontmatter.icon : '\${config.icon || "https://doccupine.com/favicon.ico"}'}\`,
+  icons: \`${mdxFile.frontmatter.icon ? mdxFile.frontmatter.icon : '\${config.icon || "https://docs.doccupine.com/favicon.ico"}'}\`,
   openGraph: {
     title: \`${mdxFile.frontmatter.title || "Generated with Doccupine"} \${config.name ? "- " + config.name : "- Doccupine"}\`,
     description: \`${mdxFile.frontmatter.description ? mdxFile.frontmatter.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
-    images: \`${mdxFile.frontmatter.image ? mdxFile.frontmatter.image : '\${config.preview || "https://doccupine.com/preview.png"}'}\`,
+    images: \`${mdxFile.frontmatter.image ? mdxFile.frontmatter.image : '\${config.preview || "https://docs.doccupine.com/preview.png"}'}\`,
   },
 };
 
@@ -1261,21 +1261,21 @@ ${
     ? `export const metadata: Metadata = {
   title: \`\${config.name ? config.name + " -" : "Doccupine -"} ${indexMDX.title}\`,
   description: \`${indexMDX.description ? indexMDX.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
-  icons: \`${indexMDX.icon ? indexMDX.icon : '\${config.icon || "https://doccupine.com/favicon.ico"}'}\`,
+  icons: \`${indexMDX.icon ? indexMDX.icon : '\${config.icon || "https://docs.doccupine.com/favicon.ico"}'}\`,
   openGraph: {
     title: \`\${config.name ? config.name + " -" : "Doccupine -"} ${indexMDX.title}\`,
     description: \`${indexMDX.description ? indexMDX.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
-    images: \`${indexMDX.image ? indexMDX.image : '\${config.preview || "https://doccupine.com/preview.png"}'}\`,
+    images: \`${indexMDX.image ? indexMDX.image : '\${config.preview || "https://docs.doccupine.com/preview.png"}'}\`,
   },
 };`
     : `export const metadata: Metadata = {
   title: \`\${config.name || "Doccupine"}\`,
   description: \`\${config.description || "Generated with Doccupine"}\`,
-  icons: \`\${config.icon || "https://doccupine.com/favicon.ico"}\`,
+  icons: \`\${config.icon || "https://docs.doccupine.com/favicon.ico"}\`,
   openGraph: {
     title: \`\${config.name || "Doccupine"}\`,
     description: \`\${config.description || "Generated with Doccupine"}\`,
-    images: \`\${config.preview || "https://doccupine.com/preview.png"}\`,
+    images: \`\${config.preview || "https://docs.doccupine.com/preview.png"}\`,
   },
 };`
 }
@@ -1306,11 +1306,11 @@ const content = \`${escapeTemplateContent(mdxContent)}\`;
 export const metadata: Metadata = {
   title: \`\${config.name ? config.name + " -" : "Doccupine -"} ${frontmatter.title || "Section"}\`,
   description: \`${frontmatter.description ? frontmatter.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
-  icons: \`${frontmatter.icon ? frontmatter.icon : '\${config.icon || "https://doccupine.com/favicon.ico"}'}\`,
+  icons: \`${frontmatter.icon ? frontmatter.icon : '\${config.icon || "https://docs.doccupine.com/favicon.ico"}'}\`,
   openGraph: {
     title: \`\${config.name ? config.name + " -" : "Doccupine -"} ${frontmatter.title || "Section"}\`,
     description: \`${frontmatter.description ? frontmatter.description : '${config.description ? config.description : "Generated with Doccupine"}'}\`,
-    images: \`${frontmatter.image ? frontmatter.image : '\${config.preview || "https://doccupine.com/preview.png"}'}\`,
+    images: \`${frontmatter.image ? frontmatter.image : '\${config.preview || "https://docs.doccupine.com/preview.png"}'}\`,
   },
 };
 
