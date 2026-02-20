@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.63
+
+- Add per-page `name` and `image` metadata overrides for Open Graph
+- Pass Next.js stdout through in verbose mode
+- Refactor CLI into modular `src/lib/` structure (types, utils, config, constants, metadata, structures, layout)
+- Improve footer links responsiveness and chat-aware spacing
+- Update dependencies
+
 ## 0.0.62
 
 - Add multi-turn conversation history support for AI chat
