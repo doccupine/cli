@@ -47,7 +47,7 @@ Where \`platform/index.mdx\` has:
 
 \`\`\`text
 ---
-title: "Platform"
+title: "Platform Overview"
 section: "Platform"
 sectionOrder: 1
 category: "Overview"
