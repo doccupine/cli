@@ -18,7 +18,7 @@
 
 ## Quick Start
 
-Make sure you have [Node.js](https://nodejs.org) (v18+) installed.
+Make sure you have [Node.js](https://nodejs.org) (v22+) installed.
 
 ```bash
 npx doccupine

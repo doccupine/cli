@@ -19,11 +19,10 @@ The Doccupine platform gives you everything you need to create, customize, and h
 - **Team collaboration** with role-based access control
 
 ## How it works
-Doccupine connects three services behind the scenes:
+Doccupine connects two core pieces behind the scenes:
 
 1. **GitHub** stores your documentation source files in a Git repository
-2. **Vercel** builds and hosts your site globally
-3. **Doccupine** ties it all together with a dashboard for editing, configuring, and managing your project
+2. **Doccupine** builds, hosts, and serves your site globally - plus provides a dashboard for editing, configuring, and managing your project
 
 You write MDX files, configure your site through visual settings pages, and hit Publish. Doccupine handles the rest.
 
