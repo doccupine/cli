@@ -58,7 +58,7 @@ You can use the Callouts component directly within your MDX files without any im
 
 ## Properties
 
-<Field value="type" type="string" required>
+<Field value="type" type="string">
   The type of the callout: \`note\`, \`info\`, \`warning\`, \`danger\`, or \`success\`.
 </Field>
 
