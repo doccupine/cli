@@ -27,12 +27,12 @@ const StyledStaticLinks = styled.div<{ theme: Theme; $isChatOpen: boolean }>\`
 
   \${mq("lg")} {
     margin: 0;
-    padding: 0 ${SIDEBAR_WIDTH + 60}px 20px ${SIDEBAR_WIDTH + 60}px;
+    padding: 0 ${SIDEBAR_WIDTH + 20}px 20px ${SIDEBAR_WIDTH + 20}px;
 
     \${({ $isChatOpen }) =>
       $isChatOpen &&
       css\`
-        padding: 0 ${CHAT_WIDTH + 20}px 20px ${SIDEBAR_WIDTH + 60}px;
+        padding: 0 ${CHAT_WIDTH + 20}px 20px ${SIDEBAR_WIDTH + 20}px;
       \`}
   }
 \`;
