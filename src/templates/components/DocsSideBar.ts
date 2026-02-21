@@ -49,7 +49,9 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
         closestHeading.getBoundingClientRect().top - getOffset(),
       );
       for (const heading of visibleHeadings) {
-        const distance = Math.abs(heading.getBoundingClientRect().top - getOffset());
+        const distance = Math.abs(
+          heading.getBoundingClientRect().top - getOffset(),
+        );
         if (
           distance < closestDistance &&
           heading.getBoundingClientRect().top <= windowHeight * 0.3
@@ -108,9 +110,15 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
     const cRect = container.getBoundingClientRect();
     const pad = 140;
     if (elRect.bottom + pad > cRect.bottom) {
-      container.scrollBy({ top: elRect.bottom - cRect.bottom + pad, behavior: "smooth" });
+      container.scrollBy({
+        top: elRect.bottom - cRect.bottom + pad,
+        behavior: "smooth",
+      });
     } else if (elRect.top - pad < cRect.top) {
-      container.scrollBy({ top: elRect.top - cRect.top - pad, behavior: "smooth" });
+      container.scrollBy({
+        top: elRect.top - cRect.top - pad,
+        behavior: "smooth",
+      });
     }
   }, [activeId]);
 
@@ -119,7 +127,10 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
     if (element) {
       const elementPosition =
         element.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo({ top: elementPosition - getOffset(), behavior: "smooth" });
+      window.scrollTo({
+        top: elementPosition - getOffset(),
+        behavior: "smooth",
+      });
     }
   };
 
