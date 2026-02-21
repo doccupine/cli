@@ -740,7 +740,8 @@ function RainbowInput({
 }
 
 function ChatButtonCTA() {
-  const { setIsOpen, isOpen, chatInputRef } = useContext(ChatContext);
+  const { setIsOpen, isOpen, answer, setAnswer, chatInputRef } =
+    useContext(ChatContext);
 
   return (
     <StyledGlowSmallButton
@@ -748,6 +749,11 @@ function ChatButtonCTA() {
         const next = !isOpen;
         setIsOpen(next);
         if (next) {
+          if (answer.length === 0) {
+            setAnswer([
+              { text: "Hey there, how can I assist you?", answer: true },
+            ]);
+          }
           setTimeout(() => {
             chatInputRef.current?.focus();
           }, 350);
@@ -858,6 +864,7 @@ const ChatContext = createContext<{
   loading: boolean;
   error: string | null;
   answer: Answer[];
+  setAnswer: (answers: Answer[]) => void;
   ask: (e: React.FormEvent) => void;
   clearChat: () => void;
   chatInputRef: React.RefObject<HTMLInputElement | null>;
@@ -870,6 +877,7 @@ const ChatContext = createContext<{
   loading: false,
   error: null,
   answer: [],
+  setAnswer: () => {},
   ask: () => {},
   clearChat: () => {},
   chatInputRef: { current: null },
@@ -1030,6 +1038,7 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
         loading,
         error,
         answer,
+        setAnswer,
         ask,
         clearChat,
         chatInputRef,
