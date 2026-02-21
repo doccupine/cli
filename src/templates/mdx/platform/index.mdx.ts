@@ -44,4 +44,13 @@ After signing in, the dashboard shows all your projects. You'll see two sections
 - **Your Projects** - documentation sites you own, plus a button to create new ones
 - **Shared Projects** - sites that other users have invited you to collaborate on
 
-Click any project card to open it and start working.`;
+Click any project card to open it and start working.
+
+<Columns cols={2}>
+  <Card title="Sign Up" icon="user-plus" href="https://doccupine.com/sign-up">
+    Create your free account and start building documentation in minutes.
+  </Card>
+  <Card title="Sign In" icon="log-in" href="https://doccupine.com/sign-in">
+    Already have an account? Sign in to your dashboard.
+  </Card>
+</Columns>`;

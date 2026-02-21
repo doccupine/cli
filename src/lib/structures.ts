@@ -73,6 +73,7 @@ import { cardsMdxTemplate } from "../templates/mdx/cards.mdx.js";
 import { codeMdxTemplate } from "../templates/mdx/code.mdx.js";
 import { columnsMdxTemplate } from "../templates/mdx/columns.mdx.js";
 import { commandsMdxTemplate } from "../templates/mdx/commands.mdx.js";
+import { componentsMdxTemplate } from "../templates/mdx/components.mdx.js";
 import { deploymentMdxTemplate } from "../templates/mdx/deployment.mdx.js";
 import { fieldsMdxTemplate } from "../templates/mdx/fields.mdx.js";
 import { fontsMdxTemplate } from "../templates/mdx/fonts.mdx.js";
@@ -187,6 +188,7 @@ export const startingDocsStructure: Record<string, string> = {
   "code.mdx": codeMdxTemplate,
   "columns.mdx": columnsMdxTemplate,
   "commands.mdx": commandsMdxTemplate,
+  "components.mdx": componentsMdxTemplate,
   "deployment.mdx": deploymentMdxTemplate,
   "fields.mdx": fieldsMdxTemplate,
   "fonts.mdx": fontsMdxTemplate,

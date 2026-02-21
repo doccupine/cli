@@ -30,7 +30,7 @@ Sign up at [doccupine.com](https://www.doccupine.com) and connect your repositor
 2. Connect your GitHub repository.
 3. Your site is deployed automatically.
 
-Every push to your repository triggers a new deployment. You can customize your site's appearance, domain, and settings from the dashboard.
+Every push to your repository triggers a new deployment. You can customize your site's appearance, domain, and settings from the dashboard. See the [Platform Overview](/platform) for a full walkthrough of the dashboard, editor, and configuration options.
 
 ---
 

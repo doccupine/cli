@@ -16,7 +16,7 @@ Doccupine turns a folder of MDX files into a beautiful, production-ready documen
 npx doccupine
 \`\`\`
 
-That's it. Doccupine prompts you for a source directory, generates a Next.js site, and starts a dev server at \`http://localhost:3000\`. Every edit rebuilds instantly.
+That's it. Doccupine prompts you for a source directory, generates your site, and starts a dev server at \`http://localhost:3000\`. Every edit rebuilds instantly.
 
 <Callout type="info">
   Want a managed experience instead? The [Doccupine Platform](/platform) gives you a browser-based editor, one-click publishing, custom domains, and team collaboration - no local setup needed.
@@ -29,11 +29,11 @@ You write \`.mdx\` files using Markdown and built-in components like this one. D
 Everything on this page - the callout above, the cards below, the code block - is a live example of what your docs can look like out of the box.
 
 <Columns cols={2}>
-  <Card title="Start writing" icon="pencil">
-    Rich docs from day one. [14+ components](/headers-and-text) work out of the box - no imports needed.
+  <Card title="Start writing" icon="pencil" href="/components">
+    Rich docs from day one. 14+ components work out of the box - no imports needed.
   </Card>
-  <Card title="Ship it" icon="rocket">
-    Custom domains and team collaboration on the [Doccupine Platform](/platform), or [self-host](/deployment) anywhere.
+  <Card title="Ship it" icon="rocket" href="/deployment">
+    Deploy to the Doccupine Platform or self-host on any platform that supports Next.js.
   </Card>
 </Columns>
 
