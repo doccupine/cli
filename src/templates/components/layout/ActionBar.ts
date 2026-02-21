@@ -1,5 +1,3 @@
-import { SIDEBAR_WIDTH } from "../../app/theme.js";
-
 export const actionBarTemplate = `"use client";
 import { useContext, useState } from "react";
 import styled, { css } from "styled-components";
@@ -7,7 +5,6 @@ import { Icon } from "@/components/layout/Icon";
 import { mq, Theme } from "@/app/theme";
 import { rgba } from "polished";
 import { resetButton, Textarea } from "cherry-styled-components";
-import { ChatContext } from "@/components/Chat";
 import { SectionBarContext } from "@/components/layout/DocsComponents";
 import { StyledSmallButton } from "@/components/layout/SharedStyled";
 
@@ -20,28 +17,18 @@ const StyledActionBar = styled.div<{
   theme: Theme;
   $isChatOpen?: boolean;
 }>\`
-  position: absolute;
   border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
   left: 0;
-  padding: 12px 20px;
+  padding: 12px 0;
   display: flex;
   justify-content: space-between;
   width: 100%;
+  max-width: 640px;
+  margin: auto;
   transition: all 0.3s ease;
 
   \${mq("lg")} {
-    left: 50%;
-    transform: translateX(-50%);
-    max-width: calc(100vw - ${SIDEBAR_WIDTH * 2}px);
-    width: 100%;
-    padding: 12px;
-    margin: 0;
-
-    \${({ $isChatOpen }) =>
-      $isChatOpen &&
-      css\`
-        padding-right: 152px;
-      \`}
+    padding: 12px 0;
   }
 \`;
 
@@ -135,11 +122,9 @@ const StyledToggle = styled.button<{ theme: Theme; $isActive?: boolean }>\`
 
 const StyledContent = styled.div<{
   theme: Theme;
-  $isChatActive?: boolean;
-  $isChatOpen?: boolean;
   $hasSectionBar?: boolean;
 }>\`
-  padding-top: 77px;
+  padding-top: 20px;
   transition: all 0.3s ease;
 
   & textarea {
@@ -160,7 +145,6 @@ const StyledContent = styled.div<{
 function ActionBar({ children, content }: ActionBarProps) {
   const [isView, setIsView] = useState(true);
   const [copied, setCopied] = useState(false);
-  const { isOpen, isChatActive } = useContext(ChatContext);
   const hasSectionBar = useContext(SectionBarContext);
 
   const handleCopyContent = async () => {
@@ -175,7 +159,7 @@ function ActionBar({ children, content }: ActionBarProps) {
 
   return (
     <>
-      <StyledActionBar $isChatOpen={isOpen}>
+      <StyledActionBar>
         <StyledCopyButton onClick={handleCopyContent} $copied={copied}>
           {copied ? (
             <>
@@ -185,7 +169,7 @@ function ActionBar({ children, content }: ActionBarProps) {
           ) : (
             <>
               <Icon name="copy" size={16} />
-              Copy Content
+              Copy content
             </>
           )}
         </StyledCopyButton>
@@ -201,20 +185,10 @@ function ActionBar({ children, content }: ActionBarProps) {
         </StyledActionBarContent>
       </StyledActionBar>
       {isView && (
-        <StyledContent
-          $isChatActive={isChatActive}
-          $isChatOpen={isOpen}
-          $hasSectionBar={hasSectionBar}
-        >
-          {children}
-        </StyledContent>
+        <StyledContent $hasSectionBar={hasSectionBar}>{children}</StyledContent>
       )}
       {!isView && (
-        <StyledContent
-          $isChatActive={isChatActive}
-          $isChatOpen={isOpen}
-          $hasSectionBar={hasSectionBar}
-        >
+        <StyledContent $hasSectionBar={hasSectionBar}>
           <Textarea defaultValue={content} $fullWidth />
         </StyledContent>
       )}
