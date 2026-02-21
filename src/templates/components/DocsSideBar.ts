@@ -1,5 +1,5 @@
 export const docsSideBarTemplate = `"use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Space } from "cherry-styled-components";
 import {
   StyledIndexSidebar,
@@ -14,10 +14,16 @@ interface Heading {
   level: number;
 }
 
-const OFFSET = 80;
+const FALLBACK_OFFSET = 60;
+
+function getOffset() {
+  const header = document.getElementById("header");
+  return (header ? header.offsetHeight : FALLBACK_OFFSET) + 20;
+}
 
 export function DocsSideBar({ headings }: { headings: Heading[] }) {
   const [activeId, setActiveId] = useState<string>("");
+  const activeRef = useRef<HTMLLIElement>(null);
 
   const handleScroll = useCallback(() => {
     if (headings.length === 0) return;
@@ -40,10 +46,10 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
     if (visibleHeadings.length > 0) {
       let closestHeading = visibleHeadings[0];
       let closestDistance = Math.abs(
-        closestHeading.getBoundingClientRect().top - OFFSET,
+        closestHeading.getBoundingClientRect().top - getOffset(),
       );
       for (const heading of visibleHeadings) {
-        const distance = Math.abs(heading.getBoundingClientRect().top - OFFSET);
+        const distance = Math.abs(heading.getBoundingClientRect().top - getOffset());
         if (
           distance < closestDistance &&
           heading.getBoundingClientRect().top <= windowHeight * 0.3
@@ -59,7 +65,7 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
     let currentActiveId = headings[0].id;
     for (const element of headingElements) {
       const rect = element.getBoundingClientRect();
-      if (rect.top <= OFFSET) {
+      if (rect.top <= getOffset()) {
         currentActiveId = element.id;
       } else {
         break;
@@ -94,17 +100,31 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
     };
   }, [handleScroll, headings]);
 
+  useEffect(() => {
+    const el = activeRef.current;
+    const container = el?.closest("[data-sidebar]") as HTMLElement | null;
+    if (!el || !container) return;
+    const elRect = el.getBoundingClientRect();
+    const cRect = container.getBoundingClientRect();
+    const pad = 140;
+    if (elRect.bottom + pad > cRect.bottom) {
+      container.scrollBy({ top: elRect.bottom - cRect.bottom + pad, behavior: "smooth" });
+    } else if (elRect.top - pad < cRect.top) {
+      container.scrollBy({ top: elRect.top - cRect.top - pad, behavior: "smooth" });
+    }
+  }, [activeId]);
+
   const handleHeadingClick = (headingId: string) => {
     const element = document.getElementById(headingId);
     if (element) {
       const elementPosition =
         element.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo({ top: elementPosition - OFFSET, behavior: "smooth" });
+      window.scrollTo({ top: elementPosition - getOffset(), behavior: "smooth" });
     }
   };
 
   return (
-    <StyledIndexSidebar>
+    <StyledIndexSidebar data-sidebar>
       {headings?.length > 0 && (
         <>
           <StyledIndexSidebarLabel>On this page</StyledIndexSidebarLabel>
@@ -114,6 +134,7 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
       {headings.map((heading, index) => (
         <StyledIndexSidebarLi
           key={index}
+          ref={activeId === heading.id ? activeRef : null}
           $isActive={activeId === heading.id}
           style={{ paddingLeft: \`\${(heading.level - 1) * 16}px\` }}
         >

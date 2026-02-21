@@ -66,6 +66,7 @@ const StyledDocsContainer = styled.div<{ theme: Theme; $isChatOpen?: boolean }>\
 
   & p {
     color: \${({ theme }) => theme.colors.grayDark};
+    hyphens: auto;
   }
 
   & pre {
