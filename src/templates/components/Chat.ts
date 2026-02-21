@@ -1,3 +1,5 @@
+import { CHAT_WIDTH } from "../app/theme.js";
+
 export const chatTemplate = `"use client";
 import React, {
   createContext,
@@ -64,7 +66,7 @@ const StyledChat = styled.div<{ theme: Theme; $isVisible: boolean }>\`
     \`}
 
   \${mq("lg")} {
-    width: 420px;
+    width: ${CHAT_WIDTH}px;
     border-left: solid 1px \${({ theme }) => theme.colors.grayLight};
   }
 \`;
@@ -358,7 +360,7 @@ const StyledChatForm = styled.form<{ theme: Theme; $isVisible: boolean }>\`
   opacity: 0;
 
   \${mq("lg")} {
-    width: 420px;
+    width: ${CHAT_WIDTH}px;
     border-left: solid 1px \${({ theme }) => theme.colors.grayLight};
   }
 

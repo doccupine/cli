@@ -1,3 +1,5 @@
+import { SIDEBAR_WIDTH, CHAT_WIDTH } from "../../app/theme.js";
+
 export const footerTemplate = `"use client";
 import { useContext } from "react";
 import styled, { css } from "styled-components";
@@ -31,12 +33,12 @@ const StyledFooter = styled.footer<{
 
   \${mq("lg")} {
     margin: 0;
-    padding: 0 340px 0 340px;
+    padding: 0 ${SIDEBAR_WIDTH + 60}px 0 ${SIDEBAR_WIDTH + 60}px;
 
     \${({ $isChatOpen }) =>
       $isChatOpen &&
       css\`
-        padding: 0 440px 0 340px;
+        padding: 0 ${CHAT_WIDTH + 20}px 0 ${SIDEBAR_WIDTH + 60}px;
       \`}
   }
 \`;

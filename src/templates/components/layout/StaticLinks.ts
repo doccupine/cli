@@ -1,3 +1,5 @@
+import { SIDEBAR_WIDTH, CHAT_WIDTH } from "../../app/theme.js";
+
 export const staticLinksTemplate = `"use client";
 import styled, { css } from "styled-components";
 import { rgba } from "polished";
@@ -25,12 +27,12 @@ const StyledStaticLinks = styled.div<{ theme: Theme; $isChatOpen: boolean }>\`
 
   \${mq("lg")} {
     margin: 0;
-    padding: 0 340px 20px 340px;
+    padding: 0 ${SIDEBAR_WIDTH + 60}px 20px ${SIDEBAR_WIDTH + 60}px;
 
     \${({ $isChatOpen }) =>
       $isChatOpen &&
       css\`
-        padding: 0 440px 20px 340px;
+        padding: 0 ${CHAT_WIDTH + 20}px 20px ${SIDEBAR_WIDTH + 60}px;
       \`}
   }
 \`;

@@ -1,3 +1,5 @@
+import { SIDEBAR_WIDTH, CHAT_WIDTH } from "../../app/theme.js";
+
 export const docsComponentsTemplate = `"use client";
 import { darken, lighten, rgba } from "polished";
 import React, { createContext, useContext } from "react";
@@ -53,12 +55,12 @@ const StyledDocsContainer = styled.div<{ theme: Theme; $isChatOpen?: boolean }>\
   transition: all 0.3s ease;
 
   \${mq("lg")} {
-    padding: 0 300px 80px 300px;
+    padding: 0 ${SIDEBAR_WIDTH + 20}px 80px ${SIDEBAR_WIDTH + 20}px;
 
     \${({ $isChatOpen }) =>
       $isChatOpen &&
       css\`
-        padding: 0 440px 80px 300px;
+        padding: 0 ${CHAT_WIDTH + 20}px 80px ${SIDEBAR_WIDTH + 20}px;
       \`}
   }
 
@@ -150,7 +152,7 @@ export const StyledSidebar = styled.nav<Props>\`
     transform: translateY(0);
     background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.05)};
     top: 0;
-    width: 280px;
+    width: ${SIDEBAR_WIDTH}px;
   }
 
   \${({ $isActive }) =>

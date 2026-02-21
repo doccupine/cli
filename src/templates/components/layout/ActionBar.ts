@@ -1,3 +1,5 @@
+import { SIDEBAR_WIDTH } from "../../app/theme.js";
+
 export const actionBarTemplate = `"use client";
 import { useContext, useState } from "react";
 import styled, { css } from "styled-components";
@@ -30,7 +32,7 @@ const StyledActionBar = styled.div<{
   \${mq("lg")} {
     left: 50%;
     transform: translateX(-50%);
-    max-width: calc(100vw - 560px);
+    max-width: calc(100vw - ${SIDEBAR_WIDTH * 2}px);
     width: 100%;
     padding: 12px;
     margin: 0;

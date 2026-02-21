@@ -1,3 +1,6 @@
+export const SIDEBAR_WIDTH = 280;
+export const CHAT_WIDTH = 420;
+
 export const themeTemplate = `"use client";
 import customThemeJson from "@/theme.json";
 
