@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.0.64
+
+- Add components index page and improve content links
+- Add welcome greeting when AI chat panel opens
+- Add optional `href` prop for link cards
+- Overhaul layout and chat UI components
+- Improve docs sidebar offset and active item visibility
+- Reduce horizontal padding on footer and static links layout
+- Fix table scroll, step icon alignment, and table header padding
+- Fix inaccuracies and add missing props across MDX templates
+- Update dependencies
+
 ## 0.0.63
 
 - Add per-page `name` and `image` metadata overrides for Open Graph
