@@ -7,6 +7,7 @@ import { rgba } from "polished";
 import { resetButton, Textarea } from "cherry-styled-components";
 import { ChatContext } from "@/components/Chat";
 import { SectionBarContext } from "@/components/layout/DocsComponents";
+import { StyledSmallButton } from "@/components/layout/SharedStyled";
 
 interface ActionBarProps {
   children: React.ReactNode;
@@ -20,7 +21,7 @@ const StyledActionBar = styled.div<{
   position: absolute;
   border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
   left: 0;
-  padding: 0 20px 20px;
+  padding: 12px 20px;
   display: flex;
   justify-content: space-between;
   width: 100%;
@@ -29,15 +30,15 @@ const StyledActionBar = styled.div<{
   \${mq("lg")} {
     left: 50%;
     transform: translateX(-50%);
-    max-width: calc(100vw - 640px);
+    max-width: calc(100vw - 560px);
     width: 100%;
-    padding: 0 20px 20px;
+    padding: 12px;
     margin: 0;
 
     \${({ $isChatOpen }) =>
       $isChatOpen &&
       css\`
-        padding: 0 120px 20px 20px;
+        padding-right: 152px;
       \`}
   }
 \`;
@@ -46,37 +47,19 @@ const StyledActionBarContent = styled.div\`
   margin: auto 0;
 \`;
 
-const StyledCopyButton = styled.button<{ theme: Theme; $copied: boolean }>\`
-  background: transparent;
+const StyledCopyButton = styled(StyledSmallButton)<{
+  theme: Theme;
+  $copied: boolean;
+}>\`
   border: solid 1px
     \${({ theme, $copied }) =>
       $copied ? theme.colors.success : theme.colors.grayLight};
   color: \${({ theme, $copied }) =>
     $copied ? theme.colors.success : theme.colors.primary};
-  border-radius: \${({ theme }) => theme.spacing.radius.xs};
-  padding: 6px 8px;
-  font-size: 12px;
-  font-family: inherit;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-right: -6px;
 
   & svg.lucide {
     color: \${({ theme, $copied }) =>
       $copied ? theme.colors.success : theme.colors.primary};
-  }
-
-  &:hover {
-    border-color: \${({ theme, $copied }) =>
-      $copied ? theme.colors.success : theme.colors.primary};
-  }
-
-  &:active {
-    transform: scale(0.95);
   }
 \`;
 
@@ -154,23 +137,8 @@ const StyledContent = styled.div<{
   $isChatOpen?: boolean;
   $hasSectionBar?: boolean;
 }>\`
-  padding-top: 74px;
+  padding-top: 77px;
   transition: all 0.3s ease;
-
-  \${mq("lg")} {
-    \${({ $isChatActive }) =>
-      $isChatActive &&
-      css\`
-        padding-top: 140px;
-      \`}
-
-    \${({ $isChatOpen, $isChatActive }) =>
-      $isChatOpen &&
-      $isChatActive &&
-      css\`
-        padding-top: 70px;
-      \`}
-  }
 
   & textarea {
     max-width: 640px;
@@ -178,25 +146,11 @@ const StyledContent = styled.div<{
     width: 100%;
     height: 100%;
     min-height: calc(
-      100vh - \${({ $hasSectionBar }) => ($hasSectionBar ? 219 : 178)}px
+      100vh - \${({ $hasSectionBar }) => ($hasSectionBar ? 202 : 160)}px
     );
 
-    \${({ $isChatOpen, $isChatActive, $hasSectionBar }) =>
-      !$isChatOpen &&
-      $isChatActive &&
-      css\`
-        min-height: calc(100vh - \${$hasSectionBar ? 288 : 246}px);
-      \`}
-
     \${mq("lg")} {
-      min-height: calc(100vh - 176px);
-
-      \${({ $isChatOpen, $isChatActive }) =>
-        !$isChatOpen &&
-        $isChatActive &&
-        css\`
-          min-height: calc(100vh - 242px);
-        \`}
+      min-height: calc(100vh - 159px);
     }
   }
 \`;
@@ -224,12 +178,12 @@ function ActionBar({ children, content }: ActionBarProps) {
           {copied ? (
             <>
               <Icon name="check" size={16} />
-              <span>Copied!</span>
+              Copied!
             </>
           ) : (
             <>
               <Icon name="copy" size={16} />
-              <span>Copy Content</span>
+              Copy Content
             </>
           )}
         </StyledCopyButton>

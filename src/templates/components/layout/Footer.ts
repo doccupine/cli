@@ -5,13 +5,34 @@ import { Space, styledSmall } from "cherry-styled-components";
 import { ChatContext } from "@/components/Chat";
 import { mq, Theme } from "@/app/theme";
 import { GitHubLogo } from "@/components/layout/Pictograms";
+import linksData from "@/links.json";
 
-const StyledFooter = styled.footer<{ theme: Theme; $isChatOpen?: boolean }>\`
-  padding: 20px;
+interface LinkProps {
+  title: string;
+  url: string;
+  icon?: string;
+}
+
+const links = linksData as LinkProps[];
+
+const StyledFooter = styled.footer<{
+  theme: Theme;
+  $isChatOpen?: boolean;
+  $hasLinks?: boolean;
+}>\`
+  padding: 0 20px 20px 20px;
   transition: all 0.3s ease;
 
+  \${({ $hasLinks }) =>
+    $hasLinks &&
+    css\`
+      margin-top: 20px;
+    \`}
+
   \${mq("lg")} {
+    margin: 0;
     padding: 0 340px 0 340px;
+
     \${({ $isChatOpen }) =>
       $isChatOpen &&
       css\`
@@ -58,10 +79,10 @@ const StyledFooterFlex = styled.div\`
 function Footer({ hideBranding }: { hideBranding?: boolean }) {
   const { isOpen } = useContext(ChatContext);
 
-  if (hideBranding) return <Space $xs={70} $lg="none" />;
+  if (hideBranding) return <Space $xs={80} $lg="none" />;
 
   return (
-    <StyledFooter $isChatOpen={isOpen}>
+    <StyledFooter $isChatOpen={isOpen} $hasLinks={links.length > 0}>
       <StyledFooterInner>
         <StyledFooterFlex>
           <span>

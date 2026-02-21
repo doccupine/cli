@@ -5,6 +5,7 @@ import {
   StyledIndexSidebar,
   StyledIndexSidebarLink,
   StyledIndexSidebarLabel,
+  StyledIndexSidebarLi,
 } from "@/components/layout/DocsComponents";
 
 interface Heading {
@@ -107,12 +108,13 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
       {headings?.length > 0 && (
         <>
           <StyledIndexSidebarLabel>On this page</StyledIndexSidebarLabel>
-          <Space $size={20} />
+          <Space $size={15} />
         </>
       )}
       {headings.map((heading, index) => (
-        <li
+        <StyledIndexSidebarLi
           key={index}
+          $isActive={activeId === heading.id}
           style={{ paddingLeft: \`\${(heading.level - 1) * 16}px\` }}
         >
           <StyledIndexSidebarLink
@@ -125,7 +127,7 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
           >
             {heading.text}
           </StyledIndexSidebarLink>
-        </li>
+        </StyledIndexSidebarLi>
       ))}
     </StyledIndexSidebar>
   );

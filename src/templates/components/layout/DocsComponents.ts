@@ -47,18 +47,18 @@ const StyledDocsSidebar = styled.div<{ theme: Theme }>\`
 
 const StyledDocsContainer = styled.div<{ theme: Theme; $isChatOpen?: boolean }>\`
   position: relative;
-  padding: 20px 20px 100px 20px;
+  padding: 0 20px 100px 20px;
   width: 100%;
   \${({ theme }) => styledText(theme)};
   transition: all 0.3s ease;
 
   \${mq("lg")} {
-    padding: 20px 340px 80px 340px;
+    padding: 0 300px 80px 300px;
 
     \${({ $isChatOpen }) =>
       $isChatOpen &&
       css\`
-        padding: 20px 440px 80px 340px;
+        padding: 0 440px 80px 300px;
       \`}
   }
 
@@ -141,16 +141,16 @@ export const StyledSidebar = styled.nav<Props>\`
 
   \${mq("lg")} {
     transition: none;
-    max-height: calc(100svh - 62px);
+    max-height: 100svh;
     width: 220px;
     background: transparent;
-    padding: 25px 40px 40px;
+    padding: 82px 20px 20px 20px;
     opacity: 1;
     pointer-events: all;
     transform: translateY(0);
     background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.05)};
-    top: 62px;
-    width: 320px;
+    top: 0;
+    width: 280px;
   }
 
   \${({ $isActive }) =>
@@ -168,13 +168,13 @@ export const StyledIndexSidebar = styled.ul<{ theme: Theme }>\`
   margin: 0;
   padding: 0;
   position: fixed;
-  top: 61px;
+  top: 0;
   right: 0;
-  width: 320px;
-  height: calc(100vh - 61px);
+  width: 280px;
+  height: 100svh;
   overflow-y: auto;
   z-index: 1;
-  padding: 27px 40px 40px;
+  padding: 82px 20px 20px 20px;
   background: \${({ theme }) => theme.colors.light};
   border-left: solid 1px \${({ theme }) => theme.colors.grayLight};
   -webkit-overflow-scrolling: touch;
@@ -195,6 +195,30 @@ export const StyledIndexSidebar = styled.ul<{ theme: Theme }>\`
 export const StyledIndexSidebarLabel = styled.span<{ theme: Theme }>\`
   \${({ theme }) => styledSmall(theme)};
   color: \${({ theme }) => theme.colors.grayDark};
+\`;
+
+export const StyledIndexSidebarLi = styled.li<{
+  theme: Theme;
+  $isActive: boolean;
+}>\`
+  &::before {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 0;
+    height: 20px;
+    width: 1px;
+    background: transparent;
+    transition: all 0.3s ease;
+  }
+
+  \${({ $isActive, theme }) =>
+    $isActive &&
+    css\`
+      &::before {
+        background: \${theme.colors.primary};
+      }
+    \`}
 \`;
 
 export const StyledIndexSidebarLink = styled.a<{

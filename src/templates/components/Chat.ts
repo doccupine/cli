@@ -20,6 +20,7 @@ import {
   styledAnchor,
   styledTable,
   stylesLists,
+  StyledSmallButton,
 } from "@/components/layout/SharedStyled";
 
 const mdxComponents = getMDXComponents({});
@@ -49,6 +50,7 @@ const StyledChat = styled.div<{ theme: Theme; $isVisible: boolean }>\`
   transform: translateX(0);
   background: \${({ theme }) => theme.colors.light};
   -webkit-overflow-scrolling: touch;
+  opacity: 1;
 
   &::-webkit-scrollbar {
     display: none;
@@ -58,6 +60,7 @@ const StyledChat = styled.div<{ theme: Theme; $isVisible: boolean }>\`
     !$isVisible &&
     css\`
       transform: translateX(100%);
+      opacity: 0;
     \`}
 
   \${mq("lg")} {
@@ -352,6 +355,7 @@ const StyledChatForm = styled.form<{ theme: Theme; $isVisible: boolean }>\`
   border-top: solid 1px \${({ theme }) => theme.colors.grayLight};
   transition: all 0.3s ease;
   transform: translateX(100%);
+  opacity: 0;
 
   \${mq("lg")} {
     width: 420px;
@@ -361,6 +365,7 @@ const StyledChatForm = styled.form<{ theme: Theme; $isVisible: boolean }>\`
   \${({ $isVisible }) =>
     $isVisible &&
     css\`
+      opacity: 1;
       transform: translateX(0);
     \`}
 
@@ -369,53 +374,94 @@ const StyledChatForm = styled.form<{ theme: Theme; $isVisible: boolean }>\`
   }
 \`;
 
-const StyledChatFixedForm = styled.form<{
+const StyledGlowSmallButton = styled(StyledSmallButton)<{
   theme: Theme;
-  $hide: boolean;
+  $hasContent: boolean;
 }>\`
-  transition: all 0.3s ease;
-  position: fixed;
-  bottom: 20px;
-  left: 20px;
-  width: calc(100% - 115px);
-  z-index: 998;
+  @property --gradient-angle {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+  }
 
-  \${mq("lg")} {
-    left: 50%;
-    transform: translateX(-50%) translateY(0);
-    bottom: initial;
+  position: relative;
+  isolation: isolate;
+  margin-right: 0;
+  background: \${({ theme }) => theme.colors.light};
+  padding: 0;
+
+  &::before {
+    content: "";
+    inset: -2px;
+    border-radius: 8px;
+    background: conic-gradient(
+      from var(--gradient-angle),
+      #cc5555,
+      #d9a745,
+      #3ab0cc,
+      #cc7fc2,
+      #4380cc,
+      #4c1fa3,
+      #cc5555
+    );
+    opacity: 0;
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: \${rotateGradient} 3s linear infinite;
+    z-index: -1;
     position: absolute;
-    top: 153px;
-    width: calc(100% - 320px * 2 - 40px);
+    top: -2px;
+    left: -2px;
+    width: calc(100% + 4px);
+    height: calc(100% + 4px);
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -8px;
+    border-radius: 14px;
+    background: conic-gradient(
+      from var(--gradient-angle),
+      \${rgba("#ff6b6b", 0.4)},
+      \${rgba("#feca57", 0.4)},
+      \${rgba("#48dbfb", 0.4)},
+      \${rgba("#ff9ff3", 0.4)},
+      \${rgba("#54a0ff", 0.4)},
+      \${rgba("#5f27cd", 0.4)},
+      \${rgba("#ff6b6b", 0.4)}
+    );
+    opacity: 0;
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    animation:
+      \${rotateGradient} 3s linear infinite,
+      \${pulseGlow} 2s ease-in-out infinite;
+    z-index: -2;
+    pointer-events: none;
+  }
+
+  &:hover::before,
+  &:hover::after {
     opacity: 1;
   }
 
-  \${({ $hide }) =>
-    $hide &&
-    css\`
-      transform: translateX(-100px);
+  & span {
+    padding: 6px 8px;
+    display: flex;
+    background: \${({ theme }) => theme.colors.light};
+    border-radius: \${({ theme }) => theme.spacing.radius.xs};
+    gap: 6px;
+  }
 
-      \${mq("lg")} {
-        opacity: 0;
-        transform: translateX(-50%) translateY(-20px);
+  \${({ $hasContent }) =>
+    $hasContent &&
+    css\`
+      &::before {
+        opacity: 1;
+      }
+      &::after {
+        opacity: 1;
       }
     \`}
-
-  & .loading {
-    animation: \${loadingAnimation} 1s linear infinite;
-  }
-\`;
-
-const StyledChatFixedInner = styled.div\`
-  margin: auto;
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  align-items: center;
-
-  \${mq("lg")} {
-    max-width: 640px;
-  }
 \`;
 
 const StyledError = styled.div<{ theme: Theme }>\`
@@ -636,6 +682,7 @@ interface RainbowInputProps {
   placeholder?: string;
   autoComplete?: string;
   "aria-label"?: string;
+  inputRef?: React.Ref<HTMLInputElement>;
 }
 
 function RainbowInput({
@@ -645,6 +692,7 @@ function RainbowInput({
   placeholder,
   autoComplete,
   "aria-label": ariaLabel,
+  inputRef,
 }: RainbowInputProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -675,6 +723,7 @@ function RainbowInput({
         ))}
       </StyledSparkleContainer>
       <StyledRainbowInput
+        ref={inputRef}
         id={id}
         value={value}
         onChange={onChange}
@@ -688,14 +737,45 @@ function RainbowInput({
   );
 }
 
+function ChatButtonCTA() {
+  const { setIsOpen, isOpen, chatInputRef } = useContext(ChatContext);
+
+  return (
+    <StyledGlowSmallButton
+      onClick={() => {
+        const next = !isOpen;
+        setIsOpen(next);
+        if (next) {
+          setTimeout(() => {
+            chatInputRef.current?.focus();
+          }, 350);
+        }
+      }}
+      aria-label="Ask AI Assistant"
+      $hasContent={isOpen}
+      type="button"
+    >
+      <span>
+        <Sparkles size={16} />
+        Ask AI
+      </span>
+    </StyledGlowSmallButton>
+  );
+}
+
 function Chat() {
-  const [question, setQuestion] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [answer, setAnswer] = useState<Answer[]>([]);
+  const {
+    isOpen,
+    question,
+    setQuestion,
+    loading,
+    error,
+    answer,
+    ask,
+    clearChat,
+    chatInputRef,
+  } = useContext(ChatContext);
   const endRef = useRef<HTMLDivElement | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
-  const { isOpen, setIsOpen } = useContext(ChatContext);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -703,12 +783,109 @@ function Chat() {
 
   useEffect(() => {
     if (answer?.length > 0) {
-      const el = document.getElementById(
-        "chat-bottom-input",
-      ) as HTMLInputElement | null;
-      el?.focus();
+      chatInputRef.current?.focus();
     }
-  }, [answer]);
+  }, [answer, chatInputRef]);
+
+  return (
+    <>
+      <StyledChat $isVisible={isOpen}>
+        <StyledChatTitle>
+          <StyledChatTitleIconWrapper>
+            <Sparkles />
+            <h3>AI Assistant</h3>
+          </StyledChatTitleIconWrapper>
+          <StyledChatCloseButton onClick={clearChat} aria-label="Close chat">
+            <X />
+          </StyledChatCloseButton>
+        </StyledChatTitle>
+        {answer &&
+          answer.map((a, i) => (
+            <StyledAnswer key={i} $isAnswer={a.answer ?? false}>
+              {a.answer && a.mdx ? (
+                <MDXRemote {...a.mdx} components={mdxComponents} />
+              ) : (
+                a.text
+              )}
+            </StyledAnswer>
+          ))}
+        {loading && (
+          <StyledLoading>
+            Answering<span>.</span>
+            <span>.</span>
+            <span>.</span>
+          </StyledLoading>
+        )}
+        {error && (
+          <StyledError>
+            <strong>Error:</strong> {error}
+          </StyledError>
+        )}
+        <div ref={endRef} />
+      </StyledChat>
+
+      <StyledChatForm onSubmit={ask} $isVisible={isOpen}>
+        <RainbowInput
+          id="chat-bottom-input"
+          inputRef={chatInputRef}
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          placeholder="Ask AI Assistant..."
+          autoComplete="off"
+          aria-label="Ask a follow-up question"
+        />
+        <StyledRainbowButton
+          type="submit"
+          disabled={loading || question.trim() === ""}
+          $hasContent={question.trim().length > 0}
+          aria-label={loading ? "Loading response" : "Submit question"}
+        >
+          {loading ? <LoaderPinwheel className="loading" /> : <ArrowUp />}
+        </StyledRainbowButton>
+      </StyledChatForm>
+    </>
+  );
+}
+
+const ChatContext = createContext<{
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+  isChatActive: boolean;
+  question: string;
+  setQuestion: (q: string) => void;
+  loading: boolean;
+  error: string | null;
+  answer: Answer[];
+  ask: (e: React.FormEvent) => void;
+  clearChat: () => void;
+  chatInputRef: React.RefObject<HTMLInputElement | null>;
+}>({
+  isOpen: false,
+  setIsOpen: () => {},
+  isChatActive: false,
+  question: "",
+  setQuestion: () => {},
+  loading: false,
+  error: null,
+  answer: [],
+  ask: () => {},
+  clearChat: () => {},
+  chatInputRef: { current: null },
+});
+
+interface ChatContextProviderProps {
+  children: React.ReactNode;
+  isChatActive: boolean;
+}
+
+const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [question, setQuestion] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [answer, setAnswer] = useState<Answer[]>([]);
+  const abortRef = useRef<AbortController | null>(null);
+  const chatInputRef = useRef<HTMLInputElement | null>(null);
 
   async function ask(e: React.FormEvent) {
     e.preventDefault();
@@ -730,7 +907,6 @@ function Chat() {
     abortRef.current = controller;
 
     try {
-      // Build conversation history from previous Q&A pairs
       const history = answer
         .filter((a) => a.text.trim() !== "")
         .map((a) => ({
@@ -757,7 +933,6 @@ function Chat() {
         throw new Error("Failed to get response reader");
       }
 
-      // Add a placeholder for the streaming answer
       const streamingAnswerIndex = mergedQuestions.length;
       setAnswer([...mergedQuestions, { text: "", answer: true }]);
 
@@ -768,7 +943,6 @@ function Chat() {
 
         buffer += decoder.decode(value, { stream: true });
         const parts = buffer.split("\\n");
-        // Keep the last (potentially incomplete) part in the buffer
         buffer = parts.pop() ?? "";
 
         for (const line of parts) {
@@ -792,7 +966,6 @@ function Chat() {
                 throw new Error(data.data);
               } else if (data.type === "done") {
                 const streamedContent = contentParts.join("");
-                // Finalize with MDX serialization
                 let mdxSource: MDXRemoteSerializeResult | null = null;
                 try {
                   mdxSource = await serialize(streamedContent, {
@@ -838,109 +1011,11 @@ function Chat() {
     }
   }
 
-  return (
-    <>
-      <StyledChatFixedForm onSubmit={ask} $hide={answer?.length > 0}>
-        <StyledChatFixedInner>
-          <RainbowInput
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Ask AI Assistant..."
-            autoComplete="off"
-            aria-label="Ask a question about the documentation"
-          />
-          <StyledRainbowButton
-            type="submit"
-            disabled={loading}
-            $hasContent={question.trim().length > 0}
-            aria-label={loading ? "Loading response" : "Submit question"}
-          >
-            {loading ? <LoaderPinwheel className="loading" /> : <ArrowUp />}
-          </StyledRainbowButton>
-        </StyledChatFixedInner>
-      </StyledChatFixedForm>
-
-      <StyledChat $isVisible={isOpen}>
-        <StyledChatTitle>
-          <StyledChatTitleIconWrapper>
-            <Sparkles />
-            <h3>AI Assistant</h3>
-          </StyledChatTitleIconWrapper>
-          <StyledChatCloseButton
-            onClick={() => {
-              abortRef.current?.abort();
-              setAnswer([]);
-              setIsOpen(false);
-            }}
-            aria-label="Close chat"
-          >
-            <X />
-          </StyledChatCloseButton>
-        </StyledChatTitle>
-        {answer &&
-          answer.map((a, i) => (
-            <StyledAnswer key={i} $isAnswer={a.answer ?? false}>
-              {a.answer && a.mdx ? (
-                <MDXRemote {...a.mdx} components={mdxComponents} />
-              ) : (
-                a.text
-              )}
-            </StyledAnswer>
-          ))}
-        {loading && (
-          <StyledLoading>
-            Answering<span>.</span>
-            <span>.</span>
-            <span>.</span>
-          </StyledLoading>
-        )}
-        {error && (
-          <StyledError>
-            <strong>Error:</strong> {error}
-          </StyledError>
-        )}
-        <div ref={endRef} />
-      </StyledChat>
-
-      <StyledChatForm onSubmit={ask} $isVisible={isOpen}>
-        <RainbowInput
-          id="chat-bottom-input"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Ask AI Assistant..."
-          autoComplete="off"
-          aria-label="Ask a follow-up question"
-        />
-        <StyledRainbowButton
-          type="submit"
-          disabled={loading || question.trim() === ""}
-          $hasContent={question.trim().length > 0}
-          aria-label={loading ? "Loading response" : "Submit question"}
-        >
-          {loading ? <LoaderPinwheel className="loading" /> : <ArrowUp />}
-        </StyledRainbowButton>
-      </StyledChatForm>
-    </>
-  );
-}
-
-const ChatContext = createContext<{
-  isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void;
-  isChatActive: boolean;
-}>({
-  isOpen: false,
-  setIsOpen: () => {},
-  isChatActive: false,
-});
-
-interface ChatContextProviderProps {
-  children: React.ReactNode;
-  isChatActive: boolean;
-}
-
-const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+  function clearChat() {
+    abortRef.current?.abort();
+    setAnswer([]);
+    setIsOpen(false);
+  }
 
   return (
     <ChatContext.Provider
@@ -948,6 +1023,14 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
         isOpen,
         setIsOpen,
         isChatActive,
+        question,
+        setQuestion,
+        loading,
+        error,
+        answer,
+        ask,
+        clearChat,
+        chatInputRef,
       }}
     >
       {children}
@@ -955,5 +1038,5 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
   );
 };
 
-export { Chat, ChtProvider, ChatContext };
+export { Chat, ChtProvider, ChatContext, ChatButtonCTA };
 `;

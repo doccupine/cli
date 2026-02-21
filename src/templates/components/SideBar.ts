@@ -1,7 +1,7 @@
 export const sideBarTemplate = `"use client";
-import { useContext, useState } from "react";
+import { useContext, useState, Suspense } from "react";
 import { usePathname } from "next/navigation";
-import { Space } from "cherry-styled-components";
+import { Flex, Space } from "cherry-styled-components";
 import {
   DocsSidebar,
   SectionBarContext,
@@ -13,6 +13,10 @@ import {
   StyleMobileBar,
   StyledMobileBurger,
 } from "@/components/layout/DocsComponents";
+import {
+  ToggleTheme,
+  ToggleThemeLoading,
+} from "@/components/layout/ThemeToggle";
 
 type NavItem = {
   label: string;
@@ -74,6 +78,12 @@ function SideBar({ result }: SideBarProps) {
               </StyledSidebarList>
             );
           })}
+        <Space $xs={40} $lg={20} />
+        <Flex $xsJustifyContent="flex-start" $lgJustifyContent="flex-end">
+          <Suspense fallback={<ToggleThemeLoading />}>
+            <ToggleTheme />
+          </Suspense>
+        </Flex>
       </StyledSidebar>
     </DocsSidebar>
   );

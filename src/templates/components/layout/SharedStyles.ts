@@ -1,6 +1,6 @@
 export const sharedStyledTemplate = `"use client";
 import { mq, styledSmall, styledText, Theme } from "cherry-styled-components";
-import { css } from "styled-components";
+import styled, { css } from "styled-components";
 
 export const interactiveStyles = css<{ theme: Theme }>\`
   transition: all 0.3s ease;
@@ -138,6 +138,28 @@ export const styledTable = css<{ theme: Theme }>\`
       color: \${({ theme }) => theme.colors.grayDark};
       \${({ theme }) => styledSmall(theme)};
     }
+  }
+\`;
+
+export const StyledSmallButton = styled.button<{ theme: Theme }>\`
+  \${interactiveStyles};
+  background: transparent;
+  border: solid 1px \${({ theme }) => theme.colors.grayLight};
+  color: \${({ theme }) => theme.colors.primary};
+  border-radius: \${({ theme }) => theme.spacing.radius.xs};
+  padding: 6px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: -6px;
+
+  & svg.lucide {
+    color: inherit;
   }
 \`;
 `;

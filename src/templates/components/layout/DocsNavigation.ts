@@ -14,11 +14,11 @@ const StyledNavigationWrapper = styled.div<{
   transition: all 0.3s ease;
   padding: 0 20px 100px 20px;
   \${mq("lg")} {
-    padding: 0 340px 80px 340px;
+    padding: 0 300px 80px 300px;
     \${({ $isChatOpen }) =>
       $isChatOpen &&
       css\`
-        padding: 0 440px 80px 340px;
+        padding: 0 440px 80px 300px;
       \`}
   }
 \`;

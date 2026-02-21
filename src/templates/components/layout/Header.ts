@@ -1,16 +1,13 @@
 export const headerTemplate = `"use client";
 import React from "react";
-import { useCallback, useRef, useState, Suspense } from "react";
+import { useCallback, useContext, useRef, useState } from "react";
 import styled, { css, useTheme } from "styled-components";
 import Link from "next/link";
 import { rgba } from "polished";
 import { mq, Theme } from "@/app/theme";
-import {
-  ToggleTheme,
-  ToggleThemeLoading,
-} from "@/components/layout/ThemeToggle";
 import { useOnClickOutside } from "@/components/ClickOutside";
 import { Logo } from "@/components/layout/Pictograms";
+import { ChatContext, ChatButtonCTA } from "@/components/Chat";
 import themeJson from "@/theme.json";
 
 const customThemeJson = themeJson as typeof themeJson & {
@@ -91,8 +88,10 @@ const StyledHeaderInner = styled.div<{ $hasChildren: boolean }>\`
   }
 \`;
 
-const StyledThemeWrapper = styled.div\`
-  display: block;
+const StyledLeftWrapper = styled.div\`
+  display: flex;
+  align-items: center;
+  gap: 8px;
   min-width: fit-content;
   padding-right: 20px;
 
@@ -123,6 +122,7 @@ function Header({ children }: HeaderProps) {
   );
   useOnClickOutside([langRef, wrapperRef], isLangActive ? closeMenu : () => {});
   const theme = useTheme() as Theme;
+  const { isChatActive } = useContext(ChatContext);
 
   return (
     <StyledHeader $hasChildren={children ? true : false} id="header">
@@ -151,11 +151,9 @@ function Header({ children }: HeaderProps) {
           )}
         </Link>
         {children}
-        <StyledThemeWrapper>
-          <Suspense fallback={<ToggleThemeLoading />}>
-            <ToggleTheme />
-          </Suspense>
-        </StyledThemeWrapper>
+        <StyledLeftWrapper>
+          {isChatActive && <ChatButtonCTA />}
+        </StyledLeftWrapper>
       </StyledHeaderInner>
     </StyledHeader>
   );

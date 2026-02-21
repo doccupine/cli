@@ -20,10 +20,13 @@ const StyledStaticLinks = styled.div<{ theme: Theme; $isChatOpen: boolean }>\`
   display: flex;
   margin: 0 auto;
   transition: all 0.3s ease;
-  padding: 0 20px 20px 20px;
+  padding: 0 20px;
+  margin-bottom: 20px;
 
   \${mq("lg")} {
+    margin: 0;
     padding: 0 340px 20px 340px;
+
     \${({ $isChatOpen }) =>
       $isChatOpen &&
       css\`
