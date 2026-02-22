@@ -18,7 +18,7 @@ export const packageJsonTemplate =
         "@langchain/openai": "^1.2.9",
         "@mdx-js/react": "^3.1.1",
         "@modelcontextprotocol/sdk": "^1.26.0",
-        "cherry-styled-components": "^0.1.12",
+        "cherry-styled-components": "^0.1.13",
         langchain: "^1.2.25",
         "lucide-react": "^0.575.0",
         next: "16.1.6",
