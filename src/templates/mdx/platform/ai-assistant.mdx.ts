@@ -15,6 +15,26 @@ Every Doccupine site ships with a built-in AI assistant that helps visitors find
 ### Platform (default)
 Uses Doccupine's built-in integration. Zero configuration needed - the AI assistant works out of the box with no API keys or setup.
 
+Each plan includes a monthly AI usage budget:
+
+| Plan       | Monthly Budget |
+| ---------- | -------------- |
+| Trial      | $2             |
+| Pro        | $20            |
+| Enterprise | $50            |
+
+The AI settings page shows a usage dashboard with your current spending and remaining budget. Usage resets automatically with your billing cycle.
+
+#### AI credit top-ups
+
+If you run out of AI credits before your billing cycle resets, you can purchase a one-time top-up to increase your monthly limit. Available tiers:
+
+- **$5**
+- **$10**
+- **$20**
+
+Top-ups are added to your current cycle's budget immediately after purchase and reset when your billing cycle renews. You can purchase multiple top-ups in the same cycle.
+
 ### Custom
 Bring your own API key for full control over the AI model. Supported providers:
 
