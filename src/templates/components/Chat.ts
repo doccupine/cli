@@ -23,6 +23,7 @@ import {
   styledTable,
   stylesLists,
   StyledSmallButton,
+  interactiveStyles,
 } from "@/components/layout/SharedStyled";
 
 const mdxComponents = getMDXComponents({});
@@ -609,6 +610,40 @@ const StyledAnswer = styled.div<{ theme: Theme; $isAnswer: boolean }>\`
   }
 \`;
 
+const StyledSources = styled.div\`
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: -5px 0 20px;
+\`;
+
+const StyledSourceLink = styled.a<{ theme: Theme }>\`
+  position: relative;
+  text-decoration: none;
+  font-size: \${({ theme }) => theme.fontSizes.small.lg};
+  line-height: 1;
+  color: \${({ theme }) => theme.colors.primary};
+  display: flex;
+  gap: 6px;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  white-space: nowrap;
+  min-width: fit-content;
+  background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.1)};
+  padding: 6px 8px;
+  border-radius: \${({ theme }) => theme.spacing.radius.xs};
+  \${interactiveStyles};
+
+  & * {
+    margin: auto 0;
+  }
+
+  &:hover {
+    color: \${({ theme }) =>
+      theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
+  }
+\`;
+
 const StyledChatTitle = styled.div<{ theme: Theme }>\`
   display: flex;
   flex-wrap: nowrap;
@@ -648,10 +683,18 @@ const StyledChatCloseButton = styled.button<{ theme: Theme }>\`
   }
 \`;
 
+type Source = {
+  id: string;
+  path: string;
+  uri: string;
+  score: number;
+};
+
 type Answer = {
   text: string;
   answer?: boolean;
   mdx?: MDXRemoteSerializeResult;
+  sources?: Source[];
 };
 
 const SPARKLE_COLORS = [
@@ -809,13 +852,37 @@ function Chat() {
         </StyledChatTitle>
         {answer &&
           answer.map((a, i) => (
-            <StyledAnswer key={i} $isAnswer={a.answer ?? false}>
-              {a.answer && a.mdx ? (
-                <MDXRemote {...a.mdx} components={mdxComponents} />
-              ) : (
-                a.text
+            <React.Fragment key={i}>
+              <StyledAnswer $isAnswer={a.answer ?? false}>
+                {a.answer && a.mdx ? (
+                  <MDXRemote {...a.mdx} components={mdxComponents} />
+                ) : (
+                  a.text
+                )}
+              </StyledAnswer>
+              {a.answer && a.sources && a.sources.length > 0 && (
+                <StyledSources>
+                  {a.sources.map((src) => {
+                    const slug = src.uri
+                      .replace("docs://", "")
+                      .replace(/^\\/+/, "");
+                    const href = slug ? \`/\${slug}/\` : "/";
+                    const label = slug
+                      ? slug
+                          .split("/")
+                          .pop()!
+                          .replace(/-/g, " ")
+                          .replace(/\\b\\w/g, (c: string) => c.toUpperCase())
+                      : "Home";
+                    return (
+                      <StyledSourceLink key={src.id} href={href}>
+                        {label}
+                      </StyledSourceLink>
+                    );
+                  })}
+                </StyledSources>
               )}
-            </StyledAnswer>
+            </React.Fragment>
           ))}
         {loading && (
           <StyledLoading>
@@ -939,6 +1006,7 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
       const contentParts: string[] = [];
+      let sources: Source[] = [];
       if (!reader) {
         throw new Error("Failed to get response reader");
       }
@@ -960,7 +1028,15 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
             try {
               const data = JSON.parse(line.slice(6));
 
-              if (data.type === "content") {
+              if (data.type === "metadata") {
+                const allSources: Source[] = data.data?.sources ?? [];
+                const seen = new Set<string>();
+                sources = allSources.filter((s: Source) => {
+                  if (s.score < 0.4 || seen.has(s.uri)) return false;
+                  seen.add(s.uri);
+                  return true;
+                });
+              } else if (data.type === "content") {
                 contentParts.push(data.data);
                 const streamedContent = contentParts.join("");
 
@@ -969,6 +1045,7 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
                   newAnswers[streamingAnswerIndex] = {
                     text: streamedContent,
                     answer: true,
+                    sources,
                   };
                   return newAnswers;
                 });
@@ -997,6 +1074,7 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
                     text: streamedContent,
                     answer: true,
                     mdx: mdxSource || undefined,
+                    sources,
                   };
                   return newAnswers;
                 });
