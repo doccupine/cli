@@ -11,7 +11,7 @@ import React, {
 import styled, { css, keyframes } from "styled-components";
 import { rgba } from "polished";
 import { Button } from "cherry-styled-components";
-import { ArrowUp, LoaderPinwheel, Sparkles, X } from "lucide-react";
+import { ArrowUp, LoaderPinwheel, RotateCcw, Sparkles, X } from "lucide-react";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import { MDXRemote, MDXRemoteSerializeResult } from "next-mdx-remote";
@@ -45,7 +45,7 @@ const StyledChat = styled.div<{ theme: Theme; $isVisible: boolean }>\`
   top: 0;
   right: 0;
   width: 100%;
-  height: calc(100vh - 90px);
+  height: calc(100svh - 90px);
   overflow-y: scroll;
   overflow-x: hidden;
   z-index: 1000;
@@ -662,7 +662,7 @@ const StyledChatTitle = styled.div<{ theme: Theme }>\`
 const StyledChatTitleIconWrapper = styled.span<{ theme: Theme }>\`
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 12px;
   color: \${({ theme }) => theme.colors.dark};
 \`;
 
@@ -824,10 +824,24 @@ function Chat() {
     error,
     answer,
     ask,
-    clearChat,
+    closeChat,
+    resetChat,
     chatInputRef,
   } = useContext(ChatContext);
   const endRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 992px)");
+    function update() {
+      document.body.style.overflow = isOpen && mql.matches ? "hidden" : "";
+    }
+    update();
+    mql.addEventListener("change", update);
+    return () => {
+      mql.removeEventListener("change", update);
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -847,9 +861,22 @@ function Chat() {
             <Sparkles />
             <h3>AI Assistant</h3>
           </StyledChatTitleIconWrapper>
-          <StyledChatCloseButton onClick={clearChat} aria-label="Close chat">
-            <X />
-          </StyledChatCloseButton>
+          <StyledChatTitleIconWrapper>
+            <StyledChatCloseButton
+              onClick={resetChat}
+              aria-label="Reset chat history"
+              title="Reset chat history"
+            >
+              <RotateCcw size={18} />
+            </StyledChatCloseButton>
+            <StyledChatCloseButton
+              onClick={closeChat}
+              aria-label="Close chat"
+              title="Close chat"
+            >
+              <X />
+            </StyledChatCloseButton>
+          </StyledChatTitleIconWrapper>
         </StyledChatTitle>
         {answer &&
           answer.map((a, i) => (
@@ -934,7 +961,8 @@ const ChatContext = createContext<{
   answer: Answer[];
   setAnswer: (answers: Answer[]) => void;
   ask: (e: React.FormEvent) => void;
-  clearChat: () => void;
+  closeChat: () => void;
+  resetChat: () => void;
   chatInputRef: React.RefObject<HTMLInputElement | null>;
 }>({
   isOpen: false,
@@ -947,7 +975,8 @@ const ChatContext = createContext<{
   answer: [],
   setAnswer: () => {},
   ask: () => {},
-  clearChat: () => {},
+  closeChat: () => {},
+  resetChat: () => {},
   chatInputRef: { current: null },
 });
 
@@ -1100,10 +1129,15 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
     }
   }
 
-  function clearChat() {
-    abortRef.current?.abort();
-    setAnswer([]);
+  function closeChat() {
     setIsOpen(false);
+  }
+
+  function resetChat() {
+    abortRef.current?.abort();
+    setLoading(false);
+    setError(null);
+    setAnswer([{ text: "Hey there, how can I assist you?", answer: true }]);
   }
 
   return (
@@ -1119,7 +1153,8 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
         answer,
         setAnswer,
         ask,
-        clearChat,
+        closeChat,
+        resetChat,
         chatInputRef,
       }}
     >
