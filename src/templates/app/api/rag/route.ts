@@ -41,9 +41,7 @@ When including code blocks in your response:
 - All output must be valid MDX that renders correctly.
 
 ## Internal Links
-When referencing documentation pages, convert file paths from the context to clean URLs:
-- Strip the "app/" prefix and "/page.tsx" suffix. For example, "app/ai-assistant/page.tsx" becomes "/ai-assistant/".
-- Always use a leading slash and a trailing slash (e.g., "/getting-started/", not "getting-started" or "/getting-started").
+Each context chunk includes a "URL:" line with the pre-computed page URL. Use it directly when linking:
 - Format links as markdown: [Page Title](/slug/).
 - Never expose raw file paths like "/app/.../page.tsx" to the user.
 - Always include relevant documentation links at the end of your answer in a "Related Pages" section. Only link to pages that explicitly appear in the provided context - never guess or fabricate page URLs.
@@ -91,10 +89,11 @@ export async function POST(req: Request) {
 
     // Build context from search results
     const context = searchResults
-      .map(
-        ({ chunk, score }) =>
-          \`File: \${chunk.path}\\nScore: \${score.toFixed(3)}\\n----\\n\${chunk.text}\`,
-      )
+      .map(({ chunk, score }) => {
+        const slug = chunk.uri.replace("docs://", "").replace(/^\\/+/, "");
+        const url = slug ? \`/\${slug}/\` : "/";
+        return \`File: \${chunk.path}\\nURL: \${url}\\nScore: \${score.toFixed(3)}\\n----\\n\${chunk.text}\`;
+      })
       .join("\\n\\n================\\n\\n");
 
     // Create chat model and stream response
