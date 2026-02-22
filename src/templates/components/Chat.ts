@@ -18,6 +18,7 @@ import { MDXRemote, MDXRemoteSerializeResult } from "next-mdx-remote";
 import { serialize } from "next-mdx-remote/serialize";
 import Link from "next/link";
 import { mq, Theme } from "@/app/theme";
+import { useLockBodyScroll } from "@/components/LockBodyScroll";
 import { useMDXComponents as getMDXComponents } from "@/components/MDXComponents";
 import {
   styledAnchor,
@@ -830,18 +831,7 @@ function Chat() {
   } = useContext(ChatContext);
   const endRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    const mql = window.matchMedia("(max-width: 992px)");
-    function update() {
-      document.body.style.overflow = isOpen && mql.matches ? "hidden" : "";
-    }
-    update();
-    mql.addEventListener("change", update);
-    return () => {
-      mql.removeEventListener("change", update);
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
+  useLockBodyScroll(isOpen);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });

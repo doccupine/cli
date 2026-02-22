@@ -17,6 +17,7 @@ import {
   ToggleTheme,
   ToggleThemeLoading,
 } from "@/components/layout/ThemeToggle";
+import { useLockBodyScroll } from "@/components/LockBodyScroll";
 
 type NavItem = {
   label: string;
@@ -36,6 +37,8 @@ function SideBar({ result }: SideBarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const hasSectionBar = useContext(SectionBarContext);
   const pathname = usePathname();
+
+  useLockBodyScroll(isMobileMenuOpen);
 
   return (
     <DocsSidebar>

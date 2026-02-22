@@ -16,6 +16,7 @@ import { themeTemplate } from "../templates/app/theme.js";
 
 import { chatTemplate } from "../templates/components/Chat.js";
 import { clickOutsideTemplate } from "../templates/components/ClickOutside.js";
+import { lockBodyScrollTemplate } from "../templates/components/LockBodyScroll.js";
 import { docsTemplate } from "../templates/components/Docs.js";
 import { docsSideBarTemplate } from "../templates/components/DocsSideBar.js";
 import { mdxComponentsTemplate } from "../templates/components/MDXComponents.js";
@@ -145,6 +146,7 @@ export const appStructure: Record<string, string> = {
 
   "components/Chat.tsx": chatTemplate,
   "components/ClickOutside.ts": clickOutsideTemplate,
+  "components/LockBodyScroll.ts": lockBodyScrollTemplate,
   "components/Docs.tsx": docsTemplate,
   "components/DocsSideBar.tsx": docsSideBarTemplate,
   "components/MDXComponents.tsx": mdxComponentsTemplate,
