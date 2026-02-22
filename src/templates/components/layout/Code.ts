@@ -140,7 +140,7 @@ const Body = styled.div<{ theme: Theme }>\`
   text-align: left;
   overflow-x: auto;
   overflow-y: auto;
-  max-height: calc(100svh - 400px);
+  max-height: calc(100dvh - 400px);
   \${({ theme }) => styledCode(theme)};
 
   /* Dark mode syntax highlighting (GitHub Dark) */

@@ -122,11 +122,11 @@ export const StyledSidebar = styled.nav<Props>\`
   position: fixed;
   overflow-y: auto;
   max-height: calc(
-    100svh - \${({ $hasSectionBar }) => ($hasSectionBar ? 105 : 63)}px
+    100dvh - \${({ $hasSectionBar }) => ($hasSectionBar ? 104 : 62)}px
   );
   width: 100%;
   z-index: 99;
-  top: \${({ $hasSectionBar }) => ($hasSectionBar ? 105 : 63)}px;
+  top: \${({ $hasSectionBar }) => ($hasSectionBar ? 104 : 62)}px;
   height: 100%;
   padding: 20px 20px 80px 20px;
   opacity: 0;
@@ -144,7 +144,7 @@ export const StyledSidebar = styled.nav<Props>\`
   \${mq("lg")} {
     border-right: solid 1px \${({ theme }) => theme.colors.grayLight};
     transition: none;
-    max-height: 100svh;
+    max-height: 100dvh;
     width: 220px;
     background: transparent;
     padding: 82px 20px 20px 20px;
@@ -174,7 +174,7 @@ export const StyledIndexSidebar = styled.ul<{ theme: Theme }>\`
   top: 0;
   right: 0;
   width: 280px;
-  height: 100svh;
+  height: 100dvh;
   overflow-y: auto;
   z-index: 1;
   padding: 82px 20px 20px 20px;
