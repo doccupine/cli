@@ -135,7 +135,6 @@ export const StyledSidebar = styled.nav<Props>\`
   transform: translateY(30px);
   left: 0;
   background: \${({ theme }) => theme.colors.light};
-  border-right: solid 1px \${({ theme }) => theme.colors.grayLight};
   -webkit-overflow-scrolling: touch;
 
   &::-webkit-scrollbar {
@@ -143,6 +142,7 @@ export const StyledSidebar = styled.nav<Props>\`
   }
 
   \${mq("lg")} {
+    border-right: solid 1px \${({ theme }) => theme.colors.grayLight};
     transition: none;
     max-height: 100svh;
     width: 220px;
