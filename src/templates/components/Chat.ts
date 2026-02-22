@@ -16,6 +16,7 @@ import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import { MDXRemote, MDXRemoteSerializeResult } from "next-mdx-remote";
 import { serialize } from "next-mdx-remote/serialize";
+import Link from "next/link";
 import { mq, Theme } from "@/app/theme";
 import { useMDXComponents as getMDXComponents } from "@/components/MDXComponents";
 import {
@@ -617,7 +618,7 @@ const StyledSources = styled.div\`
   margin: -5px 0 20px;
 \`;
 
-const StyledSourceLink = styled.a<{ theme: Theme }>\`
+const StyledSourceLink = styled(Link)<{ theme: Theme }>\`
   position: relative;
   text-decoration: none;
   font-size: \${({ theme }) => theme.fontSizes.small.lg};
