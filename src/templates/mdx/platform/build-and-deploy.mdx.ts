@@ -1,5 +1,5 @@
-export const platformDeploymentsMdxTemplate = `---
-title: "Deployments"
+export const platformBuildAndDeployMdxTemplate = `---
+title: "Build & Deploy"
 description: "Monitor your documentation site's build status and deployment history."
 date: "2026-02-19"
 category: "Infrastructure"
@@ -7,8 +7,8 @@ categoryOrder: 3
 order: 1
 section: "Platform"
 ---
-# Deployments
-The Deployments page shows your documentation site's build and deployment history. Every time you publish changes or push to GitHub, a new deployment is created.
+# Build & Deploy
+The Build & Deploy page shows your documentation site's build and deployment history. Every time you publish changes or push to GitHub, a new deployment is created.
 
 ## Deployment status
 The project header always shows your current deployment status:

@@ -75,7 +75,7 @@ import { codeMdxTemplate } from "../templates/mdx/code.mdx.js";
 import { columnsMdxTemplate } from "../templates/mdx/columns.mdx.js";
 import { commandsMdxTemplate } from "../templates/mdx/commands.mdx.js";
 import { componentsMdxTemplate } from "../templates/mdx/components.mdx.js";
-import { deploymentMdxTemplate } from "../templates/mdx/deployment.mdx.js";
+import { deploymentAndHostingMdxTemplate } from "../templates/mdx/deployment-and-hosting.mdx.js";
 import { fieldsMdxTemplate } from "../templates/mdx/fields.mdx.js";
 import { fontsMdxTemplate } from "../templates/mdx/fonts.mdx.js";
 import { globalsMdxTemplate } from "../templates/mdx/globals.mdx.js";
@@ -106,7 +106,7 @@ import { platformFontsSettingsMdxTemplate } from "../templates/mdx/platform/font
 import { platformExternalLinksMdxTemplate } from "../templates/mdx/platform/external-links.mdx.js";
 import { platformAiAssistantMdxTemplate } from "../templates/mdx/platform/ai-assistant.mdx.js";
 import { platformCustomDomainsMdxTemplate } from "../templates/mdx/platform/custom-domains.mdx.js";
-import { platformDeploymentsMdxTemplate } from "../templates/mdx/platform/deployments.mdx.js";
+import { platformBuildAndDeployMdxTemplate } from "../templates/mdx/platform/build-and-deploy.mdx.js";
 import { platformTeamMembersMdxTemplate } from "../templates/mdx/platform/team-members.mdx.js";
 import { platformBillingMdxTemplate } from "../templates/mdx/platform/billing.mdx.js";
 import { platformProjectSettingsMdxTemplate } from "../templates/mdx/platform/project-settings.mdx.js";
@@ -191,7 +191,7 @@ export const startingDocsStructure: Record<string, string> = {
   "columns.mdx": columnsMdxTemplate,
   "commands.mdx": commandsMdxTemplate,
   "components.mdx": componentsMdxTemplate,
-  "deployment.mdx": deploymentMdxTemplate,
+  "deployment-and-hosting.mdx": deploymentAndHostingMdxTemplate,
   "fields.mdx": fieldsMdxTemplate,
   "fonts.mdx": fontsMdxTemplate,
   "globals.mdx": globalsMdxTemplate,
@@ -221,7 +221,7 @@ export const startingDocsStructure: Record<string, string> = {
   "platform/external-links.mdx": platformExternalLinksMdxTemplate,
   "platform/ai-assistant.mdx": platformAiAssistantMdxTemplate,
   "platform/custom-domains.mdx": platformCustomDomainsMdxTemplate,
-  "platform/deployments.mdx": platformDeploymentsMdxTemplate,
+  "platform/build-and-deploy.mdx": platformBuildAndDeployMdxTemplate,
   "platform/team-members.mdx": platformTeamMembersMdxTemplate,
   "platform/billing.mdx": platformBillingMdxTemplate,
   "platform/project-settings.mdx": platformProjectSettingsMdxTemplate,

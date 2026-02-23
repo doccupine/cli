@@ -108,8 +108,8 @@ Executes an MCP tool call.
 {
   "content": [
     {
-      "path": "app/deployment/page.tsx",
-      "uri": "docs://deployment",
+      "path": "app/deployment-and-hosting/page.tsx",
+      "uri": "docs://deployment-and-hosting",
       "score": "0.892",
       "text": "Deploy your Doccupine site as a Next.js application..."
     },
@@ -153,7 +153,7 @@ Get the full content of a specific documentation page by its path.
 {
   "tool": "get_doc",
   "params": {
-    "path": "app/deployment/page.tsx"
+    "path": "app/deployment-and-hosting/page.tsx"
   }
 }
 \`\`\`

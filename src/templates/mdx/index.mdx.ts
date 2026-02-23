@@ -32,7 +32,7 @@ Everything on this page - the callout above, the cards below, the code block - i
   <Card title="Start writing" icon="pencil" href="/components">
     Rich docs from day one. 14+ components work out of the box - no imports needed.
   </Card>
-  <Card title="Ship it" icon="rocket" href="/deployment">
+  <Card title="Ship it" icon="rocket" href="/deployment-and-hosting">
     Deploy to the Doccupine Platform or self-host on any platform that supports Next.js.
   </Card>
 </Columns>

@@ -1,12 +1,12 @@
-export const deploymentMdxTemplate = `---
-title: "Deployment"
+export const deploymentAndHostingMdxTemplate = `---
+title: "Deployment & Hosting"
 description: "Deploy your documentation site with the Doccupine Platform or self-host on any platform that supports Next.js."
 date: "2026-02-19"
 category: "Configuration"
 categoryOrder: 3
 order: 10
 ---
-# Deployment
+# Deployment & Hosting
 The fastest way to deploy your documentation is with the [Doccupine Platform](https://www.doccupine.com). If you prefer to manage your own infrastructure, you can self-host the generated Next.js app on any platform.
 
 ## Doccupine Platform
