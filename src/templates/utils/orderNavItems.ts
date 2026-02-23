@@ -1,7 +1,7 @@
 export const orderNavItemsTemplate = `export interface PagesProps {
   slug: string;
   title: string;
-  date: string;
+  date: string | null;
   category: string;
   description?: string;
   path?: string;
@@ -13,7 +13,7 @@ export const orderNavItemsTemplate = `export interface PagesProps {
 interface AccProps {
   [key: string]: {
     categoryOrder: number;
-    pages: { date: string; slug: string; title: string; order: number }[];
+    pages: { date: string | null; slug: string; title: string; order: number }[];
   };
 }
 
