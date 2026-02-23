@@ -368,7 +368,8 @@ export const StyledMissingComponent = styled.div\`
   border-radius: \${({ theme }) => theme.spacing.radius.lg};
   padding: 20px;
   font-size: \${({ theme }) => theme.fontSizes.small.lg};
-  color: \${({ theme }) => theme.isDark ? theme.colors.dark : theme.colors.light};
+  color: \${({ theme }) =>
+    theme.isDark ? theme.colors.dark : theme.colors.light};
   font-weight: 600;
   display: flex;
   gap: 10px;

@@ -13,7 +13,12 @@ export const orderNavItemsTemplate = `export interface PagesProps {
 interface AccProps {
   [key: string]: {
     categoryOrder: number;
-    pages: { date: string | null; slug: string; title: string; order: number }[];
+    pages: {
+      date: string | null;
+      slug: string;
+      title: string;
+      order: number;
+    }[];
   };
 }
 
