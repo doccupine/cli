@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.0.67
+
+- Fix dark-mode FOUC on Safari and Firefox
+
+## 0.0.66
+
+- Rename deployment MDX templates to reduce naming confusion
+
+## 0.0.65
+
+- Add source links below AI answers in chat
+- Add AI internal links prompt and usage budget docs
+- Pre-compute page URLs from chunk URIs in RAG context
+- Decouple ActionBar from ChatContext
+- Extract `useLockBodyScroll` hook from Chat
+- Separate close and reset actions in chat with improved UX
+- Use Next.js Link component for source links in chat
+- Improve line wrapping in DocsSideBar
+- Use `dvh` viewport units and adjust sidebar offsets
+- Show sidebar border-right only on desktop breakpoint
+- Update dependencies
+
 ## 0.0.64
 
 - Add components index page and improve content links
