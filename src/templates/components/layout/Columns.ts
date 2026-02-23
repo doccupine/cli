@@ -8,6 +8,13 @@ const StyledColumns = styled.div<{ theme: Theme; $columns?: number }>\`
   gap: 20px;
 
   \${mq("lg")} {
+    \${({ $columns }) =>
+      $columns && $columns >= 3
+        ? \`display: grid; grid-template-columns: repeat(2, 1fr);\`
+        : ""}
+  }
+
+  \${mq("xl")} {
     display: grid;
     grid-template-columns: repeat(\${({ $columns }) => $columns ?? 1}, 1fr);
   }
