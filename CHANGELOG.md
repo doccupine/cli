@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.68
+
+- Show missing component placeholders in MDX pages
+- Allow null date in PagesProps type
+- Add responsive md breakpoint for 3+ column grids
+
 ## 0.0.67
 
 - Fix dark-mode FOUC on Safari and Firefox
