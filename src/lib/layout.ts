@@ -166,6 +166,18 @@ ${
 
   return (
     <html lang="en">
+      <head>
+        {/* Prevents dark-mode FOUC on Safari/Firefox. These browsers don't support
+            Sec-CH-Prefers-Color-Scheme (handled by middleware for Chrome), so on
+            a first visit this blocking script detects prefers-color-scheme, sets
+            the theme cookie, and hides the body until router.refresh() re-renders
+            with the correct theme (see ClientThemeProvider). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: \`(function(){try{var c=document.cookie.split(";").find(function(s){return s.trim().startsWith("theme=")});if(!c){var d=window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches;document.cookie="theme="+(d?"dark":"light")+";path=/;max-age=31536000;SameSite=Lax";if(d){var s=document.createElement("style");s.id="__theme-init";s.textContent="html{background:#000!important;color-scheme:dark}body{visibility:hidden}";document.head.appendChild(s)}}}catch(e){}})();\`,
+          }}
+        />
+      </head>
       <body className={font.className}>
         <StyledComponentsRegistry>
           <CherryThemeProvider theme={theme} themeDark={themeDark}>
@@ -213,6 +225,18 @@ ${
 
   return (
     <html lang="en">
+      <head>
+        {/* Prevents dark-mode FOUC on Safari/Firefox. These browsers don't support
+            Sec-CH-Prefers-Color-Scheme (handled by middleware for Chrome), so on
+            a first visit this blocking script detects prefers-color-scheme, sets
+            the theme cookie, and hides the body until router.refresh() re-renders
+            with the correct theme (see ClientThemeProvider). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: \`(function(){try{var c=document.cookie.split(";").find(function(s){return s.trim().startsWith("theme=")});if(!c){var d=window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches;document.cookie="theme="+(d?"dark":"light")+";path=/;max-age=31536000;SameSite=Lax";if(d){var s=document.createElement("style");s.id="__theme-init";s.textContent="html{background:#000!important;color-scheme:dark}body{visibility:hidden}";document.head.appendChild(s)}}}catch(e){}})();\`,
+          }}
+        />
+      </head>
       <body className={font.className}>
         <StyledComponentsRegistry>
           <CherryThemeProvider theme={theme} themeDark={themeDark}>

@@ -38,24 +38,25 @@ function ClientThemeProvider({
         .find((c) => c.startsWith("theme="));
       const cookieValue = cookie ? cookie.split("=")[1] : undefined;
       if (!cookieValue) {
+        // Fallback: blocking script should have set this, but handle edge cases
         const prefersDark =
           window.matchMedia &&
           window.matchMedia("(prefers-color-scheme: dark)").matches;
         const shouldBe = prefersDark ? "dark" : "light";
-        fetch("/api/theme", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ theme: shouldBe }),
-        })
-          .then(() => {
-            router.refresh();
-          })
-          .catch(() => {
-            console.error("Error setting theme");
-          });
+        document.cookie = \`theme=\${shouldBe};path=/;max-age=31536000;SameSite=Lax\`;
+        router.refresh();
+      } else if (theme.isDark !== (cookieValue === "dark")) {
+        // Server-rendered theme doesn't match cookie (e.g., cookie was set
+        // by the blocking script after SSR already committed to light theme)
+        router.refresh();
+      } else {
+        // Theme matches cookie - remove the flash-prevention style injected
+        // by the blocking script so styled-components takes over
+        const el = document.getElementById("__theme-init");
+        if (el) el.remove();
       }
     } catch {}
-  }, [router]);
+  }, [router, theme.isDark]);
 
   const effectiveTheme = useMemo(
     () => overrideTheme ?? theme,
