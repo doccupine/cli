@@ -893,7 +893,15 @@ function Chat() {
                           .replace(/\\b\\w/g, (c: string) => c.toUpperCase())
                       : "Home";
                     return (
-                      <StyledSourceLink key={src.id} href={href}>
+                      <StyledSourceLink
+                        key={src.id}
+                        href={href}
+                        onClick={() => {
+                          if (window.innerWidth <= 992) {
+                            closeChat();
+                          }
+                        }}
+                      >
                         {label}
                       </StyledSourceLink>
                     );
