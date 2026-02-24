@@ -11,7 +11,13 @@ section: "Platform"
 The file editor is the main workspace for your documentation project. It provides a browser-based file explorer and editor for working with your MDX files and assets.
 
 ## File explorer
-The left panel shows your repository's file tree. You can:
+The left panel has three tabs:
+
+- **Files** - browse your repository's file tree, create and manage files and folders
+- **Media** - manage uploaded images and binary assets
+- **Navigation** - open the [Navigation Builder](/navigation-settings) to configure your sidebar structure with drag-and-drop
+
+In the Files tab, you can:
 
 - **Browse** directories and files
 - **Create** new files and folders
