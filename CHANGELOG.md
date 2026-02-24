@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.0.70
+
+- Add PostHog analytics integration via `analytics.json`
+- Fix generated layout indentation when PostHog is enabled
+- Close chat when tapping source link on mobile
+
+## 0.0.69
+
+- Replace navigation and sections MDX pages with Navigation Builder guide
+- Fix internal link to navigation-settings page
+- Fix directory structure in media-and-assets guide
+
 ## 0.0.68
 
 - Show missing component placeholders in MDX pages
