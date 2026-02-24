@@ -105,6 +105,7 @@ import { platformThemeSettingsMdxTemplate } from "../templates/mdx/platform/them
 import { platformNavigationSettingsMdxTemplate } from "../templates/mdx/platform/navigation-settings.mdx.js";
 import { platformFontsSettingsMdxTemplate } from "../templates/mdx/platform/fonts-settings.mdx.js";
 import { platformExternalLinksMdxTemplate } from "../templates/mdx/platform/external-links.mdx.js";
+import { platformAnalyticsMdxTemplate } from "../templates/mdx/platform/analytics.mdx.js";
 import { platformAiAssistantMdxTemplate } from "../templates/mdx/platform/ai-assistant.mdx.js";
 import { platformCustomDomainsMdxTemplate } from "../templates/mdx/platform/custom-domains.mdx.js";
 import { platformBuildAndDeployMdxTemplate } from "../templates/mdx/platform/build-and-deploy.mdx.js";
@@ -221,6 +222,7 @@ export const startingDocsStructure: Record<string, string> = {
   "platform/navigation-settings.mdx": platformNavigationSettingsMdxTemplate,
   "platform/fonts-settings.mdx": platformFontsSettingsMdxTemplate,
   "platform/external-links.mdx": platformExternalLinksMdxTemplate,
+  "platform/analytics.mdx": platformAnalyticsMdxTemplate,
   "platform/ai-assistant.mdx": platformAiAssistantMdxTemplate,
   "platform/custom-domains.mdx": platformCustomDomainsMdxTemplate,
   "platform/build-and-deploy.mdx": platformBuildAndDeployMdxTemplate,
