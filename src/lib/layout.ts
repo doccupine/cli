@@ -83,6 +83,14 @@ export const layoutTemplate = (
   analyticsEnabled: boolean = false,
 ): string => {
   const hasSections = sectionsConfig !== null && sectionsConfig.length > 0;
+  // Extra indent when PostHogProvider wraps the inner content
+  const a = analyticsEnabled ? "  " : "";
+  // ChtProvider line wraps at wider indent
+  const chtOpen = analyticsEnabled
+    ? `<ChtProvider
+${a}              isChatActive={process.env.LLM_PROVIDER ? true : false}
+${a}            >`
+    : `<ChtProvider isChatActive={process.env.LLM_PROVIDER ? true : false}>`;
 
   return `import type { Metadata } from "next";
 ${isGoogleFont(fontConfig) ? `import { ${fontConfig.googleFont.fontName} } from "next/font/google";` : isLocalFont(fontConfig) ? 'import localFont from "next/font/local";' : 'import { Inter } from "next/font/google";'}
@@ -181,26 +189,24 @@ ${
       </head>
       <body className={font.className}>
         <StyledComponentsRegistry>
-${analyticsEnabled ? "          <PostHogProvider>" : ""}
-          <CherryThemeProvider theme={theme} themeDark={themeDark}>
-            <ChtProvider isChatActive={process.env.LLM_PROVIDER ? true : false}>
-              <Header>
-                <SectionBar sections={doccupineSections} />
-              </Header>
-              {process.env.LLM_PROVIDER && <Chat />}
-              <DocsWrapper>
-                <SectionNavProvider
-                  sections={doccupineSections}
-                  allPages={pages}
-                  hideBranding={hideBranding}
-                >
-                  {children}
-                </SectionNavProvider>
-              </DocsWrapper>
-            </ChtProvider>
-          </CherryThemeProvider>
-${analyticsEnabled ? "          </PostHogProvider>" : ""}
-        </StyledComponentsRegistry>
+${analyticsEnabled ? "          <PostHogProvider>\n" : ""}${a}          <CherryThemeProvider theme={theme} themeDark={themeDark}>
+${a}            ${chtOpen}
+${a}              <Header>
+${a}                <SectionBar sections={doccupineSections} />
+${a}              </Header>
+${a}              {process.env.LLM_PROVIDER && <Chat />}
+${a}              <DocsWrapper>
+${a}                <SectionNavProvider
+${a}                  sections={doccupineSections}
+${a}                  allPages={pages}
+${a}                  hideBranding={hideBranding}
+${a}                >
+${a}                  {children}
+${a}                </SectionNavProvider>
+${a}              </DocsWrapper>
+${a}            </ChtProvider>
+${a}          </CherryThemeProvider>
+${analyticsEnabled ? "          </PostHogProvider>\n" : ""}        </StyledComponentsRegistry>
       </body>
     </html>
   );
@@ -242,26 +248,24 @@ ${analyticsEnabled ? "          </PostHogProvider>" : ""}
       </head>
       <body className={font.className}>
         <StyledComponentsRegistry>
-${analyticsEnabled ? "          <PostHogProvider>" : ""}
-          <CherryThemeProvider theme={theme} themeDark={themeDark}>
-            <ChtProvider isChatActive={process.env.LLM_PROVIDER ? true : false}>
-              <Header />
-              {process.env.LLM_PROVIDER && <Chat />}
-              <SectionBarProvider hasSectionBar={false}>
-                <DocsWrapper>
-                  <SideBar result={result.length ? result : defaultResults} />
-                  {children}
-                  <DocsNavigation
-                    result={result.length ? result : defaultResults}
-                  />
-                  <StaticLinks />
-                  <Footer hideBranding={hideBranding} />
-                </DocsWrapper>
-              </SectionBarProvider>
-            </ChtProvider>
-          </CherryThemeProvider>
-${analyticsEnabled ? "          </PostHogProvider>" : ""}
-        </StyledComponentsRegistry>
+${analyticsEnabled ? "          <PostHogProvider>\n" : ""}${a}          <CherryThemeProvider theme={theme} themeDark={themeDark}>
+${a}            ${chtOpen}
+${a}              <Header />
+${a}              {process.env.LLM_PROVIDER && <Chat />}
+${a}              <SectionBarProvider hasSectionBar={false}>
+${a}                <DocsWrapper>
+${a}                  <SideBar result={result.length ? result : defaultResults} />
+${a}                  {children}
+${a}                  <DocsNavigation
+${a}                    result={result.length ? result : defaultResults}
+${a}                  />
+${a}                  <StaticLinks />
+${a}                  <Footer hideBranding={hideBranding} />
+${a}                </DocsWrapper>
+${a}              </SectionBarProvider>
+${a}            </ChtProvider>
+${a}          </CherryThemeProvider>
+${analyticsEnabled ? "          </PostHogProvider>\n" : ""}        </StyledComponentsRegistry>
       </body>
     </html>
   );

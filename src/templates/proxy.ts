@@ -27,7 +27,9 @@ function captureServerPageview(req: NextRequest, event: NextFetchEvent) {
   const posthog = getPostHogServerClient();
   if (!posthog) return;
 
-  const phCookie = req.cookies.get("ph_${analyticsConfig!.posthog.key}_posthog")?.value;
+  const phCookie = req.cookies.get(
+    "ph_${analyticsConfig!.posthog.key}_posthog",
+  )?.value;
   let distinctId: string | undefined;
   if (phCookie) {
     try {

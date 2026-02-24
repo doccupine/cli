@@ -14,7 +14,10 @@ const analyticsConfig = rawAnalyticsConfig as AnalyticsConfig;
 let client: PostHog | null = null;
 
 export function getPostHogServerClient(): PostHog | null {
-  if (analyticsConfig?.provider !== "posthog" || !analyticsConfig.posthog?.key) {
+  if (
+    analyticsConfig?.provider !== "posthog" ||
+    !analyticsConfig.posthog?.key
+  ) {
     return null;
   }
 
