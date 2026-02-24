@@ -15,7 +15,7 @@ The left panel has three tabs:
 
 - **Files** - browse your repository's file tree, create and manage files and folders
 - **Media** - manage uploaded images and binary assets
-- **Navigation** - open the [Navigation Builder](/navigation-settings) to configure your sidebar structure with drag-and-drop
+- **Navigation** - open the [Navigation Builder](/platform/navigation-settings) to configure your sidebar structure with drag-and-drop
 
 In the Files tab, you can:
 
