@@ -135,6 +135,7 @@ Place these JSON files in your project root (where you run `doccupine`). They ar
 | `links.json`      | Static header/footer links                                                                                |
 | `fonts.json`      | Font configuration (Google Fonts or local)                                                                |
 | `sections.json`   | Section definitions for tabbed doc groups (see [Sections](#sections))                                     |
+| `analytics.json`  | Analytics provider configuration (PostHog supported)                                                      |
 
 ## Public Directory
 
