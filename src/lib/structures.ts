@@ -1,11 +1,9 @@
 import { envExampleTemplate } from "../templates/env.example.js";
 import { gitignoreTemplate } from "../templates/gitignore.js";
 import { eslintConfigTemplate } from "../templates/eslint.config.js";
-import { nextConfigTemplate } from "../templates/next.config.js";
 import { packageJsonTemplate } from "../templates/package.js";
 import { prettierrcTemplate } from "../templates/prettierrc.js";
 import { prettierignoreTemplate } from "../templates/prettierignore.js";
-import { proxyTemplate } from "../templates/proxy.js";
 import { tsconfigTemplate } from "../templates/tsconfig.js";
 
 import { mcpRoutesTemplate } from "../templates/app/api/mcp/route.js";
@@ -21,6 +19,7 @@ import { docsTemplate } from "../templates/components/Docs.js";
 import { docsSideBarTemplate } from "../templates/components/DocsSideBar.js";
 import { mdxComponentsTemplate } from "../templates/components/MDXComponents.js";
 import { sectionNavProviderTemplate } from "../templates/components/SectionNavProvider.js";
+import { postHogProviderTemplate } from "../templates/components/PostHogProvider.js";
 import { sideBarTemplate } from "../templates/components/SideBar.js";
 
 import { sectionBarTemplate } from "../templates/components/layout/SectionBar.js";
@@ -59,6 +58,8 @@ import { llmFactoryTemplate } from "../templates/services/llm/factory.js";
 import { llmIndexTemplate } from "../templates/services/llm/index.js";
 import { llmTypesTemplate } from "../templates/services/llm/types.js";
 
+import { posthogServerTemplate } from "../templates/lib/posthog.js";
+
 import { styledDTemplate } from "../templates/types/styled.js";
 
 import { orderNavItemsTemplate } from "../templates/utils/orderNavItems.js";
@@ -68,6 +69,7 @@ import { configTemplate } from "../templates/utils/config.js";
 
 import { accordionMdxTemplate } from "../templates/mdx/accordion.mdx.js";
 import { aiAssistantMdxTemplate } from "../templates/mdx/ai-assistant.mdx.js";
+import { analyticsMdxTemplate } from "../templates/mdx/analytics.mdx.js";
 import { buttonsMdxTemplate } from "../templates/mdx/buttons.mdx.js";
 import { calloutsMdxTemplate } from "../templates/mdx/callouts.mdx.js";
 import { cardsMdxTemplate } from "../templates/mdx/cards.mdx.js";
@@ -116,9 +118,7 @@ export const appStructure: Record<string, string> = {
   ".prettierrc": prettierrcTemplate,
   ".prettierignore": prettierignoreTemplate,
   "eslint.config.mjs": eslintConfigTemplate,
-  "next.config.ts": nextConfigTemplate,
   "package.json": packageJsonTemplate,
-  "proxy.ts": proxyTemplate,
   "tsconfig.json": tsconfigTemplate,
 
   "app/not-found.tsx": notFoundTemplate,
@@ -138,6 +138,8 @@ export const appStructure: Record<string, string> = {
 
   "types/styled.d.ts": styledDTemplate,
 
+  "lib/posthog.ts": posthogServerTemplate,
+
   "utils/branding.ts": brandingTemplate,
   "utils/orderNavItems.ts": orderNavItemsTemplate,
   "utils/rateLimit.ts": rateLimitTemplate,
@@ -150,6 +152,7 @@ export const appStructure: Record<string, string> = {
   "components/DocsSideBar.tsx": docsSideBarTemplate,
   "components/MDXComponents.tsx": mdxComponentsTemplate,
   "components/SectionNavProvider.tsx": sectionNavProviderTemplate,
+  "components/PostHogProvider.tsx": postHogProviderTemplate,
   "components/SideBar.tsx": sideBarTemplate,
 
   "components/layout/Accordion.tsx": accordionTemplate,
@@ -183,6 +186,7 @@ export const appStructure: Record<string, string> = {
 export const startingDocsStructure: Record<string, string> = {
   "accordion.mdx": accordionMdxTemplate,
   "ai-assistant.mdx": aiAssistantMdxTemplate,
+  "analytics.mdx": analyticsMdxTemplate,
   "buttons.mdx": buttonsMdxTemplate,
   "callouts.mdx": calloutsMdxTemplate,
   "cards.mdx": cardsMdxTemplate,

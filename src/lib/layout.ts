@@ -80,6 +80,7 @@ export const layoutTemplate = (
   pages: PageData[],
   fontConfig: FontConfig | null,
   sectionsConfig: SectionConfig[] | null = null,
+  analyticsEnabled: boolean = false,
 ): string => {
   const hasSections = sectionsConfig !== null && sectionsConfig.length > 0;
 
@@ -124,7 +125,7 @@ ${
 import { SectionNavProvider } from "@/components/SectionNavProvider";
 `
     : ""
-}const Chat = dynamic(() => import("@/components/Chat").then((mod) => mod.Chat));
+}${analyticsEnabled ? `import { PostHogProvider } from "@/components/PostHogProvider";\n` : ""}const Chat = dynamic(() => import("@/components/Chat").then((mod) => mod.Chat));
 
 ${
   isGoogleFont(fontConfig)
@@ -180,6 +181,7 @@ ${
       </head>
       <body className={font.className}>
         <StyledComponentsRegistry>
+${analyticsEnabled ? "          <PostHogProvider>" : ""}
           <CherryThemeProvider theme={theme} themeDark={themeDark}>
             <ChtProvider isChatActive={process.env.LLM_PROVIDER ? true : false}>
               <Header>
@@ -197,6 +199,7 @@ ${
               </DocsWrapper>
             </ChtProvider>
           </CherryThemeProvider>
+${analyticsEnabled ? "          </PostHogProvider>" : ""}
         </StyledComponentsRegistry>
       </body>
     </html>
@@ -239,6 +242,7 @@ ${
       </head>
       <body className={font.className}>
         <StyledComponentsRegistry>
+${analyticsEnabled ? "          <PostHogProvider>" : ""}
           <CherryThemeProvider theme={theme} themeDark={themeDark}>
             <ChtProvider isChatActive={process.env.LLM_PROVIDER ? true : false}>
               <Header />
@@ -256,6 +260,7 @@ ${
               </SectionBarProvider>
             </ChtProvider>
           </CherryThemeProvider>
+${analyticsEnabled ? "          </PostHogProvider>" : ""}
         </StyledComponentsRegistry>
       </body>
     </html>

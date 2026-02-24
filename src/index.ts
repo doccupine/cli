@@ -22,11 +22,14 @@ import {
   generateMetadataBlock,
   generateRuntimeOnlyMetadataBlock,
 } from "./lib/metadata.js";
+import { nextConfigTemplate } from "./templates/next.config.js";
+import { proxyTemplate } from "./templates/proxy.js";
 import type {
   MDXFile,
   PageMeta,
   SectionConfig,
   FontConfig,
+  AnalyticsConfig,
 } from "./lib/types.js";
 
 export {
@@ -50,6 +53,7 @@ class MDXToNextJSGenerator {
   private configWatcher: FSWatcher | null = null;
   private fontWatcher: FSWatcher | null = null;
   private publicWatcher: FSWatcher | null = null;
+  private analyticsWatcher: FSWatcher | null = null;
   private configFiles = [
     "theme.json",
     "navigation.json",
@@ -58,6 +62,8 @@ class MDXToNextJSGenerator {
     "sections.json",
   ];
   private fontConfigFile = "fonts.json";
+  private analyticsConfigFile = "analytics.json";
+  private analyticsConfig: AnalyticsConfig | null = null;
   private sectionsConfig: SectionConfig[] | null = null;
   /** Guards against recursive reprocessing when maybeUpdateSections() triggers processAllMDXFiles() */
   private isReprocessing = false;
@@ -75,6 +81,7 @@ class MDXToNextJSGenerator {
     await fs.ensureDir(this.outputDir);
 
     this.sectionsConfig = await this.resolveSections();
+    this.analyticsConfig = await this.loadAnalyticsConfig();
 
     if (this.sectionsConfig) {
       console.log(
@@ -84,10 +91,17 @@ class MDXToNextJSGenerator {
       );
     }
 
+    if (this.analyticsConfig) {
+      console.log(
+        chalk.blue(`📊 Analytics enabled: ${this.analyticsConfig.provider}`),
+      );
+    }
+
     await this.createNextJSStructure();
     await this.createStartingDocs();
     await this.copyCustomConfigFiles();
     await this.copyFontConfig();
+    await this.copyAnalyticsConfig();
     await this.copyPublicFiles();
     await this.processAllMDXFiles();
     await this.generateSectionIndexPages();
@@ -103,6 +117,9 @@ class MDXToNextJSGenerator {
   async createNextJSStructure() {
     const structure: Record<string, string | Promise<string>> = {
       ...appStructure,
+      "next.config.ts": nextConfigTemplate(this.analyticsConfig),
+      "proxy.ts": proxyTemplate(this.analyticsConfig),
+      "analytics.json": `{}\n`,
       "config.json": `{}\n`,
       "links.json": `[]\n`,
       "navigation.json": `[]\n`,
@@ -186,6 +203,45 @@ class MDXToNextJSGenerator {
     }
 
     return null;
+  }
+
+  async loadAnalyticsConfig(): Promise<AnalyticsConfig | null> {
+    const analyticsPath = path.join(this.rootDir, this.analyticsConfigFile);
+
+    try {
+      if (await fs.pathExists(analyticsPath)) {
+        const content = await fs.readFile(analyticsPath, "utf8");
+        const parsed = JSON.parse(content);
+        if (parsed?.provider === "posthog" && parsed.posthog?.key) {
+          return parsed as AnalyticsConfig;
+        }
+      }
+    } catch (error) {
+      console.warn(
+        chalk.yellow(`⚠️ Error reading ${this.analyticsConfigFile}`),
+        error,
+      );
+    }
+
+    return null;
+  }
+
+  async copyAnalyticsConfig() {
+    console.log(chalk.blue(`🔍 Checking for analytics configuration...`));
+
+    const sourcePath = path.join(this.rootDir, this.analyticsConfigFile);
+    const destPath = path.join(this.outputDir, this.analyticsConfigFile);
+
+    if (await fs.pathExists(sourcePath)) {
+      await fs.copy(sourcePath, destPath);
+      console.log(
+        chalk.green(`  ✓ Copied ${this.analyticsConfigFile} to Next.js app`),
+      );
+    } else {
+      console.log(
+        chalk.gray(`  ✗ ${this.analyticsConfigFile} not found, skipping`),
+      );
+    }
   }
 
   async loadSectionsConfig(): Promise<SectionConfig[] | null> {
@@ -445,6 +501,83 @@ class MDXToNextJSGenerator {
     }
   }
 
+  async handleAnalyticsConfigChange() {
+    console.log(chalk.cyan(`📊 Analytics configuration changed`));
+
+    const sourcePath = path.join(this.rootDir, this.analyticsConfigFile);
+    const destPath = path.join(this.outputDir, this.analyticsConfigFile);
+
+    try {
+      await fs.copy(sourcePath, destPath);
+      console.log(
+        chalk.green(`📋 Updated ${this.analyticsConfigFile} in Next.js app`),
+      );
+
+      this.analyticsConfig = await this.loadAnalyticsConfig();
+
+      // Regenerate dynamic templates that depend on analytics config
+      await fs.writeFile(
+        path.join(this.outputDir, "next.config.ts"),
+        nextConfigTemplate(this.analyticsConfig),
+        "utf8",
+      );
+      await fs.writeFile(
+        path.join(this.outputDir, "proxy.ts"),
+        proxyTemplate(this.analyticsConfig),
+        "utf8",
+      );
+      await this.updateRootLayout();
+
+      console.log(chalk.green(`✅ Analytics configuration updated`));
+
+      if (this.analyticsConfig) {
+        console.log(
+          chalk.yellow(
+            `⚠️ Next.js dev server restart may be required for analytics proxy changes`,
+          ),
+        );
+      }
+    } catch (error) {
+      console.error(
+        chalk.red(`❌ Error updating analytics configuration:`),
+        error,
+      );
+    }
+  }
+
+  async handleAnalyticsConfigDelete() {
+    console.log(chalk.red(`🗑️ Analytics configuration deleted`));
+
+    const destPath = path.join(this.outputDir, this.analyticsConfigFile);
+
+    try {
+      // Write empty analytics.json so runtime imports don't break
+      await fs.writeFile(destPath, `{}\n`, "utf8");
+
+      this.analyticsConfig = null;
+
+      // Regenerate dynamic templates without analytics
+      await fs.writeFile(
+        path.join(this.outputDir, "next.config.ts"),
+        nextConfigTemplate(null),
+        "utf8",
+      );
+      await fs.writeFile(
+        path.join(this.outputDir, "proxy.ts"),
+        proxyTemplate(null),
+        "utf8",
+      );
+      await this.updateRootLayout();
+
+      console.log(chalk.green(`✅ Analytics removed from Next.js app`));
+    } catch (error) {
+      console.error(
+        chalk.red(`❌ Error removing analytics configuration:`),
+        error,
+      );
+    }
+  }
+
   async copyPublicFiles() {
     const publicDir = path.join(this.rootDir, "public");
     const destDir = path.join(this.outputDir, "public");
@@ -591,6 +724,28 @@ class MDXToNextJSGenerator {
       })
       .on("error", (error: unknown) => {
         console.error(chalk.red("❌ Font watcher error:"), error);
+      });
+
+    const analyticsPath = path.join(this.rootDir, this.analyticsConfigFile);
+
+    this.analyticsWatcher = chokidar.watch(analyticsPath, {
+      persistent: true,
+      ignoreInitial: true,
+    });
+
+    this.analyticsWatcher
+      .on("add", () => {
+        console.log(chalk.cyan(`📊 Analytics configuration added`));
+        this.handleAnalyticsConfigChange();
+      })
+      .on("change", () => {
+        this.handleAnalyticsConfigChange();
+      })
+      .on("unlink", () => {
+        this.handleAnalyticsConfigDelete();
+      })
+      .on("error", (error: unknown) => {
+        console.error(chalk.red("❌ Analytics watcher error:"), error);
       });
 
     const publicDir = path.join(this.rootDir, "public");
@@ -773,7 +928,13 @@ class MDXToNextJSGenerator {
   async generateRootLayout(): Promise<string> {
     const pages = await this.buildAllPagesMeta();
     const fontConfig = await this.loadFontConfig();
-    return layoutTemplate(pages, fontConfig, this.sectionsConfig);
+    const analyticsEnabled = this.analyticsConfig !== null;
+    return layoutTemplate(
+      pages,
+      fontConfig,
+      this.sectionsConfig,
+      analyticsEnabled,
+    );
   }
 
   async generateSectionIndexPages() {
@@ -969,6 +1130,12 @@ export default function Page() {
     if (this.fontWatcher) {
       await this.fontWatcher.close();
       console.log(chalk.yellow("👋 Stopped watching for font config changes"));
+    }
+    if (this.analyticsWatcher) {
+      await this.analyticsWatcher.close();
+      console.log(
+        chalk.yellow("👋 Stopped watching for analytics config changes"),
+      );
     }
     if (this.publicWatcher) {
       await this.publicWatcher.close();

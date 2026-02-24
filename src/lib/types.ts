@@ -32,3 +32,13 @@ export interface DoccupineConfig {
 export interface FontConfig {
   [key: string]: any;
 }
+
+export interface PostHogConfig {
+  key: string;
+  host?: string;
+}
+
+export interface AnalyticsConfig {
+  provider: "posthog";
+  posthog: PostHogConfig;
+}

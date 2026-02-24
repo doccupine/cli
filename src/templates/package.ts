@@ -24,6 +24,8 @@ export const packageJsonTemplate =
         next: "16.1.6",
         "next-mdx-remote": "^6.0.0",
         polished: "^4.3.1",
+        "posthog-js": "^1.353.0",
+        "posthog-node": "^5.25.0",
         react: "19.2.4",
         "react-dom": "19.2.4",
         "rehype-highlight": "^7.0.2",
