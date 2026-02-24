@@ -20,7 +20,8 @@ my-docs/
 │   ├── logo.svg
 │   └── fonts/
 │       └── custom-font.woff2
-├── index.mdx
+├── docs/
+│   └── index.mdx
 ├── config.json
 └── theme.json
 \`\`\`
