@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.0.72
+
+- Add theme-aware visibility classes for light/dark mode content
+- Fix button text color inheritance for nested paragraph elements
+- Fix public directory watcher to detect directory creation at runtime
+- Update dependencies
+
+## 0.0.71
+
+- Add analytics platform documentation template
+- Update template dependencies and migrate PostHog React package
+- Add `analytics.json` to README configuration files table
+
 ## 0.0.70
 
 - Add PostHog analytics integration via `analytics.json`
