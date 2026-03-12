@@ -24,6 +24,10 @@ const StyledLinkButton = styled(Link)<LinkButtonProps>\`
   \${({ theme, $variant, $size, $outline, $fullWidth, disabled }) =>
     buttonStyles(theme, $variant, $size, $outline, $fullWidth, disabled)}
 
+  & p {
+    color: inherit;
+  }
+
   & svg.lucide {
     margin: auto 0;
     min-width: min-content;
@@ -34,6 +38,10 @@ const StyledLinkButton = styled(Link)<LinkButtonProps>\`
 const ButtonBase = styled.button<ButtonProps>\`
   \${({ theme, $variant, $size, $outline, $fullWidth, disabled }) =>
     buttonStyles(theme, $variant, $size, $outline, $fullWidth, disabled)}
+
+  & p {
+    color: inherit;
+  }
 
   & svg.lucide {
     margin: auto 0;
