@@ -53,6 +53,7 @@ class MDXToNextJSGenerator {
   private configWatcher: FSWatcher | null = null;
   private fontWatcher: FSWatcher | null = null;
   private publicWatcher: FSWatcher | null = null;
+  private rootDirWatcher: FSWatcher | null = null;
   private analyticsWatcher: FSWatcher | null = null;
   private configFiles = [
     "theme.json",
@@ -751,40 +752,73 @@ class MDXToNextJSGenerator {
     const publicDir = path.join(this.rootDir, "public");
 
     if (await fs.pathExists(publicDir)) {
-      this.publicWatcher = chokidar.watch(publicDir, {
-        persistent: true,
-        ignoreInitial: true,
-      });
-
-      this.publicWatcher
-        .on("add", (filePath: string) => {
-          console.log(
-            chalk.cyan(
-              `📁 Public file added: ${path.relative(publicDir, filePath)}`,
-            ),
-          );
-          this.handlePublicFileChange(filePath);
-        })
-        .on("change", (filePath: string) => {
-          console.log(
-            chalk.cyan(
-              `📁 Public file changed: ${path.relative(publicDir, filePath)}`,
-            ),
-          );
-          this.handlePublicFileChange(filePath);
-        })
-        .on("unlink", (filePath: string) => {
-          console.log(
-            chalk.red(
-              `🗑️ Public file deleted: ${path.relative(publicDir, filePath)}`,
-            ),
-          );
-          this.handlePublicFileDelete(filePath);
-        })
-        .on("error", (error: unknown) => {
-          console.error(chalk.red("❌ Public watcher error:"), error);
-        });
+      this.setupPublicWatcher();
     }
+
+    // Watch rootDir for public directory creation
+    this.rootDirWatcher = chokidar.watch(this.rootDir, {
+      persistent: true,
+      ignoreInitial: true,
+      depth: 0,
+    });
+
+    this.rootDirWatcher
+      .on("addDir", async (dirPath: string) => {
+        if (
+          path.basename(dirPath) === "public" &&
+          path.dirname(dirPath) === this.rootDir &&
+          !this.publicWatcher
+        ) {
+          console.log(chalk.cyan("📁 Public directory created"));
+          await this.copyPublicFiles();
+          this.setupPublicWatcher();
+        }
+      })
+      .on("error", (error: unknown) => {
+        console.error(chalk.red("❌ Root dir watcher error:"), error);
+      });
+  }
+
+  private setupPublicWatcher() {
+    if (this.publicWatcher) {
+      return;
+    }
+
+    const publicDir = path.join(this.rootDir, "public");
+
+    this.publicWatcher = chokidar.watch(publicDir, {
+      persistent: true,
+      ignoreInitial: true,
+    });
+
+    this.publicWatcher
+      .on("add", (filePath: string) => {
+        console.log(
+          chalk.cyan(
+            `📁 Public file added: ${path.relative(publicDir, filePath)}`,
+          ),
+        );
+        this.handlePublicFileChange(filePath);
+      })
+      .on("change", (filePath: string) => {
+        console.log(
+          chalk.cyan(
+            `📁 Public file changed: ${path.relative(publicDir, filePath)}`,
+          ),
+        );
+        this.handlePublicFileChange(filePath);
+      })
+      .on("unlink", (filePath: string) => {
+        console.log(
+          chalk.red(
+            `🗑️ Public file deleted: ${path.relative(publicDir, filePath)}`,
+          ),
+        );
+        this.handlePublicFileDelete(filePath);
+      })
+      .on("error", (error: unknown) => {
+        console.error(chalk.red("❌ Public watcher error:"), error);
+      });
   }
 
   private async parseMDXFile(file: string): Promise<PageMeta> {
@@ -1142,6 +1176,9 @@ export default function Page() {
       console.log(
         chalk.yellow("👋 Stopped watching for public directory changes"),
       );
+    }
+    if (this.rootDirWatcher) {
+      await this.rootDirWatcher.close();
     }
   }
 }
