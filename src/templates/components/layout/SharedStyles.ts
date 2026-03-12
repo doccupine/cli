@@ -110,14 +110,17 @@ export const stylesLists = css<{ theme: Theme }>\`
 \`;
 
 export const styledTable = css<{ theme: Theme }>\`
+  & .table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+  }
+
   & table {
     margin: 0;
     padding: 0;
     border-collapse: collapse;
     width: 100%;
     text-align: left;
-    display: block;
-    overflow-x: auto;
 
     & tr {
       margin: 0;

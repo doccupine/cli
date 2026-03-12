@@ -144,6 +144,13 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       );
     },
 
+    // Tables - wrap in a div for responsive overflow
+    table: (props: React.TableHTMLAttributes<HTMLTableElement>) => (
+      <div className="table-wrapper">
+        <table {...props} />
+      </div>
+    ),
+
     // Code blocks
     pre: Pre,
 
