@@ -100,6 +100,14 @@ b {
 
 .full-width {
   width: 100%;
+}
+
+.light-only {
+  \${({ theme }) => theme.isDark && "display: none !important;"}
+}
+
+.dark-only {
+  \${({ theme }) => !theme.isDark && "display: none !important;"}
 }\`;
 
 export { GlobalStyles };

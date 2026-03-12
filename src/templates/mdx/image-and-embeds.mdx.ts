@@ -34,6 +34,21 @@ Embed images in your Markdown content using HTML syntax.
 <img src="https://docs.doccupine.com/demo.png" alt="Alt text">
 \`\`\`
 
+### Theme-aware images
+Show different images depending on whether the user is in light or dark mode. Add the \`light-only\` or \`dark-only\` className to display an image exclusively in that theme.
+
+\`\`\`md
+<img className="light-only" src="/images/diagram-light.png" alt="Diagram">
+<img className="dark-only" src="/images/diagram-dark.png" alt="Diagram">
+\`\`\`
+
+<img className="light-only" src="https://docs.doccupine.com/demo.png" alt="This image is only visible in light mode">
+<img className="dark-only" src="https://docs.doccupine.com/demo.png" alt="This image is only visible in dark mode" style={{ filter: "invert(1)" }}>
+
+<Callout type="note">
+  The \`light-only\` and \`dark-only\` classes work on any element, not just images. You can use them on videos, iframes, or wrapper divs too.
+</Callout>
+
 ## Videos
 Videos add a dynamic element to your documentation, engaging your audience and providing a more immersive experience.
 
