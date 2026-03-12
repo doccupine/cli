@@ -42,8 +42,8 @@ Show different images depending on whether the user is in light or dark mode. Ad
 <img className="dark-only" src="/images/diagram-dark.png" alt="Diagram">
 \`\`\`
 
-<img className="light-only" src="https://docs.doccupine.com/demo.png" alt="This image is only visible in light mode">
-<img className="dark-only" src="https://docs.doccupine.com/demo.png" alt="This image is only visible in dark mode" style={{ filter: "invert(1)" }}>
+<img className="light-only" src="https://docs.doccupine.com/demo.png" alt="This image is only visible in light mode" />
+<img className="dark-only" src="https://docs.doccupine.com/demo.png" alt="This image is only visible in dark mode" style={{ filter: "invert(1)" }} />
 
 <Callout type="note">
   The \`light-only\` and \`dark-only\` classes work on any element, not just images. You can use them on videos, iframes, or wrapper divs too.
