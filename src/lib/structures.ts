@@ -30,6 +30,7 @@ import { calloutTemplate } from "../templates/components/layout/Callout.js";
 import { cardTemplate } from "../templates/components/layout/Card.js";
 import { cherryThemeProviderTemplate } from "../templates/components/layout/CherryThemeProvider.js";
 import { clientThemeProviderTemplate } from "../templates/components/layout/ClientThemeProvider.js";
+import { colorSwatchTemplate } from "../templates/components/layout/ColorSwatch.js";
 import { codeTemplate } from "../templates/components/layout/Code.js";
 import { columnsTemplate } from "../templates/components/layout/Columns.js";
 import { demoThemeTemplate } from "../templates/components/layout/DemoTheme.js";
@@ -74,6 +75,7 @@ import { buttonsMdxTemplate } from "../templates/mdx/buttons.mdx.js";
 import { calloutsMdxTemplate } from "../templates/mdx/callouts.mdx.js";
 import { cardsMdxTemplate } from "../templates/mdx/cards.mdx.js";
 import { codeMdxTemplate } from "../templates/mdx/code.mdx.js";
+import { colorSwatchesMdxTemplate } from "../templates/mdx/color-swatches.mdx.js";
 import { columnsMdxTemplate } from "../templates/mdx/columns.mdx.js";
 import { commandsMdxTemplate } from "../templates/mdx/commands.mdx.js";
 import { componentsMdxTemplate } from "../templates/mdx/components.mdx.js";
@@ -163,6 +165,7 @@ export const appStructure: Record<string, string> = {
   "components/layout/Card.tsx": cardTemplate,
   "components/layout/CherryThemeProvider.tsx": cherryThemeProviderTemplate,
   "components/layout/ClientThemeProvider.tsx": clientThemeProviderTemplate,
+  "components/layout/ColorSwatch.tsx": colorSwatchTemplate,
   "components/layout/Code.tsx": codeTemplate,
   "components/layout/Columns.tsx": columnsTemplate,
   "components/layout/DemoTheme.tsx": demoThemeTemplate,
@@ -192,6 +195,7 @@ export const startingDocsStructure: Record<string, string> = {
   "callouts.mdx": calloutsMdxTemplate,
   "cards.mdx": cardsMdxTemplate,
   "code.mdx": codeMdxTemplate,
+  "color-swatches.mdx": colorSwatchesMdxTemplate,
   "columns.mdx": columnsMdxTemplate,
   "commands.mdx": commandsMdxTemplate,
   "components.mdx": componentsMdxTemplate,

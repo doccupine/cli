@@ -15,6 +15,7 @@ import { Field } from "@/components/layout/Field";
 import { Update } from "@/components/layout/Update";
 import { Steps, Step } from "@/components/layout/Steps";
 import { Button } from "@/components/layout/Button";
+import { ColorSwatch, ColorSwatchGroup } from "@/components/layout/ColorSwatch";
 import { DemoTheme } from "@/components/layout/DemoTheme";
 
 interface HeadingProps extends React.HTMLAttributes<HTMLHeadingElement> {
@@ -167,6 +168,8 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     Steps,
     Step,
     Button,
+    ColorSwatch,
+    ColorSwatchGroup,
     DemoTheme,
     Space,
     ...components,
