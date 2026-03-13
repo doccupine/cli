@@ -4,7 +4,7 @@ description: "Display color palettes with labeled swatches to document your them
 date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
-order: 8
+order: 15
 ---
 # Color Swatches
 Display color palettes with labeled swatches to document your theme colors.

@@ -4,7 +4,7 @@ description: "Easily manage and present change history."
 date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
-order: 11
+order: 12
 ---
 # Update
 Easily manage and present change history.

@@ -4,7 +4,7 @@ description: "Guide readers step-by-step using the Steps component."
 date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
-order: 13
+order: 14
 ---
 # Steps
 Guide readers step-by-step using the Steps component.

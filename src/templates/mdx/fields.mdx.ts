@@ -4,7 +4,7 @@ description: "Configure parameters for your API or SDK documentation."
 date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
-order: 10
+order: 11
 ---
 # Fields
 Configure parameters for your API or SDK documentation.

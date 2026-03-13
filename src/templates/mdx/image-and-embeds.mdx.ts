@@ -4,7 +4,7 @@ description: "Enrich your documentation with visuals, videos, and interactive em
 date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
-order: 8
+order: 9
 ---
 # Images and embeds
 Enrich your documentation with visuals, videos, and interactive embeds.

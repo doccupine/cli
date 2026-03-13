@@ -4,7 +4,7 @@ description: "Columns are used to organize content in a grid-like structure."
 date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
-order: 12
+order: 13
 ---
 # Columns
 Arrange multiple cards neatly in a side-by-side grid layout.
