@@ -53,4 +53,7 @@ Doccupine includes a rich set of built-in components you can use directly in you
   <Card title="Steps" icon="footprints" href="/steps">
     Numbered step-by-step guides and walkthroughs.
   </Card>
+  <Card title="Color Swatches" icon="palette" href="/color-swatches">
+    Visual color palette swatches to document your theme colors.
+  </Card>
 </Columns>`;
