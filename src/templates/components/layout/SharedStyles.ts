@@ -22,7 +22,7 @@ export const interactiveStyles = css<{ theme: Theme }>\`
 \`;
 
 export const styledAnchor = css<{ theme: Theme }>\`
-  & a:not([class]) {
+  & a:not([class]):not(:has(img)) {
     color: inherit;
     transition: all 0.3s ease;
     text-decoration: none;
