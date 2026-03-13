@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.0.78
+
+- Update dependencies
+
+## 0.0.77
+
+- Fix `order` frontmatter values in Components category
+
+## 0.0.76
+
+- Add Color Swatches card to components index page
+
+## 0.0.75
+
+- Add ColorSwatch component for documenting color palettes
+- Exclude image-wrapping anchors from styled anchor rules
+
+## 0.0.74
+
+- Fix nested paragraph color inherit rule for buttons
+
+## 0.0.73
+
+- Move table overflow-x to wrapper div for proper layout
+- Self-close img tags in image-and-embeds MDX template
+
 ## 0.0.72
 
 - Add theme-aware visibility classes for light/dark mode content
