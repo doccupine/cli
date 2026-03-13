@@ -1,6 +1,6 @@
 {
   "name": "doccupine",
-  "version": "0.0.77",
+  "version": "0.0.78",
   "description": "Free and open-source documentation platform. Write MDX, get a production-ready site with AI chat, built-in components, and an MCP server - in one command.",
   "main": "dist/index.js",
   "bin": {
