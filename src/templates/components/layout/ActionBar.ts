@@ -176,7 +176,7 @@ function ActionBar({ children, content }: ActionBarProps) {
         <StyledActionBarContent>
           <StyledToggle
             onClick={() => setIsView(!isView)}
-            aria-label="Toggle Theme"
+            aria-label="Toggle View"
             $isActive={isView}
           >
             <Icon name="Eye" />
