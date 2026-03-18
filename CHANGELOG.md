@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.79
+
+- Update to Next.js 16.2
+- Update dependencies
+
 ## 0.0.78
 
 - Update dependencies
