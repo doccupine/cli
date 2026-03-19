@@ -8,6 +8,7 @@ import { tsconfigTemplate } from "../templates/tsconfig.js";
 
 import { mcpRoutesTemplate } from "../templates/app/api/mcp/route.js";
 import { ragRoutesTemplate } from "../templates/app/api/rag/route.js";
+import { searchRoutesTemplate } from "../templates/app/api/search/route.js";
 import { routesTemplate } from "../templates/app/api/theme/routes.js";
 import { notFoundTemplate } from "../templates/app/not-found.js";
 import { themeTemplate } from "../templates/app/theme.js";
@@ -22,6 +23,7 @@ import { sectionNavProviderTemplate } from "../templates/components/SectionNavPr
 import { postHogProviderTemplate } from "../templates/components/PostHogProvider.js";
 import { searchDocsTemplate } from "../templates/components/SearchDocs.js";
 import { sideBarTemplate } from "../templates/components/SideBar.js";
+import { spinnerTemplate } from "../templates/components/Spinner.js";
 
 import { sectionBarTemplate } from "../templates/components/layout/SectionBar.js";
 import { accordionTemplate } from "../templates/components/layout/Accordion.js";
@@ -51,6 +53,7 @@ import { themeToggleTemplate } from "../templates/components/layout/ThemeToggle.
 import { typographyTemplate } from "../templates/components/layout/Typography.js";
 import { updateTemplate } from "../templates/components/layout/Update.js";
 
+import { searchServiceTemplate } from "../templates/services/search.js";
 import { mcpIndexTemplate } from "../templates/services/mcp/index.js";
 import { mcpServerTemplate } from "../templates/services/mcp/server.js";
 import { mcpToolsTemplate } from "../templates/services/mcp/tools.js";
@@ -129,8 +132,10 @@ export const appStructure: Record<string, string> = {
   "app/theme.ts": themeTemplate,
   "app/api/mcp/route.ts": mcpRoutesTemplate,
   "app/api/rag/route.ts": ragRoutesTemplate,
+  "app/api/search/route.ts": searchRoutesTemplate,
   "app/api/theme/route.ts": routesTemplate,
 
+  "services/search.ts": searchServiceTemplate,
   "services/mcp/index.ts": mcpIndexTemplate,
   "services/mcp/server.ts": mcpServerTemplate,
   "services/mcp/tools.ts": mcpToolsTemplate,
@@ -159,6 +164,7 @@ export const appStructure: Record<string, string> = {
   "components/PostHogProvider.tsx": postHogProviderTemplate,
   "components/SearchDocs.tsx": searchDocsTemplate,
   "components/SideBar.tsx": sideBarTemplate,
+  "components/Spinner.tsx": spinnerTemplate,
 
   "components/layout/Accordion.tsx": accordionTemplate,
   "components/layout/ActionBar.tsx": actionBarTemplate,

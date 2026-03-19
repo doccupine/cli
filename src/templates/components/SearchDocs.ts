@@ -13,6 +13,7 @@ import { rgba } from "polished";
 import { Search } from "lucide-react";
 import { mq, Theme } from "@/app/theme";
 import { interactiveStyles } from "@/components/layout/SharedStyled";
+import { Spinner } from "@/components/Spinner";
 
 interface PageItem {
   slug: string;
@@ -25,6 +26,16 @@ interface PageItem {
 interface SectionItem {
   label: string;
   slug: string;
+}
+
+interface ContentHit {
+  slug: string;
+  snippet: string;
+}
+
+interface MergedResult {
+  page: PageItem;
+  snippet?: string;
 }
 
 interface SearchContextValue {
@@ -170,8 +181,30 @@ const StyledResultMeta = styled.span<{ theme: Theme }>\`
   margin-top: 2px;
 \`;
 
+const StyledSnippet = styled.span<{ theme: Theme }>\`
+  font-size: \${({ theme }) => theme.fontSizes.small.lg};
+  color: \${({ theme }) => theme.colors.grayDark};
+  display: block;
+  margin-top: 4px;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  & mark {
+    background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.35)};
+    color: inherit;
+    border-radius: 4px;
+    padding: 0 1px;
+  }
+\`;
+
 const StyledEmpty = styled.div<{ theme: Theme }>\`
-  padding: 20px;
+  padding: 20px 20px 12px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   font-size: \${({ theme }) => theme.fontSizes.small.lg};
   color: \${({ theme }) => theme.colors.gray};
@@ -215,6 +248,25 @@ const StyledSearchButton = styled.button<{ theme: Theme }>\`
   }
 \`;
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function highlightMatch(snippet: string, query: string): string {
+  const escaped = escapeHtml(snippet);
+  if (!query.trim()) return escaped;
+  const q = escapeHtml(query.trim());
+  const regex = new RegExp(
+    \`(\${q.replace(/[.*+?^\${}()|[\\]\\\\]/g, "\\\\$&")})\`,
+    "gi",
+  );
+  return escaped.replace(regex, "<mark>$1</mark>");
+}
+
 function SearchProvider({
   pages,
   sections,
@@ -228,9 +280,13 @@ function SearchProvider({
   const [isClosing, setIsClosing] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
+  const [contentResults, setContentResults] = useState<ContentHit[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLUListElement>(null);
   const closingTimer = useRef<ReturnType<typeof setTimeout>>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
   const router = useRouter();
 
   const sectionLabels = useMemo(() => {
@@ -249,15 +305,20 @@ function SearchProvider({
 
   const closeSearch = useCallback(() => {
     setIsClosing(true);
+    if (abortRef.current) abortRef.current.abort();
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     closingTimer.current = setTimeout(() => {
       setIsVisible(false);
       setIsClosing(false);
       setQuery("");
       setActiveIndex(0);
+      setContentResults([]);
+      setIsSearching(false);
     }, ANIMATION_MS);
   }, []);
 
-  const filtered = useMemo(() => {
+  // Instant title/description filtering
+  const titleFiltered = useMemo(() => {
     if (!query.trim()) return pages;
     const q = query.toLowerCase();
     return pages.filter(
@@ -266,6 +327,71 @@ function SearchProvider({
         p.description?.toLowerCase().includes(q),
     );
   }, [pages, query]);
+
+  // Merge title matches with content matches
+  const merged = useMemo<MergedResult[]>(() => {
+    if (!query.trim()) {
+      return pages.map((p) => ({ page: p }));
+    }
+
+    const titleMatchSlugs = new Set(titleFiltered.map((p) => p.slug));
+    const titleMatches: MergedResult[] = titleFiltered.map((p) => {
+      const hit = contentResults.find((cr) => cr.slug === p.slug);
+      return { page: p, snippet: hit?.snippet };
+    });
+
+    const pageMap = new Map(pages.map((p) => [p.slug, p]));
+    const contentOnly: MergedResult[] = [];
+    for (const cr of contentResults) {
+      if (!titleMatchSlugs.has(cr.slug)) {
+        const page = pageMap.get(cr.slug);
+        if (page) {
+          contentOnly.push({ page, snippet: cr.snippet });
+        }
+      }
+    }
+
+    return [...titleMatches, ...contentOnly];
+  }, [pages, query, titleFiltered, contentResults]);
+
+  // Debounced content search
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (abortRef.current) abortRef.current.abort();
+
+    const q = query.trim();
+    if (q.length < 2) {
+      setContentResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    debounceRef.current = setTimeout(async () => {
+      const controller = new AbortController();
+      abortRef.current = controller;
+      try {
+        const res = await fetch(
+          \`/api/search?q=\${encodeURIComponent(q)}&limit=15\`,
+          { signal: controller.signal },
+        );
+        if (!res.ok) throw new Error("Search failed");
+        const data = await res.json();
+        setContentResults(data.results ?? []);
+      } catch (err: unknown) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setContentResults([]);
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsSearching(false);
+        }
+      }
+    }, 300);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [query]);
 
   const navigate = useCallback(
     (slug: string) => {
@@ -314,14 +440,14 @@ function SearchProvider({
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setActiveIndex((i) => (i < filtered.length - 1 ? i + 1 : 0));
+      setActiveIndex((i) => (i < merged.length - 1 ? i + 1 : 0));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setActiveIndex((i) => (i > 0 ? i - 1 : filtered.length - 1));
+      setActiveIndex((i) => (i > 0 ? i - 1 : merged.length - 1));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      if (filtered[activeIndex]) {
-        navigate(filtered[activeIndex].slug);
+      if (merged[activeIndex]) {
+        navigate(merged[activeIndex].page.slug);
       }
     } else if (e.key === "Escape") {
       closeSearch();
@@ -353,27 +479,36 @@ function SearchProvider({
               />
               <StyledKbd>Esc</StyledKbd>
             </StyledInputWrapper>
-            {filtered.length > 0 ? (
+            {merged.length > 0 ? (
               <StyledResults ref={resultsRef}>
-                {filtered.map((page, index) => (
+                {merged.map((result, index) => (
                   <StyledResultItem
-                    key={page.slug + page.section}
+                    key={result.page.slug + result.page.section}
                     $isActive={index === activeIndex}
-                    onClick={() => navigate(page.slug)}
+                    onClick={() => navigate(result.page.slug)}
                     onMouseEnter={() => setActiveIndex(index)}
                   >
-                    <StyledResultTitle>{page.title}</StyledResultTitle>
+                    <StyledResultTitle>{result.page.title}</StyledResultTitle>
                     <StyledResultMeta>
-                      {page.section
-                        ? \`\${sectionLabels[page.section] || page.section} / \`
+                      {result.page.section
+                        ? \`\${sectionLabels[result.page.section] || result.page.section} / \`
                         : ""}
-                      {page.category}
+                      {result.page.category}
                     </StyledResultMeta>
+                    {result.snippet && (
+                      <StyledSnippet
+                        dangerouslySetInnerHTML={{
+                          __html: highlightMatch(result.snippet, query),
+                        }}
+                      />
+                    )}
                   </StyledResultItem>
                 ))}
               </StyledResults>
             ) : (
-              <StyledEmpty>No results found</StyledEmpty>
+              <StyledEmpty>
+                {isSearching ? <Spinner size={18} /> : "No results found"}
+              </StyledEmpty>
             )}
           </StyledModal>
         </StyledBackdrop>
