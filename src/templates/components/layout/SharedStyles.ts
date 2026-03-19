@@ -146,7 +146,7 @@ export const styledTable = css<{ theme: Theme }>\`
 
 export const StyledSmallButton = styled.button<{ theme: Theme }>\`
   \${interactiveStyles};
-  background: transparent;
+  background: \${({ theme }) => theme.colors.light};
   border: solid 1px \${({ theme }) => theme.colors.grayLight};
   color: \${({ theme }) => theme.colors.primary};
   border-radius: \${({ theme }) => theme.spacing.radius.xs};

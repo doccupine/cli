@@ -6,8 +6,14 @@ import Link from "next/link";
 import { rgba } from "polished";
 import { mq, Theme } from "@/app/theme";
 import { useOnClickOutside } from "@/components/ClickOutside";
+import { Search } from "lucide-react";
 import { Logo } from "@/components/layout/Pictograms";
 import { ChatContext, ChatButtonCTA } from "@/components/Chat";
+import {
+  SearchContext,
+  SearchKbd,
+  StyledSearchButton,
+} from "@/components/SearchDocs";
 import themeJson from "@/theme.json";
 
 const customThemeJson = themeJson as typeof themeJson & {
@@ -91,7 +97,7 @@ const StyledHeaderInner = styled.div<{ $hasChildren: boolean }>\`
 const StyledLeftWrapper = styled.div\`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   min-width: fit-content;
   padding-right: 20px;
 
@@ -123,6 +129,7 @@ function Header({ children }: HeaderProps) {
   useOnClickOutside([langRef, wrapperRef], isLangActive ? closeMenu : () => {});
   const theme = useTheme() as Theme;
   const { isChatActive } = useContext(ChatContext);
+  const { openSearch } = useContext(SearchContext);
 
   return (
     <StyledHeader $hasChildren={children ? true : false} id="header">
@@ -152,6 +159,10 @@ function Header({ children }: HeaderProps) {
         </Link>
         {children}
         <StyledLeftWrapper>
+          <StyledSearchButton onClick={openSearch} aria-label="Search docs">
+            <Search size={14} />
+            <SearchKbd>&#8984;K</SearchKbd>
+          </StyledSearchButton>
           {isChatActive && <ChatButtonCTA />}
         </StyledLeftWrapper>
       </StyledHeaderInner>

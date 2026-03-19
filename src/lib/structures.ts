@@ -20,6 +20,7 @@ import { docsSideBarTemplate } from "../templates/components/DocsSideBar.js";
 import { mdxComponentsTemplate } from "../templates/components/MDXComponents.js";
 import { sectionNavProviderTemplate } from "../templates/components/SectionNavProvider.js";
 import { postHogProviderTemplate } from "../templates/components/PostHogProvider.js";
+import { searchDocsTemplate } from "../templates/components/SearchDocs.js";
 import { sideBarTemplate } from "../templates/components/SideBar.js";
 
 import { sectionBarTemplate } from "../templates/components/layout/SectionBar.js";
@@ -156,6 +157,7 @@ export const appStructure: Record<string, string> = {
   "components/MDXComponents.tsx": mdxComponentsTemplate,
   "components/SectionNavProvider.tsx": sectionNavProviderTemplate,
   "components/PostHogProvider.tsx": postHogProviderTemplate,
+  "components/SearchDocs.tsx": searchDocsTemplate,
   "components/SideBar.tsx": sideBarTemplate,
 
   "components/layout/Accordion.tsx": accordionTemplate,

@@ -99,6 +99,7 @@ import { StyledComponentsRegistry } from "cherry-styled-components";
 import { theme, themeDark } from "@/app/theme";
 import { CherryThemeProvider } from "@/components/layout/CherryThemeProvider";
 import { ChtProvider } from "@/components/Chat";
+import { SearchProvider } from "@/components/SearchDocs";
 ${
   hasSections
     ? ""
@@ -191,19 +192,21 @@ ${
         <StyledComponentsRegistry>
 ${analyticsEnabled ? "          <PostHogProvider>\n" : ""}${a}          <CherryThemeProvider theme={theme} themeDark={themeDark}>
 ${a}            ${chtOpen}
-${a}              <Header>
-${a}                <SectionBar sections={doccupineSections} />
-${a}              </Header>
-${a}              {process.env.LLM_PROVIDER && <Chat />}
-${a}              <DocsWrapper>
-${a}                <SectionNavProvider
-${a}                  sections={doccupineSections}
-${a}                  allPages={pages}
-${a}                  hideBranding={hideBranding}
-${a}                >
-${a}                  {children}
-${a}                </SectionNavProvider>
-${a}              </DocsWrapper>
+${a}              <SearchProvider pages={pages}>
+${a}                <Header>
+${a}                  <SectionBar sections={doccupineSections} />
+${a}                </Header>
+${a}                {process.env.LLM_PROVIDER && <Chat />}
+${a}                <DocsWrapper>
+${a}                  <SectionNavProvider
+${a}                    sections={doccupineSections}
+${a}                    allPages={pages}
+${a}                    hideBranding={hideBranding}
+${a}                  >
+${a}                    {children}
+${a}                  </SectionNavProvider>
+${a}                </DocsWrapper>
+${a}              </SearchProvider>
 ${a}            </ChtProvider>
 ${a}          </CherryThemeProvider>
 ${analyticsEnabled ? "          </PostHogProvider>\n" : ""}        </StyledComponentsRegistry>
@@ -250,19 +253,21 @@ ${analyticsEnabled ? "          </PostHogProvider>\n" : ""}        </StyledCompo
         <StyledComponentsRegistry>
 ${analyticsEnabled ? "          <PostHogProvider>\n" : ""}${a}          <CherryThemeProvider theme={theme} themeDark={themeDark}>
 ${a}            ${chtOpen}
-${a}              <Header />
-${a}              {process.env.LLM_PROVIDER && <Chat />}
-${a}              <SectionBarProvider hasSectionBar={false}>
-${a}                <DocsWrapper>
-${a}                  <SideBar result={result.length ? result : defaultResults} />
-${a}                  {children}
-${a}                  <DocsNavigation
-${a}                    result={result.length ? result : defaultResults}
-${a}                  />
-${a}                  <StaticLinks />
-${a}                  <Footer hideBranding={hideBranding} />
-${a}                </DocsWrapper>
-${a}              </SectionBarProvider>
+${a}              <SearchProvider pages={pages}>
+${a}                <Header />
+${a}                {process.env.LLM_PROVIDER && <Chat />}
+${a}                <SectionBarProvider hasSectionBar={false}>
+${a}                  <DocsWrapper>
+${a}                    <SideBar result={result.length ? result : defaultResults} />
+${a}                    {children}
+${a}                    <DocsNavigation
+${a}                      result={result.length ? result : defaultResults}
+${a}                    />
+${a}                    <StaticLinks />
+${a}                    <Footer hideBranding={hideBranding} />
+${a}                  </DocsWrapper>
+${a}                </SectionBarProvider>
+${a}              </SearchProvider>
 ${a}            </ChtProvider>
 ${a}          </CherryThemeProvider>
 ${analyticsEnabled ? "          </PostHogProvider>\n" : ""}        </StyledComponentsRegistry>

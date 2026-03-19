@@ -8,14 +8,15 @@ import { useThemeOverride } from "@/components/layout/ClientThemeProvider";
 
 const StyledThemeToggle = styled.button<{ theme: Theme; $hidden?: boolean }>\`
   \${resetButton}
-  width: 56px;
-  height: 30px;
+  width: 59px;
+  height: 32px;
   border-radius: 30px;
   display: flex;
   position: relative;
   margin: auto 0;
   transform: scale(1);
   background: \${({ theme }) => theme.colors.light};
+  border: solid 1px \${({ theme }) => theme.colors.grayLight};
 
   &::after {
     content: "";
@@ -53,6 +54,10 @@ const StyledThemeToggle = styled.button<{ theme: Theme; $hidden?: boolean }>\`
 
   & .lucide-sun {
     transform: translateX(1px);
+  }
+
+  & .lucide-moon-star {
+    transform: translateX(-1px);
   }
 
   & svg[stroke] {
