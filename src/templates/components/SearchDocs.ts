@@ -22,6 +22,11 @@ interface PageItem {
   section?: string;
 }
 
+interface SectionItem {
+  label: string;
+  slug: string;
+}
+
 interface SearchContextValue {
   openSearch: () => void;
 }
@@ -212,9 +217,11 @@ const StyledSearchButton = styled.button<{ theme: Theme }>\`
 
 function SearchProvider({
   pages,
+  sections,
   children,
 }: {
   pages: PageItem[];
+  sections?: SectionItem[];
   children: React.ReactNode;
 }) {
   const [isVisible, setIsVisible] = useState(false);
@@ -225,6 +232,14 @@ function SearchProvider({
   const resultsRef = useRef<HTMLUListElement>(null);
   const closingTimer = useRef<ReturnType<typeof setTimeout>>(null);
   const router = useRouter();
+
+  const sectionLabels = useMemo(() => {
+    const map: Record<string, string> = {};
+    sections?.forEach((s) => {
+      map[s.slug] = s.label;
+    });
+    return map;
+  }, [sections]);
 
   const openSearch = useCallback(() => {
     if (closingTimer.current) clearTimeout(closingTimer.current);
@@ -349,7 +364,9 @@ function SearchProvider({
                   >
                     <StyledResultTitle>{page.title}</StyledResultTitle>
                     <StyledResultMeta>
-                      {page.section ? \`\${page.section} / \` : ""}
+                      {page.section
+                        ? \`\${sectionLabels[page.section] || page.section} / \`
+                        : ""}
                       {page.category}
                     </StyledResultMeta>
                   </StyledResultItem>

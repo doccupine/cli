@@ -192,7 +192,7 @@ ${
         <StyledComponentsRegistry>
 ${analyticsEnabled ? "          <PostHogProvider>\n" : ""}${a}          <CherryThemeProvider theme={theme} themeDark={themeDark}>
 ${a}            ${chtOpen}
-${a}              <SearchProvider pages={pages}>
+${a}              <SearchProvider pages={pages} sections={doccupineSections}>
 ${a}                <Header>
 ${a}                  <SectionBar sections={doccupineSections} />
 ${a}                </Header>
