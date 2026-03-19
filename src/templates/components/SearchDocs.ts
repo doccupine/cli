@@ -75,13 +75,14 @@ const StyledBackdrop = styled.div<{ theme: Theme; $isClosing: boolean }>\`
 const StyledModal = styled.div<{ theme: Theme; $isClosing: boolean }>\`
   background: \${({ theme }) => theme.colors.light};
   border-radius: \${({ theme }) => theme.spacing.radius.lg};
-  box-shadow: \${({ theme }) => theme.shadows.xl};
+  box-shadow: \${({ theme }) => theme.shadows.xs};
   width: 100%;
   max-width: 560px;
   max-height: calc(100dvh - 40px);
   display: flex;
   flex-direction: column;
   border: solid 1px \${({ theme }) => theme.colors.grayLight};
+  padding-bottom: 8px;
   animation: \${({ $isClosing }) => ($isClosing ? modalOut : modalIn)}
     \${ANIMATION_MS}ms ease forwards;
 
@@ -121,8 +122,8 @@ const StyledInput = styled.input<{ theme: Theme }>\`
 
 const StyledResults = styled.ul<{ theme: Theme }>\`
   list-style: none;
-  margin: 0;
-  padding: 8px;
+  margin: 8px 0 0 0;
+  padding: 0 8px;
   overflow-y: auto;
   flex: 1;
   min-height: 0;
