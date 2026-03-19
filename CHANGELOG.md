@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.81
+
+- Add full-text content search to search modal
+- Resolve section labels from slug in search results
+- Adjust spacing and shadow in search modal
+- Capitalize escape key label in search modal
+
 ## 0.0.80
 
 - Add Cmd+K search modal for docs navigation
