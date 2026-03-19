@@ -84,6 +84,12 @@ const StyledCallout = styled.div<{ theme: Theme; $type?: CalloutType }>\`
     \`}
 \`;
 
+const StyledChildren = styled.span\`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+\`;
+
 interface CalloutProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   icon?: IconProps;
@@ -106,7 +112,7 @@ function Callout({ children, type, icon }: CalloutProps) {
   return (
     <StyledCallout $type={type}>
       <Icon name={iconType} size={16} />
-      {children}
+      <StyledChildren>{children}</StyledChildren>
     </StyledCallout>
   );
 }
