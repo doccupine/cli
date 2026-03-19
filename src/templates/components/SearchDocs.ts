@@ -335,7 +335,7 @@ function SearchProvider({
                 autoComplete="off"
                 spellCheck={false}
               />
-              <StyledKbd>esc</StyledKbd>
+              <StyledKbd>Esc</StyledKbd>
             </StyledInputWrapper>
             {filtered.length > 0 ? (
               <StyledResults ref={resultsRef}>
