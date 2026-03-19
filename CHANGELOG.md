@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.80
+
+- Add Cmd+K search modal for docs navigation
+- Fix Callout component flex column layout for proper children spacing
+
 ## 0.0.79
 
 - Update to Next.js 16.2
