@@ -316,10 +316,7 @@ export const StyleMobileBar = styled.button<Props>\`
   font-size: \${({ theme }) => theme.fontSizes.strong.lg};
   line-height: \${({ theme }) => theme.fontSizes.strong.lg};
   box-shadow: \${({ theme }) => theme.shadows.sm};
-  background: \${({ theme }) =>
-    theme.isDark
-      ? rgba(theme.colors.grayLight, 0.7)
-      : rgba(theme.colors.light, 0.7)};
+  background: \${({ theme }) => theme.colors.primary};
   color: \${({ theme }) =>
     theme.isDark ? theme.colors.dark : theme.colors.primary};
   backdrop-filter: blur(10px);
