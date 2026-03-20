@@ -318,7 +318,7 @@ export const StyleMobileBar = styled.button<Props>\`
   box-shadow: \${({ theme }) => theme.shadows.sm};
   background: \${({ theme }) => theme.colors.primary};
   color: \${({ theme }) =>
-    theme.isDark ? theme.colors.dark : theme.colors.primary};
+    theme.isDark ? theme.colors.dark : theme.colors.light};
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   padding: 10px;
@@ -356,7 +356,7 @@ export const StyledMobileBurger = styled.span<Props>\`
     height: 3px;
     border-radius: 3px;
     background: \${({ theme }) =>
-      theme.isDark ? theme.colors.dark : theme.colors.primary};
+      theme.isDark ? theme.colors.dark : theme.colors.light};
     transition: all 0.3s ease;
   }
 
