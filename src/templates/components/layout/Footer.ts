@@ -22,7 +22,7 @@ const StyledFooter = styled.footer<{
   $isChatOpen?: boolean;
   $hasLinks?: boolean;
 }>\`
-  padding: 0 20px 20px 20px;
+  padding: 0 20px;
   transition: all 0.3s ease;
 
   \${({ $hasLinks }) =>
@@ -47,12 +47,12 @@ const StyledFooterInner = styled.div<{ theme: Theme }>\`
   border-top: solid 1px \${({ theme }) => theme.colors.grayLight};
   max-width: 640px;
   margin: 0 auto;
-  padding: 33px 0 90px 0;
+  padding: 28px 0;
   color: \${({ theme }) => theme.colors.gray};
   \${({ theme }) => styledSmall(theme)};
 
   \${mq("lg")} {
-    padding: 32px 0;
+    padding: 20px 0;
   }
 
   & a {
@@ -60,6 +60,7 @@ const StyledFooterInner = styled.div<{ theme: Theme }>\`
     color: \${({ theme }) => theme.colors.primary};
     text-decoration: none;
     transition: all 0.3s ease;
+    display: inline-flex;
 
     &:hover {
       color: \${({ theme }) => theme.colors.primaryDark};
@@ -74,8 +75,13 @@ const StyledFooterInner = styled.div<{ theme: Theme }>\`
 
 const StyledFooterFlex = styled.div\`
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
+  gap: 20px;
+
+  \${mq("lg")} {
+    justify-content: space-between;
+  }
 \`;
 
 function Footer({ hideBranding }: { hideBranding?: boolean }) {

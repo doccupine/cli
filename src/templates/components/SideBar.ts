@@ -10,6 +10,7 @@ import {
   StyledSidebarListItem,
   StyledStrong,
   StyledSidebarListItemLink,
+  StyledSidebarFooter,
   StyleMobileBar,
   StyledMobileBurger,
 } from "@/components/layout/DocsComponents";
@@ -81,12 +82,13 @@ function SideBar({ result }: SideBarProps) {
               </StyledSidebarList>
             );
           })}
-        <Space $xs={40} $lg={20} />
-        <Flex $xsJustifyContent="flex-start" $lgJustifyContent="flex-end">
-          <Suspense fallback={<ToggleThemeLoading />}>
-            <ToggleTheme />
-          </Suspense>
-        </Flex>
+        <StyledSidebarFooter>
+          <Flex $xsJustifyContent="flex-start" $lgJustifyContent="flex-end">
+            <Suspense fallback={<ToggleThemeLoading />}>
+              <ToggleTheme />
+            </Suspense>
+          </Flex>
+        </StyledSidebarFooter>
       </StyledSidebar>
     </DocsSidebar>
   );

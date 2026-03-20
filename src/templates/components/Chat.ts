@@ -248,7 +248,7 @@ const StyledRainbowInput = styled.input<{ theme: Theme }>\`
   background: \${({ theme }) => theme.colors.light};
   border: 1px solid \${({ theme }) => theme.colors.grayLight};
   border-radius: 12px;
-  padding: 14px 18px;
+  padding: 12px 18px;
   font-size: \${({ theme }) => theme.fontSizes.text.lg};
   font-family: inherit;
   color: \${({ theme }) => theme.colors.dark};

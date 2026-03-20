@@ -128,7 +128,7 @@ export const StyledSidebar = styled.nav<Props>\`
   z-index: 99;
   top: \${({ $hasSectionBar }) => ($hasSectionBar ? 104 : 62)}px;
   height: 100%;
-  padding: 20px 20px 80px 20px;
+  padding: 20px;
   opacity: 0;
   pointer-events: none;
   transition: all 0.3s ease;
@@ -136,6 +136,8 @@ export const StyledSidebar = styled.nav<Props>\`
   left: 0;
   background: \${({ theme }) => theme.colors.light};
   -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
 
   &::-webkit-scrollbar {
     display: none;
@@ -163,6 +165,20 @@ export const StyledSidebar = styled.nav<Props>\`
       opacity: 1;
       pointer-events: all;
     \`}
+\`;
+
+export const StyledSidebarFooter = styled.div\`
+  padding: 22px 20px;
+  position: sticky;
+  border-top: 1px solid \${({ theme }) => theme.colors.grayLight};
+  background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.05)};
+  margin: 0 -20px -20px;
+  bottom: -20px;
+  backdrop-filter: blur(10px);
+
+  \${mq("lg")} {
+    padding: 16px 20px;
+  }
 \`;
 
 export const StyledIndexSidebar = styled.ul<{ theme: Theme }>\`
@@ -244,6 +260,10 @@ export const StyledSidebarList = styled.ul\`
   list-style: none;
   margin: 0;
   padding: 0;
+
+  &:last-of-type {
+    margin-bottom: auto;
+  }
 \`;
 
 export const StyledStrong = styled.strong<{ theme: Theme }>\`
@@ -304,7 +324,7 @@ export const StyleMobileBar = styled.button<Props>\`
     theme.isDark ? theme.colors.dark : theme.colors.primary};
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  padding: 20px;
+  padding: 10px;
   border-radius: 100px;
   margin: 0 0 20px 0;
   font-weight: 600;
@@ -328,6 +348,7 @@ export const StyledMobileBurger = styled.span<Props>\`
   overflow: hidden;
   background: transparent;
   position: relative;
+  transform: scale(0.8);
 
   &::before,
   &::after {
