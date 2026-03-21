@@ -92,7 +92,7 @@ import { iconsMdxTemplate } from "../templates/mdx/icons.mdx.js";
 import { imageAndEmbedsMdxTemplate } from "../templates/mdx/image-and-embeds.mdx.js";
 import { indexMdxTemplate } from "../templates/mdx/index.mdx.js";
 import { footerLinksMdxTemplate } from "../templates/mdx/footer-links.mdx.js";
-import { listAndTablesMdxTemplate } from "../templates/mdx/list-and-tables.mdx.js";
+import { listsAndTablesMdxTemplate } from "../templates/mdx/lists-and-tables.mdx.js";
 import { mediaAndAssetsMdxTemplate } from "../templates/mdx/media-and-assets.mdx.js";
 import { mcpMdxTemplate } from "../templates/mdx/model-context-protocol.mdx.js";
 import { navigationMdxTemplate } from "../templates/mdx/navigation.mdx.js";
@@ -216,7 +216,7 @@ export const startingDocsStructure: Record<string, string> = {
   "image-and-embeds.mdx": imageAndEmbedsMdxTemplate,
   "index.mdx": indexMdxTemplate,
   "footer-links.mdx": footerLinksMdxTemplate,
-  "lists-and-tables.mdx": listAndTablesMdxTemplate,
+  "lists-and-tables.mdx": listsAndTablesMdxTemplate,
   "media-and-assets.mdx": mediaAndAssetsMdxTemplate,
   "model-context-protocol.mdx": mcpMdxTemplate,
   "navigation.mdx": navigationMdxTemplate,

@@ -1,4 +1,4 @@
-export const listAndTablesMdxTemplate = `---
+export const listsAndTablesMdxTemplate = `---
 title: "Lists and tables"
 description: "Present structured information using lists or tables."
 date: "2026-02-19"
