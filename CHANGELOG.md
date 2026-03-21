@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.83
+
+- Update navigation example with correct slugs and categories
+- Rename list-and-tables template to lists-and-tables
+- Resolve eslint warnings in generated components
+- Update dependencies
+
 ## 0.0.82
 
 - Fix sidebar mobile bar to use light theme color in light mode
