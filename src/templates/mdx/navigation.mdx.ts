@@ -41,15 +41,16 @@ The simplest format is an array of categories. When using [sections](/sections),
 \`\`\`json
 [
   {
-    "label": "General",
+    "label": "Getting Started",
     "links": [
-      { "slug": "", "title": "Getting Started" },
+      { "slug": "", "title": "Introduction" },
       { "slug": "commands", "title": "Commands" }
     ]
   },
   {
     "label": "Components",
     "links": [
+      { "slug": "components", "title": "Components" },
       { "slug": "headers-and-text", "title": "Headers and Text" },
       { "slug": "lists-and-tables", "title": "Lists and tables" },
       { "slug": "code", "title": "Code" },
@@ -63,7 +64,8 @@ The simplest format is an array of categories. When using [sections](/sections),
       { "slug": "fields", "title": "Fields" },
       { "slug": "update", "title": "Update" },
       { "slug": "columns", "title": "Columns" },
-      { "slug": "steps", "title": "Steps" }
+      { "slug": "steps", "title": "Steps" },
+      { "slug": "color-swatches", "title": "Color Swatches" }
     ]
   },
   {
@@ -78,7 +80,8 @@ The simplest format is an array of categories. When using [sections](/sections),
       { "slug": "fonts", "title": "Fonts" },
       { "slug": "ai-assistant", "title": "AI Assistant" },
       { "slug": "model-context-protocol", "title": "Model Context Protocol" },
-      { "slug": "deployment", "title": "Deployment" }
+      { "slug": "analytics", "title": "Analytics" },
+      { "slug": "deployment-and-hosting", "title": "Deployment & Hosting" }
     ]
   }
 ]
