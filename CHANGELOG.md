@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.82
+
+- Fix sidebar mobile bar to use light theme color in light mode
+- Simplify badge background to use primary color
+- Add sticky footer and refine sidebar layout spacing
+
 ## 0.0.81
 
 - Add full-text content search to search modal
