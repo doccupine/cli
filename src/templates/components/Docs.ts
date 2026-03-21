@@ -60,7 +60,7 @@ function extractComponentNames(source: string): string[] {
 
 function MissingComponent({
   componentName,
-  children,
+  children: _children,
 }: {
   componentName: string;
   children?: React.ReactNode;

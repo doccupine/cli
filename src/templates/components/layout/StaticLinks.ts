@@ -90,11 +90,11 @@ const StyledLink = styled.a<{ theme: Theme; $hasIcon?: boolean }>\`
 \`;
 
 function StaticLinks() {
+  const { isOpen } = useContext(ChatContext);
+
   if (links.length === 0) {
     return null;
   }
-
-  const { isOpen } = useContext(ChatContext);
 
   return (
     <>

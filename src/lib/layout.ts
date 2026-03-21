@@ -106,20 +106,21 @@ ${
     : `import { Footer } from "@/components/layout/Footer";
 `
 }import { Header } from "@/components/layout/Header";
-import {
-  DocsWrapper,
-  SectionBarProvider,
-} from "@/components/layout/DocsComponents";
+import { DocsWrapper } from "@/components/layout/DocsComponents";
 ${
   hasSections
     ? ""
-    : `import { SideBar } from "@/components/SideBar";
+    : `import { SectionBarProvider } from "@/components/layout/DocsComponents";
+import { SideBar } from "@/components/SideBar";
 import { DocsNavigation } from "@/components/layout/DocsNavigation";
 `
-}import {
-  transformPagesToGroupedStructure,
-  type PagesProps,
-} from "@/utils/orderNavItems";
+}import { type PagesProps } from "@/utils/orderNavItems";
+${
+  hasSections
+    ? ""
+    : `import { transformPagesToGroupedStructure } from "@/utils/orderNavItems";
+`
+}
 ${
   hasSections
     ? ""
@@ -127,6 +128,7 @@ ${
 `
 }import { config } from "@/utils/config";
 import { verifyBrandingKey } from "@/utils/branding";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import navigation from "@/navigation.json";
 ${
   hasSections

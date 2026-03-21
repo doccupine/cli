@@ -78,13 +78,16 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
 
   useEffect(() => {
     if (headings.length === 0) return;
-    // Set active heading from URL hash immediately on mount
-    if (window.location.hash) {
-      setActiveId(window.location.hash.slice(1));
-    }
+    // Set active heading from URL hash immediately on mount (deferred to next frame)
+    const hashId = window.location.hash ? window.location.hash.slice(1) : null;
     // Run initial scroll check on next frame to avoid synchronous setState in effect
-    const rafId = requestAnimationFrame(handleScroll);
-    // Re-check after browser finishes scrolling to hash target on new tab/page load
+    const rafId = requestAnimationFrame(() => {
+      if (hashId) {
+        setActiveId(hashId);
+      }
+      handleScroll();
+    });
+    // Re-check after browser finishes scrolling to hash target on new page load
     const delayedId = setTimeout(handleScroll, 300);
     let timeoutId: NodeJS.Timeout;
     const throttledHandleScroll = () => {
