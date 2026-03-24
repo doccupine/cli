@@ -50,8 +50,8 @@
     "@types/node": "^25.5.0",
     "@types/prompts": "^2.4.9",
     "prettier": "^3.8.1",
-    "typescript": "^5.9.3",
-    "vitest": "^4.1.0"
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.1"
   },
   "files": [
     "dist/**/*"
