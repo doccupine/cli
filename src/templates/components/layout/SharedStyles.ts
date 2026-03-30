@@ -148,7 +148,8 @@ export const StyledSmallButton = styled.button<{ theme: Theme }>\`
   \${interactiveStyles};
   background: \${({ theme }) => theme.colors.light};
   border: solid 1px \${({ theme }) => theme.colors.grayLight};
-  color: \${({ theme }) => theme.colors.primary};
+  color: \${({ theme }) =>
+    theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
   border-radius: \${({ theme }) => theme.spacing.radius.xs};
   padding: 6px 8px;
   font-size: 12px;

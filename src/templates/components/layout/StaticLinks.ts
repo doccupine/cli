@@ -53,7 +53,7 @@ const StyledLink = styled.a<{ theme: Theme; $hasIcon?: boolean }>\`
   font-size: \${({ theme }) => theme.fontSizes.small.lg};
   line-height: 1;
   color: \${({ theme }) =>
-    theme.isDark ? theme.colors.primary : theme.colors.primary};
+    theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
   padding: 0;
   display: flex;
   gap: 6px;

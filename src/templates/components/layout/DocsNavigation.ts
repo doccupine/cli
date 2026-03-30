@@ -62,7 +62,7 @@ const StyledNavButton = styled(Link)<{ theme: Theme }>\`
 \`;
 
 const StyledNavLabel = styled.span<{ theme: Theme }>\`
-  color: \${({ theme }) => theme.colors.gray};
+  color: \${({ theme }) => theme.colors.grayDark};
   display: flex;
   flex-direction: row;
   gap: 4px;
