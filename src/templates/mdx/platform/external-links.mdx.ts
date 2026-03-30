@@ -47,7 +47,7 @@ Link settings are stored in \`links.json\` at the root of your repository:
   {
     "title": "GitHub",
     "url": "https://github.com/your-org/your-repo",
-    "icon": "github"
+    "icon": "git-branch"
   },
   {
     "title": "Discord",

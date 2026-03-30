@@ -24,7 +24,7 @@ Place a \`links.json\` at your project root (the same folder where you execute \
   {
     "title": "GitHub",
     "url": "https://github.com/doccupine",
-    "icon": "github"
+    "icon": "git-branch"
   },
   {
     "title": "Discord",
