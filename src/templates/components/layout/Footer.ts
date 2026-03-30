@@ -48,7 +48,7 @@ const StyledFooterInner = styled.div<{ theme: Theme }>\`
   max-width: 640px;
   margin: 0 auto;
   padding: 28px 0;
-  color: \${({ theme }) => theme.colors.gray};
+  color: \${({ theme }) => theme.colors.grayDark};
   \${({ theme }) => styledSmall(theme)};
 
   \${mq("lg")} {
@@ -57,7 +57,8 @@ const StyledFooterInner = styled.div<{ theme: Theme }>\`
 
   & a {
     font-weight: 700;
-    color: \${({ theme }) => theme.colors.primary};
+    color: \${({ theme }) =>
+      theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
     text-decoration: none;
     transition: all 0.3s ease;
     display: inline-flex;
@@ -96,7 +97,11 @@ function Footer({ hideBranding }: { hideBranding?: boolean }) {
           <span>
             Powered by <a href="https://doccupine.com">Doccupine</a>
           </span>
-          <a href="https://github.com/doccupine/cli" target="_blank">
+          <a
+            href="https://github.com/doccupine/cli"
+            target="_blank"
+            aria-label="Doccupine on GitHub"
+          >
             <GitHubLogo />
           </a>
         </StyledFooterFlex>

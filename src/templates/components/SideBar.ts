@@ -46,6 +46,8 @@ function SideBar({ result }: SideBarProps) {
       <StyleMobileBar
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         $isActive={isMobileMenuOpen}
+        aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+        aria-expanded={isMobileMenuOpen}
       >
         <StyledMobileBurger $isActive={isMobileMenuOpen} />
       </StyleMobileBar>
@@ -78,7 +80,9 @@ function SideBar({ result }: SideBarProps) {
                       </StyledSidebarListItem>
                     );
                   })}
-                <Space $size={20} />
+                <li aria-hidden="true">
+                  <Space $size={20} />
+                </li>
               </StyledSidebarList>
             );
           })}

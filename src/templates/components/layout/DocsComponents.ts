@@ -39,7 +39,7 @@ interface DocsProps {
   children: React.ReactNode;
 }
 
-const StyledDocsWrapper = styled.div<{ theme: Theme }>\`
+const StyledDocsWrapper = styled.main<{ theme: Theme }>\`
   position: relative;
 \`;
 

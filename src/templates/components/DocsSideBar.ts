@@ -140,10 +140,10 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
   return (
     <StyledIndexSidebar data-sidebar>
       {headings?.length > 0 && (
-        <>
+        <li aria-hidden="true">
           <StyledIndexSidebarLabel>On this page</StyledIndexSidebarLabel>
           <Space $size={15} />
-        </>
+        </li>
       )}
       {headings.map((heading, index) => (
         <StyledIndexSidebarLi
