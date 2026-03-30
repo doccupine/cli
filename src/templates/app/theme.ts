@@ -34,7 +34,7 @@ const spacing: Spacing = {
 
 const colors: Colors = {
   primaryLight: "#d1d5db",
-  primary: "#6b7280",
+  primary: "#556272",
   primaryDark: "#374151",
   secondaryLight: "#c4b5fd",
   secondary: "#8b5cf6",

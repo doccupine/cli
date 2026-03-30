@@ -16,7 +16,7 @@ Place a \`theme.json\` at your project root (the same folder where you execute \
 {
   "default": {
     "primaryLight": "#93c5fd",
-    "primary": "#3b82f6",
+    "primary": "#2563eb",
     "primaryDark": "#1e40af",
     "secondaryLight": "#c4b5fd",
     "secondary": "#8b5cf6",
