@@ -8,8 +8,7 @@ import type {
   ListDocsParams,
 } from "@/services/mcp/types";
 
-const PROJECT_ROOT = process.cwd();
-const APP_DIR = path.join(PROJECT_ROOT, "app");
+const APP_DIR = path.join(process.cwd(), "app");
 const VALID_EXT = new Set([".ts", ".tsx", ".js", ".jsx"]);
 
 /**
@@ -132,7 +131,7 @@ export async function listDocs(
   const filterDir = params?.directory;
 
   for await (const filePath of walkDocs(APP_DIR)) {
-    const relativePath = path.relative(PROJECT_ROOT, filePath);
+    const relativePath = path.join("app", path.relative(APP_DIR, filePath));
 
     if (filterDir && !relativePath.includes(filterDir)) {
       continue;
@@ -167,15 +166,15 @@ export async function getDoc(
 ): Promise<DocsResource | null> {
   let targetPath = params.path;
 
-  // Normalize path
-  if (!targetPath.startsWith("app/")) {
-    targetPath = \`app/\${targetPath}\`;
-  }
-  if (!targetPath.includes("page.")) {
-    targetPath = path.join(targetPath, "page.tsx");
+  // Normalize path - strip leading "app/" if present to get the relative part
+  const relativePart = targetPath.replace(/^app\\//, "");
+  if (!relativePart.includes("page.")) {
+    targetPath = path.join("app", relativePart, "page.tsx");
+  } else if (!targetPath.startsWith("app/")) {
+    targetPath = path.join("app", relativePart);
   }
 
-  const fullPath = path.join(PROJECT_ROOT, targetPath);
+  const fullPath = path.join(APP_DIR, targetPath.replace(/^app\\//, ""));
 
   // Prevent path traversal
   const resolvedPath = path.resolve(fullPath);
