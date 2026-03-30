@@ -11,6 +11,7 @@ import { ragRoutesTemplate } from "../templates/app/api/rag/route.js";
 import { searchRoutesTemplate } from "../templates/app/api/search/route.js";
 import { routesTemplate } from "../templates/app/api/theme/routes.js";
 import { notFoundTemplate } from "../templates/app/not-found.js";
+import { robotsTemplate } from "../templates/app/robots.js";
 import { themeTemplate } from "../templates/app/theme.js";
 
 import { chatTemplate } from "../templates/components/Chat.js";
@@ -21,7 +22,9 @@ import { docsSideBarTemplate } from "../templates/components/DocsSideBar.js";
 import { mdxComponentsTemplate } from "../templates/components/MDXComponents.js";
 import { sectionNavProviderTemplate } from "../templates/components/SectionNavProvider.js";
 import { postHogProviderTemplate } from "../templates/components/PostHogProvider.js";
+import { postHogProviderLazyTemplate } from "../templates/components/PostHogProviderLazy.js";
 import { searchDocsTemplate } from "../templates/components/SearchDocs.js";
+import { searchModalContentTemplate } from "../templates/components/SearchModalContent.js";
 import { sideBarTemplate } from "../templates/components/SideBar.js";
 import { spinnerTemplate } from "../templates/components/Spinner.js";
 
@@ -129,6 +132,7 @@ export const appStructure: Record<string, string> = {
   "tsconfig.json": tsconfigTemplate,
 
   "app/not-found.tsx": notFoundTemplate,
+  "app/robots.ts": robotsTemplate,
   "app/theme.ts": themeTemplate,
   "app/api/mcp/route.ts": mcpRoutesTemplate,
   "app/api/rag/route.ts": ragRoutesTemplate,
@@ -162,7 +166,9 @@ export const appStructure: Record<string, string> = {
   "components/MDXComponents.tsx": mdxComponentsTemplate,
   "components/SectionNavProvider.tsx": sectionNavProviderTemplate,
   "components/PostHogProvider.tsx": postHogProviderTemplate,
+  "components/PostHogProviderLazy.tsx": postHogProviderLazyTemplate,
   "components/SearchDocs.tsx": searchDocsTemplate,
+  "components/SearchModalContent.tsx": searchModalContentTemplate,
   "components/SideBar.tsx": sideBarTemplate,
   "components/Spinner.tsx": spinnerTemplate,
 
