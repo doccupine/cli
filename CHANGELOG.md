@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.0.84
+
+- Add robots.ts template using Next.js Metadata API
+- Improve color contrast across navigation, buttons, links, and primary theme for WCAG AA compliance
+- Improve accessibility across sidebar, docs wrapper, and footer
+- Code-split PostHogProvider and SearchDocs modal for better performance
+- Replace raw script tags with next/script component
+- Scope MCP filesystem operations through APP_DIR to fix turbopack warning
+- Remove baseUrl from generated tsconfig
+- Update dependencies
+
 ## 0.0.83
 
 - Update navigation example with correct slugs and categories
