@@ -18,11 +18,11 @@ Click **Add Link** and configure:
 - **URL** - the target URL
 
 ## Choosing an icon
-The icon picker lets you search through the full [Lucide](https://lucide.dev/) icon set. Type a keyword to filter (e.g. "github", "mail", "globe") and click to select.
+The icon picker lets you search through the full [Lucide](https://lucide.dev/) icon set. Type a keyword to filter (e.g. "git-branch", "mail", "globe") and click to select.
 
 Leave the icon unset for a text-only link.
 
-If you edit \`links.json\` directly, use Lucide icon names in kebab-case (e.g. \`github\`, \`message-circle\`, \`heart\`).
+If you edit \`links.json\` directly, use Lucide icon names in kebab-case (e.g. \`git-branch\`, \`message-circle\`, \`heart\`).
 
 ## How it works
 Link settings are stored in \`links.json\` at the root of your repository:
