@@ -14,7 +14,6 @@ export const tsconfigTemplate = `{
     "jsx": "react-jsx",
     "incremental": true,
     "plugins": [{ "name": "next" }],
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
     }
