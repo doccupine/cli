@@ -93,7 +93,6 @@ function SearchProvider({
   const [activeIndex, setActiveIndex] = useState(0);
   const [contentResults, setContentResults] = useState<ContentHit[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLUListElement>(null);
   const closingRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -274,7 +273,6 @@ function SearchProvider({
           setQuery={setQuery}
           activeIndex={activeIndex}
           setActiveIndex={setActiveIndex}
-          inputRef={inputRef}
           resultsRef={resultsRef}
           onKeyDown={handleKeyDown}
           merged={merged}

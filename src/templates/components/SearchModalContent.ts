@@ -1,5 +1,5 @@
 export const searchModalContentTemplate = `"use client";
-import React, { useCallback } from "react";
+import React from "react";
 import styled, { css, keyframes } from "styled-components";
 import { rgba } from "polished";
 import { Search } from "lucide-react";
@@ -27,7 +27,6 @@ export interface SearchModalContentProps {
   setQuery: (q: string) => void;
   activeIndex: number;
   setActiveIndex: (i: number | ((prev: number) => number)) => void;
-  inputRef: React.RefObject<HTMLInputElement | null>;
   resultsRef: React.RefObject<HTMLUListElement | null>;
   onKeyDown: (e: React.KeyboardEvent) => void;
   merged: MergedResult[];
@@ -243,7 +242,6 @@ export function SearchModalContent({
   setQuery,
   activeIndex,
   setActiveIndex,
-  inputRef,
   resultsRef,
   onKeyDown,
   merged,
@@ -251,20 +249,6 @@ export function SearchModalContent({
   isSearching,
   navigate,
 }: SearchModalContentProps) {
-  const setInputRef = useCallback(
-    (node: HTMLInputElement | null) => {
-      // Sync with parent ref
-      if (inputRef) {
-        (inputRef as React.RefObject<HTMLInputElement | null>).current = node;
-      }
-      // Auto-focus on mount
-      if (node && !isClosing) {
-        node.focus();
-      }
-    },
-    [inputRef, isClosing],
-  );
-
   return (
     <StyledBackdrop
       $isClosing={isClosing}
@@ -275,7 +259,7 @@ export function SearchModalContent({
         <StyledInputWrapper>
           <Search size={18} />
           <StyledInput
-            ref={setInputRef}
+            autoFocus
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
