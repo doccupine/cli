@@ -6,7 +6,7 @@ import {
   getAllDocsChunks,
   DOCS_TOOLS,
 } from "@/services/mcp/tools";
-import { getLLMConfig, createEmbeddings } from "@/services/llm";
+import { getLLMConfig, isLLMAvailable, createEmbeddings } from "@/services/llm";
 import type { DocsChunk } from "@/services/mcp/types";
 
 /**
@@ -110,8 +110,10 @@ export async function ensureDocsIndex(force = false): Promise<void> {
   return indexReady;
 }
 
-// Eagerly start building the index on server startup (docs are static)
-indexReady = buildDocsIndex();
+// Eagerly start building the index on server startup if LLM is configured
+if (isLLMAvailable()) {
+  indexReady = buildDocsIndex();
+}
 
 /** Cached embeddings instance for search queries */
 let cachedEmbeddings: ReturnType<typeof createEmbeddings> | null = null;

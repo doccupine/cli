@@ -36,6 +36,18 @@ function validateAPIKeys(provider: LLMProvider): void {
     );
   }
 }
+export function isLLMAvailable(): boolean {
+  const provider = (process.env.LLM_PROVIDER || "openai") as LLMProvider;
+  const requiredKeys: Record<LLMProvider, string> = {
+    openai: "OPENAI_API_KEY",
+    anthropic: "ANTHROPIC_API_KEY",
+    google: "GOOGLE_API_KEY",
+  };
+  const keyName = requiredKeys[provider];
+  if (!keyName || !process.env[keyName]) return false;
+  if (provider === "anthropic" && !process.env.OPENAI_API_KEY) return false;
+  return true;
+}
 export function getLLMConfig(): LLMConfig {
   const provider = (process.env.LLM_PROVIDER || "openai") as LLMProvider;
   if (!["openai", "anthropic", "google"].includes(provider)) {
