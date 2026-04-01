@@ -6,6 +6,7 @@ import { rgba } from "polished";
 const StyledField = styled.div<{ theme: Theme; $columns?: number }>\`
   border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
   padding: 0 0 20px 0;
+  color: \${({ theme }) => theme.colors.grayDark};
 \`;
 
 const StyledFieldFlex = styled.div<{ theme: Theme }>\`
