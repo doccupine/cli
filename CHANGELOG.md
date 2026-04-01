@@ -2,6 +2,7 @@
 
 ## 0.0.85
 
+- Make LLM API key optional to prevent build failures
 - Replace manual ref callback with autoFocus in search modal
 - Add explicit text color using theme grayDark for field component
 - Update icon examples and external links MDX template
