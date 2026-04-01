@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.85
+
+- Replace manual ref callback with autoFocus in search modal
+- Add explicit text color using theme grayDark for field component
+- Update icon examples and external links MDX template
+- Update dependencies
+
 ## 0.0.84
 
 - Add robots.ts template using Next.js Metadata API
