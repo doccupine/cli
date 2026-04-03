@@ -36,8 +36,8 @@ It then scaffolds the app, installs dependencies, and starts the dev server. Ope
 ```bash
 doccupine watch [options]   # Default. Watch MDX files and start dev server
 doccupine build [options]   # One-time build without starting the server
-doccupine config -show      # Show current configuration
-doccupine config -reset     # Re-prompt for configuration
+doccupine config --show     # Show current configuration
+doccupine config --reset    # Re-prompt for configuration
 ```
 
 ### Options
