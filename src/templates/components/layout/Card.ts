@@ -25,7 +25,8 @@ const StyledCardLink = styled(Link)<{ theme: Theme }>\`
   text-decoration: none;
 \`;
 
-const StyledCardTitle = styled.h3<{ theme: Theme }>\`
+const StyledCardTitle = styled.p<{ theme: Theme }>\`
+  font-weight: bold;
   margin: 5px 0;
   color: \${({ theme }) => theme.colors.dark};
   \${({ theme }) => styledText(theme)};
