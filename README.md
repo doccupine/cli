@@ -129,7 +129,7 @@ Place these JSON files in your project root (where you run `doccupine`). They ar
 | File              | Purpose                                                                                                   |
 | ----------------- | --------------------------------------------------------------------------------------------------------- |
 | `doccupine.json`  | CLI config (watchDir, outputDir, port). Auto-generated on first run.                                      |
-| `config.json`     | Site metadata: `name`, `description`, `icon`, `image` URL                                                 |
+| `config.json`     | Site metadata: `name`, `description`, `icon`, `image`, `url` (public site URL for sitemap/robots)         |
 | `theme.json`      | Theme overrides for [cherry-styled-components](https://github.com/cherry-design-system/styled-components) |
 | `navigation.json` | Manual navigation structure (overrides auto-generated)                                                    |
 | `links.json`      | Static header/footer links                                                                                |
@@ -139,7 +139,20 @@ Place these JSON files in your project root (where you run `doccupine`). They ar
 
 ## Public Directory
 
-Place static assets (images, favicons, `robots.txt`, etc.) in a `public/` directory at your project root. Doccupine copies it to the generated Next.js app on startup and watches for changes, so added, modified, or deleted files are synced automatically.
+Place static assets (images, favicons, etc.) in a `public/` directory at your project root. Doccupine copies it to the generated Next.js app on startup and watches for changes, so added, modified, or deleted files are synced automatically.
+
+## Sitemap and robots.txt
+
+Doccupine generates `robots.ts` automatically for every site. When you set a `url` in `config.json`, it also generates `sitemap.ts` covering every page (across all sections) and links the sitemap from `robots.txt`.
+
+```json
+{
+  "name": "My Docs",
+  "url": "https://docs.example.com"
+}
+```
+
+You can override the URL at deploy time by setting the `NEXT_PUBLIC_SITE_URL` environment variable. When no URL is configured (neither in `config.json` nor via env), the sitemap is skipped and `robots.txt` is emitted without a sitemap reference.
 
 ## AI Chat Setup
 
