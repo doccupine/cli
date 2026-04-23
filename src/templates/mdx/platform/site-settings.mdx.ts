@@ -24,6 +24,9 @@ Upload a favicon image that appears in browser tabs. Supported formats include P
 ### Preview image
 Upload an image used for social media and OpenGraph previews. This is the image that appears when your documentation URL is shared on platforms like Twitter, Slack, or Discord.
 
+### Site URL
+The public URL of your deployed documentation site, such as \`https://docs.example.com\`. This value is used as the base URL when generating \`sitemap.xml\` and \`robots.txt\`, so search engines can discover and index your pages correctly. You can override this at deploy time by setting the \`NEXT_PUBLIC_SITE_URL\` environment variable.
+
 <Callout type="note">
   Changes to site settings are staged as pending changes, just like file edits. Click **Publish** to commit them to your repository and trigger a deploy.
 </Callout>
@@ -36,6 +39,7 @@ Behind the scenes, the Site settings page reads and writes \`config.json\` in yo
   "name": "My Documentation",
   "description": "Documentation for my project",
   "icon": "/favicon.png",
-  "image": "/preview.png"
+  "image": "/preview.png",
+  "url": "https://docs.example.com"
 }
 \`\`\``;
