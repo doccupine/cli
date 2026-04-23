@@ -1,8 +1,22 @@
 # Changelog
 
-## 0.0.85
+## 0.0.88
+
+- Generate `sitemap.xml` automatically when a site URL is configured and link it from `robots.txt`
+- Add `url` field to `config.json` with `NEXT_PUBLIC_SITE_URL` environment variable override
+- Update dependencies
+
+## 0.0.87
+
+- Replace `h3` with `p` element in Card component to fix heading order accessibility
+- Fix config command option syntax from single to double dash in README
+
+## 0.0.86
 
 - Make LLM API key optional to prevent build failures
+
+## 0.0.85
+
 - Replace manual ref callback with autoFocus in search modal
 - Add explicit text color using theme grayDark for field component
 - Update icon examples and external links MDX template
