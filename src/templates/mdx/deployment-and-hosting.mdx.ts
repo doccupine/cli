@@ -55,6 +55,25 @@ Doccupine generates a standard Next.js app, so you can deploy it anywhere that s
 - **Docker** - build a container from the generated app using the standard [Next.js Docker example](https://github.com/vercel/next.js/tree/canary/examples/with-docker) and deploy to any container platform.
 - **Node.js server** - run \`next build && next start\` on any server or VPS with Node.js installed.
 
+### Sitemap and robots.txt
+Doccupine generates \`sitemap.xml\` and \`robots.txt\` automatically when you set a site URL. This is required for search engine indexing and is strongly recommended for any public deployment.
+
+Set the URL in \`config.json\`:
+
+\`\`\`json
+{
+  "url": "https://docs.example.com"
+}
+\`\`\`
+
+At deploy time, you can override the value with the \`NEXT_PUBLIC_SITE_URL\` environment variable - useful for preview deployments or staging environments.
+
+\`\`\`bash
+NEXT_PUBLIC_SITE_URL=https://staging.example.com
+\`\`\`
+
+The generated sitemap includes every page from every [section](/sections), with \`lastModified\` derived from each page's frontmatter \`date\` or the file's modification time. When no URL is configured, the sitemap is skipped and \`robots.txt\` is emitted without a sitemap reference.
+
 ### Troubleshooting
 - **Build failed** - check build logs. Ensure your lockfile and correct Node.js version are present.
 - **Missing content** - verify your MDX files and assets are in the repository.

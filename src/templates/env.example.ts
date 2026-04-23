@@ -1,4 +1,8 @@
-export const envExampleTemplate = `# LLM Provider Configuration
+export const envExampleTemplate = `# Public Site URL
+# Used by sitemap.xml and robots.txt. Overrides \`url\` in config.json when set.
+# NEXT_PUBLIC_SITE_URL=https://docs.example.com
+
+# LLM Provider Configuration
 # Choose your preferred LLM provider: openai, anthropic, or google
 LLM_PROVIDER=openai
 

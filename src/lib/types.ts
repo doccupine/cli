@@ -15,6 +15,7 @@ export interface PageMeta {
   categoryOrder: number;
   order: number;
   section: string;
+  lastModified?: string;
 }
 
 export interface SectionConfig {

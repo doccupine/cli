@@ -23,7 +23,8 @@ Place a \`config.json\` at your project root (the same folder where you execute 
   "name": "Doccupine",
   "description": "${DEFAULT_DESCRIPTION}",
   "icon": "${DEFAULT_FAVICON}",
-  "image": "${DEFAULT_OG_IMAGE}"
+  "image": "${DEFAULT_OG_IMAGE}",
+  "url": "https://docs.example.com"
 }
 \`\`\`
 
@@ -34,6 +35,7 @@ All fields are optional. Doccupine uses sensible defaults when a field is not se
 - **description**: A concise summary of your project, used in site metadata (e.g., HTML meta description) and social previews when not overridden.
 - **icon**: The favicon for your site. You can provide a full URL or a relative path to an asset in your project.
 - **image**: The Open Graph image used when links to your docs are shared on social platforms. Accepts a full URL or a relative path.
+- **url**: The public URL of your deployed site. Used as the base URL for \`sitemap.xml\` and \`robots.txt\`. When omitted, no sitemap is generated. Can be overridden at deploy time with the \`NEXT_PUBLIC_SITE_URL\` environment variable.
 
 ## Per-page overrides
 Any page can override global values by defining the matching key in its frontmatter. When present, the page's value takes precedence over \`config.json\` for that page only.

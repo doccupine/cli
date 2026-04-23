@@ -6,6 +6,7 @@ const configSchema = z.object({
   description: z.string().optional(),
   icon: z.string().optional(),
   image: z.string().optional(),
+  url: z.string().url().optional(),
 });
 
 type Config = z.infer<typeof configSchema>;

@@ -11,7 +11,6 @@ import { ragRoutesTemplate } from "../templates/app/api/rag/route.js";
 import { searchRoutesTemplate } from "../templates/app/api/search/route.js";
 import { routesTemplate } from "../templates/app/api/theme/routes.js";
 import { notFoundTemplate } from "../templates/app/not-found.js";
-import { robotsTemplate } from "../templates/app/robots.js";
 import { themeTemplate } from "../templates/app/theme.js";
 
 import { chatTemplate } from "../templates/components/Chat.js";
@@ -132,7 +131,6 @@ export const appStructure: Record<string, string> = {
   "tsconfig.json": tsconfigTemplate,
 
   "app/not-found.tsx": notFoundTemplate,
-  "app/robots.ts": robotsTemplate,
   "app/theme.ts": themeTemplate,
   "app/api/mcp/route.ts": mcpRoutesTemplate,
   "app/api/rag/route.ts": ragRoutesTemplate,

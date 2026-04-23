@@ -24,6 +24,8 @@ import {
 } from "./lib/metadata.js";
 import { nextConfigTemplate } from "./templates/next.config.js";
 import { proxyTemplate } from "./templates/proxy.js";
+import { robotsTemplate } from "./templates/app/robots.js";
+import { sitemapTemplate, type SitemapEntry } from "./templates/app/sitemap.js";
 import type {
   MDXFile,
   PageMeta,
@@ -116,6 +118,8 @@ class MDXToNextJSGenerator {
   }
 
   async createNextJSStructure() {
+    const siteUrl = await this.loadSiteUrl();
+
     const structure: Record<string, string | Promise<string>> = {
       ...appStructure,
       "next.config.ts": nextConfigTemplate(this.analyticsConfig),
@@ -126,6 +130,7 @@ class MDXToNextJSGenerator {
       "navigation.json": `[]\n`,
       "sections.json": `[]\n`,
       "theme.json": `{}\n`,
+      "app/robots.ts": robotsTemplate(siteUrl !== null),
       "app/layout.tsx": this.generateRootLayout(),
     };
 
@@ -134,6 +139,8 @@ class MDXToNextJSGenerator {
       await fs.ensureDir(path.dirname(fullPath));
       await fs.writeFile(fullPath, String(await content), "utf8");
     }
+
+    await this.updateSitemap();
   }
 
   async createStartingDocs() {
@@ -434,6 +441,11 @@ class MDXToNextJSGenerator {
         if (fileName === "sections.json") {
           await this.reloadSections();
         }
+
+        if (fileName === "config.json") {
+          await this.updateSitemap();
+          await this.updateRobots();
+        }
       } catch (error) {
         console.error(chalk.red(`❌ Error copying ${fileName}:`), error);
       }
@@ -454,6 +466,11 @@ class MDXToNextJSGenerator {
 
         if (fileName === "sections.json") {
           await this.reloadSections();
+        }
+
+        if (fileName === "config.json") {
+          await this.updateSitemap();
+          await this.updateRobots();
         }
       } catch (error) {
         console.error(chalk.red(`❌ Error removing ${fileName}:`), error);
@@ -832,6 +849,22 @@ class MDXToNextJSGenerator {
     );
     const fullSlug = getFullSlug(pageSlug, sectionSlug);
 
+    let lastModified: string | undefined;
+    if (frontmatter.date) {
+      const parsed = new Date(frontmatter.date);
+      if (!Number.isNaN(parsed.getTime())) {
+        lastModified = parsed.toISOString();
+      }
+    }
+    if (!lastModified) {
+      try {
+        const stats = await fs.stat(fullPath);
+        lastModified = stats.mtime.toISOString();
+      } catch {
+        // ignore
+      }
+    }
+
     return {
       slug: fullSlug,
       title: frontmatter.title || "Untitled",
@@ -842,6 +875,7 @@ class MDXToNextJSGenerator {
       categoryOrder: frontmatter.categoryOrder || 0,
       order: frontmatter.order || 0,
       section: sectionSlug,
+      lastModified,
     };
   }
 
@@ -888,6 +922,7 @@ class MDXToNextJSGenerator {
 
       await this.updatePagesIndex();
       await this.updateRootLayout();
+      await this.updateSitemap();
       await this.generateSectionIndexPages();
 
       console.log(chalk.green(`✅ Generated page for: ${filePath}`));
@@ -917,6 +952,7 @@ class MDXToNextJSGenerator {
 
       await this.updatePagesIndex();
       await this.updateRootLayout();
+      await this.updateSitemap();
 
       console.log(chalk.green(`✅ Removed page for: ${filePath}`));
 
@@ -1149,6 +1185,97 @@ export default function Page() {
       path.join(this.outputDir, "app", "layout.tsx"),
       layoutContent,
       "utf8",
+    );
+  }
+
+  async loadSiteUrl(): Promise<string | null> {
+    const configPath = path.join(this.rootDir, "config.json");
+
+    try {
+      if (await fs.pathExists(configPath)) {
+        const content = await fs.readFile(configPath, "utf8");
+        const parsed = JSON.parse(content) as { url?: unknown };
+        if (typeof parsed.url === "string" && parsed.url.trim() !== "") {
+          return parsed.url.trim().replace(/\/$/, "");
+        }
+      }
+    } catch (error) {
+      console.warn(chalk.yellow("⚠️ Error reading config.json"), error);
+    }
+
+    return null;
+  }
+
+  private buildSitemapEntries(pages: PageMeta[]): SitemapEntry[] {
+    const sectionSlugs = new Set(
+      (this.sectionsConfig || [])
+        .map((s) => s.slug)
+        .filter((s): s is string => typeof s === "string" && s !== ""),
+    );
+
+    const entries: SitemapEntry[] = pages.map((page) => {
+      let priority = 0.5;
+      if (page.slug === "") {
+        priority = 1.0;
+      } else if (sectionSlugs.has(page.slug)) {
+        priority = 0.8;
+      }
+      return {
+        slug: page.slug,
+        lastModified: page.lastModified,
+        changeFrequency: "weekly",
+        priority,
+      };
+    });
+
+    if (!entries.some((entry) => entry.slug === "")) {
+      entries.unshift({
+        slug: "",
+        changeFrequency: "weekly",
+        priority: 1.0,
+      });
+    }
+
+    return entries;
+  }
+
+  async updateSitemap() {
+    const sitemapPath = path.join(this.outputDir, "app", "sitemap.ts");
+    const siteUrl = await this.loadSiteUrl();
+
+    if (!siteUrl) {
+      if (await fs.pathExists(sitemapPath)) {
+        await fs.remove(sitemapPath);
+        console.log(
+          chalk.yellow("🗑️ Removed sitemap.ts (no site URL configured)"),
+        );
+      }
+      return;
+    }
+
+    const pages = await this.buildAllPagesMeta();
+    const entries = this.buildSitemapEntries(pages);
+    await fs.writeFile(sitemapPath, sitemapTemplate(entries), "utf8");
+    console.log(
+      chalk.green(
+        `🗺️ Generated sitemap.ts with ${entries.length} page(s) using ${siteUrl}`,
+      ),
+    );
+  }
+
+  async updateRobots() {
+    const siteUrl = await this.loadSiteUrl();
+    await fs.writeFile(
+      path.join(this.outputDir, "app", "robots.ts"),
+      robotsTemplate(siteUrl !== null),
+      "utf8",
+    );
+    console.log(
+      chalk.green(
+        siteUrl
+          ? `🤖 Regenerated robots.ts with sitemap link`
+          : `🤖 Regenerated robots.ts (no sitemap link)`,
+      ),
     );
   }
 
