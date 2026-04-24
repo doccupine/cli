@@ -43,7 +43,9 @@ export function generateJsonLdScript(opts: JsonLdOptions): {
     : opts.date
       ? JSON.stringify(opts.date)
       : "undefined";
-  const imageOverridePrefix = opts.image ? `${JSON.stringify(opts.image)} ||\n      ` : "";
+  const imageOverridePrefix = opts.image
+    ? `${JSON.stringify(opts.image)} ||\n      `
+    : "";
   const pathLiteral = JSON.stringify(safePath);
 
   const homepageGraph =
