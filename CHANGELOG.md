@@ -4,11 +4,16 @@
 
 - Switch theming to CSS custom properties toggled by a `dark` class on `<html>`, removing runtime `theme.isDark` branching across components
 - Add blocking `theme-init` script in the root layout so the theme is applied before first paint to prevent a flash of incorrect theme
-- Stop theme cookie handling in middleware and mark doc, home, and section pages as `force-static` for fully static output
+- Serve doc, home, and section pages fully statically from the edge cache by removing the theme cookie from middleware and marking pages as `force-static` - theme now resolves client-side via the `dark` class set before paint
 - Derive semantic tokens (`accent`, `accentStrong`, `accentMuted`, `surface`) from the brand palette using native `color-mix`, dropping the `polished` dependency
 - Add JSON-LD structured data and canonical URLs to generated pages for improved SEO
 - Document `sitemap.xml` and `robots.txt` generation in the README
 - Document the site URL field in platform site settings
+- Fix JSON-LD favicon fallback chain so a configured `config.icon` is no longer skipped by an always-falsy override check
+- Restore type checking in the generated app after the CSS-variable theming refactor
+- Derive semantic CSS tokens via `var()` so theme preset overrides cascade through to dependent tokens
+- Lock down semantic tokens and repair filled-button text contrast in dark mode
+- Emit Prettier-clean output for JSON-LD declarations and styled-components so generated sites no longer produce formatting-only diffs
 
 ## 0.0.88
 
