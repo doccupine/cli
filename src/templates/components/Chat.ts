@@ -261,12 +261,14 @@ const StyledRainbowInput = styled.input<{ theme: Theme }>\`
   }
 
   &::placeholder {
-    color: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.dark} 40%, transparent)\`};
+    color: \${({ theme }) =>
+      \`color-mix(in srgb, \${theme.colors.dark} 40%, transparent)\`};
     transition: color 0.3s ease;
   }
 
   &:focus::placeholder {
-    color: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.dark} 60%, transparent)\`};
+    color: \${({ theme }) =>
+      \`color-mix(in srgb, \${theme.colors.dark} 60%, transparent)\`};
   }
 
   &:focus {
@@ -536,7 +538,8 @@ const StyledAnswer = styled.div<{ theme: Theme; $isAnswer: boolean }>\`
     \`}
 
   & code:not([class]) {
-    background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
+    background: \${({ theme }) =>
+      \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
     color: \${({ theme }) => theme.colors.dark};
     padding: 2px 4px;
     border-radius: \${({ theme }) => theme.spacing.radius.xs};
@@ -627,7 +630,8 @@ const StyledSourceLink = styled(Link)<{ theme: Theme }>\`
   font-weight: 600;
   white-space: nowrap;
   min-width: fit-content;
-  background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 10%, transparent)\`};
+  background: \${({ theme }) =>
+    \`color-mix(in srgb, \${theme.colors.primaryLight} 10%, transparent)\`};
   padding: 6px 8px;
   border-radius: \${({ theme }) => theme.spacing.radius.xs};
   \${interactiveStyles};

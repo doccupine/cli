@@ -43,9 +43,20 @@ export function generateJsonLdScript(opts: JsonLdOptions): {
     : opts.date
       ? JSON.stringify(opts.date)
       : "undefined";
-  const imageOverridePrefix = opts.image
-    ? `${JSON.stringify(opts.image)} ||\n      `
-    : "";
+  const defaultFaviconLiteral = JSON.stringify(DEFAULT_FAVICON);
+  const faviconLine = opts.image
+    ? `const faviconUrl =
+      ${JSON.stringify(opts.image)} ||
+      config.icon ||
+      ${defaultFaviconLiteral};`
+    : `const faviconUrl = config.icon || ${defaultFaviconLiteral};`;
+  // Indent 10 + "description: ".length(13) + ",".length(1) = 24. Prettier
+  // wraps the value to the next line (indent 12) once total exceeds 80.
+  const descriptionLine =
+    descLiteral.length > 56
+      ? `description:
+            ${descLiteral},`
+      : `description: ${descLiteral},`;
   const pathLiteral = JSON.stringify(safePath);
 
   const homepageGraph =
@@ -76,16 +87,14 @@ export function generateJsonLdScript(opts: JsonLdOptions): {
     const path = ${pathLiteral};
     const url = baseUrl ? (path ? \`\${baseUrl}/\${path}\` : baseUrl) : undefined;
     const siteName = config.name || ${JSON.stringify(DEFAULT_SITE_NAME)};
-    const faviconUrl =
-      ${imageOverridePrefix}config.icon ||
-      ${JSON.stringify(DEFAULT_FAVICON)};
+    ${faviconLine}
     return {
       "@context": "https://schema.org",
       "@graph": [
         {
           "@type": "TechArticle",
           headline: ${titleLiteral},
-          description: ${descLiteral},
+          ${descriptionLine}
           url,
           mainEntityOfPage: url,
           datePublished: ${dateLiteral},

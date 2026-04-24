@@ -48,7 +48,11 @@ const TabButton = styled.button<{ theme: Theme; $isActive?: boolean }>\`
       !$isActive &&
       css\`
         color: \${theme.colors.primary};
-        background-color: color-mix(in srgb, \${theme.colors.primaryLight} 10%, transparent);
+        background-color: color-mix(
+          in srgb,
+          \${theme.colors.primaryLight} 10%,
+          transparent
+        );
       \`}
   }
   &:focus {

@@ -51,7 +51,8 @@ const StyledHeader = styled.header<{ theme: Theme; $hasChildren: boolean }>\`
   }
 
   &::after {
-    background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 5%, transparent)\`};
+    background: \${({ theme }) =>
+      \`color-mix(in srgb, \${theme.colors.primaryLight} 5%, transparent)\`};
     z-index: -1;
   }
 

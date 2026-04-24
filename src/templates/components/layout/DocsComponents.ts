@@ -84,7 +84,8 @@ const StyledDocsContainer = styled.div<{ theme: Theme; $isChatOpen?: boolean }>\
   }
 
   & code:not([class]) {
-    background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
+    background: \${({ theme }) =>
+      \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
     color: \${({ theme }) => theme.colors.dark};
     padding: 2px 4px;
     border-radius: \${({ theme }) => theme.spacing.radius.xs};
@@ -152,7 +153,8 @@ export const StyledSidebar = styled.nav<Props>\`
     opacity: 1;
     pointer-events: all;
     transform: translateY(0);
-    background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 5%, transparent)\`};
+    background: \${({ theme }) =>
+      \`color-mix(in srgb, \${theme.colors.primaryLight} 5%, transparent)\`};
     top: 0;
     width: ${SIDEBAR_WIDTH}px;
   }
@@ -170,7 +172,8 @@ export const StyledSidebarFooter = styled.div\`
   padding: 22px 20px;
   position: sticky;
   border-top: 1px solid \${({ theme }) => theme.colors.grayLight};
-  background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 5%, transparent)\`};
+  background: \${({ theme }) =>
+    \`color-mix(in srgb, \${theme.colors.primaryLight} 5%, transparent)\`};
   margin: 0 -20px -20px;
   bottom: -20px;
   backdrop-filter: blur(10px);

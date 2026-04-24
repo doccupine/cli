@@ -51,8 +51,7 @@ const StyledLink = styled.a<{ theme: Theme; $hasIcon?: boolean }>\`
   text-decoration: none;
   font-size: \${({ theme }) => theme.fontSizes.small.lg};
   line-height: 1;
-  color: \${({ theme }) =>
-    theme.colors.accent};
+  color: \${({ theme }) => theme.colors.accent};
   padding: 0;
   display: flex;
   gap: 6px;
@@ -60,7 +59,8 @@ const StyledLink = styled.a<{ theme: Theme; $hasIcon?: boolean }>\`
   font-weight: 600;
   white-space: nowrap;
   min-width: fit-content;
-  background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 10%, transparent)\`};
+  background: \${({ theme }) =>
+    \`color-mix(in srgb, \${theme.colors.primaryLight} 10%, transparent)\`};
   padding: 6px 8px;
   border-radius: \${({ theme }) => theme.spacing.radius.xs};
   \${interactiveStyles};
@@ -83,8 +83,7 @@ const StyledLink = styled.a<{ theme: Theme; $hasIcon?: boolean }>\`
   }
 
   &:hover {
-    color: \${({ theme }) =>
-      theme.colors.accent};
+    color: \${({ theme }) => theme.colors.accent};
   }
 \`;
 

@@ -71,7 +71,8 @@ const StyledToggle = styled.button<{ theme: Theme; $isActive?: boolean }>\`
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
+    background: \${({ theme }) =>
+      \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
     transition: all 0.3s ease;
     z-index: 1;
     \${({ $isActive }) =>

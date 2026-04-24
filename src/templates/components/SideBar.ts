@@ -46,7 +46,9 @@ function SideBar({ result }: SideBarProps) {
       <StyleMobileBar
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         $isActive={isMobileMenuOpen}
-        aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+        aria-label={
+          isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"
+        }
         aria-expanded={isMobileMenuOpen}
       >
         <StyledMobileBurger $isActive={isMobileMenuOpen} />

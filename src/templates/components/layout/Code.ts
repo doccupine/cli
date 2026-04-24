@@ -71,7 +71,8 @@ const Dot = styled.span<{ theme: Theme }>\`
 \`;
 
 const CopyButton = styled.button<{ theme: Theme; $copied: boolean }>\`
-  background: \${({ $copied }) => ($copied ? "rgba(45, 164, 78, 0.1)" : "transparent")};
+  background: \${({ $copied }) =>
+    $copied ? "rgba(45, 164, 78, 0.1)" : "transparent"};
   border: solid 1px
     \${({ $copied }) => ($copied ? "#2da44e" : "rgba(0, 0, 0, 0.1)")};
   color: \${({ $copied }) => ($copied ? "#2da44e" : "#57606a")};
@@ -93,7 +94,8 @@ const CopyButton = styled.button<{ theme: Theme; $copied: boolean }>\`
   &:hover {
     background: \${({ $copied }) =>
       $copied ? "rgba(45, 164, 78, 0.2)" : "rgba(0, 0, 0, 0.05)"};
-    border-color: \${({ $copied }) => ($copied ? "#2da44e" : "rgba(0, 0, 0, 0.2)")};
+    border-color: \${({ $copied }) =>
+      $copied ? "#2da44e" : "rgba(0, 0, 0, 0.2)"};
   }
 
   &:active {
@@ -101,8 +103,10 @@ const CopyButton = styled.button<{ theme: Theme; $copied: boolean }>\`
   }
 
   :root.dark & {
-    background: \${({ $copied }) => ($copied ? "rgba(126, 231, 135, 0.2)" : "transparent")};
-    border-color: \${({ $copied }) => ($copied ? "#7ee787" : "rgba(255, 255, 255, 0.1)")};
+    background: \${({ $copied }) =>
+      $copied ? "rgba(126, 231, 135, 0.2)" : "transparent"};
+    border-color: \${({ $copied }) =>
+      $copied ? "#7ee787" : "rgba(255, 255, 255, 0.1)"};
     color: \${({ $copied }) => ($copied ? "#7ee787" : "#c9d1d9")};
 
     & svg.lucide {

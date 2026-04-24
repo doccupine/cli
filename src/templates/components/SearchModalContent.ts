@@ -148,11 +148,16 @@ const StyledResultItem = styled.li<{ theme: Theme; $isActive: boolean }>\`
   \${({ $isActive, theme }) =>
     $isActive &&
     css\`
-      background: color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent);
+      background: color-mix(
+        in srgb,
+        \${theme.colors.primaryLight} 20%,
+        transparent
+      );
     \`}
 
   &:hover {
-    background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 15%, transparent)\`};
+    background: \${({ theme }) =>
+      \`color-mix(in srgb, \${theme.colors.primaryLight} 15%, transparent)\`};
   }
 \`;
 
@@ -181,7 +186,8 @@ const StyledSnippet = styled.span<{ theme: Theme }>\`
   white-space: nowrap;
 
   & mark {
-    background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 35%, transparent)\`};
+    background: \${({ theme }) =>
+      \`color-mix(in srgb, \${theme.colors.primaryLight} 35%, transparent)\`};
     color: inherit;
     border-radius: 4px;
     padding: 0 1px;

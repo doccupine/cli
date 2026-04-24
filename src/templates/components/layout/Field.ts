@@ -24,7 +24,8 @@ const StyledFieldValue = styled.span<{ theme: Theme }>\`
 \`;
 
 const StyledFieldType = styled.span<{ theme: Theme }>\`
-  background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
+  background: \${({ theme }) =>
+    \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
   color: \${({ theme }) => theme.colors.dark};
   padding: 0 4px;
   font-family: \${({ theme }) => theme.fonts.mono};
@@ -32,7 +33,8 @@ const StyledFieldType = styled.span<{ theme: Theme }>\`
 \`;
 
 const StyledFieldRequired = styled.span<{ theme: Theme }>\`
-  background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.error} 20%, transparent)\`};
+  background: \${({ theme }) =>
+    \`color-mix(in srgb, \${theme.colors.error} 20%, transparent)\`};
   color: \${({ theme }) => theme.colors.error};
   padding: 0 4px;
   font-family: \${({ theme }) => theme.fonts.mono};

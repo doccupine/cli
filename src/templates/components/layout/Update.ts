@@ -16,7 +16,8 @@ const StyledUpdate = styled.div<{ theme: Theme; $columns?: number }>\`
 \`;
 
 const StyledUpdateLabel = styled.span<{ theme: Theme }>\`
-  background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
+  background: \${({ theme }) =>
+    \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
   color: \${({ theme }) => theme.colors.primary};
   padding: 2px 4px;
   border-radius: \${({ theme }) => theme.spacing.radius.xs};
