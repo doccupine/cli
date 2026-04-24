@@ -1,7 +1,7 @@
 export const colorSwatchTemplate = `"use client";
 import styled from "styled-components";
-import { styledText, Theme } from "cherry-styled-components";
-import { mq } from "@/app/theme";
+import { styledText } from "cherry-styled-components";
+import { mq, Theme } from "@/app/theme";
 
 const StyledSwatchGroup = styled.div<{ theme: Theme }>\`
   display: grid;

@@ -1,7 +1,8 @@
 export const cardTemplate = `"use client";
 import Link from "next/link";
 import styled, { css, useTheme } from "styled-components";
-import { styledText, Theme } from "cherry-styled-components";
+import { styledText } from "cherry-styled-components";
+import { Theme } from "@/app/theme";
 import { Icon, IconProps } from "@/components/layout/Icon";
 import { interactiveStyles } from "@/components/layout/SharedStyled";
 

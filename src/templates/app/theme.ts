@@ -212,6 +212,10 @@ export const theme: Theme = {
   fonts,
   fontSizes,
   lineHeights,
+  // Stub for type compatibility with cherry-styled-components' Theme.
+  // Mode switching is handled entirely via CSS vars flipped by :root.dark,
+  // so the runtime value is irrelevant for our own code.
+  isDark: false,
 };
 
 interface Breakpoints<TNumber = number> {
@@ -355,5 +359,6 @@ export interface Theme {
   fonts: Fonts;
   fontSizes: FontSizes;
   lineHeights: LineHeights;
+  isDark: boolean;
 }
 `;

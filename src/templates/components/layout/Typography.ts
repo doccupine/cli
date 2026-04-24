@@ -7,9 +7,9 @@ import {
   styledH5,
   styledH6,
   styledText,
-  Theme,
 } from "cherry-styled-components";
 import styled, { css } from "styled-components";
+import { Theme } from "@/app/theme";
 
 const StyledHeading = css\`
   font-weight: 900;

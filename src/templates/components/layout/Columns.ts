@@ -1,6 +1,6 @@
 export const columnsTemplate = `"use client";
 import styled from "styled-components";
-import { mq, Theme } from "cherry-styled-components";
+import { mq, Theme } from "@/app/theme";
 
 const StyledColumns = styled.div<{ theme: Theme; $columns?: number }>\`
   display: flex;

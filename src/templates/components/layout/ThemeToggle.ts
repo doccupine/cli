@@ -1,6 +1,7 @@
 export const themeToggleTemplate = `"use client";
-import { Theme, resetButton } from "cherry-styled-components";
+import { resetButton } from "cherry-styled-components";
 import styled, { css } from "styled-components";
+import { Theme } from "@/app/theme";
 import { Icon } from "@/components/layout/Icon";
 import { useThemeOverride } from "@/components/layout/ClientThemeProvider";
 

@@ -1,5 +1,6 @@
 export const sharedStyledTemplate = `"use client";
-import { mq, styledSmall, styledText, Theme } from "cherry-styled-components";
+import { styledSmall, styledText } from "cherry-styled-components";
+import { mq, Theme } from "@/app/theme";
 import styled, { css } from "styled-components";
 
 export const interactiveStyles = css<{ theme: Theme }>\`

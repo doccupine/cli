@@ -1,7 +1,8 @@
 export const codeTemplate = `"use client";
 import { useState, useCallback, useMemo } from "react";
 import styled, { css } from "styled-components";
-import { Theme, styledCode } from "cherry-styled-components";
+import { styledCode } from "cherry-styled-components";
+import { Theme } from "@/app/theme";
 import { unified } from "unified";
 import rehypeParse from "rehype-parse";
 import rehypeHighlight from "rehype-highlight";

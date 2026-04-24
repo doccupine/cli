@@ -11,7 +11,7 @@ import {
 // :root and :root.dark blocks from the resolved hex objects in theme.ts.
 // Custom theme.json overrides flow through automatically because they are
 // already merged into colorsLight / colorsDark.
-function toCssVars(prefix: string, record: Record<string, string>): string {
+function toCssVars<T extends object>(prefix: string, record: T): string {
   return Object.entries(record)
     .map(([k, v]) => \`  --\${prefix}-\${k}: \${v};\`)
     .join("\\n");
