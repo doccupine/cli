@@ -43,7 +43,7 @@ export function generateJsonLdScript(opts: JsonLdOptions): {
     : opts.date
       ? JSON.stringify(opts.date)
       : "undefined";
-  const imageOverride = opts.image ? JSON.stringify(opts.image) : "undefined";
+  const imageOverridePrefix = opts.image ? `${JSON.stringify(opts.image)} ||\n      ` : "";
   const pathLiteral = JSON.stringify(safePath);
 
   const homepageGraph =
@@ -75,8 +75,7 @@ export function generateJsonLdScript(opts: JsonLdOptions): {
     const url = baseUrl ? (path ? \`\${baseUrl}/\${path}\` : baseUrl) : undefined;
     const siteName = config.name || ${JSON.stringify(DEFAULT_SITE_NAME)};
     const faviconUrl =
-      ${imageOverride} ||
-      config.icon ||
+      ${imageOverridePrefix}config.icon ||
       ${JSON.stringify(DEFAULT_FAVICON)};
     return {
       "@context": "https://schema.org",
