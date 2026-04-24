@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.0.89
+
+- Switch theming to CSS custom properties toggled by a `dark` class on `<html>`, removing runtime `theme.isDark` branching across components
+- Add blocking `theme-init` script in the root layout so the theme is applied before first paint to prevent a flash of incorrect theme
+- Stop theme cookie handling in middleware and mark doc, home, and section pages as `force-static` for fully static output
+- Derive semantic tokens (`accent`, `accentStrong`, `accentMuted`, `surface`) from the brand palette using native `color-mix`, dropping the `polished` dependency
+- Add JSON-LD structured data and canonical URLs to generated pages for improved SEO
+- Document `sitemap.xml` and `robots.txt` generation in the README
+- Document the site URL field in platform site settings
+
 ## 0.0.88
 
 - Generate `sitemap.xml` automatically when a site URL is configured and link it from `robots.txt`
