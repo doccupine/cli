@@ -21,6 +21,7 @@ import {
 import {
   generateMetadataBlock,
   generateRuntimeOnlyMetadataBlock,
+  generateJsonLdScript,
 } from "./lib/metadata.js";
 import { nextConfigTemplate } from "./templates/next.config.js";
 import { proxyTemplate } from "./templates/proxy.js";
@@ -1065,6 +1066,22 @@ export default function SectionIndex() {
       description: fm.description,
       icon: fm.icon,
       image: fm.image,
+      canonicalPath: mdxFile.slug,
+    });
+
+    const jsonLd = generateJsonLdScript({
+      kind: "article",
+      canonicalPath: mdxFile.slug,
+      title: fm.title,
+      description: fm.description,
+      date: typeof fm.date === "string" ? fm.date : undefined,
+      updated:
+        typeof fm.updated === "string"
+          ? fm.updated
+          : typeof fm.date === "string"
+            ? fm.date
+            : undefined,
+      image: fm.image,
     });
 
     const pageContent = `import { Metadata } from "next";
@@ -1076,7 +1093,14 @@ const content = \`${escapeTemplateContent(mdxFile.content)}\`;
 ${metadataBlock}
 
 export default function Page() {
-  return <Docs content={content} />;
+  ${jsonLd.declarations}
+
+  return (
+    <>
+      ${jsonLd.element}
+      <Docs content={content} />
+    </>
+  );
 }
 `;
 
@@ -1094,6 +1118,8 @@ export default function Page() {
       icon?: string;
       image?: string;
       name?: string;
+      date?: string;
+      updated?: string;
     } | null = null;
 
     for (const file of files) {
@@ -1109,6 +1135,12 @@ export default function Page() {
           icon: frontmatter.icon,
           image: frontmatter.image,
           name: frontmatter.name,
+          date:
+            typeof frontmatter.date === "string" ? frontmatter.date : undefined,
+          updated:
+            typeof frontmatter.updated === "string"
+              ? frontmatter.updated
+              : undefined,
         };
         break;
       }
@@ -1123,8 +1155,19 @@ export default function Page() {
           description: indexMDX.description || undefined,
           icon: indexMDX.icon,
           image: indexMDX.image,
+          canonicalPath: "",
         })
       : generateRuntimeOnlyMetadataBlock();
+
+    const homeJsonLd = generateJsonLdScript({
+      kind: "homepage",
+      canonicalPath: "",
+      title: indexMDX?.title,
+      description: indexMDX?.description || undefined,
+      date: indexMDX?.date,
+      updated: indexMDX?.updated ?? indexMDX?.date,
+      image: indexMDX?.image,
+    });
 
     const indexContent = `import { Metadata } from "next";
 import { Docs } from "@/components/Docs";
@@ -1135,7 +1178,14 @@ ${indexMDX ? `const content = \`${escapeTemplateContent(indexMDX.content)}\`;` :
 ${metadataBlock}
 
 export default function Home() {
-  return <Docs content={content} />;
+  ${homeJsonLd.declarations}
+
+  return (
+    <>
+      ${homeJsonLd.element}
+      <Docs content={content} />
+    </>
+  );
 }
 `;
 
@@ -1159,6 +1209,22 @@ export default function Home() {
       description: frontmatter.description || undefined,
       icon: frontmatter.icon,
       image: frontmatter.image,
+      canonicalPath: sectionSlug,
+    });
+
+    const sectionJsonLd = generateJsonLdScript({
+      kind: "article",
+      canonicalPath: sectionSlug,
+      title: frontmatter.title,
+      description: frontmatter.description,
+      date: typeof frontmatter.date === "string" ? frontmatter.date : undefined,
+      updated:
+        typeof frontmatter.updated === "string"
+          ? frontmatter.updated
+          : typeof frontmatter.date === "string"
+            ? frontmatter.date
+            : undefined,
+      image: frontmatter.image,
     });
 
     const indexContent = `import { Metadata } from "next";
@@ -1170,7 +1236,14 @@ const content = \`${escapeTemplateContent(mdxContent)}\`;
 ${metadataBlock}
 
 export default function Page() {
-  return <Docs content={content} />;
+  ${sectionJsonLd.declarations}
+
+  return (
+    <>
+      ${sectionJsonLd.element}
+      <Docs content={content} />
+    </>
+  );
 }
 `;
 

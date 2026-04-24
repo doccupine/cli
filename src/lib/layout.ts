@@ -149,7 +149,18 @@ ${
       : 'const font = Inter({ subsets: ["latin"] });'
 }
 
+function resolveSiteUrl(): URL | undefined {
+  const raw = process.env.NEXT_PUBLIC_SITE_URL ?? config.url;
+  if (!raw || typeof raw !== "string") return undefined;
+  try {
+    return new URL(raw);
+  } catch {
+    return undefined;
+  }
+}
+
 export const metadata: Metadata = {
+  metadataBase: resolveSiteUrl(),
   title: config.name || "${DEFAULT_SITE_NAME}",
   description:
     config.description ||
