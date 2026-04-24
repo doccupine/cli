@@ -63,7 +63,7 @@ const StyledFooterInner = styled.div<{ theme: Theme }>\`
     display: inline-flex;
 
     &:hover {
-      color: \${({ theme }) => theme.colors.primaryDark};
+      color: \${({ theme }) => theme.colors.primary};
     }
 
     & svg {
