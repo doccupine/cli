@@ -1,7 +1,6 @@
 export const tabsTemplate = `"use client";
 import { Theme } from "@/app/theme";
 import { styledText } from "cherry-styled-components";
-import { rgba } from "polished";
 import React, { useState, ReactNode } from "react";
 import styled, { css } from "styled-components";
 interface TabContentProps {
@@ -49,7 +48,7 @@ const TabButton = styled.button<{ theme: Theme; $isActive?: boolean }>\`
       !$isActive &&
       css\`
         color: \${theme.colors.primary};
-        background-color: \${rgba(theme.colors.primaryLight, 0.1)};
+        background-color: color-mix(in srgb, \${theme.colors.primaryLight} 10%, transparent);
       \`}
   }
   &:focus {

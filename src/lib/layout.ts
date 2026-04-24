@@ -95,9 +95,8 @@ ${a}            >`
   return `import type { Metadata } from "next";
 ${isGoogleFont(fontConfig) ? `import { ${fontConfig.googleFont.fontName} } from "next/font/google";` : isLocalFont(fontConfig) ? 'import localFont from "next/font/local";' : 'import { Inter } from "next/font/google";'}
 import dynamic from "next/dynamic";
-import Script from "next/script";
 import { StyledComponentsRegistry } from "cherry-styled-components";
-import { theme, themeDark } from "@/app/theme";
+import { theme } from "@/app/theme";
 import { CherryThemeProvider } from "@/components/layout/CherryThemeProvider";
 import { ChtProvider } from "@/components/Chat";
 import { SearchProvider } from "@/components/SearchDocs";
@@ -189,24 +188,26 @@ ${
   const pages: PagesProps[] = doccupinePages;
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Prevents dark-mode FOUC on Safari/Firefox. These browsers don't support
-            Sec-CH-Prefers-Color-Scheme (handled by middleware for Chrome), so on
-            a first visit this blocking script detects prefers-color-scheme, sets
-            the theme cookie, and hides the body until router.refresh() re-renders
-            with the correct theme (see ClientThemeProvider). */}
-        <Script
-          id="theme-init"
-          strategy="beforeInteractive"
+        {/* Resolves dark mode before first paint by adding the "dark" class
+            to <html> when needed. CSS variables in GlobalStyles flip values
+            on :root vs :root.dark, so the right palette renders without a
+            React roundtrip. Inlined as a plain <script> (not next/script) so
+            it ships in the SSR HTML and runs synchronously before paint —
+            next/script with beforeInteractive is async in App Router and
+            would still show a flash. suppressHydrationWarning on <html>
+            tells React the class/colorScheme attributes are intentionally
+            different between server (no class) and client (after script). */}
+        <script
           dangerouslySetInnerHTML={{
-            __html: \`(function(){try{var c=document.cookie.split(";").find(function(s){return s.trim().startsWith("theme=")});if(!c){var d=window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches;document.cookie="theme="+(d?"dark":"light")+";path=/;max-age=31536000;SameSite=Lax";if(d){var s=document.createElement("style");s.id="__theme-init";s.textContent="html{background:#000!important;color-scheme:dark}body{visibility:hidden}";document.head.appendChild(s)}}}catch(e){}})();\`,
+            __html: \`(function(){try{var c=document.cookie.split(";").map(function(s){return s.trim();}).find(function(s){return s.indexOf("theme=")===0;});var v=c?c.split("=")[1]:null;var d=v?v==="dark":(window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches);if(!v){document.cookie="theme="+(d?"dark":"light")+";path=/;max-age=31536000;SameSite=Lax";}if(d){document.documentElement.classList.add("dark");document.documentElement.style.colorScheme="dark";}else{document.documentElement.style.colorScheme="light";}}catch(e){}})();\`,
           }}
         />
       </head>
       <body className={font.className}>
         <StyledComponentsRegistry>
-${analyticsEnabled ? "          <PostHogProvider>\n" : ""}${a}          <CherryThemeProvider theme={theme} themeDark={themeDark}>
+${analyticsEnabled ? "          <PostHogProvider>\n" : ""}${a}          <CherryThemeProvider theme={theme}>
 ${a}            ${chtOpen}
 ${a}              <SearchProvider pages={pages} sections={doccupineSections}>
 ${a}                <Header>
@@ -252,24 +253,26 @@ ${analyticsEnabled ? "          </PostHogProvider>\n" : ""}        </StyledCompo
   const defaultResults = transformPagesToGroupedStructure(defaultPages);
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Prevents dark-mode FOUC on Safari/Firefox. These browsers don't support
-            Sec-CH-Prefers-Color-Scheme (handled by middleware for Chrome), so on
-            a first visit this blocking script detects prefers-color-scheme, sets
-            the theme cookie, and hides the body until router.refresh() re-renders
-            with the correct theme (see ClientThemeProvider). */}
-        <Script
-          id="theme-init"
-          strategy="beforeInteractive"
+        {/* Resolves dark mode before first paint by adding the "dark" class
+            to <html> when needed. CSS variables in GlobalStyles flip values
+            on :root vs :root.dark, so the right palette renders without a
+            React roundtrip. Inlined as a plain <script> (not next/script) so
+            it ships in the SSR HTML and runs synchronously before paint —
+            next/script with beforeInteractive is async in App Router and
+            would still show a flash. suppressHydrationWarning on <html>
+            tells React the class/colorScheme attributes are intentionally
+            different between server (no class) and client (after script). */}
+        <script
           dangerouslySetInnerHTML={{
-            __html: \`(function(){try{var c=document.cookie.split(";").find(function(s){return s.trim().startsWith("theme=")});if(!c){var d=window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches;document.cookie="theme="+(d?"dark":"light")+";path=/;max-age=31536000;SameSite=Lax";if(d){var s=document.createElement("style");s.id="__theme-init";s.textContent="html{background:#000!important;color-scheme:dark}body{visibility:hidden}";document.head.appendChild(s)}}}catch(e){}})();\`,
+            __html: \`(function(){try{var c=document.cookie.split(";").map(function(s){return s.trim();}).find(function(s){return s.indexOf("theme=")===0;});var v=c?c.split("=")[1]:null;var d=v?v==="dark":(window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches);if(!v){document.cookie="theme="+(d?"dark":"light")+";path=/;max-age=31536000;SameSite=Lax";}if(d){document.documentElement.classList.add("dark");document.documentElement.style.colorScheme="dark";}else{document.documentElement.style.colorScheme="light";}}catch(e){}})();\`,
           }}
         />
       </head>
       <body className={font.className}>
         <StyledComponentsRegistry>
-${analyticsEnabled ? "          <PostHogProvider>\n" : ""}${a}          <CherryThemeProvider theme={theme} themeDark={themeDark}>
+${analyticsEnabled ? "          <PostHogProvider>\n" : ""}${a}          <CherryThemeProvider theme={theme}>
 ${a}            ${chtOpen}
 ${a}              <SearchProvider pages={pages}>
 ${a}                <Header />

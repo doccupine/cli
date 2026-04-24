@@ -2,7 +2,6 @@ export const stepsTemplate = `"use client";
 import React from "react";
 import styled, { useTheme } from "styled-components";
 import { styledText, Theme } from "cherry-styled-components";
-import { rgba } from "polished";
 import { Icon, IconProps } from "@/components/layout/Icon";
 
 const StyledStepsContainer = styled.div<{ theme: Theme }>\`
@@ -30,7 +29,7 @@ const StyledStep = styled.div<{ theme: Theme }>\`
     background: linear-gradient(
       180deg,
       \${({ theme }) => theme.colors.primary},
-      \${({ theme }) => rgba(theme.colors.primary, 0)}
+      transparent
     );
     border-radius: 4px;
   }

@@ -1,7 +1,6 @@
 export const fieldTemplate = `"use client";
 import styled from "styled-components";
 import { styledSmall, Theme } from "cherry-styled-components";
-import { rgba } from "polished";
 
 const StyledField = styled.div<{ theme: Theme; $columns?: number }>\`
   border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
@@ -24,7 +23,7 @@ const StyledFieldValue = styled.span<{ theme: Theme }>\`
 \`;
 
 const StyledFieldType = styled.span<{ theme: Theme }>\`
-  background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.2)};
+  background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
   color: \${({ theme }) => theme.colors.dark};
   padding: 0 4px;
   font-family: \${({ theme }) => theme.fonts.mono};
@@ -32,7 +31,7 @@ const StyledFieldType = styled.span<{ theme: Theme }>\`
 \`;
 
 const StyledFieldRequired = styled.span<{ theme: Theme }>\`
-  background: \${({ theme }) => rgba(theme.colors.error, 0.2)};
+  background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.error} 20%, transparent)\`};
   color: \${({ theme }) => theme.colors.error};
   padding: 0 4px;
   font-family: \${({ theme }) => theme.fonts.mono};

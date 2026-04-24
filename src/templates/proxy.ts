@@ -69,6 +69,19 @@ function captureServerPageview(req: NextRequest, event: NextFetchEvent) {
 
   const eventImport = hasPostHog ? ", NextFetchEvent" : "";
 
+  // Matcher scope:
+  //   - With PostHog server-side tracking: run on every path so pageviews
+  //     fire (the capture function uses event.waitUntil and never mutates
+  //     the response, so doc pages remain edge-cacheable).
+  //   - Otherwise: only run on /api/* — the only routes that need middleware
+  //     (e.g. MCP key auth). Doc pages bypass middleware entirely.
+  //
+  // Theme detection happens client-side via the theme-init blocking script
+  // in the root layout (sets a "dark" class on <html>). Middleware no longer
+  // sets Vary, Accept-CH, or a theme cookie, because doing so would mark
+  // every response as dynamic and disable caching at Vercel/Cloudflare.
+  const matcher = hasPostHog ? `["/:path*"]` : `["/api/:path*"]`;
+
   return `import { NextResponse } from "next/server";
 import type { NextRequest${eventImport} } from "next/server";
 ${posthogImport}${posthogPageviewFn}
@@ -88,29 +101,11 @@ ${posthogCall}  // API key auth for /api/mcp when DOCS_API_KEY is configured
     }
   }
 
-  const res = NextResponse.next();
-
-  res.headers.set("Accept-CH", "Sec-CH-Prefers-Color-Scheme");
-  res.headers.set("Vary", "Sec-CH-Prefers-Color-Scheme");
-  res.headers.set("Critical-CH", "Sec-CH-Prefers-Color-Scheme");
-
-  const existing = req.cookies.get("theme")?.value;
-  const hint = req.headers.get("Sec-CH-Prefers-Color-Scheme");
-
-  if (!existing && hint) {
-    const value = hint === "dark" ? "dark" : "light";
-    res.cookies.set("theme", value, {
-      path: "/",
-      maxAge: 60 * 60 * 24 * 365,
-      sameSite: "lax",
-    });
-  }
-
-  return res;
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/:path*"],
+  matcher: ${matcher},
 };
 `;
 };

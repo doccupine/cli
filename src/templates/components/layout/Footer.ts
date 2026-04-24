@@ -57,8 +57,7 @@ const StyledFooterInner = styled.div<{ theme: Theme }>\`
 
   & a {
     font-weight: 700;
-    color: \${({ theme }) =>
-      theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
+    color: \${({ theme }) => theme.colors.accent};
     text-decoration: none;
     transition: all 0.3s ease;
     display: inline-flex;

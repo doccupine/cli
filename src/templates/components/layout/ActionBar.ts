@@ -3,7 +3,6 @@ import { useContext, useState } from "react";
 import styled, { css } from "styled-components";
 import { Icon } from "@/components/layout/Icon";
 import { mq, Theme } from "@/app/theme";
-import { rgba } from "polished";
 import { resetButton, Textarea } from "cherry-styled-components";
 import { SectionBarContext } from "@/components/layout/DocsComponents";
 import { StyledSmallButton } from "@/components/layout/SharedStyled";
@@ -72,7 +71,7 @@ const StyledToggle = styled.button<{ theme: Theme; $isActive?: boolean }>\`
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.2)};
+    background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
     transition: all 0.3s ease;
     z-index: 1;
     \${({ $isActive }) =>
@@ -106,12 +105,10 @@ const StyledToggle = styled.button<{ theme: Theme; $isActive?: boolean }>\`
 
   &:hover {
     transform: scale(1.05);
-    color: \${({ theme }) =>
-      theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
+    color: \${({ theme }) => theme.colors.accent};
 
     & svg[stroke] {
-      stroke: \${({ theme }) =>
-        theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
+      stroke: \${({ theme }) => theme.colors.accent};
     }
   }
 

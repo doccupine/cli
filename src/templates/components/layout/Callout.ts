@@ -22,64 +22,119 @@ const StyledCallout = styled.div<{ theme: Theme; $type?: CalloutType }>\`
     margin: 3px 10px 0 0;
   }
 
-  \${({ theme, $type }) =>
+  /* Callout tints are alert-semantic (info-blue, warning-amber, danger-red,
+     etc.) and intentionally independent of theme.json. Light-mode values are
+     defined by default; dark-mode overrides live in :root.dark & blocks so
+     the swap happens via the active <html> class with no re-render. */
+  \${({ $type }) =>
     $type === "note" &&
     css\`
-      border-color: \${theme.isDark ? "#0ea5e94d" : "#0ea5e933"};
-      background: \${theme.isDark ? "#0ea5e91a" : "#f0f9ff80"};
+      border-color: #0ea5e933;
+      background: #f0f9ff80;
 
       & svg.lucide,
       & p {
-        color: \${theme.isDark ? "#bae6fd" : "#0c4a6e"};
+        color: #0c4a6e;
+      }
+
+      :root.dark & {
+        border-color: #0ea5e94d;
+        background: #0ea5e91a;
+
+        & svg.lucide,
+        & p {
+          color: #bae6fd;
+        }
       }
     \`}
 
-  \${({ theme, $type }) =>
+  \${({ $type }) =>
     $type === "info" &&
     css\`
-      border-color: \${theme.isDark ? "#71717a4d" : "#71717a33"};
-      background: \${theme.isDark ? "#71717a1a" : "#fafafa80"};
+      border-color: #71717a33;
+      background: #fafafa80;
 
       & svg.lucide,
       & .lucide,
       & p {
-        color: \${theme.isDark ? "#e4e4e7" : "#18181b"};
+        color: #18181b;
+      }
+
+      :root.dark & {
+        border-color: #71717a4d;
+        background: #71717a1a;
+
+        & svg.lucide,
+        & .lucide,
+        & p {
+          color: #e4e4e7;
+        }
       }
     \`}
 
-  \${({ theme, $type }) =>
+  \${({ $type }) =>
     $type === "warning" &&
     css\`
-      border-color: \${theme.isDark ? "#f59e0b4d" : "#f59e0b33"};
-      background: \${theme.isDark ? "#f59e0b1a" : "#fffbeb80"};
+      border-color: #f59e0b33;
+      background: #fffbeb80;
 
       & svg.lucide,
       & p {
-        color: \${theme.isDark ? "#fde68a" : "#78350f"};
+        color: #78350f;
+      }
+
+      :root.dark & {
+        border-color: #f59e0b4d;
+        background: #f59e0b1a;
+
+        & svg.lucide,
+        & p {
+          color: #fde68a;
+        }
       }
     \`}
 
-  \${({ theme, $type }) =>
+  \${({ $type }) =>
     $type === "danger" &&
     css\`
-      border-color: \${theme.isDark ? "#ef44444d" : "#ef444433"};
-      background: \${theme.isDark ? "#ef44441a" : "#fef2f280"};
+      border-color: #ef444433;
+      background: #fef2f280;
 
       & svg.lucide,
       & p {
-        color: \${theme.isDark ? "#fecaca" : "#7f1d1d"};
+        color: #7f1d1d;
+      }
+
+      :root.dark & {
+        border-color: #ef44444d;
+        background: #ef44441a;
+
+        & svg.lucide,
+        & p {
+          color: #fecaca;
+        }
       }
     \`}
 
-  \${({ theme, $type }) =>
+  \${({ $type }) =>
     $type === "success" &&
     css\`
-      border-color: \${theme.isDark ? "#10b9814d" : "#10b98133"};
-      background: \${theme.isDark ? "#10b9811a" : "#ecfdf580"};
+      border-color: #10b98133;
+      background: #ecfdf580;
 
       & svg.lucide,
       & p {
-        color: \${theme.isDark ? "#a7f3d0" : "#064e3b"};
+        color: #064e3b;
+      }
+
+      :root.dark & {
+        border-color: #10b9814d;
+        background: #10b9811a;
+
+        & svg.lucide,
+        & p {
+          color: #a7f3d0;
+        }
       }
     \`}
 \`;

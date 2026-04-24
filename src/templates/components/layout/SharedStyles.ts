@@ -30,7 +30,7 @@ export const styledAnchor = css<{ theme: Theme }>\`
 
     &:hover {
       color: \${({ theme }) =>
-        theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
+        theme.colors.accent};
       box-shadow: 0 1px 0 0 \${({ theme }) => theme.colors.primary};
     }
   }
@@ -149,7 +149,7 @@ export const StyledSmallButton = styled.button<{ theme: Theme }>\`
   background: \${({ theme }) => theme.colors.light};
   border: solid 1px \${({ theme }) => theme.colors.grayLight};
   color: \${({ theme }) =>
-    theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
+    theme.colors.accent};
   border-radius: \${({ theme }) => theme.spacing.radius.xs};
   padding: 6px 8px;
   font-size: 12px;

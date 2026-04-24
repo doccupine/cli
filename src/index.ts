@@ -1092,6 +1092,12 @@ const content = \`${escapeTemplateContent(mdxFile.content)}\`;
 
 ${metadataBlock}
 
+// Doc pages have no per-request data: theme resolves client-side via the
+// "dark" class on <html> (set before paint by the theme-init blocking
+// script). Static rendering lets every response come from the edge cache.
+export const dynamic = "force-static";
+export const revalidate = false;
+
 export default function Page() {
   ${jsonLd.declarations}
 
@@ -1177,6 +1183,9 @@ ${indexMDX ? `const content = \`${escapeTemplateContent(indexMDX.content)}\`;` :
 
 ${metadataBlock}
 
+export const dynamic = "force-static";
+export const revalidate = false;
+
 export default function Home() {
   ${homeJsonLd.declarations}
 
@@ -1234,6 +1243,9 @@ import { config } from "@/utils/config";
 const content = \`${escapeTemplateContent(mdxContent)}\`;
 
 ${metadataBlock}
+
+export const dynamic = "force-static";
+export const revalidate = false;
 
 export default function Page() {
   ${sectionJsonLd.declarations}

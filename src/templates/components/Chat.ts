@@ -9,7 +9,6 @@ import React, {
   useState,
 } from "react";
 import styled, { css, keyframes } from "styled-components";
-import { rgba } from "polished";
 import { Button } from "cherry-styled-components";
 import { ArrowUp, LoaderPinwheel, RotateCcw, Sparkles, X } from "lucide-react";
 import remarkGfm from "remark-gfm";
@@ -167,13 +166,13 @@ const StyledRainbowInputWrapper = styled.div<{
     border-radius: 20px;
     background: conic-gradient(
       from var(--gradient-angle),
-      \${rgba("#ff6b6b", 0.4)},
-      \${rgba("#feca57", 0.4)},
-      \${rgba("#48dbfb", 0.4)},
-      \${rgba("#ff9ff3", 0.4)},
-      \${rgba("#54a0ff", 0.4)},
-      \${rgba("#5f27cd", 0.4)},
-      \${rgba("#ff6b6b", 0.4)}
+      #ff6b6b66,
+      #feca5766,
+      #48dbfb66,
+      #ff9ff366,
+      #54a0ff66,
+      #5f27cd66,
+      #ff6b6b66
     );
     opacity: 0;
     transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -262,12 +261,12 @@ const StyledRainbowInput = styled.input<{ theme: Theme }>\`
   }
 
   &::placeholder {
-    color: \${({ theme }) => rgba(theme.colors.dark, 0.4)};
+    color: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.dark} 40%, transparent)\`};
     transition: color 0.3s ease;
   }
 
   &:focus::placeholder {
-    color: \${({ theme }) => rgba(theme.colors.dark, 0.6)};
+    color: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.dark} 60%, transparent)\`};
   }
 
   &:focus {
@@ -284,8 +283,7 @@ const StyledRainbowButton = styled(Button)<{
   position: relative;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  color: \${({ theme }) =>
-    theme.isDark ? theme.colors.dark : theme.colors.light};
+  color: \${({ theme }) => theme.colors.surface};
 
   &::before {
     content: "";
@@ -427,13 +425,13 @@ const StyledGlowSmallButton = styled(StyledSmallButton)<{
     border-radius: 14px;
     background: conic-gradient(
       from var(--gradient-angle),
-      \${rgba("#ff6b6b", 0.4)},
-      \${rgba("#feca57", 0.4)},
-      \${rgba("#48dbfb", 0.4)},
-      \${rgba("#ff9ff3", 0.4)},
-      \${rgba("#54a0ff", 0.4)},
-      \${rgba("#5f27cd", 0.4)},
-      \${rgba("#ff6b6b", 0.4)}
+      #ff6b6b66,
+      #feca5766,
+      #48dbfb66,
+      #ff9ff366,
+      #54a0ff66,
+      #5f27cd66,
+      #ff6b6b66
     );
     opacity: 0;
     transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -472,8 +470,7 @@ const StyledGlowSmallButton = styled(StyledSmallButton)<{
 const StyledError = styled.div<{ theme: Theme }>\`
   overflow-x: auto;
   background: \${({ theme }) => theme.colors.error};
-  color: \${({ theme }) =>
-    theme.isDark ? theme.colors.dark : theme.colors.light};
+  color: \${({ theme }) => theme.colors.surface};
   padding: 10px;
   border-radius: 8px;
   margin: 20px 0;
@@ -519,8 +516,7 @@ const StyledLoading = styled.div<{ theme: Theme }>\`
 const StyledAnswer = styled.div<{ theme: Theme; $isAnswer: boolean }>\`
   overflow-x: auto;
   background: \${({ theme }) => theme.colors.primary};
-  color: \${({ theme }) =>
-    theme.isDark ? theme.colors.dark : theme.colors.light};
+  color: \${({ theme }) => theme.colors.surface};
   padding: 10px;
   border-radius: 8px;
   margin: 20px 0;
@@ -540,7 +536,7 @@ const StyledAnswer = styled.div<{ theme: Theme; $isAnswer: boolean }>\`
     \`}
 
   & code:not([class]) {
-    background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.2)};
+    background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
     color: \${({ theme }) => theme.colors.dark};
     padding: 2px 4px;
     border-radius: \${({ theme }) => theme.spacing.radius.xs};
@@ -631,7 +627,7 @@ const StyledSourceLink = styled(Link)<{ theme: Theme }>\`
   font-weight: 600;
   white-space: nowrap;
   min-width: fit-content;
-  background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.1)};
+  background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 10%, transparent)\`};
   padding: 6px 8px;
   border-radius: \${({ theme }) => theme.spacing.radius.xs};
   \${interactiveStyles};
@@ -641,8 +637,7 @@ const StyledSourceLink = styled(Link)<{ theme: Theme }>\`
   }
 
   &:hover {
-    color: \${({ theme }) =>
-      theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
+    color: \${({ theme }) => theme.colors.accent};
   }
 \`;
 

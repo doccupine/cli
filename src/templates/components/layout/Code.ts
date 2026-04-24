@@ -1,8 +1,7 @@
 export const codeTemplate = `"use client";
 import { useState, useCallback, useMemo } from "react";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { Theme, styledCode } from "cherry-styled-components";
-import { rgba } from "polished";
 import { unified } from "unified";
 import rehypeParse from "rehype-parse";
 import rehypeHighlight from "rehype-highlight";
@@ -24,20 +23,22 @@ const CodeWrapper = styled.span<{ theme: Theme }>\`
   display: block;
   width: 100%;
   border-radius: \${({ theme }) => theme.spacing.radius.lg};
-  border: solid 1px
-    \${({ theme }) =>
-      theme.isDark
-        ? rgba(theme.colors.dark, 0.2)
-        : rgba(theme.colors.dark, 0.1)};
+  border: solid 1px rgba(0, 0, 0, 0.1);
+
+  :root.dark & {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
 \`;
 
+/* Code block uses a fixed GitHub-style palette in both modes. Independent of
+   theme.json so syntax highlighting stays legible regardless of brand colors.
+   Dark variants live in :root.dark & blocks so the swap happens via the
+   active <html> class with no re-render. */
 const TopBar = styled.div<{ theme: Theme }>\`
-  background: \${({ theme }) => (theme.isDark ? "#0d1117" : "#f6f8fa")};
+  background: #f6f8fa;
   border-top-left-radius: \${({ theme }) => theme.spacing.radius.lg};
   border-top-right-radius: \${({ theme }) => theme.spacing.radius.lg};
-  border-bottom: solid 1px
-    \${({ theme }) =>
-      theme.isDark ? rgba("#ffffff", 0.1) : rgba("#000000", 0.1)};
+  border-bottom: solid 1px rgba(0, 0, 0, 0.1);
   height: 33px;
   width: 100%;
   display: flex;
@@ -45,6 +46,11 @@ const TopBar = styled.div<{ theme: Theme }>\`
   align-items: center;
   gap: 5px;
   padding: 0 10px;
+
+  :root.dark & {
+    background: #0d1117;
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
 \`;
 
 const DotsContainer = styled.div\`
@@ -56,34 +62,18 @@ const Dot = styled.span<{ theme: Theme }>\`
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: \${({ theme }) =>
-    theme.isDark ? rgba("#ffffff", 0.1) : rgba("#000000", 0.1)};
+  background: rgba(0, 0, 0, 0.1);
+
+  :root.dark & {
+    background: rgba(255, 255, 255, 0.1);
+  }
 \`;
 
 const CopyButton = styled.button<{ theme: Theme; $copied: boolean }>\`
-  background: \${({ theme, $copied }) =>
-    $copied
-      ? theme.isDark
-        ? rgba("#7ee787", 0.2)
-        : rgba("#2da44e", 0.1)
-      : "transparent"};
+  background: \${({ $copied }) => ($copied ? "rgba(45, 164, 78, 0.1)" : "transparent")};
   border: solid 1px
-    \${({ theme, $copied }) =>
-      $copied
-        ? theme.isDark
-          ? "#7ee787"
-          : "#2da44e"
-        : theme.isDark
-          ? rgba("#ffffff", 0.1)
-          : rgba("#000000", 0.1)};
-  color: \${({ theme, $copied }) =>
-    $copied
-      ? theme.isDark
-        ? "#7ee787"
-        : "#2da44e"
-      : theme.isDark
-        ? "#c9d1d9"
-        : "#57606a"};
+    \${({ $copied }) => ($copied ? "#2da44e" : "rgba(0, 0, 0, 0.1)")};
+  color: \${({ $copied }) => ($copied ? "#2da44e" : "#57606a")};
   border-radius: \${({ theme }) => theme.spacing.radius.xs};
   padding: 4px 8px;
   font-size: 12px;
@@ -96,45 +86,205 @@ const CopyButton = styled.button<{ theme: Theme; $copied: boolean }>\`
   margin-right: -6px;
 
   & svg.lucide {
-    color: \${({ theme, $copied }) =>
-      $copied
-        ? theme.isDark
-          ? "#7ee787"
-          : "#2da44e"
-        : theme.isDark
-          ? "#c9d1d9"
-          : "#57606a"};
+    color: \${({ $copied }) => ($copied ? "#2da44e" : "#57606a")};
   }
 
   &:hover {
-    background: \${({ theme, $copied }) =>
-      $copied
-        ? theme.isDark
-          ? rgba("#7ee787", 0.3)
-          : rgba("#2da44e", 0.2)
-        : theme.isDark
-          ? rgba("#ffffff", 0.1)
-          : rgba("#000000", 0.05)};
-    border-color: \${({ theme, $copied }) =>
-      $copied
-        ? theme.isDark
-          ? "#7ee787"
-          : "#2da44e"
-        : theme.isDark
-          ? rgba("#ffffff", 0.2)
-          : rgba("#000000", 0.2)};
+    background: \${({ $copied }) =>
+      $copied ? "rgba(45, 164, 78, 0.2)" : "rgba(0, 0, 0, 0.05)"};
+    border-color: \${({ $copied }) => ($copied ? "#2da44e" : "rgba(0, 0, 0, 0.2)")};
   }
 
   &:active {
     transform: scale(0.95);
   }
+
+  :root.dark & {
+    background: \${({ $copied }) => ($copied ? "rgba(126, 231, 135, 0.2)" : "transparent")};
+    border-color: \${({ $copied }) => ($copied ? "#7ee787" : "rgba(255, 255, 255, 0.1)")};
+    color: \${({ $copied }) => ($copied ? "#7ee787" : "#c9d1d9")};
+
+    & svg.lucide {
+      color: \${({ $copied }) => ($copied ? "#7ee787" : "#c9d1d9")};
+    }
+
+    &:hover {
+      background: \${({ $copied }) =>
+        $copied ? "rgba(126, 231, 135, 0.3)" : "rgba(255, 255, 255, 0.1)"};
+      border-color: \${({ $copied }) =>
+        $copied ? "#7ee787" : "rgba(255, 255, 255, 0.2)"};
+    }
+  }
+\`;
+
+/* GitHub Light syntax highlighting by default; GitHub Dark in :root.dark.
+   Browser resolves which rule wins based on the active <html> class with no
+   JS or React re-render involved. */
+const lightSyntaxHighlight = css\`
+  & .hljs {
+    color: #24292f;
+    background: #ffffff;
+  }
+  & .hljs-doctag,
+  & .hljs-keyword,
+  & .hljs-meta .hljs-keyword,
+  & .hljs-template-tag,
+  & .hljs-template-variable,
+  & .hljs-type,
+  & .hljs-variable.language_ {
+    color: #cf222e;
+  }
+  & .hljs-title,
+  & .hljs-title.class_,
+  & .hljs-title.class_.inherited__,
+  & .hljs-title.function_ {
+    color: #8250df;
+  }
+  & .hljs-attr,
+  & .hljs-attribute,
+  & .hljs-literal,
+  & .hljs-meta,
+  & .hljs-number,
+  & .hljs-operator,
+  & .hljs-selector-attr,
+  & .hljs-selector-class,
+  & .hljs-selector-id,
+  & .hljs-variable {
+    color: #0550ae;
+  }
+  & .hljs-meta .hljs-string,
+  & .hljs-regexp,
+  & .hljs-string {
+    color: #0a3069;
+  }
+  & .hljs-built_in,
+  & .hljs-symbol {
+    color: #953800;
+  }
+  & .hljs-code,
+  & .hljs-comment,
+  & .hljs-formula {
+    color: #6e7781;
+  }
+  & .hljs-name,
+  & .hljs-quote,
+  & .hljs-selector-pseudo,
+  & .hljs-selector-tag {
+    color: #116329;
+  }
+  & .hljs-subst {
+    color: #24292f;
+  }
+  & .hljs-section {
+    color: #0550ae;
+    font-weight: 700;
+  }
+  & .hljs-bullet {
+    color: #953800;
+  }
+  & .hljs-emphasis {
+    color: #24292f;
+    font-style: italic;
+  }
+  & .hljs-strong {
+    color: #24292f;
+    font-weight: 700;
+  }
+  & .hljs-addition {
+    color: #116329;
+    background-color: #dafbe1;
+  }
+  & .hljs-deletion {
+    color: #82071e;
+    background-color: #ffebe9;
+  }
+\`;
+
+const darkSyntaxHighlight = css\`
+  & .hljs {
+    color: #c9d1d9;
+    background: #0d1117;
+  }
+  & .hljs-doctag,
+  & .hljs-keyword,
+  & .hljs-meta .hljs-keyword,
+  & .hljs-template-tag,
+  & .hljs-template-variable,
+  & .hljs-type,
+  & .hljs-variable.language_ {
+    color: #ff7b72;
+  }
+  & .hljs-title,
+  & .hljs-title.class_,
+  & .hljs-title.class_.inherited__,
+  & .hljs-title.function_ {
+    color: #d2a8ff;
+  }
+  & .hljs-attr,
+  & .hljs-attribute,
+  & .hljs-literal,
+  & .hljs-meta,
+  & .hljs-number,
+  & .hljs-operator,
+  & .hljs-selector-attr,
+  & .hljs-selector-class,
+  & .hljs-selector-id,
+  & .hljs-variable {
+    color: #79c0ff;
+  }
+  & .hljs-meta .hljs-string,
+  & .hljs-regexp,
+  & .hljs-string {
+    color: #a5d6ff;
+  }
+  & .hljs-built_in,
+  & .hljs-symbol {
+    color: #ffa657;
+  }
+  & .hljs-code,
+  & .hljs-comment,
+  & .hljs-formula {
+    color: #8b949e;
+  }
+  & .hljs-name,
+  & .hljs-quote,
+  & .hljs-selector-pseudo,
+  & .hljs-selector-tag {
+    color: #7ee787;
+  }
+  & .hljs-subst {
+    color: #c9d1d9;
+  }
+  & .hljs-section {
+    color: #1f6feb;
+    font-weight: 700;
+  }
+  & .hljs-bullet {
+    color: #f2cc60;
+  }
+  & .hljs-emphasis {
+    color: #c9d1d9;
+    font-style: italic;
+  }
+  & .hljs-strong {
+    color: #c9d1d9;
+    font-weight: 700;
+  }
+  & .hljs-addition {
+    color: #aff5b4;
+    background-color: #033a16;
+  }
+  & .hljs-deletion {
+    color: #ffdcd7;
+    background-color: #67060c;
+  }
 \`;
 
 const Body = styled.div<{ theme: Theme }>\`
-  background: \${({ theme }) => (theme.isDark ? "#0d1117" : "#ffffff")};
+  background: #ffffff;
   border-bottom-left-radius: \${({ theme }) => theme.spacing.radius.lg};
   border-bottom-right-radius: \${({ theme }) => theme.spacing.radius.lg};
-  color: \${({ theme }) => (theme.isDark ? "#ffffff" : "#24292f")};
+  color: #24292f;
   padding: 20px;
   font-family: \${({ theme }) => theme.fonts.mono};
   text-align: left;
@@ -142,200 +292,13 @@ const Body = styled.div<{ theme: Theme }>\`
   overflow-y: auto;
   max-height: calc(100dvh - 400px);
   \${({ theme }) => styledCode(theme)};
+  \${lightSyntaxHighlight};
 
-  /* Dark mode syntax highlighting (GitHub Dark) */
-  \${({ theme }) =>
-    theme.isDark &&
-    \`
-    & .hljs {
-      color: #c9d1d9;
-      background: #0d1117;
-    }
-
-    & .hljs-doctag,
-    & .hljs-keyword,
-    & .hljs-meta .hljs-keyword,
-    & .hljs-template-tag,
-    & .hljs-template-variable,
-    & .hljs-type,
-    & .hljs-variable.language_ {
-      color: #ff7b72;
-    }
-
-    & .hljs-title,
-    & .hljs-title.class_,
-    & .hljs-title.class_.inherited__,
-    & .hljs-title.function_ {
-      color: #d2a8ff;
-    }
-
-    & .hljs-attr,
-    & .hljs-attribute,
-    & .hljs-literal,
-    & .hljs-meta,
-    & .hljs-number,
-    & .hljs-operator,
-    & .hljs-selector-attr,
-    & .hljs-selector-class,
-    & .hljs-selector-id,
-    & .hljs-variable {
-      color: #79c0ff;
-    }
-
-    & .hljs-meta .hljs-string,
-    & .hljs-regexp,
-    & .hljs-string {
-      color: #a5d6ff;
-    }
-
-    & .hljs-built_in,
-    & .hljs-symbol {
-      color: #ffa657;
-    }
-
-    & .hljs-code,
-    & .hljs-comment,
-    & .hljs-formula {
-      color: #8b949e;
-    }
-
-    & .hljs-name,
-    & .hljs-quote,
-    & .hljs-selector-pseudo,
-    & .hljs-selector-tag {
-      color: #7ee787;
-    }
-
-    & .hljs-subst {
-      color: #c9d1d9;
-    }
-
-    & .hljs-section {
-      color: #1f6feb;
-      font-weight: 700;
-    }
-
-    & .hljs-bullet {
-      color: #f2cc60;
-    }
-
-    & .hljs-emphasis {
-      color: #c9d1d9;
-      font-style: italic;
-    }
-
-    & .hljs-strong {
-      color: #c9d1d9;
-      font-weight: 700;
-    }
-
-    & .hljs-addition {
-      color: #aff5b4;
-      background-color: #033a16;
-    }
-
-    & .hljs-deletion {
-      color: #ffdcd7;
-      background-color: #67060c;
-    }
-  \`}
-
-  /* Light mode syntax highlighting (GitHub Light) */
-  \${({ theme }) =>
-    !theme.isDark &&
-    \`
-    & .hljs {
-      color: #24292f;
-      background: #ffffff;
-    }
-
-    & .hljs-doctag,
-    & .hljs-keyword,
-    & .hljs-meta .hljs-keyword,
-    & .hljs-template-tag,
-    & .hljs-template-variable,
-    & .hljs-type,
-    & .hljs-variable.language_ {
-      color: #cf222e;
-    }
-
-    & .hljs-title,
-    & .hljs-title.class_,
-    & .hljs-title.class_.inherited__,
-    & .hljs-title.function_ {
-      color: #8250df;
-    }
-
-    & .hljs-attr,
-    & .hljs-attribute,
-    & .hljs-literal,
-    & .hljs-meta,
-    & .hljs-number,
-    & .hljs-operator,
-    & .hljs-selector-attr,
-    & .hljs-selector-class,
-    & .hljs-selector-id,
-    & .hljs-variable {
-      color: #0550ae;
-    }
-
-    & .hljs-meta .hljs-string,
-    & .hljs-regexp,
-    & .hljs-string {
-      color: #0a3069;
-    }
-
-    & .hljs-built_in,
-    & .hljs-symbol {
-      color: #953800;
-    }
-
-    & .hljs-code,
-    & .hljs-comment,
-    & .hljs-formula {
-      color: #6e7781;
-    }
-
-    & .hljs-name,
-    & .hljs-quote,
-    & .hljs-selector-pseudo,
-    & .hljs-selector-tag {
-      color: #116329;
-    }
-
-    & .hljs-subst {
-      color: #24292f;
-    }
-
-    & .hljs-section {
-      color: #0550ae;
-      font-weight: 700;
-    }
-
-    & .hljs-bullet {
-      color: #953800;
-    }
-
-    & .hljs-emphasis {
-      color: #24292f;
-      font-style: italic;
-    }
-
-    & .hljs-strong {
-      color: #24292f;
-      font-weight: 700;
-    }
-
-    & .hljs-addition {
-      color: #116329;
-      background-color: #dafbe1;
-    }
-
-    & .hljs-deletion {
-      color: #82071e;
-      background-color: #ffebe9;
-    }
-  \`}
+  :root.dark & {
+    background: #0d1117;
+    color: #ffffff;
+    \${darkSyntaxHighlight};
+  }
 \`;
 
 const escapeHtml = (unsafe: string): string => {

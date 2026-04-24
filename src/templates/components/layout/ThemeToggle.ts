@@ -1,9 +1,7 @@
 export const themeToggleTemplate = `"use client";
 import { Theme, resetButton } from "cherry-styled-components";
-import styled, { css, useTheme } from "styled-components";
-import { rgba } from "polished";
+import styled, { css } from "styled-components";
 import { Icon } from "@/components/layout/Icon";
-import { theme as themeLight, themeDark } from "@/app/theme";
 import { useThemeOverride } from "@/components/layout/ClientThemeProvider";
 
 const StyledThemeToggle = styled.button<{ theme: Theme; $hidden?: boolean }>\`
@@ -26,14 +24,15 @@ const StyledThemeToggle = styled.button<{ theme: Theme; $hidden?: boolean }>\`
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.2)};
+    background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
     transition: all 0.3s ease;
     z-index: 1;
-    \${({ theme }) =>
-      theme.isDark &&
-      css\`
-        transform: translateX(27px);
-      \`}
+  }
+
+  /* Knob position depends on the active mode, signaled by the "dark" class
+     on <html>. Pure CSS — no JS conditional needed for the visual swap. */
+  :root.dark &::after {
+    transform: translateX(27px);
   }
 
   \${({ $hidden }) =>
@@ -66,12 +65,10 @@ const StyledThemeToggle = styled.button<{ theme: Theme; $hidden?: boolean }>\`
 
   &:hover {
     transform: scale(1.05);
-    color: \${({ theme }) =>
-      theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
+    color: \${({ theme }) => theme.colors.accent};
 
     & svg[stroke] {
-      stroke: \${({ theme }) =>
-        theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
+      stroke: \${({ theme }) => theme.colors.accent};
     }
   }
 
@@ -81,18 +78,17 @@ const StyledThemeToggle = styled.button<{ theme: Theme; $hidden?: boolean }>\`
 \`;
 
 function ToggleTheme({ $hidden }: { $hidden?: boolean }) {
-  const { setTheme } = useThemeOverride();
-  const theme = useTheme() as Theme;
+  const { mode, setMode } = useThemeOverride();
 
   return (
     <StyledThemeToggle
       onClick={async () => {
-        const nextTheme = theme.isDark ? "light" : "dark";
-        setTheme(nextTheme === "light" ? themeLight : themeDark);
+        const next = mode === "dark" ? "light" : "dark";
+        setMode(next);
         await fetch("/api/theme", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ theme: nextTheme }),
+          body: JSON.stringify({ theme: next }),
         }).catch((err) => console.error("Failed to persist theme:", err));
       }}
       $hidden={$hidden}

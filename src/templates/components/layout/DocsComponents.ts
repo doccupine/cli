@@ -1,7 +1,6 @@
 import { SIDEBAR_WIDTH, CHAT_WIDTH } from "../../app/theme.js";
 
 export const docsComponentsTemplate = `"use client";
-import { darken, lighten, rgba } from "polished";
 import React, { createContext, useContext } from "react";
 import styled, { css } from "styled-components";
 import {
@@ -85,7 +84,7 @@ const StyledDocsContainer = styled.div<{ theme: Theme; $isChatOpen?: boolean }>\
   }
 
   & code:not([class]) {
-    background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.2)};
+    background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
     color: \${({ theme }) => theme.colors.dark};
     padding: 2px 4px;
     border-radius: \${({ theme }) => theme.spacing.radius.xs};
@@ -153,7 +152,7 @@ export const StyledSidebar = styled.nav<Props>\`
     opacity: 1;
     pointer-events: all;
     transform: translateY(0);
-    background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.05)};
+    background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 5%, transparent)\`};
     top: 0;
     width: ${SIDEBAR_WIDTH}px;
   }
@@ -171,7 +170,7 @@ export const StyledSidebarFooter = styled.div\`
   padding: 22px 20px;
   position: sticky;
   border-top: 1px solid \${({ theme }) => theme.colors.grayLight};
-  background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.05)};
+  background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 5%, transparent)\`};
   margin: 0 -20px -20px;
   bottom: -20px;
   backdrop-filter: blur(10px);
@@ -269,10 +268,7 @@ export const StyledSidebarList = styled.ul\`
 export const StyledStrong = styled.strong<{ theme: Theme }>\`
   font-weight: 600;
   \${({ theme }) => styledStrong(theme)};
-  color: \${({ theme }) =>
-    theme.isDark
-      ? lighten(0.1, theme.colors.primaryLight)
-      : darken(0.1, theme.colors.primaryDark)};
+  color: \${({ theme }) => theme.colors.accentStrong};
 \`;
 
 export const StyledSidebarListItem = styled.li\`
@@ -285,23 +281,21 @@ export const StyledSidebarListItemLink = styled(Link)<Props>\`
   text-decoration: none;
   font-size: \${({ theme }) => theme.fontSizes.small.lg};
   line-height: 1.6;
-  color: \${({ theme }) =>
-    theme.isDark ? theme.colors.grayDark : theme.colors.primary};
+  color: \${({ theme }) => theme.colors.accentMuted};
   padding: 5px 0 5px 20px;
   display: flex;
   transition: all 0.3s ease;
   border-left: solid 1px \${({ theme }) => theme.colors.grayLight};
 
   &:hover {
-    color: \${({ theme }) =>
-      theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
+    color: \${({ theme }) => theme.colors.accent};
     border-color: \${({ theme }) => theme.colors.primary};
   }
 
   \${({ $isActive, theme }) =>
     $isActive &&
     \`
-			color: \${theme.isDark ? lighten(0.1, theme.colors.primaryLight) : darken(0.1, theme.colors.primaryDark)};
+			color: \${theme.colors.accentStrong};
 			border-color: \${theme.colors.primary};
 			font-weight: 600;
 	\`};
@@ -317,8 +311,7 @@ export const StyleMobileBar = styled.button<Props>\`
   line-height: \${({ theme }) => theme.fontSizes.strong.lg};
   box-shadow: \${({ theme }) => theme.shadows.sm};
   background: \${({ theme }) => theme.colors.primary};
-  color: \${({ theme }) =>
-    theme.isDark ? theme.colors.dark : theme.colors.light};
+  color: \${({ theme }) => theme.colors.surface};
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   padding: 10px;
@@ -355,8 +348,7 @@ export const StyledMobileBurger = styled.span<Props>\`
     width: 18px;
     height: 3px;
     border-radius: 3px;
-    background: \${({ theme }) =>
-      theme.isDark ? theme.colors.dark : theme.colors.light};
+    background: \${({ theme }) => theme.colors.surface};
     transition: all 0.3s ease;
   }
 
@@ -386,8 +378,7 @@ export const StyledMissingComponent = styled.div\`
   border-radius: \${({ theme }) => theme.spacing.radius.lg};
   padding: 20px;
   font-size: \${({ theme }) => theme.fontSizes.small.lg};
-  color: \${({ theme }) =>
-    theme.isDark ? theme.colors.dark : theme.colors.light};
+  color: \${({ theme }) => theme.colors.surface};
   font-weight: 600;
   display: flex;
   gap: 10px;

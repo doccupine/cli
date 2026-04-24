@@ -1,9 +1,8 @@
 export const headerTemplate = `"use client";
 import React from "react";
 import { useCallback, useContext, useRef, useState } from "react";
-import styled, { css, useTheme } from "styled-components";
+import styled, { css } from "styled-components";
 import Link from "next/link";
-import { rgba } from "polished";
 import { mq, Theme } from "@/app/theme";
 import { useOnClickOutside } from "@/components/ClickOutside";
 import { Search } from "lucide-react";
@@ -52,7 +51,7 @@ const StyledHeader = styled.header<{ theme: Theme; $hasChildren: boolean }>\`
   }
 
   &::after {
-    background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.05)};
+    background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 5%, transparent)\`};
     z-index: -1;
   }
 
@@ -127,7 +126,6 @@ function Header({ children }: HeaderProps) {
     isOptionActive ? closeMenu : () => {},
   );
   useOnClickOutside([langRef, wrapperRef], isLangActive ? closeMenu : () => {});
-  const theme = useTheme() as Theme;
   const { isChatActive } = useContext(ChatContext);
   const { openSearch } = useContext(SearchContext);
 
@@ -136,23 +134,27 @@ function Header({ children }: HeaderProps) {
       <StyledHeaderInner $hasChildren={children ? true : false}>
         <Link href="/" className="logo" aria-label="Logo">
           {customThemeJson.logo ? (
-            theme.isDark ? (
-              // eslint-disable-next-line @next/next/no-img-element
+            <>
+              {/* Both logos render; .light-only and .dark-only classes in
+                  GlobalStyles hide the inactive one based on the "dark" class
+                  on <html>. Avoids a JS-driven swap so no flash on first load. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={customThemeJson.logo.dark}
-                alt="Logo"
-                width="100"
-                height="100"
-              />
-            ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+                className="light-only"
                 src={customThemeJson.logo.light}
                 alt="Logo"
                 width="100"
                 height="100"
               />
-            )
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className="dark-only"
+                src={customThemeJson.logo.dark}
+                alt="Logo"
+                width="100"
+                height="100"
+              />
+            </>
           ) : (
             <Logo />
           )}

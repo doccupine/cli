@@ -2,7 +2,6 @@ import { SIDEBAR_WIDTH, CHAT_WIDTH } from "../../app/theme.js";
 
 export const staticLinksTemplate = `"use client";
 import styled, { css } from "styled-components";
-import { rgba } from "polished";
 import { useContext } from "react";
 import { ChatContext } from "@/components/Chat";
 import { mq, Theme } from "@/app/theme";
@@ -53,7 +52,7 @@ const StyledLink = styled.a<{ theme: Theme; $hasIcon?: boolean }>\`
   font-size: \${({ theme }) => theme.fontSizes.small.lg};
   line-height: 1;
   color: \${({ theme }) =>
-    theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
+    theme.colors.accent};
   padding: 0;
   display: flex;
   gap: 6px;
@@ -61,7 +60,7 @@ const StyledLink = styled.a<{ theme: Theme; $hasIcon?: boolean }>\`
   font-weight: 600;
   white-space: nowrap;
   min-width: fit-content;
-  background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.1)};
+  background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 10%, transparent)\`};
   padding: 6px 8px;
   border-radius: \${({ theme }) => theme.spacing.radius.xs};
   \${interactiveStyles};
@@ -85,7 +84,7 @@ const StyledLink = styled.a<{ theme: Theme; $hasIcon?: boolean }>\`
 
   &:hover {
     color: \${({ theme }) =>
-      theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
+      theme.colors.accent};
   }
 \`;
 

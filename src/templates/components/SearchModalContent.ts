@@ -1,7 +1,6 @@
 export const searchModalContentTemplate = `"use client";
 import React from "react";
 import styled, { css, keyframes } from "styled-components";
-import { rgba } from "polished";
 import { Search } from "lucide-react";
 import { mq, Theme } from "@/app/theme";
 import { Spinner } from "@/components/Spinner";
@@ -61,8 +60,9 @@ const StyledBackdrop = styled.div<{ theme: Theme; $isClosing: boolean }>\`
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: \${({ theme }) =>
-    rgba(theme.isDark ? theme.colors.light : theme.colors.dark, 0.5)};
+  /* Backdrop is intentionally near-black in both modes — covers everything
+     behind the modal regardless of the user's theme. */
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   display: flex;
@@ -148,11 +148,11 @@ const StyledResultItem = styled.li<{ theme: Theme; $isActive: boolean }>\`
   \${({ $isActive, theme }) =>
     $isActive &&
     css\`
-      background: \${rgba(theme.colors.primaryLight, 0.2)};
+      background: color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent);
     \`}
 
   &:hover {
-    background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.15)};
+    background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 15%, transparent)\`};
   }
 \`;
 
@@ -181,7 +181,7 @@ const StyledSnippet = styled.span<{ theme: Theme }>\`
   white-space: nowrap;
 
   & mark {
-    background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.35)};
+    background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 35%, transparent)\`};
     color: inherit;
     border-radius: 4px;
     padding: 0 1px;

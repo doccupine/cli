@@ -1,7 +1,6 @@
 export const updateTemplate = `"use client";
 import styled from "styled-components";
 import { mq, styledSmall, Theme } from "cherry-styled-components";
-import { rgba } from "polished";
 
 const StyledUpdate = styled.div<{ theme: Theme; $columns?: number }>\`
   position: relative;
@@ -16,7 +15,7 @@ const StyledUpdate = styled.div<{ theme: Theme; $columns?: number }>\`
 \`;
 
 const StyledUpdateLabel = styled.span<{ theme: Theme }>\`
-  background: \${({ theme }) => rgba(theme.colors.primaryLight, 0.2)};
+  background: \${({ theme }) => \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
   color: \${({ theme }) => theme.colors.primary};
   padding: 2px 4px;
   border-radius: \${({ theme }) => theme.spacing.radius.xs};
