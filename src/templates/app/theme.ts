@@ -7,9 +7,14 @@ import customThemeJson from "@/theme.json";
 // Users can only override the brand palette via theme.json — semantic tokens
 // (accent, surface, etc.) are derived in GlobalStyles from the brand colors
 // and are not directly overridable.
+type CustomColors = Omit<
+  Colors,
+  "accent" | "accentStrong" | "accentMuted" | "surface"
+>;
+
 interface CustomTheme {
-  default?: Partial<BrandColors>;
-  dark?: Partial<BrandColors>;
+  default?: Partial<CustomColors>;
+  dark?: Partial<CustomColors>;
 }
 
 const customTheme = customThemeJson as CustomTheme;
@@ -39,7 +44,7 @@ const spacing: Spacing = {
 // custom properties on :root and :root.dark. Components never read these
 // directly — they read \`theme.colors.*\` which resolves to var(--color-…)
 // and lets the browser pick the right value based on the active class.
-export const colorsLight: BrandColors = {
+export const colorsLight: CustomColors = {
   primaryLight: "#d1d5db",
   primary: "#556272",
   primaryDark: "#374151",
@@ -58,10 +63,12 @@ export const colorsLight: BrandColors = {
   info: "#06b6d4",
   dark: "#000000",
   light: "#ffffff",
-  ...(customTheme.default ? (customTheme.default as Partial<BrandColors>) : {}),
+  ...(customTheme.default
+    ? (customTheme.default as Partial<CustomColors>)
+    : {}),
 };
 
-export const colorsDark: BrandColors = {
+export const colorsDark: CustomColors = {
   primaryLight: "#9ca3af",
   primary: "#6b7280",
   primaryDark: "#374151",
@@ -80,7 +87,7 @@ export const colorsDark: BrandColors = {
   info: "#06b6d4",
   dark: "#ffffff",
   light: "#000000",
-  ...(customTheme.dark ? (customTheme.dark as Partial<BrandColors>) : {}),
+  ...(customTheme.dark ? (customTheme.dark as Partial<CustomColors>) : {}),
 };
 
 export const shadowsLight: Shadows = {
@@ -212,9 +219,11 @@ export const theme: Theme = {
   fonts,
   fontSizes,
   lineHeights,
-  // Stub for type compatibility with cherry-styled-components' Theme.
-  // Mode switching is handled entirely via CSS vars flipped by :root.dark,
-  // so the runtime value is irrelevant for our own code.
+  // Stub for type compatibility with cherry-styled-components' Theme. Mode
+  // switching lives entirely in CSS vars flipped by :root.dark, so our own
+  // code never branches on this. Cherry's internal \`isDark ? … : …\` branches
+  // (e.g. buttonStyles' filled-button text) are handled where they surface
+  // by re-pinning to a mode-agnostic semantic token — see components/layout/Button.tsx.
   isDark: false,
 };
 
@@ -235,9 +244,12 @@ interface Spacing<TString = string> {
   gridGap: { xs: TString; lg: TString };
 }
 
-// Brand palette — directly customizable via theme.json. These are the only
-// colors that hold raw hex values per mode (in colorsLight / colorsDark).
-interface BrandColors<TString = string> {
+// Matches cherry-styled-components' Colors shape for the brand keys, plus a
+// handful of semantic tokens derived from the brand palette by GlobalStyles.
+// The brand keys (primaryLight…light) are customizable via theme.json; the
+// semantic keys (accent*, surface) are derived and not overridable — see
+// CustomColors above.
+interface Colors<TString = string> {
   primaryLight: TString;
   primary: TString;
   primaryDark: TString;
@@ -261,12 +273,7 @@ interface BrandColors<TString = string> {
 
   dark: TString;
   light: TString;
-}
 
-// Semantic tokens — derived from the brand palette by GlobalStyles. Naming
-// follows the existing single-noun convention; each captures one recurring
-// mode-aware pattern that previously required a JS isDark branch.
-interface SemanticColors<TString = string> {
   /** High-contrast accent text. Was: isDark ? primaryLight : primaryDark. */
   accent: TString;
   /** Slightly stronger accent (lightened/darkened by ~10%). */
@@ -276,10 +283,6 @@ interface SemanticColors<TString = string> {
   /** Elevated surface color, white-ish in both modes. Was: isDark ? dark : light. */
   surface: TString;
 }
-
-interface Colors<TString = string>
-  extends BrandColors<TString>,
-    SemanticColors<TString> {}
 
 interface Shadows<TString = string> {
   xs: TString;
