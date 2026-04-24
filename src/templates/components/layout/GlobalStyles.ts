@@ -22,22 +22,25 @@ const lightVars = [
   toCssVars("shadow", shadowsLight),
   // Semantic tokens — derived from the brand palette per mode. See the
   // SemanticColors interface in theme.ts for the intent of each.
-  \`  --color-accent: \${colorsLight.primaryDark};\`,
+  // These reference the palette via var() (not baked hex) so that any
+  // runtime override of --color-primary* (e.g. the DemoTheme presets)
+  // cascades into the semantic tokens automatically.
+  \`  --color-accent: var(--color-primaryDark);\`,
   // accentStrong = accent shifted ~10% toward black (light mode) or white (dark
   // mode). color-mix in sRGB is not identical to polished's HSL darken/lighten
   // but the visual difference at 10% on a UI accent is imperceptible.
-  \`  --color-accentStrong: color-mix(in srgb, \${colorsLight.primaryDark} 90%, black);\`,
-  \`  --color-accentMuted: \${colorsLight.primary};\`,
-  \`  --color-surface: \${colorsLight.light};\`,
+  \`  --color-accentStrong: color-mix(in srgb, var(--color-primaryDark) 90%, black);\`,
+  \`  --color-accentMuted: var(--color-primary);\`,
+  \`  --color-surface: var(--color-light);\`,
 ].join("\\n");
 
 const darkVars = [
   toCssVars("color", colorsDark),
   toCssVars("shadow", shadowsDark),
-  \`  --color-accent: \${colorsDark.primaryLight};\`,
-  \`  --color-accentStrong: color-mix(in srgb, \${colorsDark.primaryLight} 90%, white);\`,
-  \`  --color-accentMuted: \${colorsDark.grayDark};\`,
-  \`  --color-surface: \${colorsDark.dark};\`,
+  \`  --color-accent: var(--color-primaryLight);\`,
+  \`  --color-accentStrong: color-mix(in srgb, var(--color-primaryLight) 90%, white);\`,
+  \`  --color-accentMuted: var(--color-grayDark);\`,
+  \`  --color-surface: var(--color-dark);\`,
 ].join("\\n");
 
 const GlobalStyles = createGlobalStyle\`
