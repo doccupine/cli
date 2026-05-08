@@ -12,10 +12,13 @@ category: "Configuration"
 categoryOrder: 3
 order: 1
 ---
+
 # Global Configuration
+
 Use a \`config.json\` file to define project‑wide metadata for your documentation site. These values are applied to every generated page unless a page overrides them in its own frontmatter.
 
 ## config.json
+
 Place a \`config.json\` at your project root (the same folder where you execute \`npx doccupine\`) to define global metadata for your documentation site.
 
 \`\`\`json
@@ -29,6 +32,7 @@ Place a \`config.json\` at your project root (the same folder where you execute 
 \`\`\`
 
 ## Fields
+
 All fields are optional. Doccupine uses sensible defaults when a field is not set.
 
 - **name**: The primary name of your documentation website. Displayed in the site title and used in various UI elements.
@@ -38,18 +42,19 @@ All fields are optional. Doccupine uses sensible defaults when a field is not se
 - **url**: The public URL of your deployed site. Used as the base URL for \`sitemap.xml\` and \`robots.txt\`. When omitted, no sitemap is generated. Can be overridden at deploy time with the \`NEXT_PUBLIC_SITE_URL\` environment variable.
 
 ## Per-page overrides
+
 Any page can override global values by defining the matching key in its frontmatter. When present, the page's value takes precedence over \`config.json\` for that page only.
 
-| Frontmatter field | Overrides | Effect |
-|---|---|---|
-| **title** | - | Page title in metadata and Open Graph |
-| **description** | \`description\` | Meta description and Open Graph description |
-| **name** | \`name\` | Site name shown in the title suffix (e.g. "Page - My Docs") |
-| **icon** | \`icon\` | Favicon for this page |
-| **image** | \`image\` | Open Graph preview image |
-| **section** | - | Assigns the page to a [section](/sections) |
-| **sectionOrder** | - | Controls section position in the tab bar |
-| **sectionLabel** | - | Renames the default "Docs" tab (use on \`index.mdx\`) |
+| Frontmatter field | Overrides     | Effect                                                      |
+| ----------------- | ------------- | ----------------------------------------------------------- |
+| **title**         | -             | Page title in metadata and Open Graph                       |
+| **description**   | \`description\` | Meta description and Open Graph description                 |
+| **name**          | \`name\`        | Site name shown in the title suffix (e.g. "Page - My Docs") |
+| **icon**          | \`icon\`        | Favicon for this page                                       |
+| **image**         | \`image\`       | Open Graph preview image                                    |
+| **section**       | -             | Assigns the page to a [section](/sections)                  |
+| **sectionOrder**  | -             | Controls section position in the tab bar                    |
+| **sectionLabel**  | -             | Renames the default "Docs" tab (use on \`index.mdx\`)         |
 
 <Callout type="note">
   If a key is not specified in a page's frontmatter, Doccupine falls back to the corresponding value in \`config.json\`.
@@ -67,6 +72,4 @@ image: "/custom-preview.png"
 date: "2026-02-19"
 category: "Guides"
 ---
-\`\`\`
-
-`;
+\`\`\``;

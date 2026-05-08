@@ -6,15 +6,18 @@ category: "Components"
 categoryOrder: 1
 order: 15
 ---
+
 # Color Swatches
+
 Display color palettes with labeled swatches to document your theme colors.
 
 The \`ColorSwatch\` component renders a visual preview of a color alongside its token name, and \`ColorSwatchGroup\` arranges multiple swatches in a responsive grid.
 
 ## Usage
+
 You can use the ColorSwatch components directly within your MDX files without any import:
 
-~~~mdx
+\`\`\`mdx
 <ColorSwatchGroup>
   <ColorSwatch token="primary" value="#6366F1" />
   <ColorSwatch token="secondary" value="#EC4899" />
@@ -23,7 +26,7 @@ You can use the ColorSwatch components directly within your MDX files without an
   <ColorSwatch token="danger" value="#EF4444" />
   <ColorSwatch token="info" value="#3B82F6" />
 </ColorSwatchGroup>
-~~~
+\`\`\`
 
 <ColorSwatchGroup>
   <ColorSwatch token="primary" value="#6366F1" />
@@ -38,7 +41,7 @@ You can use the ColorSwatch components directly within your MDX files without an
 
 Text color automatically adapts based on the background luminance, so dark swatches display white text:
 
-~~~mdx
+\`\`\`mdx
 <ColorSwatchGroup>
   <ColorSwatch token="dark" value="#1E1E2E" />
   <ColorSwatch token="grayDark" value="#374151" />
@@ -47,7 +50,7 @@ Text color automatically adapts based on the background luminance, so dark swatc
   <ColorSwatch token="light" value="#F9FAFB" />
   <ColorSwatch token="white" value="#FFFFFF" />
 </ColorSwatchGroup>
-~~~
+\`\`\`
 
 <ColorSwatchGroup>
   <ColorSwatch token="dark" value="#1E1E2E" />

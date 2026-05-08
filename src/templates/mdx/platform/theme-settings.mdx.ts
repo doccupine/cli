@@ -7,10 +7,13 @@ categoryOrder: 2
 order: 1
 section: "Platform"
 ---
+
 # Theme Settings
+
 The Theme settings page gives you full control over your documentation site's visual appearance. Customize colors, upload logos, and configure separate light and dark mode palettes.
 
 ## Color palette
+
 The theme system uses an 18-color palette organized into groups:
 
 - **Primary** (light, base, dark) - your brand's main color, used for links, buttons, and accents
@@ -23,11 +26,13 @@ The theme system uses an 18-color palette organized into groups:
 Click any color swatch to open a color picker and adjust the value.
 
 ## Dark mode
+
 Enable the dark mode toggle to configure a separate palette for dark mode. When enabled, your site automatically switches based on the visitor's system preference.
 
 The dark mode palette uses the same 18-color structure, letting you fine-tune every color for both appearances.
 
 ## Logos
+
 Upload separate logo images for light and dark backgrounds:
 
 - **Light background logo** - shown when the site is in light mode
@@ -38,7 +43,9 @@ Upload separate logo images for light and dark backgrounds:
 </Callout>
 
 ## Reset to defaults
+
 Each palette section has a **Reset to defaults** button that restores the original Doccupine color values. This is useful if you want to start over after experimenting.
 
 ## How it works
+
 Theme settings are stored in \`theme.json\` at the root of your repository. Like all configuration, changes are staged as pending and go live when you publish.`;

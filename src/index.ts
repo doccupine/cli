@@ -24,9 +24,16 @@ import {
   generateJsonLdScript,
 } from "./lib/metadata.js";
 import { nextConfigTemplate } from "./templates/next.config.js";
+import { pnpmWorkspaceTemplate } from "./templates/pnpmWorkspace.js";
 import { proxyTemplate } from "./templates/proxy.js";
 import { robotsTemplate } from "./templates/app/robots.js";
 import { sitemapTemplate, type SitemapEntry } from "./templates/app/sitemap.js";
+import { llmsIndexTemplate } from "./templates/llms/llmsIndex.js";
+import {
+  llmsFullTemplate,
+  type PageWithBody,
+} from "./templates/llms/llmsFull.js";
+import { llmsPageTemplate } from "./templates/llms/llmsPage.js";
 import type {
   MDXFile,
   PageMeta,
@@ -71,6 +78,8 @@ class MDXToNextJSGenerator {
   private sectionsConfig: SectionConfig[] | null = null;
   /** Guards against recursive reprocessing when maybeUpdateSections() triggers processAllMDXFiles() */
   private isReprocessing = false;
+  /** Tracks per-page .md files written under public/ so we can clean up stale ones on rename/delete */
+  private generatedLlmsPagePaths = new Set<string>();
 
   constructor(watchDir: string, outputDir: string) {
     this.watchDir = path.resolve(watchDir);
@@ -124,6 +133,7 @@ class MDXToNextJSGenerator {
     const structure: Record<string, string | Promise<string>> = {
       ...appStructure,
       "next.config.ts": nextConfigTemplate(this.analyticsConfig),
+      "pnpm-workspace.yaml": pnpmWorkspaceTemplate,
       "proxy.ts": proxyTemplate(this.analyticsConfig),
       "analytics.json": `{}\n`,
       "config.json": `{}\n`,
@@ -142,6 +152,7 @@ class MDXToNextJSGenerator {
     }
 
     await this.updateSitemap();
+    await this.updateLlmsFiles();
   }
 
   async createStartingDocs() {
@@ -446,6 +457,7 @@ class MDXToNextJSGenerator {
         if (fileName === "config.json") {
           await this.updateSitemap();
           await this.updateRobots();
+          await this.updateLlmsFiles();
         }
       } catch (error) {
         console.error(chalk.red(`❌ Error copying ${fileName}:`), error);
@@ -472,6 +484,7 @@ class MDXToNextJSGenerator {
         if (fileName === "config.json") {
           await this.updateSitemap();
           await this.updateRobots();
+          await this.updateLlmsFiles();
         }
       } catch (error) {
         console.error(chalk.red(`❌ Error removing ${fileName}:`), error);
@@ -924,6 +937,7 @@ class MDXToNextJSGenerator {
       await this.updatePagesIndex();
       await this.updateRootLayout();
       await this.updateSitemap();
+      await this.updateLlmsFiles();
       await this.generateSectionIndexPages();
 
       console.log(chalk.green(`✅ Generated page for: ${filePath}`));
@@ -954,6 +968,7 @@ class MDXToNextJSGenerator {
       await this.updatePagesIndex();
       await this.updateRootLayout();
       await this.updateSitemap();
+      await this.updateLlmsFiles();
 
       console.log(chalk.green(`✅ Removed page for: ${filePath}`));
 
@@ -1364,6 +1379,164 @@ export default function Page() {
     );
   }
 
+  private async loadSiteMetadata(): Promise<{
+    url: string | null;
+    name: string;
+    description: string;
+  }> {
+    const configPath = path.join(this.rootDir, "config.json");
+    let url: string | null = null;
+    let name = "Documentation";
+    let description = "";
+
+    try {
+      if (await fs.pathExists(configPath)) {
+        const content = await fs.readFile(configPath, "utf8");
+        const parsed = JSON.parse(content) as {
+          url?: unknown;
+          name?: unknown;
+          title?: unknown;
+          description?: unknown;
+        };
+        if (typeof parsed.url === "string" && parsed.url.trim() !== "") {
+          url = parsed.url.trim().replace(/\/$/, "");
+        }
+        if (typeof parsed.name === "string" && parsed.name.trim() !== "") {
+          name = parsed.name.trim();
+        } else if (
+          typeof parsed.title === "string" &&
+          parsed.title.trim() !== ""
+        ) {
+          name = parsed.title.trim();
+        }
+        if (
+          typeof parsed.description === "string" &&
+          parsed.description.trim() !== ""
+        ) {
+          description = parsed.description.trim();
+        }
+      }
+    } catch (error) {
+      console.warn(
+        chalk.yellow("⚠️ Error reading config.json for llms metadata"),
+        error,
+      );
+    }
+
+    return { url, name, description };
+  }
+
+  private async readPageWithBody(page: PageMeta): Promise<PageWithBody> {
+    const fullPath = path.join(this.watchDir, page.path);
+    const raw = await fs.readFile(fullPath, "utf8");
+    const { content: body } = matter(raw);
+    return { ...page, body };
+  }
+
+  private llmsManifestPath(): string {
+    return path.join(this.outputDir, ".doccupine-llms-manifest.json");
+  }
+
+  private async readLlmsManifest(): Promise<Set<string>> {
+    const manifestPath = this.llmsManifestPath();
+    try {
+      if (await fs.pathExists(manifestPath)) {
+        const raw = await fs.readFile(manifestPath, "utf8");
+        const parsed = JSON.parse(raw) as { pageFiles?: unknown };
+        if (Array.isArray(parsed.pageFiles)) {
+          return new Set(
+            parsed.pageFiles.filter(
+              (entry): entry is string => typeof entry === "string",
+            ),
+          );
+        }
+      }
+    } catch {
+      // ignore corrupted manifest
+    }
+    return new Set();
+  }
+
+  private async writeLlmsManifest(pageFiles: Set<string>): Promise<void> {
+    const manifestPath = this.llmsManifestPath();
+    const payload = { pageFiles: Array.from(pageFiles).sort() };
+    const json = JSON.stringify(payload, null, 2) + "\n";
+    await fs.writeFile(manifestPath, json, "utf8");
+  }
+
+  async updateLlmsFiles() {
+    const publicDir = path.join(this.outputDir, "public");
+    await fs.ensureDir(publicDir);
+
+    const { url: baseUrl, name, description } = await this.loadSiteMetadata();
+    const pages = await this.buildAllPagesMeta();
+    const pagesWithBodies = await Promise.all(
+      pages.map((page) => this.readPageWithBody(page)),
+    );
+
+    const indexContent = llmsIndexTemplate({
+      siteName: name,
+      siteDescription: description,
+      baseUrl,
+      pages,
+      sectionsConfig: this.sectionsConfig,
+    });
+    const fullContent = llmsFullTemplate({
+      siteName: name,
+      siteDescription: description,
+      baseUrl,
+      pages: pagesWithBodies,
+      sectionsConfig: this.sectionsConfig,
+    });
+
+    await fs.writeFile(path.join(publicDir, "llms.txt"), indexContent, "utf8");
+    await fs.writeFile(
+      path.join(publicDir, "llms-full.txt"),
+      fullContent,
+      "utf8",
+    );
+
+    const nextRelativePaths = new Set<string>();
+    await Promise.all(
+      pagesWithBodies.map(async (page) => {
+        if (page.slug === "") return;
+        const relPath = `${page.slug}.md`;
+        const targetPath = path.join(publicDir, relPath);
+        await fs.ensureDir(path.dirname(targetPath));
+        await fs.writeFile(targetPath, llmsPageTemplate(page, baseUrl), "utf8");
+        nextRelativePaths.add(relPath);
+      }),
+    );
+
+    const previousRelativePaths = new Set<string>([
+      ...this.generatedLlmsPagePaths,
+      ...(await this.readLlmsManifest()),
+    ]);
+
+    for (const stale of previousRelativePaths) {
+      if (!nextRelativePaths.has(stale)) {
+        try {
+          const stalePath = path.join(publicDir, stale);
+          if (await fs.pathExists(stalePath)) {
+            await fs.remove(stalePath);
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+    this.generatedLlmsPagePaths = nextRelativePaths;
+    await this.writeLlmsManifest(nextRelativePaths);
+
+    console.log(
+      chalk.green(
+        `🤖 Generated llms.txt and llms-full.txt with ${pages.length} page(s)${
+          baseUrl ? ` using ${baseUrl}` : " (relative URLs)"
+        }`,
+      ),
+    );
+  }
+
   async stop() {
     if (this.watcher) {
       await this.watcher.close();
@@ -1440,7 +1613,7 @@ program
 
     const install = spawn(packageManager, ["install"], {
       cwd: config.outputDir,
-      stdio: "pipe",
+      stdio: "inherit",
     });
 
     await new Promise((resolve, reject) => {

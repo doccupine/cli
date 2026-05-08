@@ -6,7 +6,9 @@ category: "Configuration"
 categoryOrder: 3
 order: 3
 ---
+
 # Sections
+
 Sections let you divide your documentation into separate top-level areas - for example "Guides", "API Reference", and "SDKs". Each section gets its own sidebar and appears as a horizontal tab bar below the site header.
 
 <Callout type="note">
@@ -14,9 +16,11 @@ Sections let you divide your documentation into separate top-level areas - for e
 </Callout>
 
 ## Automatic sections (frontmatter)
+
 The simplest way to add sections is through page frontmatter. Add a \`section\` field to group pages, and an optional \`sectionOrder\` to control the order of sections in the bar.
 
 ### Frontmatter fields
+
 - **section**: The display name for the section this page belongs to (e.g. "API Reference").
 - **sectionOrder**: Controls the position of the section in the bar. Lower numbers appear first.
 
@@ -32,6 +36,7 @@ sectionLabel: "Guides"
 \`\`\`
 
 ### Directory-based organization
+
 You can organize each section's files in a subdirectory that matches the section slug. When the directory name matches, Doccupine automatically assigns the files to that section and strips the directory from the URL.
 
 \`\`\`text
@@ -63,6 +68,7 @@ The directory \`platform/\` matches the section slug \`platform\`, so it is stri
 Files at the root level with a \`section\` field work too - they keep their full slug under the section prefix.
 
 ### Section index pages
+
 If a section has no index page (no file at its root URL), Doccupine generates a redirect to the first page in that section, sorted by \`categoryOrder\` then \`order\`.
 
 <Callout type="note">
@@ -70,6 +76,7 @@ If a section has no index page (no file at its root URL), Doccupine generates a 
 </Callout>
 
 ### Flat file example
+
 You can also keep all files at the root and rely purely on frontmatter:
 
 \`\`\`text
@@ -86,6 +93,7 @@ order: 1
 This page would be served at \`/api-reference/authentication\`.
 
 ## Explicit sections with sections.json
+
 For full control over slugs, create a \`sections.json\` file at your project root (the same folder where you run \`npx doccupine\`).
 
 ### Minimal example
@@ -98,6 +106,7 @@ For full control over slugs, create a \`sections.json\` file at your project roo
 \`\`\`
 
 This defines two sections. Pages are assigned automatically:
+
 - Files in a \`platform/\` directory belong to the "Platform" section (directory name matches slug).
 - Files with \`section: "Platform"\` in their frontmatter also belong to it.
 - Everything else stays in the root "Docs" section.
@@ -105,6 +114,7 @@ This defines two sections. Pages are assigned automatically:
 No \`directory\` field is needed when the directory name already matches the section slug.
 
 ### Example with explicit directories
+
 When the directory name differs from the slug, use the \`directory\` field to map them:
 
 \`\`\`json
@@ -116,11 +126,13 @@ When the directory name differs from the slug, use the \`directory\` field to ma
 \`\`\`
 
 ### Fields
+
 - **label**: The display name shown in the section bar.
 - **slug**: The URL prefix for this section. Use an empty string \`""\` for the default section that serves at the root.
 - **directory** (optional): The subdirectory under your watch directory that contains this section's MDX files. Only needed when the directory name differs from the slug.
 
 ### Directory structure example
+
 With the explicit directory config above and a watch directory of \`docs\`, your files would look like:
 
 \`\`\`text
@@ -137,6 +149,7 @@ docs/
 \`\`\`
 
 ## Section navigation
+
 Each section builds its own sidebar from the pages that belong to it. By default, pages are grouped by \`category\` and sorted by \`categoryOrder\` and \`order\` from frontmatter.
 
 For explicit control, use \`navigation.json\` with the object format to define per-section navigation:
@@ -144,7 +157,10 @@ For explicit control, use \`navigation.json\` with the object format to define p
 \`\`\`json
 {
   "": [
-    { "label": "General", "links": [{ "slug": "", "title": "Getting Started" }] }
+    {
+      "label": "General",
+      "links": [{ "slug": "", "title": "Getting Started" }]
+    }
   ],
   "platform": [
     { "label": "API", "links": [{ "slug": "platform/auth", "title": "Auth" }] }
@@ -155,6 +171,7 @@ For explicit control, use \`navigation.json\` with the object format to define p
 Keys are section slugs. The root section uses \`""\`. Sections without a key fall back to auto-generated navigation. See the Navigation page for the full format.
 
 ## How pages are assigned to sections
+
 Doccupine checks these rules in order and uses the first match:
 
 1. **Explicit directory** - the file is inside a directory listed in a section's \`directory\` field.
@@ -163,11 +180,13 @@ Doccupine checks these rules in order and uses the first match:
 4. **No match** - the page stays at the root.
 
 ## Precedence for section discovery
+
 1. **sections.json exists** - Doccupine uses it to define available sections.
 2. **No sections.json but pages have \`section\` frontmatter** - Doccupine auto-discovers sections from the frontmatter. Sections update live as you add or remove the \`section\` field from files.
 3. **Neither** - No section bar appears. The site works exactly as before.
 
 ## URL structure
+
 Pages in the default section (with \`slug: ""\`) serve at the root:
 
 - Default section: \`/getting-started\`, \`/installation\`
@@ -178,6 +197,7 @@ Pages in the default section (with \`slug: ""\`) serve at the root:
 </Callout>
 
 ## sections.json vs navigation.json
+
 These two config files serve different purposes and complement each other:
 
 - **sections.json** defines which sections exist - their labels, slugs, directory mappings, and order in the tab bar.
@@ -186,6 +206,7 @@ These two config files serve different purposes and complement each other:
 You can use either one independently. \`sections.json\` without \`navigation.json\` gives you sections with auto-generated sidebars. \`navigation.json\` without \`sections.json\` gives you custom sidebar ordering with frontmatter-discovered sections (or no sections at all).
 
 ## Tips
+
 - **Start simple**: Add \`section\` and \`sectionOrder\` to a few pages to try it out. No config files needed.
 - **Use directories**: Organize each section's files in a directory that matches the section slug for clean URLs and a tidy file tree.
 - **Rename the default tab**: Add \`sectionLabel: "Your Label"\` to your \`index.mdx\` frontmatter. Defaults to "Docs" if omitted.

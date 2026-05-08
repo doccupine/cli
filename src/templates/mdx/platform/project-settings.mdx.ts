@@ -7,10 +7,13 @@ categoryOrder: 4
 order: 2
 section: "Platform"
 ---
+
 # Project Settings
+
 The Project settings page provides basic project management options including renaming and deletion.
 
 ## Renaming a project
+
 Enter a new name for your project and click **Save**. The project name is used in the dashboard and sidebar - it does not affect your site's URL or domain.
 
 ## Deleting a project
@@ -27,6 +30,7 @@ To delete a project:
 4. Click **Delete**.
 
 Deletion removes:
+
 - The GitHub repository (if managed by Doccupine)
 - The hosted deployment
 - All pending changes

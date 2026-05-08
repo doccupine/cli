@@ -6,12 +6,15 @@ category: "Components"
 categoryOrder: 1
 order: 7
 ---
+
 # Buttons
+
 A flexible action component supporting variants, sizes, icons, and links.
 
 Buttons help users initiate actions or navigate to other pages. Use variants to convey emphasis, size for hierarchy, and icons to add clarity.
 
 ## Button Usage
+
 You can use the Button component directly within your MDX files without any import. The following examples show basic usage:
 
 \`\`\`mdx
@@ -53,14 +56,19 @@ You can use the Button component directly within your MDX files without any impo
 ### With icon
 
 \`\`\`mdx
-<Button icon="arrow-right" iconPosition="left">With left icon</Button>
-<Button icon="arrow-right" iconPosition="right">With right icon</Button>
+<Button icon="arrow-right" iconPosition="left">
+  With left icon
+</Button>
+<Button icon="arrow-right" iconPosition="right">
+  With right icon
+</Button>
 \`\`\`
 
 <Button icon="arrow-right" iconPosition="left">With left icon</Button>
 <Button icon="arrow-right" iconPosition="right">With right icon</Button>
 
 ### As a link
+
 Buttons can render as links when you provide an \`href\`.
 
 \`\`\`mdx

@@ -6,12 +6,15 @@ category: "Components"
 categoryOrder: 1
 order: 11
 ---
+
 # Fields
+
 Configure parameters for your API or SDK documentation.
 
 Fields allow you to describe both the **inputs** (parameters) and **outputs** (responses) of your API. The main field component is available: \`Field\` for parameters and for responses.
 
 ## Fields Usage
+
 Use the \`<Field>\` component to declare API or SDK parameters, or define the return values of an API.
 
 <Field value="param" type="string" required>

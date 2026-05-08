@@ -6,13 +6,17 @@ category: "Components"
 categoryOrder: 1
 order: 2
 ---
+
 # Lists and Tables
+
 Present structured information using lists or tables.
 
 ## Lists
-Markdown supports both *ordered* and *unordered* lists, as well as nested list structures.
+
+Markdown supports both _ordered_ and _unordered_ lists, as well as nested list structures.
 
 ### Ordered List
+
 Start each item with a number followed by a period to create an ordered list.
 
 \`\`\`md
@@ -27,8 +31,8 @@ Start each item with a number followed by a period to create an ordered list.
 3. Third item
 4. Fourth item
 
-
 ### Unordered List
+
 Use dashes (\`-\`), asterisks (\`*\`), or plus signs (\`+\`) before each item for unordered lists.
 
 \`\`\`md
@@ -44,6 +48,7 @@ Use dashes (\`-\`), asterisks (\`*\`), or plus signs (\`+\`) before each item fo
 - Fourth item
 
 ### Nested List
+
 Indent items under another to create nested lists.
 
 \`\`\`md
@@ -61,6 +66,7 @@ Indent items under another to create nested lists.
 - Third item
 
 ## Tables
+
 Markdown tables use pipes (\`|\`) to separate columns and hyphens (\`---\`) to define the header row. Place a pipe at the start and end of each row for better compatibility.
 
 \`\`\`md

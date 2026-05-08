@@ -7,29 +7,36 @@ categoryOrder: 2
 order: 3
 section: "Platform"
 ---
+
 # Analytics
+
 The Analytics settings page lets you add PostHog analytics to your documentation site. Page views are tracked client-side and proxied through your own domain for privacy - no data is sent directly to PostHog.
 
 ## Enabling analytics
+
 Use the **Enable Analytics** toggle to turn tracking on or off. When disabled, no tracking code is added to your site.
 
 ## Configuration
 
 ### PostHog Project API Key
+
 Your project API key from PostHog (starts with \`phc_\`). This is a public identifier and is safe to commit to your repository.
 
 To find your key:
+
 1. Log in to [PostHog](https://posthog.com).
 2. Open your project settings.
 3. Copy the **Project API Key**.
 
 ### Region
+
 Select the PostHog cloud region that matches your project:
 
 - **US Cloud** - \`us.i.posthog.com\`
 - **EU Cloud** - \`eu.i.posthog.com\`
 
 ## How it works
+
 Analytics settings are stored in \`analytics.json\` at the root of your repository. Here's an example:
 
 \`\`\`json

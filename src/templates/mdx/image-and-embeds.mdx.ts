@@ -6,7 +6,9 @@ category: "Components"
 categoryOrder: 1
 order: 9
 ---
+
 # Images and embeds
+
 Enrich your documentation with visuals, videos, and interactive embeds.
 
 Display images, embed video content, or add interactive frames via iframes to supplement your docs.
@@ -14,9 +16,11 @@ Display images, embed video content, or add interactive frames via iframes to su
 ![Demo Image](https://docs.doccupine.com/demo.png)
 
 ## Images
+
 Images enhance documentation with context, illustration, or decorative visual cues.
 
 ### Basic Image Syntax
+
 Include an image in Markdown using the syntax below:
 
 \`\`\`md
@@ -28,6 +32,7 @@ Include an image in Markdown using the syntax below:
 </Callout>
 
 ### HTML image embeds
+
 Embed images in your Markdown content using HTML syntax.
 
 \`\`\`md
@@ -35,6 +40,7 @@ Embed images in your Markdown content using HTML syntax.
 \`\`\`
 
 ### Theme-aware images
+
 Show different images depending on whether the user is in light or dark mode. Add the \`light-only\` or \`dark-only\` className to display an image exclusively in that theme.
 
 \`\`\`md
@@ -50,9 +56,11 @@ Show different images depending on whether the user is in light or dark mode. Ad
 </Callout>
 
 ## Videos
+
 Videos add a dynamic element to your documentation, engaging your audience and providing a more immersive experience.
 
 ### YouTube Embed
+
 To embed a YouTube video, use the following syntax:
 
 \`\`\`html
@@ -60,9 +68,9 @@ To embed a YouTube video, use the following syntax:
   className="aspect-video"
   src="https://www.youtube.com/embed/ResP_eVPYQo"
   title="YouTube video player"
-  frameBorder="0"
+  frameborder="0"
   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-  allowFullScreen
+  allowfullscreen
 ></iframe>
 \`\`\`
 
@@ -76,6 +84,7 @@ To embed a YouTube video, use the following syntax:
 ></iframe>
 
 ### Self-hosted videos
+
 Serve up your own video content using the \`<video>\` tag:
 
 \`\`\`html
@@ -87,13 +96,14 @@ Serve up your own video content using the \`<video>\` tag:
 \`\`\`
 
 <video
-  controls
-  className="aspect-video"
-  src="https://samplelib.com/lib/preview/mp4/sample-20s.mp4"
-></video>
+controls
+className="aspect-video"
+src="https://samplelib.com/lib/preview/mp4/sample-20s.mp4"
 
+> </video>
 
 #### Autoplay and Looping
+
 For demonstration videos that loop or start automatically, add attributes as shown:
 
 \`\`\`html
@@ -101,10 +111,9 @@ For demonstration videos that loop or start automatically, add attributes as sho
   controls
   className="aspect-video"
   src="https://samplelib.com/lib/preview/mp4/sample-20s.mp4"
-  autoPlay
+  autoplay
   muted
   loop
-  playsInline
+  playsinline
 ></video>
-\`\`\`
-`;
+\`\`\``;

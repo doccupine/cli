@@ -6,12 +6,15 @@ category: "Components"
 categoryOrder: 1
 order: 14
 ---
+
 # Steps
+
 Guide readers step-by-step using the Steps component.
 
 The Steps component is perfect for organizing procedures or workflows in a clear sequence. Include as many individual steps as necessary to outline your process.
 
 ## Steps Usage
+
 You can use the \`Steps\` component to create a step-by-step guide. Each step is represented by a \`Step\` component, which includes a title and content.
 
 \`\`\`mdx
@@ -20,9 +23,9 @@ You can use the \`Steps\` component to create a step-by-step guide. Each step is
     Lorem ipsum dolor sit amet, consectetur adipiscing elit.
   </Step>
 
-  <Step title="Step 2">
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-  </Step>
+<Step title="Step 2">
+  Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+</Step>
 
   <Step title="Step 3">
     Lorem ipsum dolor sit amet, consectetur adipiscing elit.
@@ -56,5 +59,4 @@ You can use the \`Steps\` component to create a step-by-step guide. Each step is
 
 <Field value="children" type="node" required>
   The content of the step.
-</Field>
-`;
+</Field>`;

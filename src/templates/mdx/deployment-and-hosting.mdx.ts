@@ -6,7 +6,9 @@ category: "Configuration"
 categoryOrder: 3
 order: 11
 ---
+
 # Deployment & Hosting
+
 The fastest way to deploy your documentation is with the [Doccupine Platform](https://www.doccupine.com). If you prefer to manage your own infrastructure, you can self-host the generated Next.js app on any platform.
 
 ## Doccupine Platform
@@ -18,6 +20,7 @@ Sign up at [doccupine.com](https://www.doccupine.com) and connect your repositor
 </Callout>
 
 ### What you get
+
 - **Automatic deployments** on every push to your repository
 - **Site customization** through a visual dashboard - no code changes needed
 - **Team collaboration** so your whole team can manage docs together
@@ -26,6 +29,7 @@ Sign up at [doccupine.com](https://www.doccupine.com) and connect your repositor
 - **Zero maintenance** - no servers, no build pipelines, no dependency updates
 
 ### Getting started
+
 1. Create an account at [doccupine.com](https://www.doccupine.com).
 2. Connect your GitHub repository.
 3. Your site is deployed automatically.
@@ -56,6 +60,7 @@ Doccupine generates a standard Next.js app, so you can deploy it anywhere that s
 - **Node.js server** - run \`next build && next start\` on any server or VPS with Node.js installed.
 
 ### Sitemap and robots.txt
+
 Doccupine generates \`sitemap.xml\` and \`robots.txt\` automatically when you set a site URL. This is required for search engine indexing and is strongly recommended for any public deployment.
 
 Set the URL in \`config.json\`:
@@ -75,6 +80,7 @@ NEXT_PUBLIC_SITE_URL=https://staging.example.com
 The generated sitemap includes every page from every [section](/sections), with \`lastModified\` derived from each page's frontmatter \`date\` or the file's modification time. When no URL is configured, the sitemap is skipped and \`robots.txt\` is emitted without a sitemap reference.
 
 ### Troubleshooting
+
 - **Build failed** - check build logs. Ensure your lockfile and correct Node.js version are present.
 - **Missing content** - verify your MDX files and assets are in the repository.
 - **SSR issues on edge platforms** - some features (like the AI chat API routes) require a Node.js runtime. Check your platform's documentation for SSR/API route support.`;

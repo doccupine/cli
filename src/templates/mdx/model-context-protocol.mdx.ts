@@ -6,7 +6,9 @@ category: "Configuration"
 categoryOrder: 3
 order: 9
 ---
+
 # Model Context Protocol
+
 Connect your documentation to AI tools with a hosted MCP server.
 
 Doccupine automatically generates a Model Context Protocol (MCP) server from your documentation, making your content accessible to AI applications like Claude, Cursor, VS Code, and other MCP-compatible tools. Your MCP server exposes semantic search capabilities, allowing AI tools to query your documentation directly and provide accurate, context-aware answers.
@@ -25,18 +27,18 @@ Your MCP server exposes search and retrieval tools for AI applications to query 
 
 When an AI tool has your documentation MCP server connected, the AI tool can search your documentation directly instead of making a generic web search in response to a user's prompt. Your MCP server provides access to all indexed content from your documentation site.
 
-* The LLM can proactively search your documentation while generating a response, not just when explicitly asked.
-* The LLM determines when to use the search tool based on the context of the conversation and the relevance of your documentation.
-* Each tool call happens during the generation process, so the LLM searches up-to-date information from your documentation to generate its response.
+- The LLM can proactively search your documentation while generating a response, not just when explicitly asked.
+- The LLM determines when to use the search tool based on the context of the conversation and the relevance of your documentation.
+- Each tool call happens during the generation process, so the LLM searches up-to-date information from your documentation to generate its response.
 
 ### MCP compared to web search
 
 AI tools can search the web, but MCP provides distinct advantages for documentation.
 
-* **Direct source access**: Web search depends on what search engines have indexed, which may be stale or incomplete. MCP searches your current indexed documentation directly.
-* **Integrated workflow**: MCP allows the AI to search during response generation rather than performing a separate web search.
-* **Semantic search**: MCP uses vector embeddings for semantic similarity search, providing more relevant results than keyword-based web search.
-* **No search noise**: SEO and ranking algorithms influence web search results. MCP goes straight to your documentation content.
+- **Direct source access**: Web search depends on what search engines have indexed, which may be stale or incomplete. MCP searches your current indexed documentation directly.
+- **Integrated workflow**: MCP allows the AI to search during response generation rather than performing a separate web search.
+- **Semantic search**: MCP uses vector embeddings for semantic similarity search, providing more relevant results than keyword-based web search.
+- **No search noise**: SEO and ranking algorithms influence web search results. MCP goes straight to your documentation content.
 
 ## Access your MCP server
 
@@ -71,6 +73,7 @@ Requests without a valid token receive a \`401 Unauthorized\` response. When \`D
 Returns information about available tools and the current index status.
 
 **Response:**
+
 \`\`\`json
 {
   "tools": [
@@ -93,6 +96,7 @@ Returns information about available tools and the current index status.
 Executes an MCP tool call.
 
 **Request Body:**
+
 \`\`\`json
 {
   "tool": "search_docs",
@@ -104,6 +108,7 @@ Executes an MCP tool call.
 \`\`\`
 
 **Response:**
+
 \`\`\`json
 {
   "content": [
@@ -127,10 +132,12 @@ Your MCP server exposes three tools for interacting with your documentation:
 Search through the documentation content using semantic search. Returns relevant chunks of documentation based on the query using vector embeddings and cosine similarity.
 
 **Parameters:**
+
 - \`query\` (required): The search query to find relevant documentation
 - \`limit\` (optional): Maximum number of results to return (default: 6)
 
 **Example:**
+
 \`\`\`json
 {
   "tool": "search_docs",
@@ -146,9 +153,11 @@ Search through the documentation content using semantic search. Returns relevant
 Get the full content of a specific documentation page by its path.
 
 **Parameters:**
+
 - \`path\` (required): The file path to the documentation page (e.g., \`app/getting-started/page.tsx\`)
 
 **Example:**
+
 \`\`\`json
 {
   "tool": "get_doc",
@@ -163,9 +172,11 @@ Get the full content of a specific documentation page by its path.
 List all available documentation pages, optionally filtered by directory.
 
 **Parameters:**
+
 - \`directory\` (optional): Optional directory to filter results (e.g., \`components\`)
 
 **Example:**
+
 \`\`\`json
 {
   "tool": "list_docs",
@@ -293,10 +304,10 @@ These are some of the ways you can help your users connect to your MCP server:
 
 To use the MCP server, you need to have the AI Assistant configured. The MCP server uses the same LLM configuration for generating embeddings.
 
-| Variable | Required | Description |
-|---|---|---|
-| \`LLM_PROVIDER\` | Yes | Your LLM provider (\`openai\`, \`anthropic\`, or \`google\`) |
-| \`DOCS_API_KEY\` | No | When set, requires Bearer token authentication on \`/api/mcp\` |
+| Variable       | Required | Description                                                  |
+| -------------- | -------- | ------------------------------------------------------------ |
+| \`LLM_PROVIDER\` | Yes      | Your LLM provider (\`openai\`, \`anthropic\`, or \`google\`)       |
+| \`DOCS_API_KEY\` | No       | When set, requires Bearer token authentication on \`/api/mcp\` |
 
 <Callout type="warning">
   The MCP server requires an LLM provider to be configured for generating embeddings. Make sure you have set up your AI Assistant with a valid API key before using the MCP server.
@@ -313,6 +324,7 @@ Your MCP server searches content extracted from your page files. The server auto
 The server extracts content from \`const content =\` declarations in your page files. Make sure your documentation pages export a \`content\` constant with your markdown or MDX content.
 
 **Example:**
+
 \`\`\`tsx
 export const content = \`
 # Getting Started
@@ -324,6 +336,7 @@ Welcome to the documentation...
 ### Excluded directories
 
 The following directories are automatically excluded from indexing:
+
 - \`node_modules\`
 - \`.next\`
 - \`.git\`
@@ -334,6 +347,7 @@ The following directories are automatically excluded from indexing:
 ### Index not building
 
 If the index is not building, check:
+
 - Your LLM provider is configured correctly in your \`.env\` file
 - You have a valid API key set
 - Your documentation pages export a \`content\` constant
@@ -341,6 +355,7 @@ If the index is not building, check:
 ### No search results
 
 If searches return no results:
+
 - Verify that your documentation pages are in the \`app/\` directory
 - Check that your pages export a \`content\` constant
 - Ensure the index has been built (check the \`index.ready\` status via GET \`/api/mcp\`)
@@ -348,6 +363,7 @@ If searches return no results:
 ### Slow search performance
 
 The first search may be slower as it builds the index. Subsequent searches are fast as they use the in-memory index. If performance is consistently slow:
+
 - Check your embedding API response times
 - Consider reducing the number of documentation pages
 - Verify your server has sufficient memory
@@ -382,7 +398,7 @@ In Cloudflare dashboard:
 
 ## Best practices
 
-* **Keep content up-to-date**: Restart your server after updating documentation to rebuild the index with fresh content.
-* **Use descriptive queries**: More specific queries yield better semantic search results.
-* **Monitor index status**: Use the GET endpoint to check if your index is ready before performing searches.
-* **Optimize content structure**: Well-structured markdown with clear headings improves search relevance.`;
+- **Keep content up-to-date**: Restart your server after updating documentation to rebuild the index with fresh content.
+- **Use descriptive queries**: More specific queries yield better semantic search results.
+- **Monitor index status**: Use the GET endpoint to check if your index is ready before performing searches.
+- **Optimize content structure**: Well-structured markdown with clear headings improves search relevance.`;
