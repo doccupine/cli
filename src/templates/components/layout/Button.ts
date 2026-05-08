@@ -11,6 +11,7 @@ import { Icon } from "@/components/layout/Icon";
 interface LinkButtonProps extends ButtonProps {
   href?: string;
   target?: "_blank" | "_self" | "_parent" | "_top";
+  rel?: string;
   variant?: "primary" | "secondary" | "tertiary";
   size?: "default" | "big";
   outline?: boolean;
@@ -69,13 +70,22 @@ function Button({
   iconPosition = "left",
   theme: _theme = localTheme,
   href,
+  target,
+  rel,
   ...props
 }: LinkButtonProps) {
+  const isExternal =
+    typeof href === "string" && /^(https?:)?\\/\\//i.test(href);
+  const resolvedTarget = target ?? (isExternal ? "_blank" : undefined);
+  const resolvedRel =
+    rel ?? (resolvedTarget === "_blank" ? "noopener noreferrer" : undefined);
   return href ? (
     <div>
       <StyledLinkButton
         {...props}
         href={href}
+        target={resolvedTarget}
+        rel={resolvedRel}
         $variant={variant}
         $size={size}
         $outline={outline}
