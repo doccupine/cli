@@ -74,8 +74,7 @@ function Button({
   rel,
   ...props
 }: LinkButtonProps) {
-  const isExternal =
-    typeof href === "string" && /^(https?:)?\\/\\//i.test(href);
+  const isExternal = typeof href === "string" && /^(https?:)?\\/\\//i.test(href);
   const resolvedTarget = target ?? (isExternal ? "_blank" : undefined);
   const resolvedRel =
     rel ?? (resolvedTarget === "_blank" ? "noopener noreferrer" : undefined);
