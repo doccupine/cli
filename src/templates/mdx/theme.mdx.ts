@@ -6,10 +6,13 @@ category: "Configuration"
 categoryOrder: 3
 order: 5
 ---
+
 # Theme
+
 Define your site’s color system with a \`theme.json\` file. This lets you tailor the look and feel of your documentation without changing content.
 
 ## theme.json
+
 Place a \`theme.json\` at your project root (the same folder where you execute \`npx doccupine\`). It supports multiple modes. Define a \`default\` mode and a \`dark\` mode.
 
 \`\`\`json
@@ -62,10 +65,12 @@ Place a \`theme.json\` at your project root (the same folder where you execute \
 \`\`\`
 
 ## Modes
+
 - **default**: The base color palette for your site.
 - **dark**: Dark‑mode palette.
 
 ## Fields
+
 - **primaryLight**: A lighter variant of your brand color, used for subtle accents and backgrounds.
 - **primary**: The main brand color.
 - **primaryDark**: A darker variant of your brand color for emphasis and hover states.
@@ -88,6 +93,7 @@ Place a \`theme.json\` at your project root (the same folder where you execute \
 - **logo.dark**: Path or URL to the logo used on dark backgrounds. Recommended size: 164×30 px.
 
 ## Behavior
+
 - **Placement**: Put \`theme.json\` in the project root alongside \`config.json\`.
 - **Partial palettes**: If a key is missing in a mode, consumers may fall back to the \`default\` value.
 - **Logo size**: Recommended dimensions are 164px width and 30px height.
@@ -97,11 +103,13 @@ Place a \`theme.json\` at your project root (the same folder where you execute \
 </Callout>
 
 ## Tips
+
 - **Contrast**: Ensure sufficient contrast between text and backgrounds for readability.
 - **Branding**: Start with your brand’s \`primary\` color, then derive \`primaryLight\` and \`primaryDark\`.
 - **Iterate**: Adjust colors and refresh the site to preview changes quickly.
 
 # Demo
+
 In the following demos, you can see how the theme can be changed. To override the theme, create a \`theme.json\` file in the project root and copy paste the code below.
 
 <DemoTheme variant="purple" />
@@ -155,6 +163,7 @@ In the following demos, you can see how the theme can be changed. To override th
   }
 }
 \`\`\`
+
 <DemoTheme variant="purple" />
 
 ## Green
@@ -203,6 +212,7 @@ In the following demos, you can see how the theme can be changed. To override th
   }
 }
 \`\`\`
+
 <DemoTheme variant="green" />
 
 ## Yellow

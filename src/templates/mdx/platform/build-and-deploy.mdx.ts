@@ -7,10 +7,13 @@ categoryOrder: 3
 order: 1
 section: "Platform"
 ---
+
 # Build & Deploy
+
 The Build & Deploy page shows your documentation site's build and deployment history. Every time you publish changes or push to GitHub, a new deployment is created.
 
 ## Deployment status
+
 The project header always shows your current deployment status:
 
 - **Ready** - your site is live and up to date
@@ -23,9 +26,11 @@ The project header always shows your current deployment status:
 </Callout>
 
 ## Build logs
+
 Click on any deployment to view its build logs. These show the full output of the build process, making it easy to diagnose issues.
 
 ## Deployment triggers
+
 Deployments are triggered in three ways:
 
 1. **Publishing from Doccupine** - clicking Publish in the project header
@@ -33,4 +38,5 @@ Deployments are triggered in three ways:
 3. **Configuration changes** - saving AI assistant settings triggers a redeploy since those are stored as environment variables
 
 ## Visiting your site
+
 Click the **Visit** button in the project header to open your live documentation site in a new tab.`;

@@ -6,7 +6,9 @@ category: "Components"
 categoryOrder: 1
 order: 10
 ---
+
 # Icons
+
 Integrate visual icons from well-known libraries to enrich your documentation.
 
 Icons can be sourced from Lucide, SVG elements, external URLs, or local files within your project directory.
@@ -18,6 +20,7 @@ Icons can be sourced from Lucide, SVG elements, external URLs, or local files wi
 \`\`\`
 
 ## Inline icons
+
 You can use icons directly within text to highlight information or add visual context.
 
 <Icon name="flag" size={16} /> Build your documentation seamlessly.

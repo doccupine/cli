@@ -7,10 +7,13 @@ categoryOrder: 0
 order: 0
 section: "Platform"
 ---
+
 # Platform Overview
+
 The Doccupine platform gives you everything you need to create, customize, and host beautiful documentation websites - all from your browser. No local setup, no CI pipelines, no infrastructure to manage.
 
 ## What you get
+
 - **Browser-based editor** for writing and managing your documentation files
 - **One-click publishing** that commits to GitHub and deploys automatically
 - **Visual configuration** for themes, navigation, fonts, links, and more
@@ -19,6 +22,7 @@ The Doccupine platform gives you everything you need to create, customize, and h
 - **Team collaboration** with role-based access control
 
 ## How it works
+
 Doccupine connects two core pieces behind the scenes:
 
 1. **GitHub** stores your documentation source files in a Git repository
@@ -39,6 +43,7 @@ You write MDX files, configure your site through visual settings pages, and hit 
 </Callout>
 
 ## Dashboard
+
 After signing in, the dashboard shows all your projects. You'll see two sections:
 
 - **Your Projects** - documentation sites you own, plus a button to create new ones

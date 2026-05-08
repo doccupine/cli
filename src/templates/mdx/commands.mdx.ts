@@ -6,10 +6,13 @@ category: "Getting Started"
 categoryOrder: 0
 order: 1
 ---
+
 # Commands
+
 In this page, you can find all the commands available in Doccupine CLI.
 
 ## Run Doccupine CLI
+
 Create a new directory for your project and navigate to it in your terminal. Run the following command to create a new Doccupine project:
 
 \`\`\`bash
@@ -23,11 +26,11 @@ This will start the development server on port 3000. Open your browser and navig
 
 ## Options
 
-| Flag | Description |
-|---|---|
+| Flag            | Description                                                          |
+| --------------- | -------------------------------------------------------------------- |
 | \`--port <port>\` | Port for the dev server (default: \`3000\`). Auto-increments if taken. |
-| \`--verbose\` | Show all Next.js output including compilation details. |
-| \`--reset\` | Re-prompt for watch/output directories. |
+| \`--verbose\`     | Show all Next.js output including compilation details.               |
+| \`--reset\`       | Re-prompt for watch/output directories.                              |
 
 ## Verbose mode
 

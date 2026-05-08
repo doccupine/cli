@@ -8,6 +8,7 @@ category: "Getting Started"
 categoryOrder: 0
 order: 0
 ---
+
 # Welcome to Doccupine
 
 Doccupine turns a folder of MDX files into a beautiful, production-ready documentation website. Write in standard Markdown, use any of the built-in components, and get a fully themed site with AI-powered search and automatic navigation - all from one command.
@@ -46,5 +47,4 @@ Doccupine works with no configuration, but when you're ready to customize, every
 - [Theme](/theme) - Colors, logos, and dark mode palette via \`theme.json\`
 - [Fonts](/fonts) - Google Fonts or local font files via \`fonts.json\`
 - [AI Assistant](/ai-assistant) - Enable the built-in chat with your own API key
-- [MCP Server](/model-context-protocol) - Let AI tools search your docs through \`/api/mcp\`
-`;
+- [MCP Server](/model-context-protocol) - Let AI tools search your docs through \`/api/mcp\``;

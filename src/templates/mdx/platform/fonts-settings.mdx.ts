@@ -7,10 +7,13 @@ categoryOrder: 2
 order: 4
 section: "Platform"
 ---
+
 # Fonts Settings
+
 The Fonts settings page lets you customize your documentation site's typography using Google Fonts or locally uploaded font files.
 
 ## Google Fonts
+
 Select a font from the full Google Fonts library:
 
 1. Type a font name to search the library.
@@ -22,6 +25,7 @@ Select a font from the full Google Fonts library:
 </Callout>
 
 ## Local fonts
+
 Upload your own font files for complete typographic control:
 
 1. Click **Add Font Source** to add a font file entry.
@@ -32,6 +36,7 @@ Upload your own font files for complete typographic control:
 WOFF2 is recommended for the best compression and browser support.
 
 ## How it works
+
 Font settings are stored in \`fonts.json\` at the root of your repository. Here's an example using Google Fonts:
 
 \`\`\`json

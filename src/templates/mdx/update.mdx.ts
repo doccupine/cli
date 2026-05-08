@@ -6,7 +6,9 @@ category: "Components"
 categoryOrder: 1
 order: 12
 ---
+
 # Update
+
 Easily manage and present change history.
 
 The \`Update\` component helps you display release notes, version details, and changelogs in a standardized format.
@@ -14,34 +16,35 @@ The \`Update\` component helps you display release notes, version details, and c
 <Update label="Example" description="v0.0.1">
   ## Example entry
 
-  You can include anything here—images, code snippets, or a bullet list of modifications.
+You can include anything here—images, code snippets, or a bullet list of modifications.
 
-  ![Demo Image](https://docs.doccupine.com/demo.png)
+![Demo Image](https://docs.doccupine.com/demo.png)
 
-  ### Key additions
+### Key additions
 
-  - Fully responsive layout
-  - Individual anchor for each update
-  - Automatic RSS feed entry generation
-</Update>
+- Fully responsive layout
+- Individual anchor for each update
+- Automatic RSS feed entry generation
+  </Update>
 
 ## Update Usage
+
 You can combine multiple \`Update\` components to build complete changelogs.
 
 \`\`\`mdx
 <Update label="Example" description="v0.0.1">
   ## Example entry
 
-  You can include anything here—images, code snippets, or a bullet list of modifications.
+You can include anything here—images, code snippets, or a bullet list of modifications.
 
-  ![Demo Image](https://docs.doccupine.com/demo.png)
+![Demo Image](https://docs.doccupine.com/demo.png)
 
-  ### Key additions
+### Key additions
 
-  - Fully responsive layout
-  - Individual anchor for each update
-  - Automatic RSS feed entry generation
-</Update>
+- Fully responsive layout
+- Individual anchor for each update
+- Automatic RSS feed entry generation
+  </Update>
 \`\`\`
 
 ## Properties

@@ -6,13 +6,17 @@ category: "Configuration"
 categoryOrder: 3
 order: 2
 ---
+
 # Navigation
+
 Doccupine builds your sidebar automatically from your MDX pages. By default, it reads the page frontmatter and groups pages into categories in the order you define. For larger docs, you can take full control with a \`navigation.json\` file.
 
 ## Automatic navigation (default)
+
 When no custom navigation is provided, Doccupine generates a structure based on each page's frontmatter.
 
 ### Frontmatter fields
+
 - **category**: The category name that groups the page in the sidebar.
 - **categoryOrder**: The position of the category within the sidebar. Lower numbers appear first.
 - **order**: The position of the page within its category. Lower numbers appear first.
@@ -33,9 +37,11 @@ order: 2
 This approach is great for small sets of documents. For larger projects, setting these fields on every page can become repetitive.
 
 ## Custom navigation with navigation.json
+
 To centrally define the entire sidebar, create a \`navigation.json\` at your project root (the same folder where you execute \`npx doccupine\`). When present, it takes priority over page frontmatter and fully controls the navigation structure.
 
 ### Array format
+
 The simplest format is an array of categories. When using [sections](/sections), this applies to the root section only.
 
 \`\`\`json
@@ -88,6 +94,7 @@ The simplest format is an array of categories. When using [sections](/sections),
 \`\`\`
 
 ### Object format (per-section)
+
 When using [sections](/sections), you can define navigation for each section by using an object keyed by section slug. Sections without a key fall back to auto-generated navigation from frontmatter.
 
 \`\`\`json
@@ -116,6 +123,7 @@ When using [sections](/sections), you can define navigation for each section by 
 The key \`""\` controls the root section. Other keys match section slugs defined in \`sections.json\` or derived from frontmatter. See [Sections](/sections) for details on configuring sections.
 
 ### Fields
+
 - **label**: The section header shown in the sidebar.
 - **links**: An array of page entries for that section.
   - **slug**: The MDX file slug (filename without extension). Use an empty string \`""\` for \`index.mdx\`.
@@ -132,6 +140,7 @@ The key \`""\` controls the root section. Other keys match section slugs defined
 - Pages without a \`category\` appear at the top level.
 
 ## Tips
+
 - **Start simple**: Use frontmatter for small docs. Switch to \`navigation.json\` as the structure grows.
 - **Keep slugs consistent**: \`slug\` must match the MDX filename (e.g., \`text.mdx\` -> \`text\`).
 - **Control titles**: Use \`title\` in \`navigation.json\` to customize sidebar labels without changing page frontmatter.

@@ -7,7 +7,9 @@ categoryOrder: 1
 order: 1
 section: "Platform"
 ---
+
 # Publishing Changes
+
 When you edit files in Doccupine, your changes are staged as pending. Nothing goes live until you explicitly publish.
 
 ## The publish workflow
@@ -19,6 +21,7 @@ When you edit files in Doccupine, your changes are staged as pending. Nothing go
 5. Click **Publish Changes**.
 
 Doccupine then:
+
 - Commits all pending changes to your GitHub repository
 - Triggers a new deployment
 - Clears all pending changes from the staging area
@@ -28,9 +31,11 @@ Doccupine then:
 </Callout>
 
 ## Discarding changes
+
 If you want to undo your pending edits, click **Discard All Changes** in the publish modal. This removes all staged changes without committing anything.
 
 ## File status badges
+
 In the publish modal, each file shows a badge indicating what changed:
 
 - **mod** - the file was modified
@@ -38,4 +43,5 @@ In the publish modal, each file shows a badge indicating what changed:
 - **bin** - the file is a binary asset (image, font, etc.)
 
 ## Auto-deploy from GitHub
+
 If you're using a user-connected GitHub repository and push changes directly (outside of Doccupine), the webhook triggers an automatic redeploy. This means you can use Doccupine's editor and Git-based workflows interchangeably.`;

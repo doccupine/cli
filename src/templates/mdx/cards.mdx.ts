@@ -6,19 +6,24 @@ category: "Components"
 categoryOrder: 1
 order: 6
 ---
+
 # Cards
+
 Duplicate a page or section with ease, then emphasize important information or links using customizable layouts and icons.
 
 Cards act as visual containers for your content, giving you flexibility to combine text, icons, images, and links in a clean and organized way.
 
 ## Cards Usage
+
 You can use the Cards component directly within your MDX files without any import. The following example shows a basic usage:
 
-~~~mdx
+\`\`\`mdx
 <Card title="Note" icon="badge-info">
-  Doccupine CLI is a command-line tool that helps you create and manage your Doccupine project. It provides a simple and intuitive interface for creating and configuring your project.
+  Doccupine CLI is a command-line tool that helps you create and manage your
+  Doccupine project. It provides a simple and intuitive interface for creating
+  and configuring your project.
 </Card>
-~~~
+\`\`\`
 
 <Card title="Note" icon="badge-info">
   Doccupine CLI is a command-line tool that helps you create and manage your Doccupine project. It provides a simple and intuitive interface for creating and configuring your project.
@@ -28,11 +33,11 @@ You can use the Cards component directly within your MDX files without any impor
 
 Pass a \`href\` prop to turn the card into a clickable link. The card will display interactive hover and focus styles automatically.
 
-~~~mdx
+\`\`\`mdx
 <Card title="Getting Started" icon="rocket" href="/cards">
   Learn how to set up Doccupine and create your first documentation site.
 </Card>
-~~~
+\`\`\`
 
 <Card title="Getting Started" icon="rocket" href="/cards">
   Learn how to set up Doccupine and create your first documentation site.
