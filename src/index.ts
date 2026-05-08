@@ -8,7 +8,6 @@ import { fileURLToPath } from "url";
 
 import matter from "gray-matter";
 import chalk from "chalk";
-import prettier from "prettier";
 
 import { appStructure, startingDocsStructure } from "./lib/structures.js";
 import { layoutTemplate } from "./lib/layout.js";
@@ -1465,24 +1464,6 @@ export default function Page() {
     await fs.writeFile(manifestPath, json, "utf8");
   }
 
-  private async formatMarkdown(
-    content: string,
-    targetPath: string,
-  ): Promise<string> {
-    try {
-      const config =
-        (await prettier.resolveConfig(targetPath)) ??
-        (await prettier.resolveConfig(this.outputDir)) ??
-        {};
-      return await prettier.format(content, {
-        ...config,
-        parser: "markdown",
-      });
-    } catch {
-      return content.endsWith("\n") ? content : content + "\n";
-    }
-  }
-
   async updateLlmsFiles() {
     const publicDir = path.join(this.outputDir, "public");
     await fs.ensureDir(publicDir);
@@ -1508,33 +1489,24 @@ export default function Page() {
       sectionsConfig: this.sectionsConfig,
     });
 
-    const indexPath = path.join(publicDir, "llms.txt");
-    const fullPath = path.join(publicDir, "llms-full.txt");
+    await fs.writeFile(path.join(publicDir, "llms.txt"), indexContent, "utf8");
     await fs.writeFile(
-      indexPath,
-      await this.formatMarkdown(indexContent, indexPath),
-      "utf8",
-    );
-    await fs.writeFile(
-      fullPath,
-      await this.formatMarkdown(fullContent, fullPath),
+      path.join(publicDir, "llms-full.txt"),
+      fullContent,
       "utf8",
     );
 
     const nextRelativePaths = new Set<string>();
-    for (const page of pagesWithBodies) {
-      if (page.slug === "") continue;
-      const relPath = `${page.slug}.md`;
-      const targetPath = path.join(publicDir, relPath);
-      await fs.ensureDir(path.dirname(targetPath));
-      const pageContent = llmsPageTemplate(page, baseUrl);
-      await fs.writeFile(
-        targetPath,
-        await this.formatMarkdown(pageContent, targetPath),
-        "utf8",
-      );
-      nextRelativePaths.add(relPath);
-    }
+    await Promise.all(
+      pagesWithBodies.map(async (page) => {
+        if (page.slug === "") return;
+        const relPath = `${page.slug}.md`;
+        const targetPath = path.join(publicDir, relPath);
+        await fs.ensureDir(path.dirname(targetPath));
+        await fs.writeFile(targetPath, llmsPageTemplate(page, baseUrl), "utf8");
+        nextRelativePaths.add(relPath);
+      }),
+    );
 
     const previousRelativePaths = new Set<string>([
       ...this.generatedLlmsPagePaths,
