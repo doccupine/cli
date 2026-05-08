@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.0.90
+
+- Emit `llms.txt`, `llms-full.txt`, and per-page markdown for LLM-friendly content discovery
+- Open external links in `Button` in a new tab by default
+- Use primary color for footer link hover state
+- Ship `pnpm-workspace.yaml` with the package and inherit install stdio so dependency installs stream output to the user
+- Migrate generated workspace to pnpm's `allowBuilds` for native dependencies
+- Make starter MDX templates Prettier-conformant and add a `.prettierignore` for generated files
+- Drop the deprecated `@types/chokidar` dependency
+- Update CLI runtime, dev dependencies, and generated app dependencies
+
 ## 0.0.89
 
 - Switch theming to CSS custom properties toggled by a `dark` class on `<html>`, removing runtime `theme.isDark` branching across components
