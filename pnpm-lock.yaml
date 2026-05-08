@@ -26,6 +26,9 @@ importers:
       next:
         specifier: ^16.2.6
         version: 16.2.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      prettier:
+        specifier: ^3.8.3
+        version: 3.8.3
       prompts:
         specifier: ^2.4.2
         version: 2.4.2
@@ -45,9 +48,6 @@ importers:
       '@types/prompts':
         specifier: ^2.4.9
         version: 2.4.9
-      prettier:
-        specifier: ^3.8.3
-        version: 3.8.3
       typescript:
         specifier: ^6.0.3
         version: 6.0.3

@@ -8,6 +8,7 @@ import { fileURLToPath } from "url";
 
 import matter from "gray-matter";
 import chalk from "chalk";
+import prettier from "prettier";
 
 import { appStructure, startingDocsStructure } from "./lib/structures.js";
 import { layoutTemplate } from "./lib/layout.js";
@@ -1460,7 +1461,26 @@ export default function Page() {
   private async writeLlmsManifest(pageFiles: Set<string>): Promise<void> {
     const manifestPath = this.llmsManifestPath();
     const payload = { pageFiles: Array.from(pageFiles).sort() };
-    await fs.writeFile(manifestPath, JSON.stringify(payload, null, 2), "utf8");
+    const json = JSON.stringify(payload, null, 2) + "\n";
+    await fs.writeFile(manifestPath, json, "utf8");
+  }
+
+  private async formatMarkdown(
+    content: string,
+    targetPath: string,
+  ): Promise<string> {
+    try {
+      const config =
+        (await prettier.resolveConfig(targetPath)) ??
+        (await prettier.resolveConfig(this.outputDir)) ??
+        {};
+      return await prettier.format(content, {
+        ...config,
+        parser: "markdown",
+      });
+    } catch {
+      return content.endsWith("\n") ? content : content + "\n";
+    }
   }
 
   async updateLlmsFiles() {
@@ -1488,10 +1508,16 @@ export default function Page() {
       sectionsConfig: this.sectionsConfig,
     });
 
-    await fs.writeFile(path.join(publicDir, "llms.txt"), indexContent, "utf8");
+    const indexPath = path.join(publicDir, "llms.txt");
+    const fullPath = path.join(publicDir, "llms-full.txt");
     await fs.writeFile(
-      path.join(publicDir, "llms-full.txt"),
-      fullContent,
+      indexPath,
+      await this.formatMarkdown(indexContent, indexPath),
+      "utf8",
+    );
+    await fs.writeFile(
+      fullPath,
+      await this.formatMarkdown(fullContent, fullPath),
       "utf8",
     );
 
@@ -1501,7 +1527,12 @@ export default function Page() {
       const relPath = `${page.slug}.md`;
       const targetPath = path.join(publicDir, relPath);
       await fs.ensureDir(path.dirname(targetPath));
-      await fs.writeFile(targetPath, llmsPageTemplate(page, baseUrl), "utf8");
+      const pageContent = llmsPageTemplate(page, baseUrl);
+      await fs.writeFile(
+        targetPath,
+        await this.formatMarkdown(pageContent, targetPath),
+        "utf8",
+      );
       nextRelativePaths.add(relPath);
     }
 
