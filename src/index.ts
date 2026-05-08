@@ -24,6 +24,7 @@ import {
   generateJsonLdScript,
 } from "./lib/metadata.js";
 import { nextConfigTemplate } from "./templates/next.config.js";
+import { pnpmWorkspaceTemplate } from "./templates/pnpmWorkspace.js";
 import { proxyTemplate } from "./templates/proxy.js";
 import { robotsTemplate } from "./templates/app/robots.js";
 import { sitemapTemplate, type SitemapEntry } from "./templates/app/sitemap.js";
@@ -132,6 +133,7 @@ class MDXToNextJSGenerator {
     const structure: Record<string, string | Promise<string>> = {
       ...appStructure,
       "next.config.ts": nextConfigTemplate(this.analyticsConfig),
+      "pnpm-workspace.yaml": pnpmWorkspaceTemplate,
       "proxy.ts": proxyTemplate(this.analyticsConfig),
       "analytics.json": `{}\n`,
       "config.json": `{}\n`,
@@ -1608,7 +1610,7 @@ program
 
     const install = spawn(packageManager, ["install"], {
       cwd: config.outputDir,
-      stdio: "pipe",
+      stdio: "inherit",
     });
 
     await new Promise((resolve, reject) => {
