@@ -42,11 +42,26 @@ doccupine config --reset    # Re-prompt for configuration
 
 ### Options
 
+`watch` (default):
+
 | Flag            | Description                                                          |
 | --------------- | -------------------------------------------------------------------- |
 | `--port <port>` | Port for the dev server (default: `3000`). Auto-increments if taken. |
 | `--verbose`     | Show all Next.js output including compilation details                |
 | `--reset`       | Re-prompt for watch/output directories                               |
+
+`build`:
+
+| Flag      | Description                            |
+| --------- | -------------------------------------- |
+| `--reset` | Re-prompt for watch/output directories |
+
+`config`:
+
+| Flag      | Description                              |
+| --------- | ---------------------------------------- |
+| `--show`  | Print the current configuration and exit |
+| `--reset` | Re-prompt for watch/output directories   |
 
 ## MDX Frontmatter
 
@@ -153,6 +168,20 @@ Doccupine generates `robots.ts` automatically for every site. When you set a `ur
 ```
 
 You can override the URL at deploy time by setting the `NEXT_PUBLIC_SITE_URL` environment variable. When no URL is configured (neither in `config.json` nor via env), the sitemap is skipped and `robots.txt` is emitted without a sitemap reference.
+
+## llms.txt
+
+Doccupine generates [llms.txt](https://llmstxt.org) artifacts so AI agents can discover and ingest your docs. On every regeneration, the following files are written to the generated app's `public/` directory:
+
+| File                  | Contents                                                                                       |
+| --------------------- | ---------------------------------------------------------------------------------------------- |
+| `llms.txt`            | Index of every page (title, description, URL), grouped by section and category                |
+| `llms-full.txt`       | Full-text bundle: every page's body concatenated for one-shot ingestion                        |
+| `public/<slug>.md`    | Per-page Markdown mirror of each MDX page, suitable for direct fetching at `/<slug>.md`        |
+
+The site name and description used in `llms.txt` come from `config.json` (`name`, `description`). Page URLs are absolute when `url` is set in `config.json` (or via `NEXT_PUBLIC_SITE_URL`), and root-relative otherwise.
+
+A `.doccupine-llms-manifest.json` file in the generated app tracks which per-page mirrors were emitted so renamed or deleted pages get cleaned up on the next regeneration. Don't commit this file — it's regenerated automatically.
 
 ## AI Chat Setup
 

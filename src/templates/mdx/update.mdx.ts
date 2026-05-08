@@ -25,7 +25,8 @@ You can include anything here—images, code snippets, or a bullet list of modif
 - Fully responsive layout
 - Individual anchor for each update
 - Automatic RSS feed entry generation
-  </Update>
+
+</Update>
 
 ## Update Usage
 
@@ -44,7 +45,8 @@ You can include anything here—images, code snippets, or a bullet list of modif
 - Fully responsive layout
 - Individual anchor for each update
 - Automatic RSS feed entry generation
-  </Update>
+
+</Update>
 \`\`\`
 
 ## Properties

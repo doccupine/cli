@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.91
+
+- Fix `</Update>` closing tag indentation in the update MDX template so it renders as a block element instead of being parsed as inline content
+
 ## 0.0.90
 
 - Emit `llms.txt`, `llms-full.txt`, and per-page markdown for LLM-friendly content discovery
