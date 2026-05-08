@@ -45,7 +45,6 @@
     "react-dom": "^19.2.5"
   },
   "devDependencies": {
-    "@types/chokidar": "^2.1.7",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^25.6.0",
     "@types/prompts": "^2.4.9",
