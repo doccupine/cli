@@ -46,11 +46,11 @@
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^25.6.2",
+    "@types/node": "^25.9.1",
     "@types/prompts": "^2.4.9",
     "prettier": "^3.8.3",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.7"
   },
   "files": [
     "dist/**/*"
