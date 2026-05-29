@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.92
+
+- Read the initial theme mode via a lazy `useState` initializer so generated sites apply the stored preference on first render instead of defaulting to light and correcting in an effect
+- Drop the `esbuild: false` entry from the generated workspace `allowBuilds`
+- Update CLI and generated app dependencies
+
 ## 0.0.91
 
 - Fix `</Update>` closing tag indentation in the update MDX template so it renders as a block element instead of being parsed as inline content
