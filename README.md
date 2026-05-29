@@ -173,11 +173,11 @@ You can override the URL at deploy time by setting the `NEXT_PUBLIC_SITE_URL` en
 
 Doccupine generates [llms.txt](https://llmstxt.org) artifacts so AI agents can discover and ingest your docs. On every regeneration, the following files are written to the generated app's `public/` directory:
 
-| File                  | Contents                                                                                       |
-| --------------------- | ---------------------------------------------------------------------------------------------- |
-| `llms.txt`            | Index of every page (title, description, URL), grouped by section and category                |
-| `llms-full.txt`       | Full-text bundle: every page's body concatenated for one-shot ingestion                        |
-| `public/<slug>.md`    | Per-page Markdown mirror of each MDX page, suitable for direct fetching at `/<slug>.md`        |
+| File               | Contents                                                                                |
+| ------------------ | --------------------------------------------------------------------------------------- |
+| `llms.txt`         | Index of every page (title, description, URL), grouped by section and category          |
+| `llms-full.txt`    | Full-text bundle: every page's body concatenated for one-shot ingestion                 |
+| `public/<slug>.md` | Per-page Markdown mirror of each MDX page, suitable for direct fetching at `/<slug>.md` |
 
 The site name and description used in `llms.txt` come from `config.json` (`name`, `description`). Page URLs are absolute when `url` is set in `config.json` (or via `NEXT_PUBLIC_SITE_URL`), and root-relative otherwise.
 
