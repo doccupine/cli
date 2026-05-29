@@ -41,12 +41,14 @@ function ClientThemeProvider({
   // Mode lives in React state so consumers (e.g. ThemeToggle) re-render when
   // the user toggles. The visual swap itself is driven entirely by the
   // "dark" class on <html> + CSS variables — React doesn't drive paint.
-  const [mode, setModeState] = useState<ThemeMode>("light");
+  // The lazy initializer reads the class set by the theme-init blocking
+  // script (SSR returns "light"); no rendered markup branches on mode, so
+  // reading the DOM during the hydration render can't cause a mismatch.
+  const [mode, setModeState] = useState<ThemeMode>(readMode);
 
   useEffect(() => {
-    // Sync with the class set by the theme-init blocking script. Also
-    // backfill the cookie if the script didn't get to write one (rare).
-    setModeState(readMode());
+    // Backfill the cookie if the theme-init script didn't get to write one
+    // (rare — e.g. cookies disabled at first paint).
     try {
       const has = document.cookie
         .split(";")
