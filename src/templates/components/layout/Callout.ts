@@ -166,7 +166,7 @@ function Callout({ children, type, icon }: CalloutProps) {
               : (icon as IconProps);
   return (
     <StyledCallout $type={type}>
-      <Icon name={iconType} size={16} />
+      {iconType ? <Icon name={iconType} size={16} /> : null}
       <StyledChildren>{children}</StyledChildren>
     </StyledCallout>
   );
