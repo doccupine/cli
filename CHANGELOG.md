@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.93
+
+- Guard the `Icon` component against a missing icon name so it returns `null` instead of attempting an invalid render, and only render the `Callout` icon when an icon type is resolved
+- Update CLI dev dependencies
+
 ## 0.0.92
 
 - Read the initial theme mode via a lazy `useState` initializer so generated sites apply the stored preference on first render instead of defaulting to light and correcting in an effect
