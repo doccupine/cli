@@ -12,4 +12,4 @@ minimumReleaseAgeExclude:
   - '@next/swc-win32-arm64-msvc@16.2.9'
   - '@next/swc-win32-x64-msvc@16.2.9'
   - next@16.2.9
-  - prettier@3.8.4
+  - prettier@3.8.4 || 3.9.3
