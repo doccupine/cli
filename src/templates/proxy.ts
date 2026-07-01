@@ -106,28 +106,46 @@ ${posthogCall}  const pathname = req.nextUrl.pathname;
     }
   }
 
-  // SITE_PASSWORD gate for the content APIs (RAG chat + search). Without a
-  // valid gate cookie these return 401 so the docs can't be scraped around
-  // the login screen. /api/mcp keeps its own key auth above; /api/gate and
-  // /api/theme stay open so the gate can unlock and the theme can toggle.
-  if (
-    sitePassword &&
-    (pathname.startsWith("/api/rag") || pathname.startsWith("/api/search"))
-  ) {
+  // SITE_PASSWORD gate. Enforced here in the middleware (not the layout) so it
+  // works even though the doc pages render statically: pages can't read the
+  // request cookie, but the middleware always can. Skip Next internals so the
+  // gate screen's own assets keep loading.
+  if (sitePassword && !pathname.startsWith("/_next")) {
     const unlocked = await isGateUnlocked(
       req.cookies.get(GATE_COOKIE_NAME)?.value,
       sitePassword,
     );
-    if (!unlocked) {
+
+    // Content APIs (RAG chat + search) return 401 without a valid cookie so the
+    // docs can't be scraped around the login screen. /api/mcp keeps its own key
+    // auth above; /api/gate and /api/theme stay open so the gate can unlock and
+    // the theme can toggle.
+    if (
+      !unlocked &&
+      (pathname.startsWith("/api/rag") || pathname.startsWith("/api/search"))
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Locked visitors see the gate screen. Rewrite (not redirect) so the URL is
+    // preserved — after unlocking, a reload lands them back on the page they
+    // asked for. API routes are never rewritten to HTML.
+    if (!unlocked && !pathname.startsWith("/api") && pathname !== "/gate") {
+      const res = NextResponse.rewrite(new URL("/gate", req.url));
+      res.headers.set("X-Robots-Tag", "noindex, nofollow");
+      return res;
+    }
+
+    // Unlocked visitors never need the gate screen.
+    if (unlocked && pathname === "/gate") {
+      return NextResponse.redirect(new URL("/", req.url));
     }
   }
 
   const res = NextResponse.next();
 
   // While password protection is active, keep the whole site out of search
-  // indexes as a header-level backstop to the noindex meta (root layout) and
-  // the disallow rule in robots.txt.
+  // indexes as a header-level backstop to robots.txt's disallow rule.
   if (sitePassword) {
     res.headers.set("X-Robots-Tag", "noindex, nofollow");
   }

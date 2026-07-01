@@ -10,7 +10,7 @@ import matter from "gray-matter";
 import chalk from "chalk";
 
 import { appStructure, startingDocsStructure } from "./lib/structures.js";
-import { layoutTemplate } from "./lib/layout.js";
+import { rootLayoutTemplate, siteLayoutTemplate } from "./lib/layout.js";
 import { ConfigManager } from "./lib/config-manager.js";
 import {
   findAvailablePort,
@@ -143,6 +143,7 @@ class MDXToNextJSGenerator {
       "theme.json": `{}\n`,
       "app/robots.ts": robotsTemplate(siteUrl !== null),
       "app/layout.tsx": this.generateRootLayout(),
+      "app/(site)/layout.tsx": this.generateSiteLayout(),
     };
 
     for (const [filePath, content] of Object.entries(structure)) {
@@ -961,7 +962,7 @@ class MDXToNextJSGenerator {
           {},
         );
         const fullSlug = getFullSlug(pageSlug, sectionSlug);
-        const pagePath = path.join(this.outputDir, "app", fullSlug);
+        const pagePath = path.join(this.outputDir, "app", "(site)", fullSlug);
         await fs.remove(pagePath);
       }
 
@@ -1012,15 +1013,14 @@ class MDXToNextJSGenerator {
   }
 
   async generateRootLayout(): Promise<string> {
-    const pages = await this.buildAllPagesMeta();
     const fontConfig = await this.loadFontConfig();
     const analyticsEnabled = this.analyticsConfig !== null;
-    return layoutTemplate(
-      pages,
-      fontConfig,
-      this.sectionsConfig,
-      analyticsEnabled,
-    );
+    return rootLayoutTemplate(fontConfig, analyticsEnabled);
+  }
+
+  async generateSiteLayout(): Promise<string> {
+    const pages = await this.buildAllPagesMeta();
+    return siteLayoutTemplate(pages, this.sectionsConfig);
   }
 
   async generateSectionIndexPages() {
@@ -1057,6 +1057,7 @@ export default function SectionIndex() {
       const pagePath = path.join(
         this.outputDir,
         "app",
+        "(site)",
         section.slug,
         "page.tsx",
       );
@@ -1125,7 +1126,13 @@ export default function Page() {
 }
 `;
 
-    const pagePath = path.join(this.outputDir, "app", mdxFile.slug, "page.tsx");
+    const pagePath = path.join(
+      this.outputDir,
+      "app",
+      "(site)",
+      mdxFile.slug,
+      "page.tsx",
+    );
     await fs.ensureDir(path.dirname(pagePath));
     await fs.writeFile(pagePath, pageContent, "utf8");
   }
@@ -1213,11 +1220,9 @@ export default function Home() {
 }
 `;
 
-    await fs.writeFile(
-      path.join(this.outputDir, "app", "page.tsx"),
-      indexContent,
-      "utf8",
-    );
+    const homePath = path.join(this.outputDir, "app", "(site)", "page.tsx");
+    await fs.ensureDir(path.dirname(homePath));
+    await fs.writeFile(homePath, indexContent, "utf8");
   }
 
   async updateSectionIndex(
@@ -1274,18 +1279,31 @@ export default function Page() {
 }
 `;
 
-    const pagePath = path.join(this.outputDir, "app", sectionSlug, "page.tsx");
+    const pagePath = path.join(
+      this.outputDir,
+      "app",
+      "(site)",
+      sectionSlug,
+      "page.tsx",
+    );
     await fs.ensureDir(path.dirname(pagePath));
     await fs.writeFile(pagePath, indexContent, "utf8");
   }
 
   async updateRootLayout() {
-    const layoutContent = await this.generateRootLayout();
     await fs.writeFile(
       path.join(this.outputDir, "app", "layout.tsx"),
-      layoutContent,
+      await this.generateRootLayout(),
       "utf8",
     );
+    const siteLayoutPath = path.join(
+      this.outputDir,
+      "app",
+      "(site)",
+      "layout.tsx",
+    );
+    await fs.ensureDir(path.dirname(siteLayoutPath));
+    await fs.writeFile(siteLayoutPath, await this.generateSiteLayout(), "utf8");
   }
 
   async loadSiteUrl(): Promise<string | null> {

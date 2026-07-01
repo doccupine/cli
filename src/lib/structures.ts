@@ -6,6 +6,7 @@ import { prettierrcTemplate } from "../templates/prettierrc.js";
 import { prettierignoreTemplate } from "../templates/prettierignore.js";
 import { tsconfigTemplate } from "../templates/tsconfig.js";
 
+import { gatePageTemplate } from "../templates/app/gate/page.js";
 import { gateRoutesTemplate } from "../templates/app/api/gate/route.js";
 import { mcpRoutesTemplate } from "../templates/app/api/mcp/route.js";
 import { ragRoutesTemplate } from "../templates/app/api/rag/route.js";
@@ -134,7 +135,8 @@ export const appStructure: Record<string, string> = {
   "package.json": packageJsonTemplate,
   "tsconfig.json": tsconfigTemplate,
 
-  "app/not-found.tsx": notFoundTemplate,
+  "app/(site)/not-found.tsx": notFoundTemplate,
+  "app/gate/page.tsx": gatePageTemplate,
   "app/theme.ts": themeTemplate,
   "app/api/gate/route.ts": gateRoutesTemplate,
   "app/api/mcp/route.ts": mcpRoutesTemplate,
