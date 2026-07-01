@@ -3,6 +3,16 @@ export const robotsTemplate = (hasSiteUrl: boolean): string => {
     return `import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
+  // When the site is password protected, keep every crawler out entirely.
+  if (process.env.SITE_PASSWORD) {
+    return {
+      rules: {
+        userAgent: "*",
+        disallow: "/",
+      },
+    };
+  }
+
   return {
     rules: {
       userAgent: "*",
@@ -23,6 +33,17 @@ function resolveBaseUrl(): string | null {
 }
 
 export default function robots(): MetadataRoute.Robots {
+  // When the site is password protected, keep every crawler out entirely and
+  // don't advertise the sitemap.
+  if (process.env.SITE_PASSWORD) {
+    return {
+      rules: {
+        userAgent: "*",
+        disallow: "/",
+      },
+    };
+  }
+
   const base = resolveBaseUrl();
   const rules: MetadataRoute.Robots = {
     rules: {

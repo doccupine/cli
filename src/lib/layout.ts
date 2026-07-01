@@ -95,9 +95,12 @@ ${a}            >`
   return `import type { Metadata } from "next";
 ${isGoogleFont(fontConfig) ? `import { ${fontConfig.googleFont.fontName} } from "next/font/google";` : isLocalFont(fontConfig) ? 'import localFont from "next/font/local";' : 'import { Inter } from "next/font/google";'}
 import dynamic from "next/dynamic";
+import { cookies } from "next/headers";
 import { StyledComponentsRegistry } from "cherry-styled-components";
 import { theme } from "@/app/theme";
 import { CherryThemeProvider } from "@/components/layout/CherryThemeProvider";
+import { SiteGate } from "@/components/layout/SiteGate";
+import { GATE_COOKIE_NAME, isGateUnlocked } from "@/lib/siteGate";
 import { ChtProvider } from "@/components/Chat";
 import { SearchProvider } from "@/components/SearchDocs";
 ${
@@ -182,6 +185,16 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const hideBranding = verifyBrandingKey();
+
+  // Password gate: when SITE_PASSWORD is set and the request has no valid gate
+  // cookie, render only the SiteGate login screen instead of the docs.
+  const gatePassword = process.env.SITE_PASSWORD;
+  const locked =
+    !!gatePassword &&
+    !(await isGateUnlocked(
+      (await cookies()).get(GATE_COOKIE_NAME)?.value,
+      gatePassword,
+    ));
 ${
   hasSections
     ? `
@@ -190,6 +203,7 @@ ${
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {locked && <meta name="robots" content="noindex, nofollow" />}
         {/* Resolves dark mode before first paint by adding the "dark" class
             to <html> when needed. CSS variables in GlobalStyles flip values
             on :root vs :root.dark, so the right palette renders without a
@@ -208,6 +222,9 @@ ${
       <body className={font.className}>
         <StyledComponentsRegistry>
 ${analyticsEnabled ? "          <PostHogProvider>\n" : ""}${a}          <CherryThemeProvider theme={theme}>
+${a}            {locked ? (
+${a}              <SiteGate />
+${a}            ) : (
 ${a}            ${chtOpen}
 ${a}              <SearchProvider pages={pages} sections={doccupineSections}>
 ${a}                <Header>
@@ -225,6 +242,7 @@ ${a}                  </SectionNavProvider>
 ${a}                </DocsWrapper>
 ${a}              </SearchProvider>
 ${a}            </ChtProvider>
+${a}            )}
 ${a}          </CherryThemeProvider>
 ${analyticsEnabled ? "          </PostHogProvider>\n" : ""}        </StyledComponentsRegistry>
       </body>
@@ -255,6 +273,7 @@ ${analyticsEnabled ? "          </PostHogProvider>\n" : ""}        </StyledCompo
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {locked && <meta name="robots" content="noindex, nofollow" />}
         {/* Resolves dark mode before first paint by adding the "dark" class
             to <html> when needed. CSS variables in GlobalStyles flip values
             on :root vs :root.dark, so the right palette renders without a
@@ -273,6 +292,9 @@ ${analyticsEnabled ? "          </PostHogProvider>\n" : ""}        </StyledCompo
       <body className={font.className}>
         <StyledComponentsRegistry>
 ${analyticsEnabled ? "          <PostHogProvider>\n" : ""}${a}          <CherryThemeProvider theme={theme}>
+${a}            {locked ? (
+${a}              <SiteGate />
+${a}            ) : (
 ${a}            ${chtOpen}
 ${a}              <SearchProvider pages={pages}>
 ${a}                <Header />
@@ -290,6 +312,7 @@ ${a}                  </DocsWrapper>
 ${a}                </SectionBarProvider>
 ${a}              </SearchProvider>
 ${a}            </ChtProvider>
+${a}            )}
 ${a}          </CherryThemeProvider>
 ${analyticsEnabled ? "          </PostHogProvider>\n" : ""}        </StyledComponentsRegistry>
       </body>
