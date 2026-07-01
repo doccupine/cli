@@ -1,5 +1,6 @@
 export const gatePageTemplate = `import type { Metadata } from "next";
 import { SiteGate } from "@/components/layout/SiteGate";
+import { verifyBrandingKey } from "@/utils/branding";
 
 // The gate screen is never indexed. The middleware also sets X-Robots-Tag and
 // robots.txt disallows everything while SITE_PASSWORD is active.
@@ -14,6 +15,7 @@ export const dynamic = "force-static";
 export const revalidate = false;
 
 export default function GatePage() {
-  return <SiteGate />;
+  const hideBranding = verifyBrandingKey();
+  return <SiteGate hideBranding={hideBranding} />;
 }
 `;

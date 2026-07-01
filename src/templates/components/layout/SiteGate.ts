@@ -1,11 +1,15 @@
 export const siteGateComponentTemplate = `"use client";
-import { useState, type FormEvent } from "react";
+import { Suspense, useState, type FormEvent } from "react";
 import styled from "styled-components";
 import { Input } from "cherry-styled-components";
 import { Lock } from "lucide-react";
 import { Theme } from "@/app/theme";
 import { Button } from "@/components/layout/Button";
 import { Callout } from "@/components/layout/Callout";
+import {
+  ToggleTheme,
+  ToggleThemeLoading,
+} from "@/components/layout/ThemeToggle";
 import { config } from "@/utils/config";
 
 const StyledWrapper = styled.div<{ theme: Theme }>\`
@@ -17,18 +21,50 @@ const StyledWrapper = styled.div<{ theme: Theme }>\`
   background: \${({ theme }) => theme.colors.light};
 \`;
 
-const StyledCard = styled.div<{ theme: Theme }>\`
+const StyledInner = styled.div\`
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 20px;
   width: 100%;
   max-width: 380px;
+\`;
+
+const StyledFooter = styled.div\`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+\`;
+
+const StyledBranding = styled.p<{ theme: Theme }>\`
+  margin: 0;
+  font-size: 14px;
+  color: \${({ theme }) => theme.colors.grayDark};
+
+  & a {
+    color: \${({ theme }) => theme.colors.accent};
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+
+  & a:hover {
+    color: \${({ theme }) => theme.colors.primary};
+  }
+\`;
+
+const StyledCard = styled.div<{ theme: Theme }>\`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
   padding: 40px 32px;
   background: \${({ theme }) => theme.colors.light};
   border: solid 1px \${({ theme }) => theme.colors.grayLight};
   border-radius: \${({ theme }) => theme.spacing.radius.lg};
-  box-shadow: \${({ theme }) => theme.shadows.lg};
+  box-shadow: \${({ theme }) => theme.shadows.sm};
   text-align: center;
 \`;
 
@@ -72,7 +108,7 @@ const StyledAlert = styled.div\`
   text-align: left;
 \`;
 
-export function SiteGate() {
+export function SiteGate({ hideBranding }: { hideBranding?: boolean }) {
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
 
@@ -99,44 +135,56 @@ export function SiteGate() {
 
   return (
     <StyledWrapper>
-      <StyledCard>
-        <StyledIcon>
-          <Lock />
-        </StyledIcon>
-        <StyledTitle>{config.name || "Documentation"}</StyledTitle>
-        <StyledLede>This site is password protected.</StyledLede>
-        <StyledForm onSubmit={handleSubmit} noValidate>
-          <Input
-            type="password"
-            name="password"
-            autoComplete="current-password"
-            placeholder="Enter password"
-            aria-label="Password"
-            autoFocus
-            value={password}
-            $error={status === "error"}
-            $fullWidth
-            onChange={(e) => {
-              setPassword(e.target.value);
-              if (status === "error") setStatus("idle");
-            }}
-          />
-          <Button
-            type="submit"
-            fullWidth
-            disabled={status === "loading" || !password}
-          >
-            {status === "loading" ? "Unlocking..." : "Enter"}
-          </Button>
-        </StyledForm>
-        {status === "error" && (
-          <StyledAlert>
-            <Callout type="danger">
-              <p>Incorrect password. Try again.</p>
-            </Callout>
-          </StyledAlert>
-        )}
-      </StyledCard>
+      <StyledInner>
+        <StyledCard>
+          <StyledIcon>
+            <Lock />
+          </StyledIcon>
+          <StyledTitle>{config.name || "Documentation"}</StyledTitle>
+          <StyledLede>This site is password protected.</StyledLede>
+          <StyledForm onSubmit={handleSubmit} noValidate>
+            <Input
+              type="password"
+              name="password"
+              autoComplete="current-password"
+              placeholder="Enter password"
+              aria-label="Password"
+              autoFocus
+              value={password}
+              $error={status === "error"}
+              $fullWidth
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (status === "error") setStatus("idle");
+              }}
+            />
+            <Button
+              type="submit"
+              fullWidth
+              disabled={status === "loading" || !password}
+            >
+              {status === "loading" ? "Unlocking..." : "Enter"}
+            </Button>
+          </StyledForm>
+          {status === "error" && (
+            <StyledAlert>
+              <Callout type="danger">
+                <p>Incorrect password. Try again.</p>
+              </Callout>
+            </StyledAlert>
+          )}
+        </StyledCard>
+        <StyledFooter>
+          <Suspense fallback={<ToggleThemeLoading />}>
+            <ToggleTheme />
+          </Suspense>
+          {!hideBranding && (
+            <StyledBranding>
+              Powered by <a href="https://doccupine.com">Doccupine</a>
+            </StyledBranding>
+          )}
+        </StyledFooter>
+      </StyledInner>
     </StyledWrapper>
   );
 }
