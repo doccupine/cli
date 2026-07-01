@@ -128,6 +128,14 @@ class MDXToNextJSGenerator {
   }
 
   async createNextJSStructure() {
+    // Clear the generated app/ directory first so a fresh run never inherits
+    // stale routes from a previous version (e.g. pages left at their old paths
+    // after a route-group move would collide with the newly generated ones).
+    // Everything under app/ is regenerated below and by processAllMDXFiles /
+    // generateSectionIndexPages, so nothing here is user-authored. Config JSONs
+    // and other generated dirs live outside app/ and are untouched.
+    await fs.remove(path.join(this.outputDir, "app"));
+
     const siteUrl = await this.loadSiteUrl();
 
     const structure: Record<string, string | Promise<string>> = {
