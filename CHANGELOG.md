@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.0.94
+
+- Add optional password protection: set `SITE_PASSWORD` to gate the whole generated site behind a shared-password login screen, with a theme toggle and hideable "Powered by Doccupine" branding below the login box
+- Return `401` from the chat (`/api/rag`) and search (`/api/search`) APIs while locked so the docs can't be scraped around the login, keeping the MCP endpoint on its own `DOCS_API_KEY` auth
+- Hide password-protected sites from search engines via a `robots.txt` disallow rule, a `noindex, nofollow` tag, and an `X-Robots-Tag` header
+- Enforce the gate in middleware with a URL-transparent `(site)` route-group layout so documentation pages stay statically rendered
+- Add an Authentication documentation page describing the feature
+- Clear the generated `app/` directory on start so upgrades never leave stale, conflicting routes behind
+- Fix disabled buttons crashing by passing the `$error` argument to Cherry's `buttonStyles`
+- Emit Prettier-formatted output from the layout, button, and sitemap templates so generated sites no longer produce formatting-only diffs
+- Disable pnpm's minimum-release-age supply-chain gate in the generated workspace and the CLI repo
+
 ## 0.0.93
 
 - Guard the `Icon` component against a missing icon name so it returns `null` instead of attempting an invalid render, and only render the `Callout` icon when an icon type is resolved

@@ -14,6 +14,7 @@
 - **MCP server** - exposes `search_docs`, `get_doc`, and `list_docs` tools for AI agents
 - **Custom fonts** - Google Fonts or local fonts via `fonts.json`
 - **Static assets** - `public/` directory is watched and synced to the generated app
+- **Password protection** - gate the whole site behind a shared password with `SITE_PASSWORD`
 - **Zero config to start** - `npx doccupine` scaffolds everything and starts the server
 
 ## Quick Start
@@ -225,6 +226,24 @@ The generated app exposes an MCP endpoint at `/api/mcp` with three tools:
 - `list_docs` - list all available documents
 
 This lets AI agents (Claude, ChatGPT, etc.) query your docs programmatically. Requires the AI chat setup above for embeddings.
+
+## Password Protection
+
+Gate your entire documentation site behind a shared password by setting `SITE_PASSWORD` in the generated app's environment - add it to `.env` for local development, or your host's environment variables in production:
+
+```env
+SITE_PASSWORD=choose-a-strong-shared-password
+```
+
+When set, every visitor sees a login screen until they enter the password. Protection is enforced across three layers:
+
+- **Pages** are gated behind the login screen.
+- **Content APIs** (`/api/rag` chat and `/api/search`) return `401` without a valid session, so the docs can't be scraped around the login.
+- **Search engines and crawlers** are blocked: `robots.txt` disallows everything, pages carry a `noindex, nofollow` tag, and responses include an `X-Robots-Tag` header.
+
+A successful login sets a signed, `httpOnly` cookie that lasts 30 days. The cookie stores an HMAC of the password, never the password itself. Leave `SITE_PASSWORD` unset (the default) to keep the site fully public. Documentation pages stay statically rendered either way - the gate is enforced in middleware.
+
+> **Note:** The [MCP endpoint](#mcp-server) uses its own `DOCS_API_KEY` bearer token and is not affected by `SITE_PASSWORD`.
 
 ## License
 
