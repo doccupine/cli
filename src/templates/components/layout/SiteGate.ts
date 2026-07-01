@@ -1,8 +1,11 @@
 export const siteGateComponentTemplate = `"use client";
 import { useState, type FormEvent } from "react";
 import styled from "styled-components";
+import { Input } from "cherry-styled-components";
 import { Lock } from "lucide-react";
 import { Theme } from "@/app/theme";
+import { Button } from "@/components/layout/Button";
+import { Callout } from "@/components/layout/Callout";
 import { config } from "@/utils/config";
 
 const StyledWrapper = styled.div<{ theme: Theme }>\`
@@ -11,13 +14,18 @@ const StyledWrapper = styled.div<{ theme: Theme }>\`
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: \${({ theme }) => theme.colors.surface};
+  background: \${({ theme }) => theme.colors.light};
 \`;
 
 const StyledCard = styled.div<{ theme: Theme }>\`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
   width: 100%;
   max-width: 380px;
   padding: 40px 32px;
+  background: \${({ theme }) => theme.colors.light};
   border: solid 1px \${({ theme }) => theme.colors.grayLight};
   border-radius: \${({ theme }) => theme.spacing.radius.lg};
   box-shadow: \${({ theme }) => theme.shadows.lg};
@@ -30,7 +38,6 @@ const StyledIcon = styled.div<{ theme: Theme }>\`
   justify-content: center;
   width: 48px;
   height: 48px;
-  margin-bottom: 20px;
   border-radius: 50%;
   color: \${({ theme }) => theme.colors.accent};
   background: \${({ theme }) => theme.colors.grayLight};
@@ -42,13 +49,13 @@ const StyledIcon = styled.div<{ theme: Theme }>\`
 \`;
 
 const StyledTitle = styled.h1<{ theme: Theme }>\`
-  margin: 0 0 8px;
+  margin: 0;
   font-size: 22px;
   color: \${({ theme }) => theme.colors.accent};
 \`;
 
 const StyledLede = styled.p<{ theme: Theme }>\`
-  margin: 0 0 24px;
+  margin: 0;
   font-size: 15px;
   color: \${({ theme }) => theme.colors.grayDark};
 \`;
@@ -56,54 +63,13 @@ const StyledLede = styled.p<{ theme: Theme }>\`
 const StyledForm = styled.form\`
   display: flex;
   flex-direction: column;
-  gap: 12px;
-\`;
-
-const StyledInput = styled.input<{ theme: Theme; $error: boolean }>\`
+  gap: 20px;
   width: 100%;
-  padding: 12px 14px;
-  font-size: 16px;
-  color: \${({ theme }) => theme.colors.accent};
-  background: \${({ theme }) => theme.colors.surface};
-  border: solid 1px
-    \${({ theme, $error }) =>
-      $error ? theme.colors.error : theme.colors.grayLight};
-  border-radius: \${({ theme }) => theme.spacing.radius.xs};
-  outline: none;
-  transition: border-color 0.2s ease;
-
-  &:focus {
-    border-color: \${({ theme, $error }) =>
-      $error ? theme.colors.error : theme.colors.accent};
-  }
 \`;
 
-const StyledButton = styled.button<{ theme: Theme }>\`
+const StyledAlert = styled.div\`
   width: 100%;
-  padding: 12px 14px;
-  font-size: 16px;
-  font-weight: 700;
-  color: \${({ theme }) => theme.colors.surface};
-  background: \${({ theme }) => theme.colors.accent};
-  border: none;
-  border-radius: \${({ theme }) => theme.spacing.radius.xs};
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-
-  &:hover {
-    opacity: 0.9;
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-\`;
-
-const StyledError = styled.p<{ theme: Theme }>\`
-  margin: 4px 0 0;
-  font-size: 13px;
-  color: \${({ theme }) => theme.colors.error};
+  text-align: left;
 \`;
 
 export function SiteGate() {
@@ -140,7 +106,7 @@ export function SiteGate() {
         <StyledTitle>{config.name || "Documentation"}</StyledTitle>
         <StyledLede>This site is password protected.</StyledLede>
         <StyledForm onSubmit={handleSubmit} noValidate>
-          <StyledInput
+          <Input
             type="password"
             name="password"
             autoComplete="current-password"
@@ -149,20 +115,26 @@ export function SiteGate() {
             autoFocus
             value={password}
             $error={status === "error"}
+            $fullWidth
             onChange={(e) => {
               setPassword(e.target.value);
               if (status === "error") setStatus("idle");
             }}
           />
-          <StyledButton
+          <Button
             type="submit"
+            fullWidth
             disabled={status === "loading" || !password}
           >
             {status === "loading" ? "Unlocking..." : "Enter"}
-          </StyledButton>
+          </Button>
         </StyledForm>
         {status === "error" && (
-          <StyledError>Incorrect password. Try again.</StyledError>
+          <StyledAlert>
+            <Callout type="danger">
+              <p>Incorrect password. Try again.</p>
+            </Callout>
+          </StyledAlert>
         )}
       </StyledCard>
     </StyledWrapper>
