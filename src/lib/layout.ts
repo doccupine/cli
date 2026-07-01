@@ -184,10 +184,14 @@ export default function RootLayout({
       </head>
       <body className={font.className}>
         <StyledComponentsRegistry>
-${analyticsEnabled ? "          <PostHogProvider>\n" : ""}          <CherryThemeProvider theme={theme}>
-            {children}
-          </CherryThemeProvider>
-${analyticsEnabled ? "          </PostHogProvider>\n" : ""}        </StyledComponentsRegistry>
+${
+  analyticsEnabled
+    ? `          <PostHogProvider>
+            <CherryThemeProvider theme={theme}>{children}</CherryThemeProvider>
+          </PostHogProvider>`
+    : `          <CherryThemeProvider theme={theme}>{children}</CherryThemeProvider>`
+}
+        </StyledComponentsRegistry>
       </body>
     </html>
   );
@@ -311,9 +315,7 @@ ${
           <DocsWrapper>
             <SideBar result={result.length ? result : defaultResults} />
             {children}
-            <DocsNavigation
-              result={result.length ? result : defaultResults}
-            />
+            <DocsNavigation result={result.length ? result : defaultResults} />
             <StaticLinks />
             <Footer hideBranding={hideBranding} />
           </DocsWrapper>
