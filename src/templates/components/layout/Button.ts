@@ -26,8 +26,16 @@ interface LinkButtonProps extends ButtonProps {
 // the fallback resolves to --color-light (black in dark mode). Re-pin to \`surface\`,
 // which resolves to white in both modes, for the filled, non-disabled case.
 const StyledLinkButton = styled(Link)<LinkButtonProps>\`
-  \${({ theme, $variant, $size, $outline, $fullWidth, disabled }) =>
-    buttonStyles(theme, $variant, $size, $outline, $fullWidth, disabled)}
+  \${({ theme, $variant, $size, $outline, $fullWidth, $error, disabled }) =>
+    buttonStyles(
+      theme,
+      $variant,
+      $size,
+      $outline,
+      $fullWidth,
+      $error,
+      disabled,
+    )}
 
   \${({ theme, $outline, disabled }) =>
     !disabled && !$outline && \`color: \${theme.colors.surface};\`}
@@ -44,8 +52,16 @@ const StyledLinkButton = styled(Link)<LinkButtonProps>\`
 \`;
 
 const ButtonBase = styled.button<ButtonProps>\`
-  \${({ theme, $variant, $size, $outline, $fullWidth, disabled }) =>
-    buttonStyles(theme, $variant, $size, $outline, $fullWidth, disabled)}
+  \${({ theme, $variant, $size, $outline, $fullWidth, $error, disabled }) =>
+    buttonStyles(
+      theme,
+      $variant,
+      $size,
+      $outline,
+      $fullWidth,
+      $error,
+      disabled,
+    )}
 
   \${({ theme, $outline, disabled }) =>
     !disabled && !$outline && \`color: \${theme.colors.surface};\`}

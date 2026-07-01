@@ -27,13 +27,7 @@ export const sitemapTemplate = (entries: SitemapEntry[]): string => {
 import { config } from "@/utils/config";
 
 type ChangeFrequency =
-  | "always"
-  | "hourly"
-  | "daily"
-  | "weekly"
-  | "monthly"
-  | "yearly"
-  | "never";
+  "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
 
 interface Entry {
   slug: string;

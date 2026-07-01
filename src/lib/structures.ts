@@ -6,6 +6,8 @@ import { prettierrcTemplate } from "../templates/prettierrc.js";
 import { prettierignoreTemplate } from "../templates/prettierignore.js";
 import { tsconfigTemplate } from "../templates/tsconfig.js";
 
+import { gatePageTemplate } from "../templates/app/gate/page.js";
+import { gateRoutesTemplate } from "../templates/app/api/gate/route.js";
 import { mcpRoutesTemplate } from "../templates/app/api/mcp/route.js";
 import { ragRoutesTemplate } from "../templates/app/api/rag/route.js";
 import { searchRoutesTemplate } from "../templates/app/api/search/route.js";
@@ -48,6 +50,7 @@ import { headerTemplate } from "../templates/components/layout/Header.js";
 import { iconTemplate } from "../templates/components/layout/Icon.js";
 import { pictogramsTemplate } from "../templates/components/layout/Pictograms.js";
 import { sharedStyledTemplate } from "../templates/components/layout/SharedStyles.js";
+import { siteGateComponentTemplate } from "../templates/components/layout/SiteGate.js";
 import { staticLinksTemplate } from "../templates/components/layout/StaticLinks.js";
 import { stepsTemplate } from "../templates/components/layout/Steps.js";
 import { tabsTemplate } from "../templates/components/layout/Tabs.js";
@@ -66,6 +69,7 @@ import { llmIndexTemplate } from "../templates/services/llm/index.js";
 import { llmTypesTemplate } from "../templates/services/llm/types.js";
 
 import { posthogServerTemplate } from "../templates/lib/posthog.js";
+import { siteGateTemplate } from "../templates/lib/siteGate.js";
 
 import { styledDTemplate } from "../templates/types/styled.js";
 
@@ -77,6 +81,7 @@ import { configTemplate } from "../templates/utils/config.js";
 import { accordionMdxTemplate } from "../templates/mdx/accordion.mdx.js";
 import { aiAssistantMdxTemplate } from "../templates/mdx/ai-assistant.mdx.js";
 import { analyticsMdxTemplate } from "../templates/mdx/analytics.mdx.js";
+import { authenticationMdxTemplate } from "../templates/mdx/authentication.mdx.js";
 import { buttonsMdxTemplate } from "../templates/mdx/buttons.mdx.js";
 import { calloutsMdxTemplate } from "../templates/mdx/callouts.mdx.js";
 import { cardsMdxTemplate } from "../templates/mdx/cards.mdx.js";
@@ -130,8 +135,10 @@ export const appStructure: Record<string, string> = {
   "package.json": packageJsonTemplate,
   "tsconfig.json": tsconfigTemplate,
 
-  "app/not-found.tsx": notFoundTemplate,
+  "app/(site)/not-found.tsx": notFoundTemplate,
+  "app/gate/page.tsx": gatePageTemplate,
   "app/theme.ts": themeTemplate,
+  "app/api/gate/route.ts": gateRoutesTemplate,
   "app/api/mcp/route.ts": mcpRoutesTemplate,
   "app/api/rag/route.ts": ragRoutesTemplate,
   "app/api/search/route.ts": searchRoutesTemplate,
@@ -150,6 +157,7 @@ export const appStructure: Record<string, string> = {
   "types/styled.d.ts": styledDTemplate,
 
   "lib/posthog.ts": posthogServerTemplate,
+  "lib/siteGate.ts": siteGateTemplate,
 
   "utils/branding.ts": brandingTemplate,
   "utils/orderNavItems.ts": orderNavItemsTemplate,
@@ -191,6 +199,7 @@ export const appStructure: Record<string, string> = {
   "components/layout/Icon.tsx": iconTemplate,
   "components/layout/Pictograms.tsx": pictogramsTemplate,
   "components/layout/SharedStyled.ts": sharedStyledTemplate,
+  "components/layout/SiteGate.tsx": siteGateComponentTemplate,
   "components/layout/StaticLinks.tsx": staticLinksTemplate,
   "components/layout/Steps.tsx": stepsTemplate,
   "components/layout/Tabs.tsx": tabsTemplate,
@@ -203,6 +212,7 @@ export const startingDocsStructure: Record<string, string> = {
   "accordion.mdx": accordionMdxTemplate,
   "ai-assistant.mdx": aiAssistantMdxTemplate,
   "analytics.mdx": analyticsMdxTemplate,
+  "authentication.mdx": authenticationMdxTemplate,
   "buttons.mdx": buttonsMdxTemplate,
   "callouts.mdx": calloutsMdxTemplate,
   "cards.mdx": cardsMdxTemplate,

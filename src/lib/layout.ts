@@ -76,77 +76,62 @@ function getLocalFontSrc(fc: FontConfig): string {
   );
 }
 
-export const layoutTemplate = (
-  pages: PageData[],
-  fontConfig: FontConfig | null,
-  sectionsConfig: SectionConfig[] | null = null,
-  analyticsEnabled: boolean = false,
-): string => {
-  const hasSections = sectionsConfig !== null && sectionsConfig.length > 0;
-  // Extra indent when PostHogProvider wraps the inner content
-  const a = analyticsEnabled ? "  " : "";
-  // ChtProvider line wraps at wider indent
-  const chtOpen = analyticsEnabled
-    ? `<ChtProvider
-${a}              isChatActive={process.env.LLM_PROVIDER ? true : false}
-${a}            >`
-    : `<ChtProvider isChatActive={process.env.LLM_PROVIDER ? true : false}>`;
-
-  return `import type { Metadata } from "next";
-${isGoogleFont(fontConfig) ? `import { ${fontConfig.googleFont.fontName} } from "next/font/google";` : isLocalFont(fontConfig) ? 'import localFont from "next/font/local";' : 'import { Inter } from "next/font/google";'}
-import dynamic from "next/dynamic";
-import { StyledComponentsRegistry } from "cherry-styled-components";
-import { theme } from "@/app/theme";
-import { CherryThemeProvider } from "@/components/layout/CherryThemeProvider";
-import { ChtProvider } from "@/components/Chat";
-import { SearchProvider } from "@/components/SearchDocs";
-${
-  hasSections
-    ? ""
-    : `import { Footer } from "@/components/layout/Footer";
-`
-}import { Header } from "@/components/layout/Header";
-import { DocsWrapper } from "@/components/layout/DocsComponents";
-${
-  hasSections
-    ? ""
-    : `import { SectionBarProvider } from "@/components/layout/DocsComponents";
-import { SideBar } from "@/components/SideBar";
-import { DocsNavigation } from "@/components/layout/DocsNavigation";
-`
-}import { type PagesProps } from "@/utils/orderNavItems";
-${
-  hasSections
-    ? ""
-    : `import { transformPagesToGroupedStructure } from "@/utils/orderNavItems";
-`
+function fontImportLine(fontConfig: FontConfig | null): string {
+  return isGoogleFont(fontConfig)
+    ? `import { ${fontConfig.googleFont.fontName} } from "next/font/google";`
+    : isLocalFont(fontConfig)
+      ? 'import localFont from "next/font/local";'
+      : 'import { Inter } from "next/font/google";';
 }
-${
-  hasSections
-    ? ""
-    : `import { StaticLinks } from "@/components/layout/StaticLinks";
-`
-}import { config } from "@/utils/config";
-import { verifyBrandingKey } from "@/utils/branding";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import navigation from "@/navigation.json";
-${
-  hasSections
-    ? `import { SectionBar } from "@/components/layout/SectionBar";
-import { SectionNavProvider } from "@/components/SectionNavProvider";
-`
-    : ""
-}${analyticsEnabled ? `import { PostHogProvider } from "@/components/PostHogProvider";\n` : ""}const Chat = dynamic(() => import("@/components/Chat").then((mod) => mod.Chat));
 
-${
-  isGoogleFont(fontConfig)
-    ? `const font = ${fontConfig.googleFont.fontName}({ ${[fontConfig.googleFont.subsets?.length ? `subsets: ${JSON.stringify(fontConfig.googleFont.subsets)}` : "", fontConfig.googleFont.weight?.length ? `weight: ${Array.isArray(fontConfig.googleFont.weight) ? JSON.stringify(fontConfig.googleFont.weight) : `"${fontConfig.googleFont.weight}"`}` : ""].filter(Boolean).join(", ")} });`
+function fontDeclLine(fontConfig: FontConfig | null): string {
+  return isGoogleFont(fontConfig)
+    ? `const font = ${fontConfig.googleFont.fontName}({ ${[
+        fontConfig.googleFont.subsets?.length
+          ? `subsets: ${JSON.stringify(fontConfig.googleFont.subsets)}`
+          : "",
+        fontConfig.googleFont.weight?.length
+          ? `weight: ${
+              Array.isArray(fontConfig.googleFont.weight)
+                ? JSON.stringify(fontConfig.googleFont.weight)
+                : `"${fontConfig.googleFont.weight}"`
+            }`
+          : "",
+      ]
+        .filter(Boolean)
+        .join(", ")} });`
     : isLocalFont(fontConfig)
       ? `const font = localFont({
   src: ${getLocalFontSrc(fontConfig!)},
 });`
-      : 'const font = Inter({ subsets: ["latin"] });'
+      : 'const font = Inter({ subsets: ["latin"] });';
 }
+
+// The inline blocking script that resolves dark mode before first paint by
+// adding the "dark" class to <html>. Shared by the root layout's <head>.
+const THEME_INIT_SCRIPT = `(function(){try{var c=document.cookie.split(";").map(function(s){return s.trim();}).find(function(s){return s.indexOf("theme=")===0;});var v=c?c.split("=")[1]:null;var d=v?v==="dark":(window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches);if(!v){document.cookie="theme="+(d?"dark":"light")+";path=/;max-age=31536000;SameSite=Lax";}if(d){document.documentElement.classList.add("dark");document.documentElement.style.colorScheme="dark";}else{document.documentElement.style.colorScheme="light";}}catch(e){}})();`;
+
+/**
+ * Root layout ("app/layout.tsx"). Minimal shell: html/body, fonts, the theme
+ * provider stack, and (optionally) PostHog. It renders `children` directly so
+ * both the docs (via the "(site)" layout) and the password gate ("app/gate")
+ * share the same providers and theme without the docs chrome. Deliberately has
+ * NO request-time data (cookies/headers) so pages stay statically renderable —
+ * the SITE_PASSWORD gate is enforced in the middleware (proxy.ts), which
+ * rewrites locked page requests to "/gate".
+ */
+export const rootLayoutTemplate = (
+  fontConfig: FontConfig | null,
+  analyticsEnabled: boolean = false,
+): string => {
+  return `import type { Metadata } from "next";
+${fontImportLine(fontConfig)}
+import { StyledComponentsRegistry } from "cherry-styled-components";
+import { theme } from "@/app/theme";
+import { CherryThemeProvider } from "@/components/layout/CherryThemeProvider";
+import { config } from "@/utils/config";
+${analyticsEnabled ? `import { PostHogProvider } from "@/components/PostHogProvider";\n` : ""}
+${fontDeclLine(fontConfig)}
 
 function resolveSiteUrl(): URL | undefined {
   const raw = process.env.NEXT_PUBLIC_SITE_URL ?? config.url;
@@ -174,19 +159,11 @@ export const metadata: Metadata = {
   },
 };
 
-const doccupinePages = ${formatObjectArray(pages)};${hasSections ? `\nconst doccupineSections = ${formatObjectArray(sectionsConfig!)};` : ""}
-
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const hideBranding = verifyBrandingKey();
-${
-  hasSections
-    ? `
-  const pages: PagesProps[] = doccupinePages;
-
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -201,34 +178,111 @@ ${
             different between server (no class) and client (after script). */}
         <script
           dangerouslySetInnerHTML={{
-            __html: \`(function(){try{var c=document.cookie.split(";").map(function(s){return s.trim();}).find(function(s){return s.indexOf("theme=")===0;});var v=c?c.split("=")[1]:null;var d=v?v==="dark":(window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches);if(!v){document.cookie="theme="+(d?"dark":"light")+";path=/;max-age=31536000;SameSite=Lax";}if(d){document.documentElement.classList.add("dark");document.documentElement.style.colorScheme="dark";}else{document.documentElement.style.colorScheme="light";}}catch(e){}})();\`,
+            __html: \`${THEME_INIT_SCRIPT}\`,
           }}
         />
       </head>
       <body className={font.className}>
         <StyledComponentsRegistry>
-${analyticsEnabled ? "          <PostHogProvider>\n" : ""}${a}          <CherryThemeProvider theme={theme}>
-${a}            ${chtOpen}
-${a}              <SearchProvider pages={pages} sections={doccupineSections}>
-${a}                <Header>
-${a}                  <SectionBar sections={doccupineSections} />
-${a}                </Header>
-${a}                {process.env.LLM_PROVIDER && <Chat />}
-${a}                <DocsWrapper>
-${a}                  <SectionNavProvider
-${a}                    sections={doccupineSections}
-${a}                    allPages={pages}
-${a}                    hideBranding={hideBranding}
-${a}                  >
-${a}                    {children}
-${a}                  </SectionNavProvider>
-${a}                </DocsWrapper>
-${a}              </SearchProvider>
-${a}            </ChtProvider>
-${a}          </CherryThemeProvider>
-${analyticsEnabled ? "          </PostHogProvider>\n" : ""}        </StyledComponentsRegistry>
+${
+  analyticsEnabled
+    ? `          <PostHogProvider>
+            <CherryThemeProvider theme={theme}>{children}</CherryThemeProvider>
+          </PostHogProvider>`
+    : `          <CherryThemeProvider theme={theme}>{children}</CherryThemeProvider>`
+}
+        </StyledComponentsRegistry>
       </body>
     </html>
+  );
+}
+`;
+};
+
+/**
+ * Docs chrome layout ("app/(site)/layout.tsx"). Wraps every documentation page
+ * with the header, sidebar/section navigation, chat, and footer. Lives in the
+ * URL-transparent "(site)" route group so it wraps the docs but NOT the gate
+ * screen at "/gate", which renders under the root shell alone. Renders inside
+ * the root layout's providers, so it needs no html/body or theme provider.
+ */
+export const siteLayoutTemplate = (
+  pages: PageData[],
+  sectionsConfig: SectionConfig[] | null = null,
+): string => {
+  const hasSections = sectionsConfig !== null && sectionsConfig.length > 0;
+  const chtOpen = `<ChtProvider isChatActive={process.env.LLM_PROVIDER ? true : false}>`;
+
+  return `import dynamic from "next/dynamic";
+import { ChtProvider } from "@/components/Chat";
+import { SearchProvider } from "@/components/SearchDocs";
+${
+  hasSections
+    ? ""
+    : `import { Footer } from "@/components/layout/Footer";
+`
+}import { Header } from "@/components/layout/Header";
+import { DocsWrapper } from "@/components/layout/DocsComponents";
+${
+  hasSections
+    ? ""
+    : `import { SectionBarProvider } from "@/components/layout/DocsComponents";
+import { SideBar } from "@/components/SideBar";
+import { DocsNavigation } from "@/components/layout/DocsNavigation";
+`
+}import { type PagesProps } from "@/utils/orderNavItems";
+${
+  hasSections
+    ? ""
+    : `import { transformPagesToGroupedStructure } from "@/utils/orderNavItems";
+`
+}${
+    hasSections
+      ? ""
+      : `import { StaticLinks } from "@/components/layout/StaticLinks";
+`
+  }import { verifyBrandingKey } from "@/utils/branding";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import navigation from "@/navigation.json";
+${
+  hasSections
+    ? `import { SectionBar } from "@/components/layout/SectionBar";
+import { SectionNavProvider } from "@/components/SectionNavProvider";
+`
+    : ""
+}const Chat = dynamic(() => import("@/components/Chat").then((mod) => mod.Chat));
+
+const doccupinePages = ${formatObjectArray(pages)};${hasSections ? `\nconst doccupineSections = ${formatObjectArray(sectionsConfig!)};` : ""}
+
+export default function SiteLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  const hideBranding = verifyBrandingKey();
+${
+  hasSections
+    ? `
+  const pages: PagesProps[] = doccupinePages;
+
+  return (
+    ${chtOpen}
+      <SearchProvider pages={pages} sections={doccupineSections}>
+        <Header>
+          <SectionBar sections={doccupineSections} />
+        </Header>
+        {process.env.LLM_PROVIDER && <Chat />}
+        <DocsWrapper>
+          <SectionNavProvider
+            sections={doccupineSections}
+            allPages={pages}
+            hideBranding={hideBranding}
+          >
+            {children}
+          </SectionNavProvider>
+        </DocsWrapper>
+      </SearchProvider>
+    </ChtProvider>
   );
 }`
     : `
@@ -253,47 +307,21 @@ ${analyticsEnabled ? "          </PostHogProvider>\n" : ""}        </StyledCompo
   const defaultResults = transformPagesToGroupedStructure(defaultPages);
 
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* Resolves dark mode before first paint by adding the "dark" class
-            to <html> when needed. CSS variables in GlobalStyles flip values
-            on :root vs :root.dark, so the right palette renders without a
-            React roundtrip. Inlined as a plain <script> (not next/script) so
-            it ships in the SSR HTML and runs synchronously before paint —
-            next/script with beforeInteractive is async in App Router and
-            would still show a flash. suppressHydrationWarning on <html>
-            tells React the class/colorScheme attributes are intentionally
-            different between server (no class) and client (after script). */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: \`(function(){try{var c=document.cookie.split(";").map(function(s){return s.trim();}).find(function(s){return s.indexOf("theme=")===0;});var v=c?c.split("=")[1]:null;var d=v?v==="dark":(window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches);if(!v){document.cookie="theme="+(d?"dark":"light")+";path=/;max-age=31536000;SameSite=Lax";}if(d){document.documentElement.classList.add("dark");document.documentElement.style.colorScheme="dark";}else{document.documentElement.style.colorScheme="light";}}catch(e){}})();\`,
-          }}
-        />
-      </head>
-      <body className={font.className}>
-        <StyledComponentsRegistry>
-${analyticsEnabled ? "          <PostHogProvider>\n" : ""}${a}          <CherryThemeProvider theme={theme}>
-${a}            ${chtOpen}
-${a}              <SearchProvider pages={pages}>
-${a}                <Header />
-${a}                {process.env.LLM_PROVIDER && <Chat />}
-${a}                <SectionBarProvider hasSectionBar={false}>
-${a}                  <DocsWrapper>
-${a}                    <SideBar result={result.length ? result : defaultResults} />
-${a}                    {children}
-${a}                    <DocsNavigation
-${a}                      result={result.length ? result : defaultResults}
-${a}                    />
-${a}                    <StaticLinks />
-${a}                    <Footer hideBranding={hideBranding} />
-${a}                  </DocsWrapper>
-${a}                </SectionBarProvider>
-${a}              </SearchProvider>
-${a}            </ChtProvider>
-${a}          </CherryThemeProvider>
-${analyticsEnabled ? "          </PostHogProvider>\n" : ""}        </StyledComponentsRegistry>
-      </body>
-    </html>
+    ${chtOpen}
+      <SearchProvider pages={pages}>
+        <Header />
+        {process.env.LLM_PROVIDER && <Chat />}
+        <SectionBarProvider hasSectionBar={false}>
+          <DocsWrapper>
+            <SideBar result={result.length ? result : defaultResults} />
+            {children}
+            <DocsNavigation result={result.length ? result : defaultResults} />
+            <StaticLinks />
+            <Footer hideBranding={hideBranding} />
+          </DocsWrapper>
+        </SectionBarProvider>
+      </SearchProvider>
+    </ChtProvider>
   );
 }`
 }

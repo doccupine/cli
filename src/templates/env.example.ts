@@ -2,6 +2,13 @@ export const envExampleTemplate = `# Public Site URL
 # Used by sitemap.xml and robots.txt. Overrides \`url\` in config.json when set.
 # NEXT_PUBLIC_SITE_URL=https://docs.example.com
 
+# Password Protection (optional)
+# Set a shared password to gate the whole site behind a login screen. When set,
+# pages require the password, the content APIs (chat + search) return 401
+# without it, and the site is hidden from search engines and crawlers. Leave
+# unset (or remove) to keep the site public.
+# SITE_PASSWORD=choose-a-strong-shared-password
+
 # LLM Provider Configuration
 # Choose your preferred LLM provider: openai, anthropic, or google
 LLM_PROVIDER=openai
