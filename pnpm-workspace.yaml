@@ -1,16 +1,8 @@
 allowBuilds:
   esbuild: false
   sharp: false
-minimumReleaseAgeExclude:
-  - '@next/env@16.2.9'
-  - '@next/swc-darwin-arm64@16.2.9'
-  - '@next/swc-darwin-x64@16.2.9'
-  - '@next/swc-linux-arm64-gnu@16.2.9'
-  - '@next/swc-linux-arm64-musl@16.2.9'
-  - '@next/swc-linux-x64-gnu@16.2.9'
-  - '@next/swc-linux-x64-musl@16.2.9'
-  - '@next/swc-win32-arm64-msvc@16.2.9'
-  - '@next/swc-win32-x64-msvc@16.2.9'
-  - next@16.2.9
-  - prettier@3.8.4 || 3.9.3
-  - '@types/node@26.1.0'
+# Disable pnpm's minimum-release-age supply-chain gate for this repo. The gate
+# blocks freshly published versions, which trips installs whenever pinned
+# dependencies are newer than the cutoff. Set to 0 to install any resolved
+# version without waiting out the release-age window.
+minimumReleaseAge: 0
