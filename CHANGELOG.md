@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.95
+
+- Persist the theme preference client-side in the theme toggle and drop the `/api/theme` route, removing a server round-trip on every toggle
+- Update generated app dependencies (Next.js 16.2.10, cherry-styled-components 0.2.0, PostHog, and others)
+
 ## 0.0.94
 
 - Add optional password protection: set `SITE_PASSWORD` to gate the whole generated site behind a shared-password login screen, with a theme toggle and hideable "Powered by Doccupine" branding below the login box
