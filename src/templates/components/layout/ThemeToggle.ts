@@ -84,15 +84,7 @@ function ToggleTheme({ $hidden }: { $hidden?: boolean }) {
 
   return (
     <StyledThemeToggle
-      onClick={async () => {
-        const next = mode === "dark" ? "light" : "dark";
-        setMode(next);
-        await fetch("/api/theme", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ theme: next }),
-        }).catch((err) => console.error("Failed to persist theme:", err));
-      }}
+      onClick={() => setMode(mode === "dark" ? "light" : "dark")}
       $hidden={$hidden}
       aria-label="Toggle Theme"
     >

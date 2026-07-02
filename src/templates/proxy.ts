@@ -118,8 +118,7 @@ ${posthogCall}  const pathname = req.nextUrl.pathname;
 
     // Content APIs (RAG chat + search) return 401 without a valid cookie so the
     // docs can't be scraped around the login screen. /api/mcp keeps its own key
-    // auth above; /api/gate and /api/theme stay open so the gate can unlock and
-    // the theme can toggle.
+    // auth above; /api/gate stays open so the gate can unlock.
     if (
       !unlocked &&
       (pathname.startsWith("/api/rag") || pathname.startsWith("/api/search"))

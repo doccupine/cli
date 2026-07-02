@@ -11,7 +11,6 @@ import { gateRoutesTemplate } from "../templates/app/api/gate/route.js";
 import { mcpRoutesTemplate } from "../templates/app/api/mcp/route.js";
 import { ragRoutesTemplate } from "../templates/app/api/rag/route.js";
 import { searchRoutesTemplate } from "../templates/app/api/search/route.js";
-import { routesTemplate } from "../templates/app/api/theme/routes.js";
 import { notFoundTemplate } from "../templates/app/not-found.js";
 import { themeTemplate } from "../templates/app/theme.js";
 
@@ -142,7 +141,6 @@ export const appStructure: Record<string, string> = {
   "app/api/mcp/route.ts": mcpRoutesTemplate,
   "app/api/rag/route.ts": ragRoutesTemplate,
   "app/api/search/route.ts": searchRoutesTemplate,
-  "app/api/theme/route.ts": routesTemplate,
 
   "services/search.ts": searchServiceTemplate,
   "services/mcp/index.ts": mcpIndexTemplate,
