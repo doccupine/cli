@@ -3,6 +3,14 @@ import { styledSmall, styledText } from "cherry-styled-components";
 import { mq, Theme } from "@/app/theme";
 import styled, { css } from "styled-components";
 
+/** Slim, theme-aware scrollbar for internal scroll areas (code blocks,
+    modals, tables) so the chunky native bar doesn't stand out, especially
+    in dark mode. */
+export const thinScrollbar = css<{ theme: Theme }>\`
+  scrollbar-width: thin;
+  scrollbar-color: \${({ theme }) => theme.colors.grayLight} transparent;
+\`;
+
 export const interactiveStyles = css<{ theme: Theme }>\`
   transition: all 0.3s ease;
   border: solid 1px transparent;
@@ -113,6 +121,7 @@ export const styledTable = css<{ theme: Theme }>\`
   & .table-wrapper {
     overflow-x: auto;
     width: 100%;
+    \${thinScrollbar};
   }
 
   & table {

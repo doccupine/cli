@@ -25,6 +25,7 @@ import {
   stylesLists,
   StyledSmallButton,
   interactiveStyles,
+  thinScrollbar,
 } from "@/components/layout/SharedStyled";
 
 const mdxComponents = getMDXComponents({});
@@ -471,6 +472,7 @@ const StyledGlowSmallButton = styled(StyledSmallButton)<{
 
 const StyledError = styled.div<{ theme: Theme }>\`
   overflow-x: auto;
+  \${thinScrollbar};
   background: \${({ theme }) => theme.colors.error};
   color: \${({ theme }) => theme.colors.surface};
   padding: 10px;
@@ -494,6 +496,7 @@ const loadingDotAnimation = keyframes\`
 
 const StyledLoading = styled.div<{ theme: Theme }>\`
   overflow-x: auto;
+  \${thinScrollbar};
   margin: 20px 0;
   width: 100%;
   font-weight: 600;
@@ -517,6 +520,7 @@ const StyledLoading = styled.div<{ theme: Theme }>\`
 
 const StyledAnswer = styled.div<{ theme: Theme; $isAnswer: boolean }>\`
   overflow-x: auto;
+  \${thinScrollbar};
   background: \${({ theme }) => theme.colors.primary};
   color: \${({ theme }) => theme.colors.surface};
   padding: 10px;

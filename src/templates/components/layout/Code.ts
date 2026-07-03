@@ -12,6 +12,7 @@ import rehypeParse from "rehype-parse";
 import rehypeHighlight from "rehype-highlight";
 import rehypeStringify from "rehype-stringify";
 import { Icon } from "@/components/layout/Icon";
+import { thinScrollbar } from "@/components/layout/SharedStyled";
 
 interface CodeProps extends Omit<
   React.HTMLAttributes<HTMLDivElement>,
@@ -286,6 +287,7 @@ const Body = styled.div<{ theme: Theme }>\`
   overflow-x: auto;
   overflow-y: auto;
   max-height: calc(100dvh - 400px);
+  \${thinScrollbar};
   \${({ theme }) => styledCode(theme)};
   \${lightSyntaxHighlight};
 

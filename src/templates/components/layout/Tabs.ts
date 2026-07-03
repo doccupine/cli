@@ -3,6 +3,7 @@ import { Theme } from "@/app/theme";
 import { styledText } from "cherry-styled-components";
 import React, { useState, ReactNode } from "react";
 import styled, { css } from "styled-components";
+import { thinScrollbar } from "@/components/layout/SharedStyled";
 interface TabContentProps {
   title: string;
   children: ReactNode;
@@ -23,6 +24,7 @@ const TabsList = styled.div<{ theme: Theme }>\`
   background-color: \${({ theme }) => theme.colors.light};
   border: solid 1px \${({ theme }) => theme.colors.grayLight};
   overflow-x: auto;
+  \${thinScrollbar};
 \`;
 const TabButton = styled.button<{ theme: Theme; $isActive?: boolean }>\`
   flex: 1;

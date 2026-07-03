@@ -4,6 +4,7 @@ import styled, { css, keyframes } from "styled-components";
 import { Search } from "lucide-react";
 import { mq, Theme } from "@/app/theme";
 import { Spinner } from "@/components/Spinner";
+import { thinScrollbar } from "@/components/layout/SharedStyled";
 
 export interface PageItem {
   slug: string;
@@ -133,10 +134,7 @@ const StyledResults = styled.ul<{ theme: Theme }>\`
   flex: 1;
   min-height: 0;
   -webkit-overflow-scrolling: touch;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
+  \${thinScrollbar};
 \`;
 
 const StyledResultItem = styled.li<{ theme: Theme; $isActive: boolean }>\`
