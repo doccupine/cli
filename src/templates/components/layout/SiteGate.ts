@@ -174,7 +174,14 @@ export function SiteGate({ hideBranding }: { hideBranding?: boolean }) {
           <ThemeToggle />
           {!hideBranding && (
             <StyledBranding>
-              Powered by <a href="https://doccupine.com">Doccupine</a>
+              Powered by{" "}
+              <a
+                href="https://doccupine.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Doccupine
+              </a>
             </StyledBranding>
           )}
         </StyledFooter>

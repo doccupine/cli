@@ -94,11 +94,19 @@ function Footer({ hideBranding }: { hideBranding?: boolean }) {
       <StyledFooterInner>
         <StyledFooterFlex>
           <span>
-            Powered by <a href="https://doccupine.com">Doccupine</a>
+            Powered by{" "}
+            <a
+              href="https://doccupine.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Doccupine
+            </a>
           </span>
           <a
             href="https://github.com/doccupine/cli"
             target="_blank"
+            rel="noopener noreferrer"
             aria-label="Doccupine on GitHub"
           >
             <GitHubLogo />

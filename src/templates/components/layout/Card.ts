@@ -52,7 +52,16 @@ function Card({ children, title, icon, href }: CardProps) {
   );
 
   if (href) {
-    return <StyledCardLink href={href}>{content}</StyledCardLink>;
+    const isExternal = /^(https?:)?\\/\\//i.test(href);
+    return (
+      <StyledCardLink
+        href={href}
+        target={isExternal ? "_blank" : undefined}
+        rel={isExternal ? "noopener noreferrer" : undefined}
+      >
+        {content}
+      </StyledCardLink>
+    );
   }
 
   return <StyledCard>{content}</StyledCard>;
