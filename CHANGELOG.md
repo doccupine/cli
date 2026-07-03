@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.0.96
+
+- Adopt cherry-styled-components' theme stack in the generated app: `ThemeToggle`, `ClientThemeProvider`, and `useOnClickOutside` now come from Cherry instead of bespoke local copies, and the theme is defined as literal `theme`/`themeDark` objects swapped on toggle
+- Keep pages fully static with no dark-mode flash: the blocking theme-init script hides the body and pins a dark background on dark visits until Cherry's provider reconciles, and temporarily disables CSS transitions so the light-to-dark swap on load snaps instantly instead of animating every element
+- Rework the `DemoTheme` presets to rebuild the swapped theme objects (via the new `buildColors` helper) while still mirroring overrides onto CSS custom properties
+- Restyle the ActionBar view toggle to match Cherry's `ThemeToggle` exactly: `interactiveStyles` border highlight and focus/active rings instead of the scale hover, with the knob and icons perfectly centered in both states
+- Make the code block copy button icon-only (copy icon, check when copied) with an accessible label, using `interactiveStyles` instead of the scale effect
+- Fix `react-hooks` lint errors in generated sites: derive search results and the searching flag at render time instead of setting state inside the debounced search effect, and drop the local `useOnClickOutside` with its non-literal dependency array
+- Delete obsolete generated files (`ClickOutside.ts`, `ClientThemeProvider.tsx`, `ThemeToggle.tsx`) on every run so upgraded projects don't keep stale copies that fail lint
+- Emit Prettier-clean output from the search template
+- Update generated app dependency cherry-styled-components to 0.2.5
+
 ## 0.0.95
 
 - Persist the theme preference client-side in the theme toggle and drop the `/api/theme` route, removing a server round-trip on every toggle
