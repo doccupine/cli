@@ -19,7 +19,7 @@ export const packageJsonTemplate =
         "@mdx-js/react": "^3.1.1",
         "@modelcontextprotocol/sdk": "^1.29.0",
         "@posthog/react": "^1.10.3",
-        "cherry-styled-components": "^0.2.3",
+        "cherry-styled-components": "^0.2.5",
         langchain: "^1.5.2",
         "lucide-react": "^1.23.0",
         minisearch: "^7.2.0",

@@ -40,10 +40,11 @@ const spacing: Spacing = {
   gridGap: { xs: "20px", lg: "40px" },
 };
 
-// Resolved hex palettes for each mode. GlobalStyles emits these as CSS
-// custom properties on :root and :root.dark. Components never read these
-// directly — they read \`theme.colors.*\` which resolves to var(--color-…)
-// and lets the browser pick the right value based on the active class.
+// Resolved hex palettes for each mode. They feed the literal \`theme\` /
+// \`themeDark\` objects below (swapped by Cherry's ClientThemeProvider) and
+// GlobalStyles, which also emits them as CSS custom properties on :root and
+// :root.dark for plain-CSS consumers. Custom theme.json overrides are merged
+// here, so both consumers pick them up automatically.
 export const colorsLight: CustomColors = {
   primaryLight: "#d1d5db",
   primary: "#556272",
@@ -168,63 +169,44 @@ const lineHeights: LineHeights = {
   inputSmall: { xs: "1", lg: "1" },
 };
 
-// Single theme object exported to consumers. Every color/shadow value is a
-// CSS custom-property reference; the browser resolves it against :root or
-// :root.dark depending on the active class. Components access these exactly
-// like before — \`theme.colors.primary\`, \`theme.shadows.sm\` — but the values
-// flip without React re-rendering.
-const colors: Colors = {
-  // Brand palette — directly customizable via theme.json's "default" / "dark".
-  primaryLight: "var(--color-primaryLight)",
-  primary: "var(--color-primary)",
-  primaryDark: "var(--color-primaryDark)",
-  secondaryLight: "var(--color-secondaryLight)",
-  secondary: "var(--color-secondary)",
-  secondaryDark: "var(--color-secondaryDark)",
-  tertiaryLight: "var(--color-tertiaryLight)",
-  tertiary: "var(--color-tertiary)",
-  tertiaryDark: "var(--color-tertiaryDark)",
-  grayLight: "var(--color-grayLight)",
-  gray: "var(--color-gray)",
-  grayDark: "var(--color-grayDark)",
-  success: "var(--color-success)",
-  error: "var(--color-error)",
-  warning: "var(--color-warning)",
-  info: "var(--color-info)",
-  dark: "var(--color-dark)",
-  light: "var(--color-light)",
-
-  // Semantic tokens — derived in GlobalStyles to capture the most common
-  // mode-aware swaps that components used to express via \`theme.isDark ? A : B\`.
-  // They follow the same single-noun convention as the brand palette.
-  accent: "var(--color-accent)",
-  accentStrong: "var(--color-accentStrong)",
-  accentMuted: "var(--color-accentMuted)",
-  surface: "var(--color-surface)",
-};
-
-const shadows: Shadows = {
-  xs: "var(--shadow-xs)",
-  sm: "var(--shadow-sm)",
-  md: "var(--shadow-md)",
-  lg: "var(--shadow-lg)",
-  xl: "var(--shadow-xl)",
-};
+// Builds the full Colors record for a mode: the resolved brand palette plus
+// the semantic tokens derived from it. Cherry's ClientThemeProvider swaps
+// whole theme objects on toggle, so components read literal values here —
+// the CSS variables emitted by GlobalStyles stay in sync via the "dark"
+// class for plain-CSS consumers (e.g. Callout's / Code's :root.dark blocks).
+// Exported so DemoTheme can derive preset themes with the same rules.
+export function buildColors(palette: CustomColors, isDark: boolean): Colors {
+  const accent = isDark ? palette.primaryLight : palette.primaryDark;
+  return {
+    ...palette,
+    accent,
+    // accent shifted ~10% toward black (light mode) or white (dark mode).
+    accentStrong: \`color-mix(in srgb, \${accent} 90%, \${isDark ? "white" : "black"})\`,
+    accentMuted: isDark ? palette.grayDark : palette.primary,
+    surface: isDark ? palette.dark : palette.light,
+  };
+}
 
 export const theme: Theme = {
   breakpoints,
   spacing,
-  colors,
-  shadows,
+  colors: buildColors(colorsLight, false),
+  shadows: shadowsLight,
   fonts,
   fontSizes,
   lineHeights,
-  // Stub for type compatibility with cherry-styled-components' Theme. Mode
-  // switching lives entirely in CSS vars flipped by :root.dark, so our own
-  // code never branches on this. Cherry's internal \`isDark ? … : …\` branches
-  // (e.g. buttonStyles' filled-button text) are handled where they surface
-  // by re-pinning to a mode-agnostic semantic token — see components/layout/Button.tsx.
   isDark: false,
+};
+
+export const themeDark: Theme = {
+  breakpoints,
+  spacing,
+  colors: buildColors(colorsDark, true),
+  shadows: shadowsDark,
+  fonts,
+  fontSizes,
+  lineHeights,
+  isDark: true,
 };
 
 interface Breakpoints<TNumber = number> {
@@ -245,7 +227,7 @@ interface Spacing<TString = string> {
 }
 
 // Matches cherry-styled-components' Colors shape for the brand keys, plus a
-// handful of semantic tokens derived from the brand palette by GlobalStyles.
+// handful of semantic tokens derived from the brand palette by buildColors.
 // The brand keys (primaryLight…light) are customizable via theme.json; the
 // semantic keys (accent*, surface) are derived and not overridable — see
 // CustomColors above.

@@ -1,6 +1,16 @@
 export const demoThemeTemplate = `"use client";
+import { useContext } from "react";
+import { useTheme } from "styled-components";
+import { ThemeContext } from "cherry-styled-components";
+import {
+  buildColors,
+  colorsLight,
+  colorsDark,
+  theme,
+  themeDark,
+  Theme,
+} from "@/app/theme";
 import { Button } from "@/components/layout/Button";
-import { useThemeOverride } from "@/components/layout/ClientThemeProvider";
 import { Columns } from "@/components/layout/Columns";
 
 interface DemoThemeProps {
@@ -9,11 +19,13 @@ interface DemoThemeProps {
 
 type Palette = Record<string, string>;
 
-// Each preset is light + dark color overrides applied directly to CSS custom
-// properties on <html>. This mirrors what a user editing theme.json would see:
-// the variable names are identical, the variables flip light vs dark via the
-// "dark" class on <html>, and Reset clears the overrides so the defaults take
-// over again.
+// Each preset is light + dark color overrides, mirroring what a user editing
+// theme.json would see. Applying one does two things: swaps in a theme object
+// rebuilt with the overridden palette (Cherry's setTheme, which also persists
+// the mode), and mirrors the overrides onto the --color-* CSS custom
+// properties on <html> for the plain-CSS consumers that read variables
+// (e.g. Callout's and Code's :root.dark blocks). Reset clears both so the
+// defaults take over again.
 const PRESETS: Record<
   DemoThemeProps["variant"],
   { light: Palette; dark: Palette; label: string }
@@ -61,28 +73,47 @@ const PRESETS: Record<
 
 const PRESET_KEYS = ["primaryLight", "primary", "primaryDark"] as const;
 
-function applyPreset(palette: Palette) {
+function applyPresetVars(palette: Palette) {
   const root = document.documentElement;
   for (const key of PRESET_KEYS) {
     if (palette[key]) root.style.setProperty(\`--color-\${key}\`, palette[key]);
   }
 }
 
-function clearPreset() {
+function clearPresetVars() {
   const root = document.documentElement;
   for (const key of PRESET_KEYS) {
     root.style.removeProperty(\`--color-\${key}\`);
   }
 }
 
+// Rebuilds a mode's theme with the preset palette merged in, so the semantic
+// tokens (accent, accentStrong, …) derive from the preset colors exactly like
+// they would from a theme.json override.
+function presetTheme(palette: Palette, dark: boolean): Theme {
+  const base = dark ? themeDark : theme;
+  const paletteBase = dark ? colorsDark : colorsLight;
+  return {
+    ...base,
+    colors: buildColors({ ...paletteBase, ...palette }, dark),
+  };
+}
+
 function DemoTheme({ variant }: DemoThemeProps) {
-  const { setMode } = useThemeOverride();
+  const { setTheme } = useContext(ThemeContext);
+  const activeTheme = useTheme() as Theme;
   const preset = PRESETS[variant];
 
   if (!preset) {
     return (
       <Columns cols={2}>
-        <Button onClick={() => clearPreset()} fullWidth>
+        <Button
+          onClick={() => {
+            clearPresetVars();
+            setTheme(activeTheme.isDark ? themeDark : theme);
+          }}
+          fullWidth
+        >
           Reset to Default
         </Button>
       </Columns>
@@ -93,8 +124,8 @@ function DemoTheme({ variant }: DemoThemeProps) {
     <Columns cols={2}>
       <Button
         onClick={() => {
-          applyPreset(preset.light);
-          setMode("light");
+          applyPresetVars(preset.light);
+          setTheme(presetTheme(preset.light, false));
         }}
         icon="sun"
         fullWidth
@@ -104,8 +135,8 @@ function DemoTheme({ variant }: DemoThemeProps) {
       <Button
         outline
         onClick={() => {
-          applyPreset(preset.dark);
-          setMode("dark");
+          applyPresetVars(preset.dark);
+          setTheme(presetTheme(preset.dark, true));
         }}
         icon="moon-star"
         fullWidth

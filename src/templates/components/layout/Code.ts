@@ -1,7 +1,11 @@
 export const codeTemplate = `"use client";
 import { useState, useCallback, useMemo } from "react";
 import styled, { css } from "styled-components";
-import { styledCode } from "cherry-styled-components";
+import {
+  interactiveStyles,
+  resetButton,
+  styledCode,
+} from "cherry-styled-components";
 import { Theme } from "@/app/theme";
 import { unified } from "unified";
 import rehypeParse from "rehype-parse";
@@ -70,36 +74,26 @@ const Dot = styled.span<{ theme: Theme }>\`
   }
 \`;
 
+/* Icon-only copy button. interactiveStyles supplies the border highlight on
+   hover plus the focus/active rings (no scale effect); the GitHub-style
+   copied/base colors stay fixed like the rest of the code block. The dark
+   block re-declares the hover border because its higher-specificity
+   :root.dark & border-color would otherwise override the mixin's hover. */
 const CopyButton = styled.button<{ theme: Theme; $copied: boolean }>\`
+  \${resetButton}
+  \${interactiveStyles}
   background: \${({ $copied }) =>
     $copied ? "rgba(45, 164, 78, 0.1)" : "transparent"};
-  border: solid 1px
-    \${({ $copied }) => ($copied ? "#2da44e" : "rgba(0, 0, 0, 0.1)")};
-  color: \${({ $copied }) => ($copied ? "#2da44e" : "#57606a")};
+  border-color: \${({ $copied }) => ($copied ? "#2da44e" : "rgba(0, 0, 0, 0.1)")};
   border-radius: \${({ theme }) => theme.spacing.radius.xs};
-  padding: 4px 8px;
-  font-size: 12px;
-  font-family: \${({ theme }) => theme.fonts.mono};
-  cursor: pointer;
-  transition: all 0.2s ease;
+  padding: 4px;
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
   margin-right: -6px;
 
   & svg.lucide {
     color: \${({ $copied }) => ($copied ? "#2da44e" : "#57606a")};
-  }
-
-  &:hover {
-    background: \${({ $copied }) =>
-      $copied ? "rgba(45, 164, 78, 0.2)" : "rgba(0, 0, 0, 0.05)"};
-    border-color: \${({ $copied }) =>
-      $copied ? "#2da44e" : "rgba(0, 0, 0, 0.2)"};
-  }
-
-  &:active {
-    transform: scale(0.95);
   }
 
   :root.dark & {
@@ -107,17 +101,13 @@ const CopyButton = styled.button<{ theme: Theme; $copied: boolean }>\`
       $copied ? "rgba(126, 231, 135, 0.2)" : "transparent"};
     border-color: \${({ $copied }) =>
       $copied ? "#7ee787" : "rgba(255, 255, 255, 0.1)"};
-    color: \${({ $copied }) => ($copied ? "#7ee787" : "#c9d1d9")};
 
     & svg.lucide {
       color: \${({ $copied }) => ($copied ? "#7ee787" : "#c9d1d9")};
     }
 
     &:hover {
-      background: \${({ $copied }) =>
-        $copied ? "rgba(126, 231, 135, 0.3)" : "rgba(255, 255, 255, 0.1)"};
-      border-color: \${({ $copied }) =>
-        $copied ? "#7ee787" : "rgba(255, 255, 255, 0.2)"};
+      border-color: \${({ theme }) => theme.colors.primary};
     }
   }
 \`;
@@ -363,18 +353,13 @@ function Code({ code, language = "javascript", theme, className }: CodeProps) {
           <Dot theme={theme} />
           <Dot theme={theme} />
         </DotsContainer>
-        <CopyButton onClick={handleCopy} $copied={copied} theme={theme}>
-          {copied ? (
-            <>
-              <Icon name="check" size={12} />
-              <span>Copied!</span>
-            </>
-          ) : (
-            <>
-              <Icon name="copy" size={12} />
-              <span>Copy</span>
-            </>
-          )}
+        <CopyButton
+          onClick={handleCopy}
+          $copied={copied}
+          theme={theme}
+          aria-label={copied ? "Copied" : "Copy code"}
+        >
+          <Icon name={copied ? "check" : "copy"} size={12} />
         </CopyButton>
       </TopBar>
       <Body

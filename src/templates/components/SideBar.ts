@@ -1,7 +1,7 @@
 export const sideBarTemplate = `"use client";
-import { useContext, useState, Suspense } from "react";
+import { useContext, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Flex, Space } from "cherry-styled-components";
+import { Flex, Space, ThemeToggle } from "cherry-styled-components";
 import {
   DocsSidebar,
   SectionBarContext,
@@ -14,10 +14,6 @@ import {
   StyleMobileBar,
   StyledMobileBurger,
 } from "@/components/layout/DocsComponents";
-import {
-  ToggleTheme,
-  ToggleThemeLoading,
-} from "@/components/layout/ThemeToggle";
 import { useLockBodyScroll } from "@/components/LockBodyScroll";
 
 type NavItem = {
@@ -90,9 +86,7 @@ function SideBar({ result }: SideBarProps) {
           })}
         <StyledSidebarFooter>
           <Flex $xsJustifyContent="flex-start" $lgJustifyContent="flex-end">
-            <Suspense fallback={<ToggleThemeLoading />}>
-              <ToggleTheme />
-            </Suspense>
+            <ThemeToggle />
           </Flex>
         </StyledSidebarFooter>
       </StyledSidebar>

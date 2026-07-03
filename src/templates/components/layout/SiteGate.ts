@@ -1,15 +1,11 @@
 export const siteGateComponentTemplate = `"use client";
-import { Suspense, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import styled from "styled-components";
-import { Input } from "cherry-styled-components";
+import { Input, ThemeToggle } from "cherry-styled-components";
 import { Lock } from "lucide-react";
 import { Theme } from "@/app/theme";
 import { Button } from "@/components/layout/Button";
 import { Callout } from "@/components/layout/Callout";
-import {
-  ToggleTheme,
-  ToggleThemeLoading,
-} from "@/components/layout/ThemeToggle";
 import { config } from "@/utils/config";
 
 const StyledWrapper = styled.div<{ theme: Theme }>\`
@@ -175,9 +171,7 @@ export function SiteGate({ hideBranding }: { hideBranding?: boolean }) {
           )}
         </StyledCard>
         <StyledFooter>
-          <Suspense fallback={<ToggleThemeLoading />}>
-            <ToggleTheme />
-          </Suspense>
+          <ThemeToggle />
           {!hideBranding && (
             <StyledBranding>
               Powered by <a href="https://doccupine.com">Doccupine</a>

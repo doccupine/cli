@@ -107,9 +107,24 @@ function fontDeclLine(fontConfig: FontConfig | null): string {
       : 'const font = Inter({ subsets: ["latin"] });';
 }
 
-// The inline blocking script that resolves dark mode before first paint by
-// adding the "dark" class to <html>. Shared by the root layout's <head>.
-const THEME_INIT_SCRIPT = `(function(){try{var c=document.cookie.split(";").map(function(s){return s.trim();}).find(function(s){return s.indexOf("theme=")===0;});var v=c?c.split("=")[1]:null;var d=v?v==="dark":(window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches);if(!v){document.cookie="theme="+(d?"dark":"light")+";path=/;max-age=31536000;SameSite=Lax";}if(d){document.documentElement.classList.add("dark");document.documentElement.style.colorScheme="dark";}else{document.documentElement.style.colorScheme="light";}}catch(e){}})();`;
+// The inline blocking script that resolves dark mode before first paint.
+// Adds the "dark" class to <html> (so the CSS variables emitted by
+// GlobalStyles paint dark immediately) and, on dark visits, injects a
+// "#__theme-init" style that hides the body AND forces a dark html
+// background: the server always renders with the light theme (pages are
+// force-static, so no cookie read), and Cherry's ClientThemeProvider
+// briefly re-syncs the "dark" class off the initial light theme during
+// mount, so without the forced background the html would flash white for a
+// frame. A second "__theme-transitions" style disables all transitions so
+// the light-to-dark swap on mount snaps instantly instead of animating every
+// element that declares a color transition. It can't live in "__theme-init":
+// the provider removes that in the same frame the dark colors commit, so the
+// browser would compute one light-to-dark style diff with transitions
+// re-enabled and animate it anyway. Instead a MutationObserver waits for the
+// provider to remove "__theme-init" (themeDark committed, body unhidden),
+// forces a reflow, and drops the transition suppression two painted frames
+// later — restoring transitions for user-initiated toggles.
+const THEME_INIT_SCRIPT = `(function(){try{var c=document.cookie.split(";").map(function(s){return s.trim();}).find(function(s){return s.indexOf("theme=")===0;});var v=c?c.split("=")[1]:null;var d=v?v==="dark":(window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches);if(!v){document.cookie="theme="+(d?"dark":"light")+";path=/;max-age=31536000;SameSite=Lax";}if(d){document.documentElement.classList.add("dark");document.documentElement.style.colorScheme="dark";var s=document.createElement("style");s.id="__theme-init";s.textContent="html{background:#000!important;color-scheme:dark}body{visibility:hidden}";document.head.appendChild(s);var t=document.createElement("style");t.id="__theme-transitions";t.textContent="*,*::before,*::after{transition:none!important}";document.head.appendChild(t);var f=function(){var e=document.getElementById("__theme-transitions");if(!e)return;void document.body.offsetHeight;requestAnimationFrame(function(){requestAnimationFrame(function(){e.remove();});});};var o=new MutationObserver(function(){if(!document.getElementById("__theme-init")){o.disconnect();f();}});o.observe(document.head,{childList:true});setTimeout(f,10000);}else{document.documentElement.style.colorScheme="light";}}catch(e){}})();`;
 
 /**
  * Root layout ("app/layout.tsx"). Minimal shell: html/body, fonts, the theme
@@ -127,7 +142,7 @@ export const rootLayoutTemplate = (
   return `import type { Metadata } from "next";
 ${fontImportLine(fontConfig)}
 import { StyledComponentsRegistry } from "cherry-styled-components";
-import { theme } from "@/app/theme";
+import { theme, themeDark } from "@/app/theme";
 import { CherryThemeProvider } from "@/components/layout/CherryThemeProvider";
 import { config } from "@/utils/config";
 ${analyticsEnabled ? `import { PostHogProvider } from "@/components/PostHogProvider";\n` : ""}
@@ -167,10 +182,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Resolves dark mode before first paint by adding the "dark" class
-            to <html> when needed. CSS variables in GlobalStyles flip values
-            on :root vs :root.dark, so the right palette renders without a
-            React roundtrip. Inlined as a plain <script> (not next/script) so
+        {/* Resolves dark mode before first paint: adds the "dark" class to
+            <html> (flipping the CSS variables in GlobalStyles) and hides the
+            body until Cherry's ClientThemeProvider has swapped in themeDark
+            on mount — the server always renders the light theme since pages
+            are force-static. Inlined as a plain <script> (not next/script) so
             it ships in the SSR HTML and runs synchronously before paint —
             next/script with beforeInteractive is async in App Router and
             would still show a flash. suppressHydrationWarning on <html>
@@ -187,9 +203,13 @@ export default function RootLayout({
 ${
   analyticsEnabled
     ? `          <PostHogProvider>
-            <CherryThemeProvider theme={theme}>{children}</CherryThemeProvider>
+            <CherryThemeProvider theme={theme} themeDark={themeDark}>
+              {children}
+            </CherryThemeProvider>
           </PostHogProvider>`
-    : `          <CherryThemeProvider theme={theme}>{children}</CherryThemeProvider>`
+    : `          <CherryThemeProvider theme={theme} themeDark={themeDark}>
+            {children}
+          </CherryThemeProvider>`
 }
         </StyledComponentsRegistry>
       </body>

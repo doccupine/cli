@@ -4,7 +4,7 @@ import { useCallback, useContext, useRef, useState } from "react";
 import styled, { css } from "styled-components";
 import Link from "next/link";
 import { mq, Theme } from "@/app/theme";
-import { useOnClickOutside } from "@/components/ClickOutside";
+import { useOnClickOutside } from "cherry-styled-components";
 import { Search } from "lucide-react";
 import { Logo } from "@/components/layout/Pictograms";
 import { ChatContext, ChatButtonCTA } from "@/components/Chat";

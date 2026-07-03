@@ -27,6 +27,10 @@ interface SectionItem {
   slug: string;
 }
 
+// Stable empty array so the derived contentResults keeps the same identity
+// across renders when there are no hits (memo deps stay stable).
+const EMPTY_RESULTS: ContentHit[] = [];
+
 interface ContentHit {
   slug: string;
   snippet: string;
@@ -91,8 +95,14 @@ function SearchProvider({
   const [isClosing, setIsClosing] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
-  const [contentResults, setContentResults] = useState<ContentHit[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
+  // Latest completed content search, keyed by the query that produced it.
+  // contentResults and isSearching are derived from it at render time, so
+  // the debounced-search effect never sets state synchronously (which would
+  // trigger cascading renders — react-hooks/set-state-in-effect).
+  const [fetched, setFetched] = useState<{
+    q: string;
+    results: ContentHit[];
+  } | null>(null);
   const resultsRef = useRef<HTMLUListElement>(null);
   const closingRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -127,9 +137,15 @@ function SearchProvider({
     setIsClosing(false);
     setQuery("");
     setActiveIndex(0);
-    setContentResults([]);
-    setIsSearching(false);
+    setFetched(null);
   }, []);
+
+  const trimmedQuery = query.trim();
+  const contentResults =
+    trimmedQuery.length >= 2 && fetched?.q === trimmedQuery
+      ? fetched.results
+      : EMPTY_RESULTS;
+  const isSearching = trimmedQuery.length >= 2 && fetched?.q !== trimmedQuery;
 
   // Instant title/description filtering
   const titleFiltered = useMemo(() => {
@@ -168,19 +184,16 @@ function SearchProvider({
     return [...titleMatches, ...contentOnly];
   }, [pages, query, titleFiltered, contentResults]);
 
-  // Debounced content search
+  // Debounced content search. State updates happen only inside the timeout's
+  // async callback; short queries need no reset because the derived values
+  // above ignore results whose query no longer matches.
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (abortRef.current) abortRef.current.abort();
 
     const q = query.trim();
-    if (q.length < 2) {
-      setContentResults([]);
-      setIsSearching(false);
-      return;
-    }
+    if (q.length < 2) return;
 
-    setIsSearching(true);
     debounceRef.current = setTimeout(async () => {
       const controller = new AbortController();
       abortRef.current = controller;
@@ -191,14 +204,10 @@ function SearchProvider({
         );
         if (!res.ok) throw new Error("Search failed");
         const data = await res.json();
-        setContentResults(data.results ?? []);
+        setFetched({ q, results: data.results ?? [] });
       } catch (err: unknown) {
         if (err instanceof DOMException && err.name === "AbortError") return;
-        setContentResults([]);
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsSearching(false);
-        }
+        setFetched({ q, results: [] });
       }
     }, 300);
 

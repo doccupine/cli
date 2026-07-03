@@ -9,7 +9,11 @@ import { fileURLToPath } from "url";
 import matter from "gray-matter";
 import chalk from "chalk";
 
-import { appStructure, startingDocsStructure } from "./lib/structures.js";
+import {
+  appStructure,
+  obsoleteFiles,
+  startingDocsStructure,
+} from "./lib/structures.js";
 import { rootLayoutTemplate, siteLayoutTemplate } from "./lib/layout.js";
 import { ConfigManager } from "./lib/config-manager.js";
 import {
@@ -135,6 +139,12 @@ class MDXToNextJSGenerator {
     // generateSectionIndexPages, so nothing here is user-authored. Config JSONs
     // and other generated dirs live outside app/ and are untouched.
     await fs.remove(path.join(this.outputDir, "app"));
+
+    // Drop files that earlier CLI versions generated but no longer exist in
+    // the template set, so upgraded projects don't keep stale copies.
+    await Promise.all(
+      obsoleteFiles.map((file) => fs.remove(path.join(this.outputDir, file))),
+    );
 
     const siteUrl = await this.loadSiteUrl();
 

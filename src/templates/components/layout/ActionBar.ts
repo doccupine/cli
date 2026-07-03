@@ -3,7 +3,11 @@ import { useContext, useState } from "react";
 import styled, { css } from "styled-components";
 import { Icon } from "@/components/layout/Icon";
 import { mq, Theme } from "@/app/theme";
-import { resetButton, Textarea } from "cherry-styled-components";
+import {
+  interactiveStyles,
+  resetButton,
+  Textarea,
+} from "cherry-styled-components";
 import { SectionBarContext } from "@/components/layout/DocsComponents";
 import { StyledSmallButton } from "@/components/layout/SharedStyled";
 
@@ -51,23 +55,32 @@ const StyledCopyButton = styled(StyledSmallButton)<{
   }
 \`;
 
+// Mirrors the geometry and interaction of Cherry's ThemeToggle so the two
+// pills look identical side by side: interactiveStyles supplies the border
+// highlight + focus/active rings (no scale effect), and the space-between
+// layout with 6px padding puts each 16px icon's center exactly where the
+// 24px knob's center sits in its resting (left: 2px) and active
+// (translateX(26px)) positions.
 const StyledToggle = styled.button<{ theme: Theme; $isActive?: boolean }>\`
   \${resetButton}
+  \${interactiveStyles}
   width: 56px;
-  height: 32px;
+  height: 30px;
   border-radius: 30px;
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px;
   position: relative;
   margin: auto 0;
-  transform: scale(1);
   background: \${({ theme }) => theme.colors.light};
-  border: solid 1px \${({ theme }) => theme.colors.grayLight};
+  border-color: \${({ theme }) => theme.colors.grayLight};
 
   &::after {
     content: "";
     position: absolute;
-    top: 3px;
-    left: 3px;
+    top: 2px;
+    left: 2px;
     width: 24px;
     height: 24px;
     border-radius: 50%;
@@ -78,7 +91,7 @@ const StyledToggle = styled.button<{ theme: Theme; $isActive?: boolean }>\`
     \${({ $isActive }) =>
       !$isActive &&
       css\`
-        transform: translateX(24px);
+        transform: translateX(26px);
       \`}
   }
 
@@ -86,35 +99,17 @@ const StyledToggle = styled.button<{ theme: Theme; $isActive?: boolean }>\`
     width: 16px;
     height: 16px;
     object-fit: contain;
-    margin: auto;
     transition: all 0.3s ease;
     position: relative;
     z-index: 2;
-  }
-
-  & .lucide-eye {
-    transform: translateX(1px);
-  }
-
-  & .lucide-code-xml {
-    transform: translateX(-1px);
   }
 
   & svg[stroke] {
     stroke: \${({ theme }) => theme.colors.primary};
   }
 
-  &:hover {
-    transform: scale(1.05);
-    color: \${({ theme }) => theme.colors.accent};
-
-    & svg[stroke] {
-      stroke: \${({ theme }) => theme.colors.accent};
-    }
-  }
-
-  &:active {
-    transform: scale(0.97);
+  &:hover svg[stroke] {
+    stroke: \${({ theme }) => theme.colors.accent};
   }
 \`;
 
