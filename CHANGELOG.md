@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.98
+
+- Open external links in the generated app in a new tab with `rel="noopener noreferrer"`: `Card` now detects external `href` values like `Button` already did, and the "Powered by Doccupine" links in the footer and password gate open in a new tab (the footer's GitHub link also gained the missing `rel`)
+
 ## 0.0.97
 
 - Apply a slim, theme-aware scrollbar to internal scroll areas in the generated app (tables, code blocks, search results, tab lists, and chat overflow areas) via a shared `thinScrollbar` helper, replacing the chunky native bar that stood out in dark mode
