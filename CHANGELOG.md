@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.97
+
+- Apply a slim, theme-aware scrollbar to internal scroll areas in the generated app (tables, code blocks, search results, tab lists, and chat overflow areas) via a shared `thinScrollbar` helper, replacing the chunky native bar that stood out in dark mode
+
 ## 0.0.96
 
 - Adopt cherry-styled-components' theme stack in the generated app: `ThemeToggle`, `ClientThemeProvider`, and `useOnClickOutside` now come from Cherry instead of bespoke local copies, and the theme is defined as literal `theme`/`themeDark` objects swapped on toggle
