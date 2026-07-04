@@ -31,18 +31,27 @@ function generateId(text: string): string {
 
 function extractHeadings(content: string): Heading[] {
   const contentWithoutCodeBlocks = content.replace(/\`\`\`[\\s\\S]*?\`\`\`/g, "");
-  const headingRegex = /^(#{1,6})\\s+(.+)$/gm;
-  const headings: Heading[] = [];
+  const headings: (Heading & { position: number })[] = [];
   let match;
 
+  // Markdown headings (# .. ######)
+  const headingRegex = /^(#{1,6})\\s+(.+)$/gm;
   while ((match = headingRegex.exec(contentWithoutCodeBlocks)) !== null) {
     const level = match[1].length;
     const text = match[2].trim();
-    const id = generateId(text);
-    headings.push({ id, text, level });
+    headings.push({ id: generateId(text), text, level, position: match.index });
   }
 
-  return headings;
+  // <Update label="..."> blocks surface their label as a top-level entry
+  const updateRegex = /<Update\\b[^>]*?\\blabel=["']([^"']+)["'][^>]*>/g;
+  while ((match = updateRegex.exec(contentWithoutCodeBlocks)) !== null) {
+    const text = match[1].trim();
+    headings.push({ id: generateId(text), text, level: 1, position: match.index });
+  }
+
+  return headings
+    .sort((a, b) => a.position - b.position)
+    .map(({ id, text, level }) => ({ id, text, level }));
 }
 
 function extractComponentNames(source: string): string[] {

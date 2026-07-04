@@ -13,10 +13,12 @@ Easily manage and present change history.
 
 The \`Update\` component helps you display release notes, version details, and changelogs in a standardized format.
 
+Each \`Update\` label is added to the "On this page" sidebar and gets its own anchor, so you can link directly to a specific entry.
+
 <Update label="Example" description="v0.0.1">
   ## Example entry
 
-You can include anything here—images, code snippets, or a bullet list of modifications.
+You can include anything here - images, code snippets, or a bullet list of modifications.
 
 ![Demo Image](https://docs.doccupine.com/demo.png)
 
@@ -36,7 +38,7 @@ You can combine multiple \`Update\` components to build complete changelogs.
 <Update label="Example" description="v0.0.1">
   ## Example entry
 
-You can include anything here—images, code snippets, or a bullet list of modifications.
+You can include anything here - images, code snippets, or a bullet list of modifications.
 
 ![Demo Image](https://docs.doccupine.com/demo.png)
 
@@ -52,7 +54,8 @@ You can include anything here—images, code snippets, or a bullet list of modif
 ## Properties
 
 <Field value="label" type="string" required>
-  The label of the update.
+  The label of the update. It also appears in the page's "On this page"
+  navigation and acts as a deep-link anchor to this entry.
 </Field>
 
 <Field value="description" type="string" required>

@@ -53,9 +53,19 @@ interface UpdateProps extends React.HTMLAttributes<HTMLDivElement> {
   description: string;
 }
 
+// Keep in sync with generateId in components/Docs.ts so the index sidebar
+// anchor (#id) resolves to this block.
+function generateId(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^\\w\\s-]/g, "")
+    .replace(/\\s+/g, "-")
+    .trim();
+}
+
 function Update({ children, label, description }: UpdateProps) {
   return (
-    <StyledUpdate>
+    <StyledUpdate id={generateId(label)}>
       <StyledUpdateSidebar>
         <div>
           <StyledUpdateLabel>{label}</StyledUpdateLabel>
