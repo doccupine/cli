@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.101
+
+- Strip Next.js route-group segments like `(site)` from generated doc URLs so AI chat answers, chat source links, and MCP search results link to real pages (`/code/` instead of `/(site)/code/`)
+- Instruct the AI chat assistant to never include route-group segments in links as an extra safeguard
+
 ## 0.0.100
 
 - Type the `TabList` styled component in `Code` with the `Theme` generic so it receives the typed theme prop like the other styled components
