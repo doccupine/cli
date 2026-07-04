@@ -114,6 +114,21 @@ function extractContentBlocks(fileText: string): string[] {
 }
 
 /**
+ * Convert a page file path to its URL path, stripping the leading "app/"
+ * and Next.js route group segments like "(site)" which never appear in URLs.
+ */
+function toDocPath(pagePath: string): string {
+  return (
+    path
+      .dirname(pagePath)
+      .replace(/^app\\/?/, "")
+      .split("/")
+      .filter((seg) => !(seg.startsWith("(") && seg.endsWith(")")))
+      .join("/") || "/"
+  );
+}
+
+/**
  * Get the title from markdown content
  */
 function extractTitle(content: string): string {
@@ -142,7 +157,7 @@ export async function listDocs(
       const blocks = extractContentBlocks(fileContent);
       const content = blocks.join("\\n\\n");
       const title = extractTitle(content);
-      const docPath = path.dirname(relativePath).replace(/^app\\/?/, "") || "/";
+      const docPath = toDocPath(relativePath);
 
       resources.push({
         uri: \`docs://\${docPath}\`,
@@ -187,7 +202,7 @@ export async function getDoc(
     const blocks = extractContentBlocks(fileContent);
     const content = blocks.join("\\n\\n");
     const title = extractTitle(content);
-    const docPath = path.dirname(targetPath).replace(/^app\\/?/, "") || "/";
+    const docPath = toDocPath(targetPath);
 
     return {
       uri: \`docs://\${docPath}\`,

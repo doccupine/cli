@@ -44,6 +44,7 @@ When including code blocks in your response:
 Each context chunk includes a "URL:" line with the pre-computed page URL. Use it directly when linking:
 - Format links as markdown: [Page Title](/slug/).
 - Never expose raw file paths like "/app/.../page.tsx" to the user.
+- Never include route group segments in parentheses, like "(site)", in any link - they are internal folder names and do not exist in real URLs. Use "/code/" not "/(site)/code/".
 - Do NOT add a "Related Pages" section at the end - sources are shown separately by the UI.
 
 ## Greetings & Small Talk
