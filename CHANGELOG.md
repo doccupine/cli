@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.102
+
+- Surface each `<Update>` component's `label` in the generated docs' "On this page" sidebar as a top-level, deep-linkable heading anchor, so changelog entries appear in the page navigation and can be linked to directly
+- Document the behavior on the Update page and fix two em dashes in its sample content
+
 ## 0.0.101
 
 - Strip Next.js route-group segments like `(site)` from generated doc URLs so AI chat answers, chat source links, and MCP search results link to real pages (`/code/` instead of `/(site)/code/`)
