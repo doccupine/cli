@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.0.99
+
+- Add an optional `title` prop to the `Code` component that shows a file name centered in the window bar, styled to match the GitHub-style header in both modes
+- Add a `CodeTabs` component for multi-variant snippets (e.g. npm/pnpm/yarn install commands): a keyboard-accessible tablist in the window bar with arrow-key navigation, and a copy button that copies the active tab
+- Expose `Code` and `CodeTabs` to MDX authors so docs can use them directly without imports
+- Render `diff` code blocks GitHub-style with added and removed lines highlighted full-width in green and red
+- Document the new features on the Code page: Highlighting Diffs, File Names, and Tabbed Code Blocks sections with live examples
+- Update generated app dependency baseline-browser-mapping
+
 ## 0.0.98
 
 - Open external links in the generated app in a new tab with `rel="noopener noreferrer"`: `Card` now detects external `href` values like `Button` already did, and the "Powered by Doccupine" links in the footer and password gate open in a new tab (the footer's GitHub link also gained the missing `rel`)
