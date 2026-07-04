@@ -4,7 +4,7 @@ import Link from "next/link";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type MDXComponents = Record<string, React.ComponentType<any>>;
 import { Space } from "cherry-styled-components";
-import { Code as CodeBlock } from "@/components/layout/Code";
+import { Code as CodeBlock, CodeTabs } from "@/components/layout/Code";
 import { Card } from "@/components/layout/Card";
 import { Accordion } from "@/components/layout/Accordion";
 import { Tabs, TabContent } from "@/components/layout/Tabs";
@@ -156,6 +156,8 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     pre: Pre,
 
     // Expose your custom components for MDX usage
+    Code: CodeBlock,
+    CodeTabs,
     Card,
     Accordion,
     Tabs,

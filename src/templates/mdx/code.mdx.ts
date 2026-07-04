@@ -47,4 +47,46 @@ class HelloWorld {
         System.out.println("Hello, World!");
     }
 }
-\`\`\``;
+\`\`\`
+
+## Highlighting Diffs
+
+Show a visual diff of added or removed lines in your code blocks. Added lines are highlighted in green and removed lines are highlighted in red. Set the language to \`diff\` and prefix each changed line with \`+\` or \`-\`:
+
+\`\`\`\`text
+\`\`\`diff
+function calculateTotal(items) {
+-  return items.reduce((sum, item) => sum + item.price, 0);
++  const total = items.reduce((sum, item) => sum + item.price, 0);
++  return Math.round(total * 100) / 100;
+}
+\`\`\`
+\`\`\`\`
+
+\`\`\`diff
+function calculateTotal(items) {
+-  return items.reduce((sum, item) => sum + item.price, 0);
++  const total = items.reduce((sum, item) => sum + item.price, 0);
++  return Math.round(total * 100) / 100;
+}
+\`\`\`
+
+## File Names
+
+Add a \`title\` to a code block to display a file name in the window bar, styled to match the GitHub-style header. Pass it through the \`<Code />\` component:
+
+\`\`\`text
+<Code title="package.json" language="json" code={\`{\\n  "name": "my-app",\\n  "version": "1.0.0"\\n}\`} />
+\`\`\`
+
+<Code title="package.json" language="json" code={\`{\\n  "name": "my-app",\\n  "version": "1.0.0"\\n}\`} />
+
+## Tabbed Code Blocks
+
+Use \`<CodeTabs />\` to show several variants of the same snippet - for example the same install command across package managers. Each tab is a keyboard-accessible button, and the copy button copies whichever tab is active. Each tab may set a \`language\` for highlighting (defaults to \`bash\`).
+
+\`\`\`text
+<CodeTabs tabs={[{ label: "npm", code: "npm install doccupine" }, { label: "pnpm", code: "pnpm add doccupine" }, { label: "yarn", code: "yarn add doccupine" }]} />
+\`\`\`
+
+<CodeTabs tabs={[{ label: "npm", code: "npm install doccupine" }, { label: "pnpm", code: "pnpm add doccupine" }, { label: "yarn", code: "yarn add doccupine" }]} />`;
