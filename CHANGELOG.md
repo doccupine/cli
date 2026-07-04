@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.100
+
+- Type the `TabList` styled component in `Code` with the `Theme` generic so it receives the typed theme prop like the other styled components
+- Update generated app dependency cherry-styled-components to 0.2.8
+
 ## 0.0.99
 
 - Add an optional `title` prop to the `Code` component that shows a file name centered in the window bar, styled to match the GitHub-style header in both modes
