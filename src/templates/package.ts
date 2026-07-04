@@ -41,7 +41,7 @@ export const packageJsonTemplate =
         "@types/node": "^26",
         "@types/react": "^19",
         "@types/react-dom": "^19",
-        "baseline-browser-mapping": "^2.10.41",
+        "baseline-browser-mapping": "^2.10.42",
         eslint: "^9",
         "eslint-config-next": "16.2.10",
         prettier: "^3.9.4",
