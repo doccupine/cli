@@ -154,7 +154,7 @@ const TopBarTitle = styled.span<{ theme: Theme }>\`
 
 /* Segmented control living in the TopBar for CodeTabs. Scrolls horizontally
    with the thin scrollbar when the labels overflow the 33px bar. */
-const TabList = styled.div\`
+const TabList = styled.div<{ theme: Theme }>\`
   display: flex;
   align-items: center;
   gap: 2px;
