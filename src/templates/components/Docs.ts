@@ -46,7 +46,12 @@ function extractHeadings(content: string): Heading[] {
   const updateRegex = /<Update\\b[^>]*?\\blabel=["']([^"']+)["'][^>]*>/g;
   while ((match = updateRegex.exec(contentWithoutCodeBlocks)) !== null) {
     const text = match[1].trim();
-    headings.push({ id: generateId(text), text, level: 1, position: match.index });
+    headings.push({
+      id: generateId(text),
+      text,
+      level: 1,
+      position: match.index,
+    });
   }
 
   return headings
