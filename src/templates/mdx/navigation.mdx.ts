@@ -20,6 +20,8 @@ When no custom navigation is provided, Doccupine generates a structure based on 
 - **category**: The category name that groups the page in the sidebar.
 - **categoryOrder**: The position of the category within the sidebar. Lower numbers appear first.
 - **order**: The position of the page within its category. Lower numbers appear first.
+- **navIcon**: Optional [Lucide](https://lucide.dev/icons) icon name shown next to the page's sidebar link.
+- **categoryIcon**: Optional Lucide icon name for the page's category header. The first page in a category that sets it wins.
 
 ### Example frontmatter
 
@@ -87,7 +89,8 @@ The simplest format is an array of categories. When using [sections](/sections),
       { "slug": "ai-assistant", "title": "AI Assistant" },
       { "slug": "model-context-protocol", "title": "Model Context Protocol" },
       { "slug": "analytics", "title": "Analytics" },
-      { "slug": "deployment-and-hosting", "title": "Deployment & Hosting" }
+      { "slug": "deployment-and-hosting", "title": "Deployment & Hosting" },
+      { "slug": "authentication", "title": "Authentication" }
     ]
   }
 ]
@@ -125,9 +128,74 @@ The key \`""\` controls the root section. Other keys match section slugs defined
 ### Fields
 
 - **label**: The section header shown in the sidebar.
+- **icon**: Optional [Lucide](https://lucide.dev/icons) icon name shown next to the category header.
 - **links**: An array of page entries for that section.
   - **slug**: The MDX file slug (filename without extension). Use an empty string \`""\` for \`index.mdx\`.
   - **title**: The display title in the navigation. This can differ from the page's \`title\` frontmatter.
+  - **icon**: Optional Lucide icon name shown next to the link.
+  - **links**: Optional array of nested child links. See [Nested navigation](#nested-navigation).
+
+## Icons
+
+Add icons to categories and links to make the sidebar easier to scan. Icons use [Lucide](https://lucide.dev/icons) names in kebab-case (e.g. \`rocket\`, \`book-open\`, \`settings\`). Unknown names render nothing, so a typo never breaks the build.
+
+With frontmatter, set \`navIcon\` on a page for its sidebar link and \`categoryIcon\` for its category:
+
+\`\`\`text
+---
+title: "Introduction"
+category: "Getting Started"
+categoryOrder: 1
+order: 1
+navIcon: "rocket"
+categoryIcon: "book-open"
+---
+\`\`\`
+
+With \`navigation.json\`, add an \`icon\` to any category or link:
+
+\`\`\`json
+[
+  {
+    "label": "Getting Started",
+    "icon": "book-open",
+    "links": [
+      { "slug": "", "title": "Introduction", "icon": "rocket" },
+      { "slug": "commands", "title": "Commands", "icon": "terminal" }
+    ]
+  }
+]
+\`\`\`
+
+## Nested navigation
+
+A link in \`navigation.json\` can hold its own \`links\` array to create a collapsible group. Groups expand and collapse on click and open automatically when one of their pages is active. Nesting can go as deep as you need.
+
+\`\`\`json
+[
+  {
+    "label": "Guides",
+    "icon": "book-open",
+    "links": [
+      { "slug": "guides", "title": "Overview", "icon": "compass" },
+      {
+        "title": "Advanced",
+        "icon": "settings",
+        "links": [
+          { "slug": "guides/caching", "title": "Caching" },
+          { "slug": "guides/streaming", "title": "Streaming" }
+        ]
+      }
+    ]
+  }
+]
+\`\`\`
+
+A group can be a plain label - omit \`slug\` and it acts only as a collapsible header - or a real page, by adding a \`slug\` so the group title is also a link.
+
+<Callout type="note">
+  Nested groups are only available through \`navigation.json\`. Frontmatter navigation is always two levels: category and pages.
+</Callout>
 
 ## Precedence and behavior
 

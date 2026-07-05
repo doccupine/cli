@@ -4,6 +4,7 @@ description: "Configure your documentation site's name, description, icon, and i
 date: "2026-02-19"
 category: "Configuration"
 categoryOrder: 2
+categoryIcon: "settings"
 order: 0
 section: "Platform"
 ---

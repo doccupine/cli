@@ -4,6 +4,7 @@ description: "Learn how to use the Doccupine platform to create, customize, and 
 date: "2026-02-19"
 category: "Getting Started"
 categoryOrder: 0
+categoryIcon: "rocket"
 order: 0
 section: "Platform"
 ---

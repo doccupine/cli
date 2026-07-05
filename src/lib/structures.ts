@@ -48,6 +48,7 @@ import { iconTemplate } from "../templates/components/layout/Icon.js";
 import { pictogramsTemplate } from "../templates/components/layout/Pictograms.js";
 import { sharedStyledTemplate } from "../templates/components/layout/SharedStyles.js";
 import { siteGateComponentTemplate } from "../templates/components/layout/SiteGate.js";
+import { slugTemplate } from "../templates/components/layout/Slug.js";
 import { staticLinksTemplate } from "../templates/components/layout/StaticLinks.js";
 import { stepsTemplate } from "../templates/components/layout/Steps.js";
 import { tabsTemplate } from "../templates/components/layout/Tabs.js";
@@ -193,6 +194,7 @@ export const appStructure: Record<string, string> = {
   "components/layout/Pictograms.tsx": pictogramsTemplate,
   "components/layout/SharedStyled.ts": sharedStyledTemplate,
   "components/layout/SiteGate.tsx": siteGateComponentTemplate,
+  "components/layout/Slug.ts": slugTemplate,
   "components/layout/StaticLinks.tsx": staticLinksTemplate,
   "components/layout/Steps.tsx": stepsTemplate,
   "components/layout/Tabs.tsx": tabsTemplate,

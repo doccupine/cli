@@ -4,6 +4,7 @@ description: "Explore the full library of built-in components available in your 
 date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
+categoryIcon: "blocks"
 order: 0
 ---
 

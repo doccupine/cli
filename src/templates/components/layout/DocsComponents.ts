@@ -115,6 +115,7 @@ export const StyledMarkdownContainer = styled.div\`
 interface Props {
   theme?: Theme;
   $isActive?: boolean;
+  $isOpen?: boolean;
   $hasSectionBar?: boolean;
 }
 
@@ -272,6 +273,13 @@ export const StyledStrong = styled.strong<{ theme: Theme }>\`
   font-weight: 600;
   \${({ theme }) => styledStrong(theme)};
   color: \${({ theme }) => theme.colors.accentStrong};
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  & svg {
+    flex-shrink: 0;
+  }
 \`;
 
 export const StyledSidebarListItem = styled.li\`
@@ -280,15 +288,25 @@ export const StyledSidebarListItem = styled.li\`
   clear: both;
 \`;
 
-export const StyledSidebarListItemLink = styled(Link)<Props>\`
+// Shared appearance for every sidebar row - leaf links AND nested group
+// headers - so hover, active state, and the left rail read identically.
+const sidebarRowStyles = css<Props>\`
   text-decoration: none;
   font-size: \${({ theme }) => theme.fontSizes.small.lg};
   line-height: 1.6;
   color: \${({ theme }) => theme.colors.accentMuted};
   padding: 5px 0 5px 20px;
   display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
   transition: all 0.3s ease;
   border-left: solid 1px \${({ theme }) => theme.colors.grayLight};
+
+  & svg {
+    flex-shrink: 0;
+  }
 
   &:hover {
     color: \${({ theme }) => theme.colors.accent};
@@ -297,11 +315,89 @@ export const StyledSidebarListItemLink = styled(Link)<Props>\`
 
   \${({ $isActive, theme }) =>
     $isActive &&
-    \`
-			color: \${theme.colors.accentStrong};
-			border-color: \${theme.colors.primary};
-			font-weight: 600;
-	\`};
+    css\`
+      color: \${theme.colors.accentStrong};
+      border-color: \${theme.colors.primary};
+      font-weight: 600;
+    \`};
+\`;
+
+// The collapse chevron points right when closed and rotates to point down
+// when the group is open.
+const sidebarChevron = css<Props>\`
+  & .lucide-chevron-right {
+    margin-left: auto;
+    transition: transform 0.3s ease;
+
+    \${({ $isOpen }) =>
+      $isOpen &&
+      css\`
+        transform: rotate(90deg);
+      \`}
+  }
+\`;
+
+export const StyledSidebarListItemLink = styled(Link)<Props>\`
+  \${sidebarRowStyles};
+\`;
+
+// Nested navigation group. The header shares the link appearance/hover; a
+// non-navigable group is a single toggle button, while a group that is also a
+// page pairs a link with a chevron toggle. Children live in
+// StyledSidebarGroupContent, which animates open/closed via height 0 <-> auto
+// (enabled by interpolate-size in GlobalStyles, same as the Accordion).
+export const StyledSidebarGroupButton = styled.button<Props>\`
+  \${resetButton};
+  \${sidebarRowStyles};
+  \${sidebarChevron};
+  width: 100%;
+  text-align: left;
+\`;
+
+export const StyledSidebarGroupRow = styled.div<Props>\`
+  \${sidebarRowStyles};
+  \${sidebarChevron};
+\`;
+
+export const StyledSidebarGroupLink = styled(Link)\`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+
+  & svg {
+    flex-shrink: 0;
+  }
+\`;
+
+export const StyledSidebarGroupChevron = styled.button\`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+\`;
+
+export const StyledSidebarGroupContent = styled.ul<Props>\`
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  height: 0;
+  overflow: clip;
+  transition: all 0.3s ease;
+
+  \${({ $isOpen }) =>
+    $isOpen &&
+    css\`
+      height: auto;
+    \`}
 \`;
 
 export const StyleMobileBar = styled.button<Props>\`

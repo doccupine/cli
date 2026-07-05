@@ -4,6 +4,7 @@ description: "Monitor your documentation site's build status and deployment hist
 date: "2026-02-19"
 category: "Infrastructure"
 categoryOrder: 3
+categoryIcon: "server"
 order: 1
 section: "Platform"
 ---

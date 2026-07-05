@@ -15,6 +15,8 @@ export interface PageMeta {
   categoryOrder: number;
   order: number;
   section: string;
+  navIcon?: string;
+  categoryIcon?: string;
   lastModified?: string;
 }
 

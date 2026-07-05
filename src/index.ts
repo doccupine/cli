@@ -908,6 +908,13 @@ class MDXToNextJSGenerator {
       categoryOrder: frontmatter.categoryOrder || 0,
       order: frontmatter.order || 0,
       section: sectionSlug,
+      // Sidebar icons (Lucide names). Kept separate from `icon`, which is
+      // reserved for the favicon/OG metadata. Only emitted when set so the
+      // generated page literal stays lean.
+      ...(frontmatter.navIcon ? { navIcon: String(frontmatter.navIcon) } : {}),
+      ...(frontmatter.categoryIcon
+        ? { categoryIcon: String(frontmatter.categoryIcon) }
+        : {}),
       lastModified,
     };
   }

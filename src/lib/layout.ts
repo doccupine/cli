@@ -315,6 +315,7 @@ ${
       date: "2025-01-15",
       category: "Introduction",
       categoryOrder: 0,
+      categoryIcon: "rocket",
       order: 0,
     },
   ];

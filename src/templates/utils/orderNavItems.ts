@@ -8,16 +8,20 @@ export const orderNavItemsTemplate = `export interface PagesProps {
   categoryOrder?: number;
   order?: number;
   section?: string;
+  navIcon?: string;
+  categoryIcon?: string;
 }
 
 interface AccProps {
   [key: string]: {
     categoryOrder: number;
+    icon?: string;
     pages: {
       date: string | null;
       slug: string;
       title: string;
       order: number;
+      icon?: string;
     }[];
   };
 }
@@ -33,11 +37,17 @@ function transformPagesToGroupedStructure(pages: PagesProps[]) {
       };
     }
 
+    // The first page in a category to declare a categoryIcon sets it.
+    if (!acc[category].icon && page.categoryIcon) {
+      acc[category].icon = page.categoryIcon;
+    }
+
     acc[category].pages.push({
       date: page.date,
       slug: page.slug,
       title: page.title,
       order: page.order || 0,
+      icon: page.navIcon,
     });
 
     return acc;
@@ -48,6 +58,7 @@ function transformPagesToGroupedStructure(pages: PagesProps[]) {
     .map(([categoryName, categoryData], index) => ({
       slug: index === 0 ? "" : categoryName.toLowerCase().replace(/s+/g, "-"),
       label: categoryName,
+      icon: categoryData.icon,
       links: categoryData.pages.sort((a, b) => a.order - b.order),
     }));
 }

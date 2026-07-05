@@ -4,6 +4,7 @@ description: "Browse, create, and edit your documentation files directly in the 
 date: "2026-02-19"
 category: "Editing"
 categoryOrder: 1
+categoryIcon: "pencil"
 order: 0
 section: "Platform"
 ---

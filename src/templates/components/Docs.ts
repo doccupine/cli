@@ -10,6 +10,7 @@ import remarkGfm from "remark-gfm";
 import { useMDXComponents } from "@/components/MDXComponents";
 import { DocsSideBar } from "@/components/DocsSideBar";
 import { ActionBar } from "@/components/layout/ActionBar";
+import { createSlugger } from "@/components/layout/Slug";
 
 interface DocsProps {
   content: string;
@@ -21,17 +22,9 @@ interface Heading {
   level: number;
 }
 
-function generateId(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\\w\\s-]/g, "")
-    .replace(/\\s+/g, "-")
-    .trim();
-}
-
 function extractHeadings(content: string): Heading[] {
   const contentWithoutCodeBlocks = content.replace(/\`\`\`[\\s\\S]*?\`\`\`/g, "");
-  const headings: (Heading & { position: number })[] = [];
+  const entries: { text: string; level: number; position: number }[] = [];
   let match;
 
   // Markdown headings (# .. ######)
@@ -39,24 +32,22 @@ function extractHeadings(content: string): Heading[] {
   while ((match = headingRegex.exec(contentWithoutCodeBlocks)) !== null) {
     const level = match[1].length;
     const text = match[2].trim();
-    headings.push({ id: generateId(text), text, level, position: match.index });
+    entries.push({ text, level, position: match.index });
   }
 
   // <Update label="..."> blocks surface their label as a top-level entry
   const updateRegex = /<Update\\b[^>]*?\\blabel=["']([^"']+)["'][^>]*>/g;
   while ((match = updateRegex.exec(contentWithoutCodeBlocks)) !== null) {
-    const text = match[1].trim();
-    headings.push({
-      id: generateId(text),
-      text,
-      level: 1,
-      position: match.index,
-    });
+    entries.push({ text: match[1].trim(), level: 1, position: match.index });
   }
 
-  return headings
+  // Assign ids in document order with a shared slugger so repeated heading
+  // text produces unique anchors ("setup", "setup-1", ...) that stay in sync
+  // with the ids rendered by MDXComponents/Update.
+  const slug = createSlugger();
+  return entries
     .sort((a, b) => a.position - b.position)
-    .map(({ id, text, level }) => ({ id, text, level }));
+    .map(({ text, level }) => ({ id: slug(text), text, level }));
 }
 
 function extractComponentNames(source: string): string[] {
