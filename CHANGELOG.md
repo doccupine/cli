@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.104
+
+- Add accessible keyboard focus indicators throughout the generated docs site: a shared `focusRing` helper draws a soft `:focus-visible` glow (matching the existing `interactiveStyles` treatment) on header navigation links and the logo, both the left and right sidebars, footer links, and inline document and chat links, so keyboard users get a clear, on-brand focus ring that never shows on mouse clicks
+- Round the footer's GitHub icon-link focus ring, and draw the header section-tab ring inset so the horizontally scrolling section bar never clips it top or bottom
+- Redesign the generated 404 page as a standalone, centered card served from the site root (`app/not-found.tsx`) reusing the password-gate box pattern, with an icon, an "Error 404" title, a "This page could not be found." message, and a "Home" button that links back to the home page
+- Render the Steps component's step title as a bold `div` instead of an `h3` so step labels no longer inject an out-of-order heading into the page outline
+
 ## 0.0.103
 
 - Add optional sidebar icons: set `navIcon` in a page's frontmatter for its sidebar link and `categoryIcon` for its category header, or add an `icon` to any category or link in `navigation.json`, all using [Lucide](https://lucide.dev/icons) names, with unknown names rendering nothing so a typo never breaks the build
