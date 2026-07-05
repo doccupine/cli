@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://doccupine.com
+    about: Read the docs before filing an issue.
+  - name: Report a security vulnerability
+    url: https://github.com/doccupine/cli/security/advisories/new
+    about: Please report security issues privately, not as public issues.
+  - name: Questions and discussion
+    url: https://github.com/doccupine/cli/discussions
+    about: Ask questions and share ideas with the community.

@@ -46,3 +46,11 @@ When adding a new template:
 2. Make your changes and ensure `pnpm build && pnpm test` passes
 3. Write a clear PR description explaining the change and why
 4. Keep PRs focused - one feature or fix per PR
+
+## Code of Conduct
+
+By participating in this project you agree to abide by the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Security
+
+Found a vulnerability? Please report it privately as described in the [Security Policy](SECURITY.md). Do not open a public issue for security reports.

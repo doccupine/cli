@@ -1,0 +1,66 @@
+name: Bug report
+description: Report a problem with the Doccupine CLI or the app it generates
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. Please do not include API keys, passwords, or other secrets. Security issues should be reported privately: see [SECURITY.md](https://github.com/doccupine/cli/blob/main/SECURITY.md).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected instead.
+      placeholder: When I run `npx doccupine`, ...
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps so we can reproduce the issue.
+      placeholder: |
+        1. Run `npx doccupine`
+        2. Add an MDX file with ...
+        3. See error
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Doccupine version
+      description: Output of `npx doccupine --version`.
+      placeholder: "0.0.104"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of Doccupine is affected?
+      options:
+        - CLI / file watching
+        - Generated app (pages, layout, navigation)
+        - AI chat / RAG
+        - MCP server
+        - Theming / fonts
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Node version, package manager, and OS.
+      placeholder: |
+        - Node: 22.x
+        - Package manager: pnpm 10
+        - OS: macOS 15
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant terminal output. Redact any secrets first.
+      render: shell
