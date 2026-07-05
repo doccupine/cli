@@ -54,11 +54,12 @@ const StepNumber = styled.div<{ theme: Theme }>\`
   z-index: 1;
 \`;
 
-const StyledStepTitle = styled.h3<{ theme: Theme }>\`
+const StyledStepTitle = styled.div<{ theme: Theme }>\`
   margin: 0 0 10px 0;
   padding: 2px 0 0 0;
   color: \${({ theme }) => theme.colors.dark};
   \${({ theme }) => styledText(theme)};
+  font-weight: 700;
   display: flex;
   align-items: center;
   gap: 10px;

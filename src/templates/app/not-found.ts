@@ -1,11 +1,7 @@
 import { DEFAULT_DESCRIPTION } from "../../lib/constants.js";
 
 export const notFoundTemplate = `import { Metadata } from "next";
-import { Docs } from "@/components/Docs";
-
-const content = \`# 404 Not Found
-
-You just hit a route that doesn't exist.\`;
+import { NotFound } from "@/components/layout/NotFound";
 
 export const metadata: Metadata = {
   title: "Not Found",
@@ -19,6 +15,6 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <Docs content={content} />;
+  return <NotFound />;
 }
 `;

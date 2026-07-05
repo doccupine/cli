@@ -55,6 +55,15 @@ const StyledSectionLink = styled(Link)<{
   transition: all 0.3s ease;
   min-width: fit-content;
 
+  /* Inset ring (not the shared outset focusRing): the scrolling section bar
+     clips overflow, so an outset glow gets cropped top/bottom. Drawing it inside
+     the link's padding keeps the primaryLight focus look fully visible. */
+  &:focus-visible {
+    outline: none;
+    border-radius: \${({ theme }) => theme.spacing.radius.xs};
+    box-shadow: inset 0 0 0 4px \${({ theme }) => theme.colors.primaryLight};
+  }
+
   &:hover {
     color: \${({ theme }) => theme.colors.primary};
   }

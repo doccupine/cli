@@ -12,6 +12,7 @@ import {
 import Link from "next/link";
 import { mq, Theme } from "@/app/theme";
 import {
+  focusRing,
   styledAnchor,
   styledTable,
   stylesLists,
@@ -253,6 +254,7 @@ export const StyledIndexSidebarLink = styled.a<{
   font-weight: \${({ $isActive }) => ($isActive ? "600" : "400")};
   text-decoration: none;
   transition: all 0.3s ease;
+  \${focusRing};
 
   &:hover {
     color: \${({ theme }) => theme.colors.primary};
@@ -313,6 +315,8 @@ const sidebarRowStyles = css<Props>\`
     border-color: \${({ theme }) => theme.colors.primary};
   }
 
+  \${focusRing};
+
   \${({ $isActive, theme }) =>
     $isActive &&
     css\`
@@ -357,6 +361,14 @@ export const StyledSidebarGroupButton = styled.button<Props>\`
 export const StyledSidebarGroupRow = styled.div<Props>\`
   \${sidebarRowStyles};
   \${sidebarChevron};
+
+  /* The row is a plain div, so it never matches :focus-visible itself. Ring the
+     whole row when its inner link or chevron takes keyboard focus instead, to
+     match the leaf-row focus treatment. */
+  &:has(:focus-visible) {
+    border-radius: \${({ theme }) => theme.spacing.radius.xs};
+    box-shadow: 0 0 0 4px \${({ theme }) => theme.colors.primaryLight};
+  }
 \`;
 
 export const StyledSidebarGroupLink = styled(Link)\`
@@ -371,6 +383,11 @@ export const StyledSidebarGroupLink = styled(Link)\`
   & svg {
     flex-shrink: 0;
   }
+
+  /* Ring is drawn on the parent row via :has(:focus-visible). */
+  &:focus-visible {
+    outline: none;
+  }
 \`;
 
 export const StyledSidebarGroupChevron = styled.button\`
@@ -383,6 +400,11 @@ export const StyledSidebarGroupChevron = styled.button\`
   background: none;
   color: inherit;
   cursor: pointer;
+
+  /* Ring is drawn on the parent row via :has(:focus-visible). */
+  &:focus-visible {
+    outline: none;
+  }
 \`;
 
 export const StyledSidebarGroupContent = styled.ul<Props>\`

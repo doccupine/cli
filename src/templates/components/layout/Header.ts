@@ -4,6 +4,7 @@ import { useCallback, useContext, useRef, useState } from "react";
 import styled, { css } from "styled-components";
 import Link from "next/link";
 import { mq, Theme } from "@/app/theme";
+import { focusRing } from "@/components/layout/SharedStyled";
 import { useOnClickOutside } from "cherry-styled-components";
 import { Search } from "lucide-react";
 import { Logo } from "@/components/layout/Pictograms";
@@ -58,6 +59,8 @@ const StyledHeader = styled.header<{ theme: Theme; $hasChildren: boolean }>\`
 
   & .logo {
     display: flex;
+    min-width: max-content;
+    \${focusRing};
 
     & svg,
     & img {

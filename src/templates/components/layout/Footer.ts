@@ -7,6 +7,7 @@ import { Space, styledSmall } from "cherry-styled-components";
 import { ChatContext } from "@/components/Chat";
 import { mq, Theme } from "@/app/theme";
 import { GitHubLogo } from "@/components/layout/Pictograms";
+import { focusRing } from "@/components/layout/SharedStyled";
 import linksData from "@/links.json";
 
 interface LinkProps {
@@ -61,9 +62,15 @@ const StyledFooterInner = styled.div<{ theme: Theme }>\`
     text-decoration: none;
     transition: all 0.3s ease;
     display: inline-flex;
+    \${focusRing};
 
     &:hover {
       color: \${({ theme }) => theme.colors.primary};
+    }
+
+    /* The GitHub logo is an icon-only link - round its focus ring to match. */
+    &:has(svg):focus-visible {
+      border-radius: 100%;
     }
 
     & svg {

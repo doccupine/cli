@@ -30,6 +30,20 @@ export const interactiveStyles = css<{ theme: Theme }>\`
   }
 \`;
 
+/** Keyboard-focus ring for bare navigation links (header links, sidebar rows,
+    footer links) that don't carry the full interactiveStyles treatment. Mirrors
+    the primaryLight glow from interactiveStyles, but uses :focus-visible so the
+    ring only shows for keyboard users - not on mouse click. Pair with an element
+    that already has a transition for a smooth fade. The small border-radius
+    rounds the ring, so don't apply this to elements that set their own radius. */
+export const focusRing = css<{ theme: Theme }>\`
+  &:focus-visible {
+    outline: none;
+    border-radius: \${({ theme }) => theme.spacing.radius.xs};
+    box-shadow: 0 0 0 4px \${({ theme }) => theme.colors.primaryLight};
+  }
+\`;
+
 export const styledAnchor = css<{ theme: Theme }>\`
   & a:not([class]):not(:has(img)) {
     color: inherit;
@@ -40,6 +54,16 @@ export const styledAnchor = css<{ theme: Theme }>\`
     &:hover {
       color: \${({ theme }) => theme.colors.accent};
       box-shadow: 0 1px 0 0 \${({ theme }) => theme.colors.primary};
+    }
+
+    /* Same primaryLight focus glow as focusRing, but layered over the link's
+       own box-shadow underline (same property) so the underline is preserved. */
+    &:focus-visible {
+      outline: none;
+      border-radius: \${({ theme }) => theme.spacing.radius.xs};
+      box-shadow:
+        0 2px 0 0 \${({ theme }) => theme.colors.primary},
+        0 0 0 4px \${({ theme }) => theme.colors.primaryLight};
     }
   }
 \`;

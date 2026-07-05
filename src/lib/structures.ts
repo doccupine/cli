@@ -47,6 +47,7 @@ import { headerTemplate } from "../templates/components/layout/Header.js";
 import { iconTemplate } from "../templates/components/layout/Icon.js";
 import { pictogramsTemplate } from "../templates/components/layout/Pictograms.js";
 import { sharedStyledTemplate } from "../templates/components/layout/SharedStyles.js";
+import { notFoundComponentTemplate } from "../templates/components/layout/NotFound.js";
 import { siteGateComponentTemplate } from "../templates/components/layout/SiteGate.js";
 import { slugTemplate } from "../templates/components/layout/Slug.js";
 import { staticLinksTemplate } from "../templates/components/layout/StaticLinks.js";
@@ -132,7 +133,7 @@ export const appStructure: Record<string, string> = {
   "package.json": packageJsonTemplate,
   "tsconfig.json": tsconfigTemplate,
 
-  "app/(site)/not-found.tsx": notFoundTemplate,
+  "app/not-found.tsx": notFoundTemplate,
   "app/gate/page.tsx": gatePageTemplate,
   "app/theme.ts": themeTemplate,
   "app/api/gate/route.ts": gateRoutesTemplate,
@@ -193,6 +194,7 @@ export const appStructure: Record<string, string> = {
   "components/layout/Icon.tsx": iconTemplate,
   "components/layout/Pictograms.tsx": pictogramsTemplate,
   "components/layout/SharedStyled.ts": sharedStyledTemplate,
+  "components/layout/NotFound.tsx": notFoundComponentTemplate,
   "components/layout/SiteGate.tsx": siteGateComponentTemplate,
   "components/layout/Slug.ts": slugTemplate,
   "components/layout/StaticLinks.tsx": staticLinksTemplate,
