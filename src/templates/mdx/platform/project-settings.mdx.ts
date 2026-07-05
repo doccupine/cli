@@ -4,6 +4,7 @@ description: "Rename or delete your documentation project."
 date: "2026-02-19"
 category: "Account"
 categoryOrder: 4
+categoryIcon: "user"
 order: 2
 section: "Platform"
 ---

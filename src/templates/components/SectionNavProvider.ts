@@ -15,7 +15,13 @@ import {
 import rawNavigation from "@/navigation.json";
 
 // navigation.json can be an array (root section only) or an object keyed by section slug
-type NavItem = { label: string; links: { slug: string; title: string }[] };
+type NavLink = {
+  slug?: string;
+  title: string;
+  icon?: string;
+  links?: NavLink[];
+};
+type NavItem = { label: string; icon?: string; links: NavLink[] };
 type NavigationConfig = NavItem[] | Record<string, NavItem[]>;
 
 const navigation = rawNavigation as NavigationConfig;
@@ -83,6 +89,7 @@ function SectionNavProvider({
       date: "2025-01-15",
       category: "Introduction",
       categoryOrder: 0,
+      categoryIcon: "rocket",
       order: 0,
     },
   ];

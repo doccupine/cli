@@ -17,6 +17,7 @@ import { Steps, Step } from "@/components/layout/Steps";
 import { Button } from "@/components/layout/Button";
 import { ColorSwatch, ColorSwatchGroup } from "@/components/layout/ColorSwatch";
 import { DemoTheme } from "@/components/layout/DemoTheme";
+import { createSlugger } from "@/components/layout/Slug";
 
 interface HeadingProps extends React.HTMLAttributes<HTMLHeadingElement> {
   children?: React.ReactNode;
@@ -40,14 +41,6 @@ function extractAllTextFromChildren(children: React.ReactNode): string {
     return extractAllTextFromChildren(element.props.children);
   }
   return "";
-}
-
-function generateId(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\\w\\s-]/g, "")
-    .replace(/\\s+/g, "-")
-    .trim();
 }
 
 // Map <pre><code class="language-xyz"> to our <Code /> component
@@ -74,10 +67,14 @@ function Pre(props: PreProps) {
 }
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
+  // One slugger per render so repeated heading text (and <Update> labels)
+  // resolve to unique, document-order ids that match the index sidebar built
+  // in components/Docs.tsx.
+  const slug = createSlugger();
   return {
     // Headings with auto-generated ids for TOC and deep links
     h1: ({ children, ...props }: HeadingProps) => {
-      const id = generateId(extractAllTextFromChildren(children));
+      const id = slug(extractAllTextFromChildren(children));
       return (
         <h1 id={id} {...props}>
           {children}
@@ -85,7 +82,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       );
     },
     h2: ({ children, ...props }: HeadingProps) => {
-      const id = generateId(extractAllTextFromChildren(children));
+      const id = slug(extractAllTextFromChildren(children));
       return (
         <h2 id={id} {...props}>
           {children}
@@ -93,7 +90,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       );
     },
     h3: ({ children, ...props }: HeadingProps) => {
-      const id = generateId(extractAllTextFromChildren(children));
+      const id = slug(extractAllTextFromChildren(children));
       return (
         <h3 id={id} {...props}>
           {children}
@@ -101,7 +98,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       );
     },
     h4: ({ children, ...props }: HeadingProps) => {
-      const id = generateId(extractAllTextFromChildren(children));
+      const id = slug(extractAllTextFromChildren(children));
       return (
         <h4 id={id} {...props}>
           {children}
@@ -109,7 +106,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       );
     },
     h5: ({ children, ...props }: HeadingProps) => {
-      const id = generateId(extractAllTextFromChildren(children));
+      const id = slug(extractAllTextFromChildren(children));
       return (
         <h5 id={id} {...props}>
           {children}
@@ -117,7 +114,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       );
     },
     h6: ({ children, ...props }: HeadingProps) => {
-      const id = generateId(extractAllTextFromChildren(children));
+      const id = slug(extractAllTextFromChildren(children));
       return (
         <h6 id={id} {...props}>
           {children}
@@ -166,7 +163,11 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     Icon,
     Columns,
     Field,
-    Update,
+    // Share the heading slugger so an <Update> label anchor stays unique and
+    // in document order alongside the surrounding headings.
+    Update: (props: React.ComponentProps<typeof Update>) => (
+      <Update {...props} id={slug(props.label)} />
+    ),
     Steps,
     Step,
     Button,

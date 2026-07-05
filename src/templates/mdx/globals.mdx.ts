@@ -10,6 +10,7 @@ description: "Configure global settings for your documentation."
 date: "2026-02-19"
 category: "Configuration"
 categoryOrder: 3
+categoryIcon: "settings"
 order: 1
 ---
 

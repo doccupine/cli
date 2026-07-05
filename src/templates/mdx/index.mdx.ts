@@ -6,6 +6,7 @@ description: "${DEFAULT_DESCRIPTION}"
 date: "2026-02-19"
 category: "Getting Started"
 categoryOrder: 0
+categoryIcon: "rocket"
 order: 0
 ---
 

@@ -87,9 +87,13 @@ const StyledSpacer = styled.div\`
 \`;
 
 interface Page {
-  slug: string;
+  // Optional: nested group nodes may act as headers without their own page.
+  // collectPages() only pushes nodes that actually have a slug.
+  slug?: string;
   title: string;
   category?: string;
+  links?: Page[];
+  items?: Page[];
   [key: string]: unknown;
 }
 
@@ -109,18 +113,29 @@ interface DocsNavigationProps {
 function DocsNavigation({ result }: DocsNavigationProps) {
   const { isOpen } = useContext(ChatContext);
   const pathname = usePathname();
-  const allPages: Page[] = result.flatMap((item) => {
-    if (item.links && Array.isArray(item.links)) {
-      return item.links;
+  // Walk categories and any nested link groups depth-first so prev/next spans
+  // every real page (a node with a slug), in reading order.
+  const collectPages = (nodes: unknown): Page[] => {
+    if (!Array.isArray(nodes)) return [];
+    const pages: Page[] = [];
+    for (const node of nodes as Page[]) {
+      if (node && node.slug !== undefined) {
+        pages.push(node);
+      }
+      const children = node && ((node.links ?? node.items) as unknown);
+      if (Array.isArray(children)) {
+        pages.push(...collectPages(children));
+      }
     }
-    if (item.items && Array.isArray(item.items)) {
-      return item.items;
-    }
-    if (item.slug !== undefined) {
-      return [item as Page];
-    }
-    return [];
-  });
+    return pages;
+  };
+  const allPages: Page[] = result.flatMap((item) =>
+    collectPages(
+      item.links ??
+        item.items ??
+        (item.slug !== undefined ? [item as Page] : []),
+    ),
+  );
   const currentSlug = pathname.replace(/^\\//, "").replace(/\\/$/, "");
   const currentIndex = allPages.findIndex((page) => page.slug === currentSlug);
   const prevPage = currentIndex > 0 ? allPages[currentIndex - 1] : null;

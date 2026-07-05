@@ -4,8 +4,10 @@ import { styledText } from "cherry-styled-components";
 import React, { useState, ReactNode } from "react";
 import styled, { css } from "styled-components";
 import { thinScrollbar } from "@/components/layout/SharedStyled";
+import { Icon } from "@/components/layout/Icon";
 interface TabContentProps {
   title: string;
+  icon?: string;
   children: ReactNode;
 }
 interface TabsProps {
@@ -28,6 +30,10 @@ const TabsList = styled.div<{ theme: Theme }>\`
 \`;
 const TabButton = styled.button<{ theme: Theme; $isActive?: boolean }>\`
   flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   padding: 12px 20px;
   border: none;
   background: \${({ theme }) => theme.colors.light};
@@ -38,6 +44,10 @@ const TabButton = styled.button<{ theme: Theme; $isActive?: boolean }>\`
   \${({ theme }) => styledText(theme)};
   color: \${({ theme }) => theme.colors.dark};
   font-weight: 600;
+
+  & svg {
+    flex-shrink: 0;
+  }
   \${({ theme, $isActive }) =>
     $isActive &&
     css\`
@@ -105,6 +115,7 @@ const Tabs: React.FC<TabsProps> = ({ children }) => {
             onClick={() => setActiveTab(index)}
             type="button"
           >
+            {tab.props.icon && <Icon name={tab.props.icon} size={18} />}
             {tab.props.title}
           </TabButton>
         ))}
