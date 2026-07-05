@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.0.103
+
+- Add optional sidebar icons: set `navIcon` in a page's frontmatter for its sidebar link and `categoryIcon` for its category header, or add an `icon` to any category or link in `navigation.json`, all using [Lucide](https://lucide.dev/icons) names, with unknown names rendering nothing so a typo never breaks the build
+- Add an optional `icon` prop to `TabContent` that renders a Lucide icon before the tab title
+- Support nested, collapsible navigation groups in `navigation.json`: any link can carry its own `links` array to become a group that expands and collapses on click and opens automatically when one of its pages is active, nested as deep as needed; a group can be a plain label or a real page when given a `slug`
+- Walk nested link groups when computing previous/next page navigation so paging spans every real page in reading order
+- Generate unique, document-order heading anchors via a shared slugger so repeated heading text yields stable ids (`setup`, `setup-1`, ...) matching GitHub and rehype-slug, keeping the "On this page" sidebar links in sync with the rendered headings and `<Update>` labels
+- Make each `<Update>` label a clickable anchor so readers can copy a deep link straight to a changelog entry
+- Document icons, nested navigation, and the tab `icon` prop on the Navigation and Tabs pages
+
 ## 0.0.102
 
 - Surface each `<Update>` component's `label` in the generated docs' "On this page" sidebar as a top-level, deep-linkable heading anchor, so changelog entries appear in the page navigation and can be linked to directly
