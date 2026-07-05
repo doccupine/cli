@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.105
+
+- Fix a generated-app build failure introduced with the keyboard focus rings: the shared `focusRing` helper required a non-optional `theme`, so interpolating it into the sidebar row styles (whose props type `theme` as optional) failed `next build` with a styled-components type-variance error; type its generic theme as optional so it composes into both required- and optional-theme styled blocks
+
 ## 0.0.104
 
 - Add accessible keyboard focus indicators throughout the generated docs site: a shared `focusRing` helper draws a soft `:focus-visible` glow (matching the existing `interactiveStyles` treatment) on header navigation links and the logo, both the left and right sidebars, footer links, and inline document and chat links, so keyboard users get a clear, on-brand focus ring that never shows on mouse clicks

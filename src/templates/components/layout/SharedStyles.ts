@@ -36,7 +36,7 @@ export const interactiveStyles = css<{ theme: Theme }>\`
     ring only shows for keyboard users - not on mouse click. Pair with an element
     that already has a transition for a smooth fade. The small border-radius
     rounds the ring, so don't apply this to elements that set their own radius. */
-export const focusRing = css<{ theme: Theme }>\`
+export const focusRing = css<{ theme?: Theme }>\`
   &:focus-visible {
     outline: none;
     border-radius: \${({ theme }) => theme.spacing.radius.xs};
