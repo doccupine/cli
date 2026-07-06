@@ -31,8 +31,17 @@ async function ensureIndex(): Promise<MiniSearch<IndexedDoc>> {
     const resources = await listDocs();
 
     docs = resources.map((doc) => {
-      const slug =
-        doc.path.replace(/^app\\//, "").replace(/\\/page\\.\\w+$/, "") || "";
+      // Strip the leading "app/", the "/page.ext" suffix, and any Next.js
+      // route-group segments like "(site)" which never appear in URLs. This
+      // must match the URL slug produced by toDocPath() in mcp/tools.ts and
+      // the nav slugs in the layout, otherwise content hits fail to map back
+      // to a page on the client and get silently dropped.
+      const slug = doc.path
+        .replace(/^app\\//, "")
+        .replace(/\\/page\\.\\w+$/, "")
+        .split("/")
+        .filter((seg) => !(seg.startsWith("(") && seg.endsWith(")")))
+        .join("/");
       const cleanContent = doc.content
         .replace(/\\r\\n/g, "\\n")
         .replace(/\\n{3,}/g, "\\n\\n")
