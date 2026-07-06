@@ -251,7 +251,14 @@ export function SearchModalContent({
     <StyledBackdrop
       $isClosing={isClosing}
       onClick={closeSearch}
-      onAnimationEnd={onCloseAnimationEnd}
+      onAnimationEnd={(e) => {
+        // animationend bubbles, so this handler also fires for animations
+        // completing on descendants (the inner modal, icons, result items).
+        // Only the backdrop's own exit animation should trigger the unmount -
+        // otherwise a child finishing its animation first tears the modal down
+        // before the close animation plays, making it vanish instantly.
+        if (e.target === e.currentTarget) onCloseAnimationEnd();
+      }}
     >
       <StyledModal $isClosing={isClosing} onClick={(e) => e.stopPropagation()}>
         <StyledInputWrapper>
