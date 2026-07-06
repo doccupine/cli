@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.0.106
+
+- Consolidate the keyboard focus rings added in 0.0.104 into a single global `:focus-visible` rule, so every link shares one consistent, keyboard-only ring instead of each element re-declaring it, and slim the ring from 4px to 2px; the shared `focusRing` helper is dropped in favor of the global style
+- Keep the focus ring off buttons that render as links (a Cherry `Button` given an `href`) so they retain their own button focus treatment instead of picking up the link ring
+- Draw the section-tab and Tabbed Code Block focus rings inset on a pseudo-element so the horizontally scrolling bars never clip them top or bottom
+- Give the search modal's scrollable results list its own inset focus ring so keyboard users can see when it is focused
+- Use Cherry's `IconButton` for the AI chat panel's reset and close buttons
+- Replace the search modal's desktop-only "Esc" hint with an always-visible close (X) button so the modal can be dismissed by tap on touch devices
+- Render the Accordion header as a real `<button>` with `aria-expanded` and `aria-controls` wired to the content `region`, instead of an `<h3>` carrying `role="button"`, so it is fully keyboard- and screen-reader-accessible and no longer injects an out-of-order heading into the page outline
+- Swap the sample `<Update>` label and description on the Update docs page so the version string reads as the entry's sidebar anchor and "Example" as its description
+
 ## 0.0.105
 
 - Fix a generated-app build failure introduced with the keyboard focus rings: the shared `focusRing` helper required a non-optional `theme`, so interpolating it into the sidebar row styles (whose props type `theme` as optional) failed `next build` with a styled-components type-variance error; type its generic theme as optional so it composes into both required- and optional-theme styled blocks
