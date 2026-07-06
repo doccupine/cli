@@ -12,7 +12,6 @@ import {
 import Link from "next/link";
 import { mq, Theme } from "@/app/theme";
 import {
-  focusRing,
   styledAnchor,
   styledTable,
   stylesLists,
@@ -254,7 +253,6 @@ export const StyledIndexSidebarLink = styled.a<{
   font-weight: \${({ $isActive }) => ($isActive ? "600" : "400")};
   text-decoration: none;
   transition: all 0.3s ease;
-  \${focusRing};
 
   &:hover {
     color: \${({ theme }) => theme.colors.primary};
@@ -315,8 +313,6 @@ const sidebarRowStyles = css<Props>\`
     border-color: \${({ theme }) => theme.colors.primary};
   }
 
-  \${focusRing};
-
   \${({ $isActive, theme }) =>
     $isActive &&
     css\`
@@ -356,6 +352,14 @@ export const StyledSidebarGroupButton = styled.button<Props>\`
   \${sidebarChevron};
   width: 100%;
   text-align: left;
+
+  /* Buttons aren't covered by the global a:focus-visible ring, so this
+     nav-row toggle carries its own copy of it. */
+  &:focus-visible {
+    outline: none;
+    border-radius: \${({ theme }) => theme.spacing.radius.xs};
+    box-shadow: 0 0 0 2px \${({ theme }) => theme.colors.primaryLight};
+  }
 \`;
 
 export const StyledSidebarGroupRow = styled.div<Props>\`
@@ -367,7 +371,7 @@ export const StyledSidebarGroupRow = styled.div<Props>\`
      match the leaf-row focus treatment. */
   &:has(:focus-visible) {
     border-radius: \${({ theme }) => theme.spacing.radius.xs};
-    box-shadow: 0 0 0 4px \${({ theme }) => theme.colors.primaryLight};
+    box-shadow: 0 0 0 2px \${({ theme }) => theme.colors.primaryLight};
   }
 \`;
 
@@ -384,9 +388,11 @@ export const StyledSidebarGroupLink = styled(Link)\`
     flex-shrink: 0;
   }
 
-  /* Ring is drawn on the parent row via :has(:focus-visible). */
+  /* Ring is drawn on the parent row via :has(:focus-visible); suppress the
+     global a:focus-visible glow so it isn't drawn twice. */
   &:focus-visible {
     outline: none;
+    box-shadow: none;
   }
 \`;
 

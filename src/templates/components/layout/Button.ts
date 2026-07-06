@@ -25,7 +25,11 @@ interface LinkButtonProps extends ButtonProps {
 // Our theme's isDark is a stub (false) because mode switching lives in CSS vars, so
 // the fallback resolves to --color-light (black in dark mode). Re-pin to \`surface\`,
 // which resolves to white in both modes, for the filled, non-disabled case.
-const StyledLinkButton = styled(Link)<LinkButtonProps>\`
+// The "button-link" class opts this anchor out of the global a:focus-visible
+// ring (see GlobalStyles) so Cherry's buttonStyles owns the button's focus look.
+const StyledLinkButton = styled(Link).attrs({
+  className: "button-link",
+})<LinkButtonProps>\`
   \${({ theme, $variant, $size, $outline, $fullWidth, $error, disabled }) =>
     buttonStyles(
       theme,

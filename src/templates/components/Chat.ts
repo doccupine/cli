@@ -9,7 +9,7 @@ import React, {
   useState,
 } from "react";
 import styled, { css, keyframes } from "styled-components";
-import { Button } from "cherry-styled-components";
+import { Button, IconButton } from "cherry-styled-components";
 import { ArrowUp, LoaderPinwheel, RotateCcw, Sparkles, X } from "lucide-react";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -670,24 +670,6 @@ const StyledChatTitleIconWrapper = styled.span<{ theme: Theme }>\`
   color: \${({ theme }) => theme.colors.dark};
 \`;
 
-const StyledChatCloseButton = styled.button<{ theme: Theme }>\`
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  margin: 0;
-  color: \${({ theme }) => theme.colors.primary};
-
-  &:hover {
-    color: \${({ theme }) => theme.colors.primaryDark};
-    transform: scale(1.05);
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-\`;
-
 type Source = {
   id: string;
   path: string;
@@ -855,20 +837,20 @@ function Chat() {
             <h3>AI Assistant</h3>
           </StyledChatTitleIconWrapper>
           <StyledChatTitleIconWrapper>
-            <StyledChatCloseButton
+            <IconButton
               onClick={resetChat}
               aria-label="Reset chat history"
               title="Reset chat history"
             >
-              <RotateCcw size={18} />
-            </StyledChatCloseButton>
-            <StyledChatCloseButton
+              <RotateCcw />
+            </IconButton>
+            <IconButton
               onClick={closeChat}
               aria-label="Close chat"
               title="Close chat"
             >
               <X />
-            </StyledChatCloseButton>
+            </IconButton>
           </StyledChatTitleIconWrapper>
         </StyledChatTitle>
         {answer &&

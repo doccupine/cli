@@ -1,7 +1,8 @@
 export const searchModalContentTemplate = `"use client";
 import React from "react";
 import styled, { css, keyframes } from "styled-components";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
+import { IconButton } from "cherry-styled-components";
 import { mq, Theme } from "@/app/theme";
 import { Spinner } from "@/components/Spinner";
 import { thinScrollbar } from "@/components/layout/SharedStyled";
@@ -135,6 +136,15 @@ const StyledResults = styled.ul<{ theme: Theme }>\`
   min-height: 0;
   -webkit-overflow-scrolling: touch;
   \${thinScrollbar};
+
+  /* The results list is a keyboard-focusable scroll container; frame it with
+     the app focus ring (inset so it hugs the visible viewport and isn't clipped
+     by the scroll overflow) instead of the browser's default outline. */
+  &:focus-visible {
+    outline: none;
+    border-radius: \${({ theme }) => theme.spacing.radius.xs};
+    box-shadow: inset 0 0 0 2px \${({ theme }) => theme.colors.primaryLight};
+  }
 \`;
 
 const StyledResultItem = styled.li<{ theme: Theme; $isActive: boolean }>\`
@@ -203,22 +213,6 @@ const StyledEmpty = styled.div<{ theme: Theme }>\`
   color: \${({ theme }) => theme.colors.gray};
 \`;
 
-const StyledKbd = styled.kbd<{ theme: Theme }>\`
-  font-size: 11px;
-  font-family: inherit;
-  background: \${({ theme }) => theme.colors.grayLight};
-  color: \${({ theme }) => theme.colors.grayDark};
-  padding: 2px 6px;
-  border-radius: 4px;
-  margin-left: auto;
-  font-weight: 600;
-  display: none;
-
-  \${mq("lg")} {
-    display: initial;
-  }
-\`;
-
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
@@ -274,7 +268,13 @@ export function SearchModalContent({
             autoComplete="off"
             spellCheck={false}
           />
-          <StyledKbd>Esc</StyledKbd>
+          <IconButton
+            onClick={closeSearch}
+            aria-label="Close search"
+            title="Close search"
+          >
+            <X />
+          </IconButton>
         </StyledInputWrapper>
         {merged.length > 0 ? (
           <StyledResults ref={resultsRef}>

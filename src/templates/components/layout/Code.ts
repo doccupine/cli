@@ -167,11 +167,13 @@ const TabList = styled.div<{ theme: Theme }>\`
 /* Individual tab button. Active tab reads as part of the window: a light body
    fill (#ffffff) that echoes the code area, with a soft border. Inactive tabs
    are muted and transparent. resetButton strips native styling; focus-visible
-   uses the brand primary ring for keyboard users. All colors stay fixed and
-   swap purely via :root.dark, matching the no-re-render palette approach. */
+   draws an inset brand primary ring on a pseudo-element so the scrolling
+   TabList can't clip it. All colors stay fixed and swap purely via :root.dark,
+   matching the no-re-render palette approach. */
 const CodeTab = styled.button<{ theme: Theme; $active: boolean }>\`
   \${resetButton}
   flex: 0 0 auto;
+  position: relative;
   font-family: \${({ theme }) => theme.fonts.mono};
   font-size: 12px;
   line-height: 1;
@@ -195,8 +197,16 @@ const CodeTab = styled.button<{ theme: Theme; $active: boolean }>\`
   }
 
   &:focus-visible {
-    outline: solid 2px \${({ theme }) => theme.colors.primary};
-    outline-offset: 1px;
+    outline: none;
+  }
+
+  &:focus-visible::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    border: solid 2px \${({ theme }) => theme.colors.primary};
+    border-radius: \${({ theme }) => theme.spacing.radius.xs};
+    pointer-events: none;
   }
 
   :root.dark & {

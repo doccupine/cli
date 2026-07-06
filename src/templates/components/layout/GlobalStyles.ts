@@ -118,6 +118,20 @@ a {
   color: var(--color-primary);
 }
 
+/* Keyboard-focus ring, defined once globally so links don't each re-declare it.
+   :focus-visible keeps it keyboard-only (no ring on mouse click); box-shadow
+   gives a soft primaryLight glow that follows the element's border-radius. The
+   6px radius mirrors theme.spacing.radius.xs so the ring rounds on links that
+   have no radius of their own. Cherry link-buttons (.button-link) are excluded
+   via :where() so the exclusion adds no specificity - this keeps the selector
+   at (0,1,1) so bespoke per-component :focus-visible rules (inline content
+   links, the section bar, the sidebar group rows) still override it. */
+a:focus-visible:where(:not(.button-link)) {
+  outline: none;
+  border-radius: 6px;
+  box-shadow: 0 0 0 2px var(--color-primaryLight);
+}
+
 ol,
 ul {
   list-style: none;
