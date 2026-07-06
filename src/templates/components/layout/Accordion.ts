@@ -1,5 +1,5 @@
 export const accordionTemplate = `"use client";
-import { useState } from "react";
+import { useId, useState } from "react";
 import styled, { css } from "styled-components";
 import { styledText } from "cherry-styled-components";
 import { Theme } from "@/app/theme";
@@ -15,11 +15,19 @@ const StyledAccordion = styled.div<{ theme: Theme }>\`
   width: 100%;
 \`;
 
-const StyledAccordionTitle = styled.h3<{ theme: Theme; $isOpen: boolean }>\`
+const StyledAccordionTitle = styled.button<{ theme: Theme; $isOpen: boolean }>\`
+  appearance: none;
+  display: block;
+  width: 100%;
+  border: none;
+  background: none;
+  text-align: left;
+  font: inherit;
   cursor: pointer;
   margin: 0;
   padding: 0 40px 0 0;
   \${({ theme }) => styledText(theme)};
+  font-weight: 700;
   color: \${({ theme }) => theme.colors.primary};
   transition: color 0.3s ease;
   position: relative;
@@ -70,18 +78,20 @@ interface AccordionProps extends React.HTMLAttributes<HTMLDivElement> {
 
 function Accordion({ children, title }: AccordionProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const contentId = useId();
 
   return (
     <StyledAccordion>
       <StyledAccordionTitle
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         $isOpen={isOpen}
-        role="button"
         aria-expanded={isOpen}
+        aria-controls={contentId}
       >
         {title} <Icon name="ChevronDown" />
       </StyledAccordionTitle>
-      <StyledAccordionContent $isOpen={isOpen}>
+      <StyledAccordionContent id={contentId} role="region" $isOpen={isOpen}>
         {children}
       </StyledAccordionContent>
     </StyledAccordion>
