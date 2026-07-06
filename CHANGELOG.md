@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.108
+
+- Strip Next.js route-group segments like `(site)` from the search index slug so content search hits map back to real page URLs instead of being silently dropped: the slug MiniSearch stores now matches the URL produced by `toDocPath()` and the nav slugs, extending the 0.0.101 URL fix to the client-side search index
+- Fix the "Images and Embeds" card link on the Components docs page, which pointed to `/images-and-embeds` and 404'd; it now uses the canonical `/image-and-embeds` slug shared by the rest of the site
+- Update generated app dependency posthog-js to ^1.398.0
+
 ## 0.0.107
 
 - Play the search modal's close animation to completion instead of letting the modal vanish instantly: the backdrop's `onAnimationEnd` also fired for `animationend` events bubbling up from descendant elements, which could unmount the modal before its own exit animation finished; it now responds only to the backdrop's own animation via an `e.target === e.currentTarget` guard
