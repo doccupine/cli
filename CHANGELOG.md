@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.107
+
+- Play the search modal's close animation to completion instead of letting the modal vanish instantly: the backdrop's `onAnimationEnd` also fired for `animationend` events bubbling up from descendant elements, which could unmount the modal before its own exit animation finished; it now responds only to the backdrop's own animation via an `e.target === e.currentTarget` guard
+- Toggle the AI assistant with Cmd/Ctrl+I when chat is enabled: a global shortcut opens or closes the chat panel (seeding the greeting and focusing the input on open) through a shared `toggleChat` action that the "Ask AI" button now reuses as well
+
 ## 0.0.106
 
 - Consolidate the keyboard focus rings added in 0.0.104 into a single global `:focus-visible` rule, so every link shares one consistent, keyboard-only ring instead of each element re-declaring it, and slim the ring from 4px to 2px; the shared `focusRing` helper is dropped in favor of the global style

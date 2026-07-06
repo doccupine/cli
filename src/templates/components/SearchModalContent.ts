@@ -36,7 +36,7 @@ export interface SearchModalContentProps {
   navigate: (slug: string) => void;
 }
 
-const ANIMATION_MS = 150;
+const ANIMATION_MS = 300;
 
 const backdropIn = keyframes\`
   from { opacity: 0; }
