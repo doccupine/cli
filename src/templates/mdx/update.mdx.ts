@@ -15,7 +15,7 @@ The \`Update\` component helps you display release notes, version details, and c
 
 Each \`Update\` label is added to the "On this page" sidebar and gets its own anchor, so you can link directly to a specific entry.
 
-<Update label="Example" description="v0.0.1">
+<Update label="v0.0.1" description="Example">
   ## Example entry
 
 You can include anything here - images, code snippets, or a bullet list of modifications.
@@ -35,7 +35,7 @@ You can include anything here - images, code snippets, or a bullet list of modif
 You can combine multiple \`Update\` components to build complete changelogs.
 
 \`\`\`mdx
-<Update label="Example" description="v0.0.1">
+<Update label="v0.0.1" description="Example">
   ## Example entry
 
 You can include anything here - images, code snippets, or a bullet list of modifications.
