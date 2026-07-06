@@ -3,6 +3,7 @@ import { CHAT_WIDTH } from "../app/theme.js";
 export const chatTemplate = `"use client";
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useRef,
@@ -770,25 +771,11 @@ function RainbowInput({
 }
 
 function ChatButtonCTA() {
-  const { setIsOpen, isOpen, answer, setAnswer, chatInputRef } =
-    useContext(ChatContext);
+  const { toggleChat, isOpen } = useContext(ChatContext);
 
   return (
     <StyledGlowSmallButton
-      onClick={() => {
-        const next = !isOpen;
-        setIsOpen(next);
-        if (next) {
-          if (answer.length === 0) {
-            setAnswer([
-              { text: "Hey there, how can I assist you?", answer: true },
-            ]);
-          }
-          setTimeout(() => {
-            chatInputRef.current?.focus();
-          }, 350);
-        }
-      }}
+      onClick={toggleChat}
       aria-label="Ask AI Assistant"
       $hasContent={isOpen}
       type="button"
@@ -936,6 +923,7 @@ function Chat() {
 const ChatContext = createContext<{
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
+  toggleChat: () => void;
   isChatActive: boolean;
   question: string;
   setQuestion: (q: string) => void;
@@ -950,6 +938,7 @@ const ChatContext = createContext<{
 }>({
   isOpen: false,
   setIsOpen: () => {},
+  toggleChat: () => {},
   isChatActive: false,
   question: "",
   setQuestion: () => {},
@@ -976,6 +965,46 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
   const [answer, setAnswer] = useState<Answer[]>([]);
   const abortRef = useRef<AbortController | null>(null);
   const chatInputRef = useRef<HTMLInputElement | null>(null);
+  const isOpenRef = useRef(isOpen);
+
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+  }, [isOpen]);
+
+  // Open the assistant, seeding a greeting the first time and focusing the
+  // input once the panel has slid in (matches the 0.3s panel transition).
+  const openChat = useCallback(() => {
+    setIsOpen(true);
+    setAnswer((prev) =>
+      prev.length === 0
+        ? [{ text: "Hey there, how can I assist you?", answer: true }]
+        : prev,
+    );
+    setTimeout(() => {
+      chatInputRef.current?.focus();
+    }, 350);
+  }, []);
+
+  const toggleChat = useCallback(() => {
+    if (isOpenRef.current) {
+      setIsOpen(false);
+    } else {
+      openChat();
+    }
+  }, [openChat]);
+
+  // Global Cmd/Ctrl+I toggles the assistant, but only when chat is enabled.
+  useEffect(() => {
+    if (!isChatActive) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "i") {
+        e.preventDefault();
+        toggleChat();
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isChatActive, toggleChat]);
 
   async function ask(e: React.FormEvent) {
     e.preventDefault();
@@ -1128,6 +1157,7 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
       value={{
         isOpen,
         setIsOpen,
+        toggleChat,
         isChatActive,
         question,
         setQuestion,
