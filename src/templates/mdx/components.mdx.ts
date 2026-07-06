@@ -37,7 +37,7 @@ Doccupine includes a rich set of built-in components you can use directly in you
   <Card title="Callouts" icon="megaphone" href="/callouts">
     Highlighted blocks for tips, warnings, and important notes.
   </Card>
-  <Card title="Images and Embeds" icon="image" href="/images-and-embeds">
+  <Card title="Images and Embeds" icon="image" href="/image-and-embeds">
     Images, videos, and embedded content.
   </Card>
   <Card title="Icons" icon="smile" href="/icons">
