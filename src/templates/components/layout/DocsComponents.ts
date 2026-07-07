@@ -83,7 +83,8 @@ const StyledDocsContainer = styled.div<{ theme: Theme; $isChatOpen?: boolean }>\
     border-radius: \${({ theme }) => theme.spacing.radius.lg};
   }
 
-  & code:not([class]) {
+  & code:not([class]),
+  & kbd {
     background: \${({ theme }) =>
       \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
     color: \${({ theme }) => theme.colors.dark};
