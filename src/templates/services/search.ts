@@ -20,6 +20,33 @@ let buildPromise: Promise<void> | null = null;
 const CONTEXT_BEFORE = 60;
 const CONTEXT_AFTER = 90;
 
+/**
+ * Convert raw MDX (as extracted from the generated page templates) into plain,
+ * human-readable text for search snippets: undoes the template-literal escaping
+ * and strips common Markdown syntax so inline code shows as Test rather than a
+ * backtick-wrapped or backslash-escaped fragment.
+ */
+function toPlainText(text: string): string {
+  return (
+    text
+      // Undo the template-literal escaping from the generated page files so
+      // escaped backticks, dollar-braces and backslashes read as plain text.
+      .replace(/\\\\([\\s\\S])/g, "$1")
+      // Images and links -> visible text only.
+      .replace(/!\\[([^\\]]*)\\]\\([^)]*\\)/g, "$1")
+      .replace(/\\[([^\\]]*)\\]\\([^)]*\\)/g, "$1")
+      // Bold markers.
+      .replace(/\\*\\*([\\s\\S]*?)\\*\\*/g, "$1")
+      // Line-leading markers: headings, blockquotes, list bullets.
+      .replace(/^\\s{0,3}#{1,6}\\s+/gm, "")
+      .replace(/^\\s{0,3}>\\s?/gm, "")
+      .replace(/^\\s{0,3}[-*+]\\s+/gm, "")
+      .replace(/^\\s{0,3}\\d+\\.\\s+/gm, "")
+      // Inline code / escaped backticks -> plain text.
+      .replace(/\`/g, "")
+  );
+}
+
 async function ensureIndex(): Promise<MiniSearch<IndexedDoc>> {
   if (index) return index;
   if (buildPromise) {
@@ -42,8 +69,7 @@ async function ensureIndex(): Promise<MiniSearch<IndexedDoc>> {
         .split("/")
         .filter((seg) => !(seg.startsWith("(") && seg.endsWith(")")))
         .join("/");
-      const cleanContent = doc.content
-        .replace(/\\r\\n/g, "\\n")
+      const cleanContent = toPlainText(doc.content.replace(/\\r\\n/g, "\\n"))
         .replace(/\\n{3,}/g, "\\n\\n")
         .slice(0, 200_000);
       return {
