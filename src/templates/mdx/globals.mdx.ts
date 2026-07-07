@@ -20,7 +20,7 @@ Use a \`config.json\` file to define project‑wide metadata for your documentat
 
 ## config.json
 
-Place a \`config.json\` at your project root (the same folder where you execute \`npx doccupine\`) to define global metadata for your documentation site.
+Place a \`config.json\` at your project root (the same directory where you execute \`npx doccupine\`) to define global metadata for your documentation site.
 
 \`\`\`json
 {

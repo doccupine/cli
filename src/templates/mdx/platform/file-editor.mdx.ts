@@ -17,14 +17,14 @@ The file editor is the main workspace for your documentation project. It provide
 
 The left panel has three tabs:
 
-- **Files** - browse your repository's file tree, create and manage files and folders
+- **Files** - browse your repository's file tree, create and manage files and directories
 - **Media** - manage uploaded images and binary assets
 - **Navigation** - open the [Navigation Builder](/platform/navigation-settings) to configure your sidebar structure with drag-and-drop
 
 In the Files tab, you can:
 
 - **Browse** directories and files
-- **Create** new files and folders
+- **Create** new files and directories
 - **Rename** and **delete** existing files
 - **Upload** binary assets like images, favicons, and font files
 

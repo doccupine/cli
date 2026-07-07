@@ -13,7 +13,7 @@ Track how users interact with your documentation using PostHog. Doccupine suppor
 
 ## analytics.json
 
-Place an \`analytics.json\` at your project root (the same folder where you execute \`npx doccupine\`).
+Place an \`analytics.json\` at your project root (the same directory where you execute \`npx doccupine\`).
 
 \`\`\`json
 {

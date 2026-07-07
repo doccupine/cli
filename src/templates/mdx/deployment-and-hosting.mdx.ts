@@ -43,7 +43,7 @@ Every push to your repository triggers a new deployment. You can customize your 
 Doccupine generates a standard Next.js app, so you can deploy it anywhere that supports Node.js or Next.js.
 
 <Callout type="warning">
-  Deploy the generated website directory (the Next.js app), not your MDX source folder. In a monorepo, set the root directory to the generated site folder.
+  Deploy the generated website directory (the Next.js app), not your MDX source directory. In a monorepo, set the root directory to the generated site directory.
 </Callout>
 
 <Callout type="note">
@@ -52,7 +52,7 @@ Doccupine generates a standard Next.js app, so you can deploy it anywhere that s
 
 ### Popular hosting options
 
-- **Vercel** - native Next.js support, zero-config deploys. Connect your repo and set the root directory to the generated app folder.
+- **Vercel** - native Next.js support, zero-config deploys. Connect your repo and set the root directory to the generated app directory.
 - **Netlify** - supports Next.js via the \`@netlify/plugin-nextjs\` adapter. Works with the standard \`next build\` output.
 - **AWS Amplify** - fully managed hosting with CI/CD. Supports Next.js SSR out of the box.
 - **Cloudflare Pages** - deploy using the \`@cloudflare/next-on-pages\` adapter for edge-based hosting.

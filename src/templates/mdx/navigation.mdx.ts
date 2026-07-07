@@ -40,7 +40,7 @@ This approach is great for small sets of documents. For larger projects, setting
 
 ## Custom navigation with navigation.json
 
-To centrally define the entire sidebar, create a \`navigation.json\` at your project root (the same folder where you execute \`npx doccupine\`). When present, it takes priority over page frontmatter and fully controls the navigation structure.
+To centrally define the entire sidebar, create a \`navigation.json\` at your project root (the same directory where you execute \`npx doccupine\`). When present, it takes priority over page frontmatter and fully controls the navigation structure.
 
 ### Array format
 

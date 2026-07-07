@@ -94,7 +94,7 @@ This page would be served at \`/api-reference/authentication\`.
 
 ## Explicit sections with sections.json
 
-For full control over slugs, create a \`sections.json\` file at your project root (the same folder where you run \`npx doccupine\`).
+For full control over slugs, create a \`sections.json\` file at your project root (the same directory where you run \`npx doccupine\`).
 
 ### Minimal example
 

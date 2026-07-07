@@ -13,7 +13,7 @@ Define your site’s typography with a \`fonts.json\` file. You can load fonts f
 
 ## fonts.json
 
-Place a \`fonts.json\` at your project root (the same folder where you execute \`npx doccupine\`). Choose one of the following configurations depending on the source of your fonts.
+Place a \`fonts.json\` at your project root (the same directory where you execute \`npx doccupine\`). Choose one of the following configurations depending on the source of your fonts.
 
 ## Google Fonts
 

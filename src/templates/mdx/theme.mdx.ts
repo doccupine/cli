@@ -13,7 +13,7 @@ Define your site’s color system with a \`theme.json\` file. This lets you tail
 
 ## theme.json
 
-Place a \`theme.json\` at your project root (the same folder where you execute \`npx doccupine\`). It supports multiple modes. Define a \`default\` mode and a \`dark\` mode.
+Place a \`theme.json\` at your project root (the same directory where you execute \`npx doccupine\`). It supports multiple modes. Define a \`default\` mode and a \`dark\` mode.
 
 \`\`\`json
 {

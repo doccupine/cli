@@ -13,7 +13,7 @@ Add a row of static links at the bottom of your documentation pages, just above 
 
 ## links.json
 
-Place a \`links.json\` at your project root (the same folder where you execute \`npx doccupine\`). When present, Doccupine displays the links at the bottom of each page. You can add as many links as you need.
+Place a \`links.json\` at your project root (the same directory where you execute \`npx doccupine\`). When present, Doccupine displays the links at the bottom of each page. You can add as many links as you need.
 
 ### Example links.json
 

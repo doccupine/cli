@@ -9,11 +9,11 @@ order: 6
 
 # Media and assets
 
-Doccupine watches a \`public\` directory in your project root (the same folder where you execute \`npx doccupine\`) and copies its contents into the generated Next.js \`public\` folder. Use it to serve static files such as favicons, Open Graph preview images, custom fonts, or any other media your documentation needs.
+Doccupine watches a \`public\` directory in your project root (the same directory where you execute \`npx doccupine\`) and copies its contents into the generated Next.js \`public\` directory. Use it to serve static files such as favicons, Open Graph preview images, custom fonts, or any other media your documentation needs.
 
 ## The public directory
 
-Create a \`public\` folder at your project root. Any file you place inside is automatically synced to the generated site and served from the root URL path.
+Create a \`public\` directory at your project root. Any file you place inside is automatically synced to the generated site and served from the root URL path.
 
 \`\`\`text
 my-docs/
@@ -44,7 +44,7 @@ Files in the \`public\` directory are available at the root of your deployed dom
 
 ### Favicon
 
-Drop a \`favicon.ico\` into the \`public\` folder. Browsers pick it up automatically from the root path.
+Drop a \`favicon.ico\` into the \`public\` directory. Browsers pick it up automatically from the root path.
 
 \`\`\`text
 public/favicon.ico → https://your-domain.com/favicon.ico
@@ -83,6 +83,6 @@ Any image or file you want to reference in your MDX pages can live in \`public\`
 ## Tips
 
 - **Keep it flat**: For a small number of files, placing them directly in \`public\` keeps paths short and simple.
-- **Use subfolders for organization**: For larger projects, group assets into folders like \`public/fonts\`, \`public/images\`, or \`public/icons\`.
+- **Use subdirectories for organization**: For larger projects, group assets into directories like \`public/fonts\`, \`public/images\`, or \`public/icons\`.
 - **Mind file size**: Optimize images before adding them to keep deployment size and load times low.
 - **Consistent naming**: Use lowercase, hyphen-separated filenames (e.g., \`og-image.png\`) for predictable URLs.`;
