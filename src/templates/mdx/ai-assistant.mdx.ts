@@ -11,6 +11,14 @@ order: 8
 
 Doccupine supports AI integration to enhance your documentation experience. You can use OpenAI, Anthropic, or Google Gemini to power AI features in your documentation site. The AI assistant uses your documentation content as context, allowing users to ask questions about your docs and receive accurate answers based on the documentation.
 
+## Opening the Assistant
+
+Once a provider is configured, an assistant button appears in the header. You can open and close the assistant from anywhere on the site by pressing <kbd>Command</kbd> + <kbd>I</kbd> (<kbd>Ctrl</kbd> + <kbd>I</kbd> on Windows). Press the same shortcut again to dismiss it.
+
+<Callout type="note">
+  The keyboard shortcut is only active once you have configured an LLM provider, as described below.
+</Callout>
+
 ## Setup
 
 To enable AI features, create an \`.env\` file in the directory where your website is generated. By default, this is the \`nextjs-app/\` directory.
