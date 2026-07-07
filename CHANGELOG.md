@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.109
+
+- Render the search modal's inline result snippets as plain text: snippet source is extracted from the generated page files as raw MDX, so results used to show stray backticks, backslashes, and other Markdown syntax (for example `` `Test` `` instead of `Test`); a new `toPlainText` step now undoes the template-literal escaping and strips inline code, emphasis, links, images, and heading/list markers so snippets read as clean prose
+- Style `<kbd>` elements in the docs like inline `code`, sharing the same tinted background, padding, and rounded corners in both light and dark themes
+- Document the Cmd/Ctrl+I shortcut for toggling the AI assistant on the AI Assistant page, noting it activates once an LLM provider is configured
+- Use "directory" consistently in place of "folder" across the starter MDX documentation
+
 ## 0.0.108
 
 - Strip Next.js route-group segments like `(site)` from the search index slug so content search hits map back to real page URLs instead of being silently dropped: the slug MiniSearch stores now matches the URL produced by `toDocPath()` and the nav slugs, extending the 0.0.101 URL fix to the client-side search index
