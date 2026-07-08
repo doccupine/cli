@@ -4,6 +4,7 @@ import { eslintConfigTemplate } from "../templates/eslint.config.js";
 import { packageJsonTemplate } from "../templates/package.js";
 import { prettierrcTemplate } from "../templates/prettierrc.js";
 import { prettierignoreTemplate } from "../templates/prettierignore.js";
+import { npmrcTemplate } from "../templates/npmrc.js";
 import { tsconfigTemplate } from "../templates/tsconfig.js";
 
 import { gatePageTemplate } from "../templates/app/gate/page.js";
@@ -129,6 +130,7 @@ export const appStructure: Record<string, string> = {
   ".gitignore": gitignoreTemplate,
   ".prettierrc": prettierrcTemplate,
   ".prettierignore": prettierignoreTemplate,
+  ".npmrc": npmrcTemplate,
   "eslint.config.mjs": eslintConfigTemplate,
   "package.json": packageJsonTemplate,
   "tsconfig.json": tsconfigTemplate,

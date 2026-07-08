@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.112
+
+- Fix the generated app failing to deploy with an `npm install` `ERESOLVE` peer-dependency error: the 0.0.111 migration to ESLint 10 left `eslint-plugin-react`, `eslint-plugin-jsx-a11y`, and `eslint-plugin-import` on peer ranges that still cap at ESLint 9 even though they run fine under 10; installing with pnpm only warns on such mismatches, but installing with npm hard-fails. Ship a `.npmrc` (`legacy-peer-deps=true`) with the generated app so npm skips the stale peer check and matches pnpm's behavior
+- Update generated app dependency posthog-js to ^1.398.7
+
 ## 0.0.111
 
 - Smoothly animate the active sidebar link into view instead of snapping to it, and honor `prefers-reduced-motion` in both the nav sidebar and the "On this page" table of contents: readers who opt out of motion get instant (`auto`) scrolling while everyone else gets a `smooth` scroll
