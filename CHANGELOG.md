@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.111
+
+- Smoothly animate the active sidebar link into view instead of snapping to it, and honor `prefers-reduced-motion` in both the nav sidebar and the "On this page" table of contents: readers who opt out of motion get instant (`auto`) scrolling while everyone else gets a `smooth` scroll
+- Migrate the generated app's linting to ESLint 10 with a hand-rolled flat config that replaces `eslint-config-next`, which crashes under ESLint 10 because its `react.version: "detect"` detection calls the removed `context.getFilename()`; the new config composes the same React, React Hooks, Next.js, jsx-a11y, import, and `@typescript-eslint` plugins, pins `react.version` to skip the removed code path, and preserves the project's `no-console` and `@typescript-eslint` rules
+- Add a `type-check` script (`tsgo --noEmit`) to the generated app backed by the `@typescript/native-preview` compiler, and alias `typescript` to `npm:@typescript/typescript6` so Next keeps building against the classic compiler while the native preview drives type checking
+- Update generated app dependencies cherry-styled-components to ^0.2.10 and posthog-js to ^1.398.6
+- Upgrade the CLI's TypeScript dev dependency to the native v7 compiler
+
 ## 0.0.110
 
 - Scroll the generated docs sidebar to the active page's link when it starts off-screen (deep pages, in-content links, or search results): the sidebar nav scrolls within its own overflow area so the main document never jumps, treats links hidden behind the sticky theme-toggle footer as off-screen so they are still revealed, and marks the current link with `aria-current="page"`
