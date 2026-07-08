@@ -193,7 +193,15 @@ function SideBar({ result }: SideBarProps) {
       nav.scrollTop +
       (activeRect.top - navRect.top) -
       (visibleHeight - active.clientHeight) / 2;
-    nav.scrollTo({ top: Math.max(0, target) });
+
+    // Animate the scroll, but honor users who opt out of motion.
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    nav.scrollTo({
+      top: Math.max(0, target),
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+    });
   }, [pathname]);
 
   return (

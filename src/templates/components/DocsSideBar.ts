@@ -112,15 +112,20 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
     const elRect = el.getBoundingClientRect();
     const cRect = container.getBoundingClientRect();
     const pad = 140;
+    // Animate the scroll, but honor users who opt out of motion.
+    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)")
+      .matches
+      ? "auto"
+      : "smooth";
     if (elRect.bottom + pad > cRect.bottom) {
       container.scrollBy({
         top: elRect.bottom - cRect.bottom + pad,
-        behavior: "smooth",
+        behavior,
       });
     } else if (elRect.top - pad < cRect.top) {
       container.scrollBy({
         top: elRect.top - cRect.top - pad,
-        behavior: "smooth",
+        behavior,
       });
     }
   }, [activeId]);
