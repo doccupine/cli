@@ -1,5 +1,5 @@
 export const sideBarTemplate = `"use client";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Flex, Space, ThemeToggle } from "cherry-styled-components";
 import {
@@ -81,6 +81,7 @@ function SidebarNavLink({
         <StyledSidebarListItemLink
           href={href ?? "#"}
           $isActive={isActive}
+          aria-current={isActive ? "page" : undefined}
           onClick={onNavigate}
           style={indent}
         >
@@ -105,7 +106,11 @@ function SidebarNavLink({
           $isOpen={isOpen}
           style={indent}
         >
-          <StyledSidebarGroupLink href={href} onClick={onNavigate}>
+          <StyledSidebarGroupLink
+            href={href}
+            aria-current={pathname === href ? "page" : undefined}
+            onClick={onNavigate}
+          >
             {link.icon && <Icon name={link.icon} size={16} />}
             {link.title}
           </StyledSidebarGroupLink>
@@ -152,8 +157,44 @@ function SideBar({ result }: SideBarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const hasSectionBar = useContext(SectionBarContext);
   const pathname = usePathname();
+  const navRef = useRef<HTMLElement>(null);
+  const footerRef = useRef<HTMLDivElement>(null);
 
   useLockBodyScroll(isMobileMenuOpen);
+
+  // Bring the current page's link into view within the sidebar's own scroll
+  // area when it starts off-screen (deep pages, in-content links, search).
+  // Scoped to the nav via scrollTo so the main document never jumps.
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const active = nav.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!active) return;
+
+    const navRect = nav.getBoundingClientRect();
+    const activeRect = active.getBoundingClientRect();
+
+    // The theme-toggle footer is sticky over the bottom of the scroll area
+    // (~60px tall), so links underneath it are covered rather than visible.
+    // Clamp the visible bottom to the footer's top edge when it's pinned.
+    const footerRect = footerRef.current?.getBoundingClientRect();
+    const visibleBottom = footerRect
+      ? Math.min(navRect.bottom, footerRect.top)
+      : navRect.bottom;
+
+    const isOutOfView =
+      activeRect.top < navRect.top || activeRect.bottom > visibleBottom;
+    if (!isOutOfView) return;
+
+    // Center within the visible band (nav top .. footer top), not the full
+    // nav height, so the link never settles behind the footer.
+    const visibleHeight = visibleBottom - navRect.top;
+    const target =
+      nav.scrollTop +
+      (activeRect.top - navRect.top) -
+      (visibleHeight - active.clientHeight) / 2;
+    nav.scrollTo({ top: Math.max(0, target) });
+  }, [pathname]);
 
   return (
     <DocsSidebar>
@@ -169,6 +210,7 @@ function SideBar({ result }: SideBarProps) {
       </StyleMobileBar>
 
       <StyledSidebar
+        ref={navRef}
         $isActive={isMobileMenuOpen}
         $hasSectionBar={hasSectionBar}
       >
@@ -201,7 +243,7 @@ function SideBar({ result }: SideBarProps) {
               </StyledSidebarList>
             );
           })}
-        <StyledSidebarFooter>
+        <StyledSidebarFooter ref={footerRef}>
           <Flex $xsJustifyContent="flex-start" $lgJustifyContent="flex-end">
             <ThemeToggle />
           </Flex>
