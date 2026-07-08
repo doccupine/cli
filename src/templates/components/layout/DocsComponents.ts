@@ -90,7 +90,6 @@ const StyledDocsContainer = styled.div<{ theme: Theme; $isChatOpen?: boolean }>\
     color: \${({ theme }) => theme.colors.dark};
     padding: 2px 4px;
     border-radius: \${({ theme }) => theme.spacing.radius.xs};
-    white-space: pre;
   }
 
   & .lucide {
