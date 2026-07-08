@@ -17,12 +17,11 @@ The \`Columns\` component helps you organize several \`Card\` elements into a vi
 
 You can use the \`Columns\` component to create a grid of cards with a specified number of columns.
 
-\`\`\`mdx
+\`\`\`html
 <Columns cols={2}>
   <Card title="Getting Started" icon="rocket">
     Kick off your project using our easy quickstart guide.
   </Card>
-
   <Card title="API Reference" icon="code">
     Browse all endpoints, parameters, and code examples for your API integration.
   </Card>
@@ -33,7 +32,6 @@ You can use the \`Columns\` component to create a grid of cards with a specified
   <Card title="Getting Started" icon="rocket">
     Kick off your project using our easy quickstart guide.
   </Card>
-
   <Card title="API Reference" icon="code">
     Browse all endpoints, parameters, and code examples for your API integration.
   </Card>

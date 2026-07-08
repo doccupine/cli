@@ -17,34 +17,26 @@ You can format them as Note, Warning, Info, Danger and Success.
 
 You can use the Callouts component directly within your MDX files without any import. The following example shows a basic usage:
 
-\`\`\`mdx
+\`\`\`html
 <Callout type="note">This is a note callout</Callout>
-
 <Callout type="warning">This is a warning callout</Callout>
-
 <Callout type="info">This is an info callout</Callout>
-
 <Callout type="danger">This is a danger callout</Callout>
-
 <Callout type="success">This is a success callout</Callout>
 \`\`\`
 
 <Callout type="note">
   This is a note callout
 </Callout>
-
 <Callout type="warning">
   This is a warning callout
 </Callout>
-
 <Callout type="info">
   This is an info callout
 </Callout>
-
 <Callout type="danger">
   This is a danger callout
 </Callout>
-
 <Callout type="success">
  This is a success callout
 </Callout>

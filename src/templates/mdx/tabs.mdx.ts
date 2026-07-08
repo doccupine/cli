@@ -17,20 +17,19 @@ Tabs are useful for grouping related information while keeping the interface tid
 
 You can use the Tabs component directly within your MDX files without any import. The following example shows a basic usage:
 
-\`\`\`\`mdx
+\`\`\`\`html
 <Tabs>
   <TabContent title="First tab" icon="code">
     ☝️ This is the content shown only when the first tab is active.
 
     Tabs can include all kinds of components. For example, a simple Java program:
     \`\`\`java
-      class HelloWorld {
-          public static void main(String[] args) {
-              System.out.println("Hello, World!");
-          }
+    class HelloWorld {
+      public static void main(String[] args) {
+        System.out.println("Hello, World!");
       }
+    }
     \`\`\`
-
   </TabContent>
   <TabContent title="Second tab" icon="book-open">
     ✌️ Content inside this second tab is separate from the first.
@@ -48,12 +47,11 @@ You can use the Tabs component directly within your MDX files without any import
     Tabs can include all kinds of components. For example, a simple Java program:
     \`\`\`java
     class HelloWorld {
-        public static void main(String[] args) {
-            System.out.println("Hello, World!");
-        }
+      public static void main(String[] args) {
+        System.out.println("Hello, World!");
+      }
     }
     \`\`\`
-
   </TabContent>
   <TabContent title="Second tab" icon="book-open">
     ✌️ Content inside this second tab is separate from the first.

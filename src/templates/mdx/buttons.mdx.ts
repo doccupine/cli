@@ -17,7 +17,7 @@ Buttons help users initiate actions or navigate to other pages. Use variants to 
 
 You can use the Button component directly within your MDX files without any import. The following examples show basic usage:
 
-\`\`\`mdx
+\`\`\`html
 <Button>Primary</Button>
 <Button variant="secondary">Secondary</Button>
 <Button variant="tertiary">Tertiary</Button>
@@ -29,7 +29,7 @@ You can use the Button component directly within your MDX files without any impo
 
 ### Sizes
 
-\`\`\`mdx
+\`\`\`html
 <Button size="default">Default size</Button>
 <Button size="big">Big size</Button>
 \`\`\`
@@ -39,7 +39,7 @@ You can use the Button component directly within your MDX files without any impo
 
 ### Outline
 
-\`\`\`mdx
+\`\`\`html
 <Button outline>Outlined</Button>
 \`\`\`
 
@@ -47,7 +47,7 @@ You can use the Button component directly within your MDX files without any impo
 
 ### Full width
 
-\`\`\`mdx
+\`\`\`html
 <Button fullWidth>Full width button</Button>
 \`\`\`
 
@@ -55,7 +55,7 @@ You can use the Button component directly within your MDX files without any impo
 
 ### With icon
 
-\`\`\`mdx
+\`\`\`html
 <Button icon="arrow-right" iconPosition="left">
   With left icon
 </Button>
@@ -71,7 +71,7 @@ You can use the Button component directly within your MDX files without any impo
 
 Buttons can render as links when you provide an \`href\`.
 
-\`\`\`mdx
+\`\`\`html
 <Button href="/">Home</Button>
 \`\`\`
 

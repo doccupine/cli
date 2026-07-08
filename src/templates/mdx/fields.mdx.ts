@@ -21,7 +21,7 @@ Use the \`<Field>\` component to declare API or SDK parameters, or define the re
   Example definition of a parameter field.
 </Field>
 
-\`\`\`mdx
+\`\`\`html
 <Field value="param" type="string" required>
   Example definition of a parameter field.
 </Field>

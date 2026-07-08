@@ -18,36 +18,34 @@ Each \`Update\` label is added to the "On this page" sidebar and gets its own an
 <Update label="v0.0.1" description="Example">
   ## Example entry
 
-You can include anything here - images, code snippets, or a bullet list of modifications.
+  You can include anything here - images, code snippets, or a bullet list of modifications.
 
-![Demo Image](https://docs.doccupine.com/demo.png)
+  ![Demo Image](https://docs.doccupine.com/demo.png)
 
-### Key additions
+  ### Key additions
 
-- Fully responsive layout
-- Individual anchor for each update
-- Automatic RSS feed entry generation
-
+  - Fully responsive layout
+  - Individual anchor for each update
+  - Automatic RSS feed entry generation
 </Update>
 
 ## Update Usage
 
 You can combine multiple \`Update\` components to build complete changelogs.
 
-\`\`\`mdx
+\`\`\`html
 <Update label="v0.0.1" description="Example">
   ## Example entry
 
-You can include anything here - images, code snippets, or a bullet list of modifications.
+  You can include anything here - images, code snippets, or a bullet list of modifications.
 
-![Demo Image](https://docs.doccupine.com/demo.png)
+  ![Demo Image](https://docs.doccupine.com/demo.png)
 
-### Key additions
+  ### Key additions
 
-- Fully responsive layout
-- Individual anchor for each update
-- Automatic RSS feed entry generation
-
+  - Fully responsive layout
+  - Individual anchor for each update
+  - Automatic RSS feed entry generation
 </Update>
 \`\`\`
 

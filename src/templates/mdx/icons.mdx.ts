@@ -15,7 +15,7 @@ Icons can be sourced from Lucide, SVG elements, external URLs, or local files wi
 
 <Icon name="flag" size={32} />
 
-\`\`\`mdx
+\`\`\`html
 <Icon name="flag" size={32} />
 \`\`\`
 
@@ -25,7 +25,7 @@ You can use icons directly within text to highlight information or add visual co
 
 <Icon name="flag" size={16} /> Build your documentation seamlessly.
 
-\`\`\`mdx
+\`\`\`html
 <Icon name="flag" size={16} /> Build your documentation seamlessly.
 \`\`\`
 

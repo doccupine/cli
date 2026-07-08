@@ -17,32 +17,30 @@ Accordion elements help organize information by letting users show or hide secti
 
 You can use the Accordion component directly within your MDX files without any import. The following example shows a basic usage:
 
-\`\`\`\`mdx
+\`\`\`\`html
 <Accordion title="What is MDX?">
-    You can put any content in here, including other components, like code:
+  You can put any content in here, including other components, like code:
 
-\`\`\`java HelloWorld.java
- class HelloWorld {
-     public static void main(String[] args) {
-         System.out.println("Hello, World!");
-     }
- }
-\`\`\`
-
+  \`\`\`java
+  class HelloWorld {
+    public static void main(String[] args) {
+      System.out.println("Hello, World!");
+    }
+  }
+  \`\`\`
 </Accordion>
 \`\`\`\`
 
 <Accordion title="What is MDX?">
-    You can put any content in here, including other components, like code:
+  You can put any content in here, including other components, like code:
 
-\`\`\`java HelloWorld.java
- class HelloWorld {
-     public static void main(String[] args) {
-         System.out.println("Hello, World!");
-     }
- }
-\`\`\`
-
+  \`\`\`java
+  class HelloWorld {
+    public static void main(String[] args) {
+      System.out.println("Hello, World!");
+    }
+  }
+  \`\`\`
 </Accordion>
 
 ## Properties

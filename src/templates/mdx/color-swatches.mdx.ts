@@ -17,7 +17,7 @@ The \`ColorSwatch\` component renders a visual preview of a color alongside its 
 
 You can use the ColorSwatch components directly within your MDX files without any import:
 
-\`\`\`mdx
+\`\`\`html
 <ColorSwatchGroup>
   <ColorSwatch token="primary" value="#6366F1" />
   <ColorSwatch token="secondary" value="#EC4899" />
@@ -41,7 +41,7 @@ You can use the ColorSwatch components directly within your MDX files without an
 
 Text color automatically adapts based on the background luminance, so dark swatches display white text:
 
-\`\`\`mdx
+\`\`\`html
 <ColorSwatchGroup>
   <ColorSwatch token="dark" value="#1E1E2E" />
   <ColorSwatch token="grayDark" value="#374151" />

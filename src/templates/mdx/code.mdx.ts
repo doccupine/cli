@@ -34,18 +34,18 @@ You may specify the language for highlighting:
 \`\`\`\`text
 \`\`\`java
 class HelloWorld {
-    public static void main(String[] args) {
-        System.out.println("Hello, World!");
-    }
+  public static void main(String[] args) {
+    System.out.println("Hello, World!");
+  }
 }
 \`\`\`
 \`\`\`\`
 
 \`\`\`java
 class HelloWorld {
-    public static void main(String[] args) {
-        System.out.println("Hello, World!");
-    }
+  public static void main(String[] args) {
+    System.out.println("Hello, World!");
+  }
 }
 \`\`\`
 
@@ -75,7 +75,7 @@ function calculateTotal(items) {
 
 Add a \`title\` to a code block to display a file name in the window bar, styled to match the GitHub-style header. Pass it through the \`<Code />\` component:
 
-\`\`\`text
+\`\`\`html
 <Code title="package.json" language="json" code={\`{\\n  "name": "my-app",\\n  "version": "1.0.0"\\n}\`} />
 \`\`\`
 
@@ -85,7 +85,7 @@ Add a \`title\` to a code block to display a file name in the window bar, styled
 
 Use \`<CodeTabs />\` to show several variants of the same snippet - for example the same install command across package managers. Each tab is a keyboard-accessible button, and the copy button copies whichever tab is active. Each tab may set a \`language\` for highlighting (defaults to \`bash\`).
 
-\`\`\`text
+\`\`\`html
 <CodeTabs tabs={[{ label: "npm", code: "npm install doccupine" }, { label: "pnpm", code: "pnpm add doccupine" }, { label: "yarn", code: "yarn add doccupine" }]} />
 \`\`\`
 

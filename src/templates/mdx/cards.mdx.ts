@@ -17,7 +17,7 @@ Cards act as visual containers for your content, giving you flexibility to combi
 
 You can use the Cards component directly within your MDX files without any import. The following example shows a basic usage:
 
-\`\`\`mdx
+\`\`\`html
 <Card title="Note" icon="badge-info">
   Doccupine CLI is a command-line tool that helps you create and manage your
   Doccupine project. It provides a simple and intuitive interface for creating
@@ -33,7 +33,7 @@ You can use the Cards component directly within your MDX files without any impor
 
 Pass a \`href\` prop to turn the card into a clickable link. The card will display interactive hover and focus styles automatically.
 
-\`\`\`mdx
+\`\`\`html
 <Card title="Getting Started" icon="rocket" href="/cards">
   Learn how to set up Doccupine and create your first documentation site.
 </Card>
