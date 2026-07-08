@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.113
+
+- Let long inline `code` and `kbd` tokens wrap in the generated docs instead of forcing horizontal overflow: drop the `white-space: pre` rule from the inline `code`/`kbd` styling so a long token (a file path, URL, or command) breaks onto the next line rather than pushing the document wider than the viewport on narrow screens
+
 ## 0.0.112
 
 - Fix the generated app failing to deploy with an `npm install` `ERESOLVE` peer-dependency error: the 0.0.111 migration to ESLint 10 left `eslint-plugin-react`, `eslint-plugin-jsx-a11y`, and `eslint-plugin-import` on peer ranges that still cap at ESLint 9 even though they run fine under 10; installing with pnpm only warns on such mismatches, but installing with npm hard-fails. Ship a `.npmrc` (`legacy-peer-deps=true`) with the generated app so npm skips the stale peer check and matches pnpm's behavior
