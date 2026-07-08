@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.114
+
+- Size the user's chat message to its content instead of stretching it edge to edge: the user bubble now uses `width: fit-content` and right-aligns within the panel, with roomier padding and rounded corners, while the AI answer keeps its full-width layout, so short questions read as compact right-aligned bubbles rather than full-width blocks
+
 ## 0.0.113
 
 - Let long inline `code` and `kbd` tokens wrap in the generated docs instead of forcing horizontal overflow: drop the `white-space: pre` rule from the inline `code`/`kbd` styling so a long token (a file path, URL, or command) breaks onto the next line rather than pushing the document wider than the viewport on narrow screens
