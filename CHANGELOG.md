@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.110
+
+- Scroll the generated docs sidebar to the active page's link when it starts off-screen (deep pages, in-content links, or search results): the sidebar nav scrolls within its own overflow area so the main document never jumps, treats links hidden behind the sticky theme-toggle footer as off-screen so they are still revealed, and marks the current link with `aria-current="page"`
+- Add the generated Next.js `public/` directory to the app's `.prettierignore` so generated build output (`llms.txt`, `llms-full.txt`, and per-page markdown) is no longer reformatted by the app's `prettier --write .`
+- Use `html` code fences instead of `mdx` for the component-usage examples in the starter MDX docs so the sample component tags syntax-highlight consistently in both themes; the JavaScript/JSX highlighter mis-tokenizes bare component tags and colored the first tag differently from the rest
+- Update generated app dependency posthog-js to ^1.398.1
+- Update CLI dev dependencies (`@types/node`, `vitest`)
+
 ## 0.0.109
 
 - Render the search modal's inline result snippets as plain text: snippet source is extracted from the generated page files as raw MDX, so results used to show stray backticks, backslashes, and other Markdown syntax (for example `` `Test` `` instead of `Test`); a new `toPlainText` step now undoes the template-literal escaping and strips inline code, emphasis, links, images, and heading/list markers so snippets read as clean prose
