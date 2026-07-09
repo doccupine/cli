@@ -110,6 +110,7 @@ const CopyButton = styled.button<{ theme: Theme; $copied: boolean }>\`
   margin-right: -6px;
 
   & svg.lucide {
+    margin: 0;
     color: \${({ $copied }) => ($copied ? "#2da44e" : "#57606a")};
   }
 

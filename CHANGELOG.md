@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.115
+
+- Speed up the initial build for large documentation sets by roughly 340x (a 1,000-file build drops from ~239s to ~0.7s): the generator used to regenerate every site-wide file (pages index, root and site layout, sitemap, `llms.txt`/`llms-full.txt`, and section-index redirects) once per MDX file, and each of those re-parsed every file, so a full build scaled quadratically with the number of docs; it now writes each page once and runs the aggregations a single time at the end, sharing a single parse of all pages across them. Output is unchanged - the generated files are byte-identical to before for full builds and for incremental add/change/delete while watching
+- Fix a latent ordering bug where sections were resolved before the starter sample docs that define them were written, so a first run now applies section navigation correctly in a single pass instead of relying on per-file rediscovery
+- Detect pnpm reliably when it is installed as a standalone binary (for example under `PNPM_HOME`/`~/Library/pnpm`): the `watch` command previously probed for pnpm only through the shell `PATH`, so launching Doccupine from an IDE terminal or GUI that didn't inherit the interactive shell's `PATH` made it silently fall back to npm even though pnpm was installed. It now also resolves pnpm via `PNPM_HOME` and spawns it by absolute path, trusts `npm_config_user_agent` when pnpm launched the CLI, and adds a `--package-manager <pnpm|npm>` flag (plus a matching `packageManager` field in `doccupine.json`) to force the choice
+
 ## 0.0.114
 
 - Size the user's chat message to its content instead of stretching it edge to edge: the user bubble now uses `width: fit-content` and right-aligns within the panel, with roomier padding and rounded corners, while the AI answer keeps its full-width layout, so short questions read as compact right-aligned bubbles rather than full-width blocks

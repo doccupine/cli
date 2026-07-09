@@ -21,6 +21,7 @@ import {
   generateSlug,
   getFullSlug,
   escapeTemplateContent,
+  resolvePackageManager,
 } from "./lib/utils.js";
 import {
   generateMetadataBlock,
@@ -1668,6 +1669,10 @@ program
   .option("--port <port>", "Port for Next.js dev server", "3000")
   .option("--verbose", "Show verbose output")
   .option("--reset", "Reset configuration and prompt for new directories")
+  .option(
+    "--package-manager <name>",
+    "Package manager for the generated app: pnpm or npm (default: auto-detect)",
+  )
   .action(async (options) => {
     const configManager = new ConfigManager();
     const config = await configManager.getConfig({
@@ -1685,20 +1690,18 @@ program
     let devServer: ReturnType<typeof spawn> | null = null;
 
     console.log(chalk.blue("📦 Installing dependencies..."));
-    const { spawn, execSync } = await import("child_process");
+    const { spawn } = await import("child_process");
 
-    // Check if pnpm is available, fallback to npm
-    let packageManager = "npm";
-    try {
-      execSync("pnpm --version", { stdio: "ignore" });
-      packageManager = "pnpm";
-    } catch {
-      // pnpm not available, use npm
-    }
+    // Prefer pnpm (the generated app ships a pnpm workspace) and fall back to
+    // npm. A --package-manager flag or a "packageManager" field in
+    // doccupine.json overrides detection; the flag wins.
+    const packageManager = resolvePackageManager(
+      options.packageManager ?? config.packageManager,
+    );
 
-    console.log(chalk.blue(`📦 Using ${packageManager}...`));
+    console.log(chalk.blue(`📦 Using ${packageManager.name}...`));
 
-    const install = spawn(packageManager, ["install"], {
+    const install = spawn(packageManager.bin, ["install"], {
       cwd: config.outputDir,
       stdio: "inherit",
     });
@@ -1710,7 +1713,9 @@ program
           resolve(void 0);
         } else {
           reject(
-            new Error(`${packageManager} install failed with code ${code}`),
+            new Error(
+              `${packageManager.name} install failed with code ${code}`,
+            ),
           );
         }
       });
@@ -1730,10 +1735,10 @@ program
     );
     const portStr = String(port);
     const devArgs =
-      packageManager === "npm"
+      packageManager.name === "npm"
         ? ["run", "dev", "--", "--port", portStr]
         : ["run", "dev", "--port", portStr];
-    devServer = spawn(packageManager, devArgs, {
+    devServer = spawn(packageManager.bin, devArgs, {
       cwd: config.outputDir,
       stdio: ["ignore", "pipe", "pipe"],
     });

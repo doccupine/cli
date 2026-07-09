@@ -30,6 +30,10 @@ export interface DoccupineConfig {
   watchDir: string;
   outputDir: string;
   port: string;
+  /** Force the package manager used to install and run the generated app
+   *  ("pnpm" or "npm"), overriding auto-detection. Also settable per run via
+   *  the `--package-manager` flag, which takes precedence over this field. */
+  packageManager?: string;
 }
 
 export interface FontConfig {

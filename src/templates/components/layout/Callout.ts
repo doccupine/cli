@@ -12,6 +12,7 @@ const StyledCallout = styled.div<{ theme: Theme; $type?: CalloutType }>\`
   border-radius: \${({ theme }) => theme.spacing.radius.lg};
   padding: 20px;
   margin: 0;
+  max-width: 100%;
   \${({ theme }) => styledSmall(theme)}
   color: \${({ theme }) => theme.colors.grayDark};
   display: flex;
