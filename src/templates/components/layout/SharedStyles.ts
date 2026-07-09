@@ -78,7 +78,7 @@ export const stylesLists = css<{ theme: Theme }>\`
       text-indent: 0;
       display: block;
       position: relative;
-      padding: 0 0 0 15px;
+      padding: 0 0 0 24px;
       margin: 0;
       \${({ theme }) => styledText(theme)};
       min-height: 23px;
@@ -96,7 +96,7 @@ export const stylesLists = css<{ theme: Theme }>\`
         background: \${({ theme }) => theme.colors.primary};
         position: absolute;
         top: 8px;
-        left: 2px;
+        left: 9px;
 
         \${mq("lg")} {
           top: 10px;
@@ -106,6 +106,7 @@ export const stylesLists = css<{ theme: Theme }>\`
   }
 
   & ol {
+    counter-reset: item;
     padding: 0;
     margin: 0;
 
@@ -114,16 +115,18 @@ export const stylesLists = css<{ theme: Theme }>\`
     }
 
     & > li {
-      position: relative;
-      padding: 0 0 0 24px;
       counter-increment: item;
+      padding: 0 0 0 24px;
       margin: 0;
       \${({ theme }) => styledText(theme)};
 
       &::before {
         content: counter(item) ".";
-        position: absolute;
-        left: 2px;
+        display: inline-block;
+        min-width: 20px;
+        margin-left: -24px;
+        margin-right: 4px;
+        text-align: right;
         font-weight: 700;
         color: \${({ theme }) => theme.colors.primary};
       }

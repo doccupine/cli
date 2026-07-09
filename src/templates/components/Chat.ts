@@ -588,18 +588,6 @@ const StyledAnswer = styled.div<{ theme: Theme; $isAnswer: boolean }>\`
     }
   }
 
-  & ol {
-    & > li {
-      padding-left: 20px;
-
-      &::before {
-        position: absolute;
-        top: 0;
-        left: 0;
-      }
-    }
-  }
-
   & img,
   & video,
   & iframe {
