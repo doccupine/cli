@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.117
+
+- Fix numbered lists so multi-digit numbers render cleanly: the number marker is now an in-flow element sized to its content with a hanging indent instead of a fixed-width gutter, so `1.`, `10.`, and `100.` keep a consistent gap and never overlap the item's text. Nested ordered lists also number independently now instead of continuing the parent list's count
+- Align the unordered- and ordered-list indents so bullets and numbers share the same 24px gutter, and recenter the bullet dot within it
+
 ## 0.0.116
 
 - Theme the generated docs code block from the site's palette instead of a fixed GitHub look, so it matches the rest of the app and picks up a custom brand theme in both light and dark modes: the outer frame and window-bar divider now use the same `grayLight` border as the sidebar and footer, the dark-mode surface uses the left sidebar's translucent `primaryLight` tint instead of GitHub's `#0d1117` so the code window shares the nav's background, and the copy button, code tabs, and centered file-name title all draw from theme tokens that swap for dark mode via the theme provider. The `.hljs` syntax highlighting keeps its fixed GitHub Light and Dark palettes so code stays legible regardless of the brand colors
