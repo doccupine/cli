@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.116
+
+- Theme the generated docs code block from the site's palette instead of a fixed GitHub look, so it matches the rest of the app and picks up a custom brand theme in both light and dark modes: the outer frame and window-bar divider now use the same `grayLight` border as the sidebar and footer, the dark-mode surface uses the left sidebar's translucent `primaryLight` tint instead of GitHub's `#0d1117` so the code window shares the nav's background, and the copy button, code tabs, and centered file-name title all draw from theme tokens that swap for dark mode via the theme provider. The `.hljs` syntax highlighting keeps its fixed GitHub Light and Dark palettes so code stays legible regardless of the brand colors
+- Fix numbered lists so a wrapped item stays indented: the counter is now pinned to the left with a hanging indent instead of sitting inline, so the second and later lines of a long item align with its text rather than collapsing back under the number
+- Render paragraphs inside list items inline so a list item's text sits beside its marker instead of dropping to the next line, and cap list width at 100% so wide list content no longer stretches the page
+
 ## 0.0.115
 
 - Speed up the initial build for large documentation sets by roughly 340x (a 1,000-file build drops from ~239s to ~0.7s): the generator used to regenerate every site-wide file (pages index, root and site layout, sitemap, `llms.txt`/`llms-full.txt`, and section-index redirects) once per MDX file, and each of those re-parsed every file, so a full build scaled quadratically with the number of docs; it now writes each page once and runs the aggregations a single time at the end, sharing a single parse of all pages across them. Output is unchanged - the generated files are byte-identical to before for full builds and for incremental add/change/delete while watching
