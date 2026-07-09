@@ -100,14 +100,6 @@ class MDXToNextJSGenerator {
     this.sectionsConfig = await this.resolveSections();
     this.analyticsConfig = await this.loadAnalyticsConfig();
 
-    if (this.sectionsConfig) {
-      console.log(
-        chalk.blue(
-          `📑 Found ${this.sectionsConfig.length} section(s): ${this.sectionsConfig.map((s) => s.label).join(", ")}`,
-        ),
-      );
-    }
-
     if (this.analyticsConfig) {
       console.log(
         chalk.blue(`📊 Analytics enabled: ${this.analyticsConfig.provider}`),
@@ -120,8 +112,22 @@ class MDXToNextJSGenerator {
     await this.copyFontConfig();
     await this.copyAnalyticsConfig();
     await this.copyPublicFiles();
+
+    // createStartingDocs() may have written the sample docs - which carry
+    // section frontmatter - after the initial resolveSections() ran against an
+    // empty watch dir. Re-resolve now that every MDX file is on disk so the
+    // build applies the correct sections in a single O(n) pass, instead of
+    // rediscovering them per file (the old O(n²) behavior).
+    this.sectionsConfig = await this.resolveSections();
+    if (this.sectionsConfig) {
+      console.log(
+        chalk.blue(
+          `📑 Found ${this.sectionsConfig.length} section(s): ${this.sectionsConfig.map((s) => s.label).join(", ")}`,
+        ),
+      );
+    }
+
     await this.processAllMDXFiles();
-    await this.generateSectionIndexPages();
 
     console.log(chalk.green("✅ Initial setup complete!"));
     console.log(chalk.cyan("💡 To start the Next.js dev server:"));
@@ -362,7 +368,6 @@ class MDXToNextJSGenerator {
     console.log(chalk.cyan("📑 Sections configuration changed"));
     this.sectionsConfig = await this.resolveSections();
     await this.processAllMDXFiles();
-    await this.generateSectionIndexPages();
   }
 
   private async maybeUpdateSections(): Promise<void> {
@@ -387,8 +392,9 @@ class MDXToNextJSGenerator {
       this.sectionsConfig = newSections;
       this.isReprocessing = true;
       try {
+        // processAllMDXFiles() already refreshes section index pages via its
+        // aggregate pass, so no separate generateSectionIndexPages() here.
         await this.processAllMDXFiles();
-        await this.generateSectionIndexPages();
       } finally {
         this.isReprocessing = false;
       }
@@ -924,47 +930,69 @@ class MDXToNextJSGenerator {
     return Promise.all(files.map((file) => this.parseMDXFile(file)));
   }
 
+  /**
+   * Writes the generated page(s) for a single MDX file: the doc page and, for a
+   * section-index file, the section landing page. Deliberately does NOT run the
+   * site-wide aggregations (pages index, layout, sitemap, llms, section
+   * redirects) - the caller batches those so a bulk build runs them once at the
+   * end instead of once per file (which is what made large builds O(n²)).
+   */
+  private async writePageForFile(filePath: string): Promise<void> {
+    const fullPath = path.join(this.watchDir, filePath);
+    const content = await fs.readFile(fullPath, "utf8");
+    const { data: frontmatter, content: mdxContent } = matter(content);
+
+    const { sectionSlug, pageSlug } = this.determineSectionForFile(
+      filePath,
+      frontmatter,
+    );
+    const fullSlug = getFullSlug(pageSlug, sectionSlug);
+
+    const isIndex = filePath === "index.mdx" || filePath === "./index.mdx";
+    const isSectionIndex =
+      this.sectionsConfig && pageSlug === "" && sectionSlug !== "";
+
+    if (isIndex) {
+      // The homepage is emitted by updatePagesIndex() in the aggregate pass, so
+      // there is no per-file page to write here.
+      console.log(chalk.blue("🏠 Updating homepage with index.mdx content"));
+    } else {
+      const mdxFile: MDXFile = {
+        path: filePath,
+        content: mdxContent,
+        frontmatter,
+        slug: fullSlug,
+      };
+
+      await this.generatePageFromMDX(mdxFile);
+    }
+
+    if (isSectionIndex) {
+      await this.updateSectionIndex(sectionSlug, frontmatter, mdxContent);
+    }
+  }
+
+  /**
+   * Regenerates every file that depends on the full set of pages (pages index,
+   * root/site layout, sitemap, llms files, section redirects). Parses all MDX
+   * exactly once and threads the result through each generator, so one refresh
+   * is a single scan rather than one scan per generator.
+   */
+  private async refreshSiteAggregates(): Promise<void> {
+    const pages = await this.buildAllPagesMeta();
+    await this.updatePagesIndex();
+    await this.updateRootLayout(pages);
+    await this.updateSitemap(pages);
+    await this.updateLlmsFiles(pages);
+    await this.generateSectionIndexPages(pages);
+  }
+
   async handleFileChange(action: string, filePath: string) {
     console.log(chalk.cyan(`📝 File ${action}: ${filePath}`));
 
-    const fullPath = path.join(this.watchDir, filePath);
-
     try {
-      const content = await fs.readFile(fullPath, "utf8");
-      const { data: frontmatter, content: mdxContent } = matter(content);
-
-      const { sectionSlug, pageSlug } = this.determineSectionForFile(
-        filePath,
-        frontmatter,
-      );
-      const fullSlug = getFullSlug(pageSlug, sectionSlug);
-
-      const isIndex = filePath === "index.mdx" || filePath === "./index.mdx";
-      const isSectionIndex =
-        this.sectionsConfig && pageSlug === "" && sectionSlug !== "";
-
-      if (isIndex) {
-        console.log(chalk.blue("🏠 Updating homepage with index.mdx content"));
-      } else {
-        const mdxFile: MDXFile = {
-          path: filePath,
-          content: mdxContent,
-          frontmatter,
-          slug: fullSlug,
-        };
-
-        await this.generatePageFromMDX(mdxFile);
-      }
-
-      if (isSectionIndex) {
-        await this.updateSectionIndex(sectionSlug, frontmatter, mdxContent);
-      }
-
-      await this.updatePagesIndex();
-      await this.updateRootLayout();
-      await this.updateSitemap();
-      await this.updateLlmsFiles();
-      await this.generateSectionIndexPages();
+      await this.writePageForFile(filePath);
+      await this.refreshSiteAggregates();
 
       console.log(chalk.green(`✅ Generated page for: ${filePath}`));
 
@@ -1010,9 +1038,21 @@ class MDXToNextJSGenerator {
   async processAllMDXFiles() {
     const files = await this.getAllMDXFiles();
 
+    // Write each page first (the only genuinely per-file work), then run the
+    // site-wide aggregations a single time. Doing the aggregations per file
+    // re-scanned and re-parsed every MDX file on each iteration, which made a
+    // full build O(n²); batching them makes it O(n). A single bad file is
+    // logged and skipped so it never aborts the whole build.
     for (const file of files) {
-      await this.handleFileChange("processed", file);
+      console.log(chalk.cyan(`📝 Processing: ${file}`));
+      try {
+        await this.writePageForFile(file);
+      } catch (error) {
+        console.error(chalk.red(`❌ Error processing ${file}:`), error);
+      }
     }
+
+    await this.refreshSiteAggregates();
   }
 
   async getAllMDXFiles(): Promise<string[]> {
@@ -1043,25 +1083,25 @@ class MDXToNextJSGenerator {
     return rootLayoutTemplate(fontConfig, analyticsEnabled);
   }
 
-  async generateSiteLayout(): Promise<string> {
-    const pages = await this.buildAllPagesMeta();
-    return siteLayoutTemplate(pages, this.sectionsConfig);
+  async generateSiteLayout(pages?: PageMeta[]): Promise<string> {
+    const resolvedPages = pages ?? (await this.buildAllPagesMeta());
+    return siteLayoutTemplate(resolvedPages, this.sectionsConfig);
   }
 
-  async generateSectionIndexPages() {
+  async generateSectionIndexPages(pages?: PageMeta[]) {
     if (!this.sectionsConfig || this.sectionsConfig.length === 0) return;
 
-    const pages = await this.buildAllPagesMeta();
+    const resolvedPages = pages ?? (await this.buildAllPagesMeta());
 
     for (const section of this.sectionsConfig) {
       if (section.slug === "") continue;
 
       // Check if a page already exists at the section root
-      const hasIndex = pages.some((p) => p.slug === section.slug);
+      const hasIndex = resolvedPages.some((p) => p.slug === section.slug);
       if (hasIndex) continue;
 
       // Find the first page in this section
-      const sectionPages = pages
+      const sectionPages = resolvedPages
         .filter((p) => p.section === section.slug)
         .sort((a, b) => {
           if (a.categoryOrder !== b.categoryOrder)
@@ -1315,7 +1355,7 @@ export default function Page() {
     await fs.writeFile(pagePath, indexContent, "utf8");
   }
 
-  async updateRootLayout() {
+  async updateRootLayout(pages?: PageMeta[]) {
     await fs.writeFile(
       path.join(this.outputDir, "app", "layout.tsx"),
       await this.generateRootLayout(),
@@ -1328,7 +1368,11 @@ export default function Page() {
       "layout.tsx",
     );
     await fs.ensureDir(path.dirname(siteLayoutPath));
-    await fs.writeFile(siteLayoutPath, await this.generateSiteLayout(), "utf8");
+    await fs.writeFile(
+      siteLayoutPath,
+      await this.generateSiteLayout(pages),
+      "utf8",
+    );
   }
 
   async loadSiteUrl(): Promise<string | null> {
@@ -1382,7 +1426,7 @@ export default function Page() {
     return entries;
   }
 
-  async updateSitemap() {
+  async updateSitemap(pages?: PageMeta[]) {
     const sitemapPath = path.join(this.outputDir, "app", "sitemap.ts");
     const siteUrl = await this.loadSiteUrl();
 
@@ -1396,8 +1440,8 @@ export default function Page() {
       return;
     }
 
-    const pages = await this.buildAllPagesMeta();
-    const entries = this.buildSitemapEntries(pages);
+    const resolvedPages = pages ?? (await this.buildAllPagesMeta());
+    const entries = this.buildSitemapEntries(resolvedPages);
     await fs.writeFile(sitemapPath, sitemapTemplate(entries), "utf8");
     console.log(
       chalk.green(
@@ -1507,21 +1551,21 @@ export default function Page() {
     await fs.writeFile(manifestPath, json, "utf8");
   }
 
-  async updateLlmsFiles() {
+  async updateLlmsFiles(pages?: PageMeta[]) {
     const publicDir = path.join(this.outputDir, "public");
     await fs.ensureDir(publicDir);
 
     const { url: baseUrl, name, description } = await this.loadSiteMetadata();
-    const pages = await this.buildAllPagesMeta();
+    const resolvedPages = pages ?? (await this.buildAllPagesMeta());
     const pagesWithBodies = await Promise.all(
-      pages.map((page) => this.readPageWithBody(page)),
+      resolvedPages.map((page) => this.readPageWithBody(page)),
     );
 
     const indexContent = llmsIndexTemplate({
       siteName: name,
       siteDescription: description,
       baseUrl,
-      pages,
+      pages: resolvedPages,
       sectionsConfig: this.sectionsConfig,
     });
     const fullContent = llmsFullTemplate({
@@ -1573,7 +1617,7 @@ export default function Page() {
 
     console.log(
       chalk.green(
-        `🤖 Generated llms.txt and llms-full.txt with ${pages.length} page(s)${
+        `🤖 Generated llms.txt and llms-full.txt with ${resolvedPages.length} page(s)${
           baseUrl ? ` using ${baseUrl}` : " (relative URLs)"
         }`,
       ),
