@@ -62,6 +62,10 @@ export const stylesLists = css<{ theme: Theme }>\`
       & > .code-wrapper {
         margin: 10px 0;
       }
+
+      & p {
+        display: inline;
+      }
     }
   }
 
@@ -111,18 +115,17 @@ export const stylesLists = css<{ theme: Theme }>\`
 
     & > li {
       position: relative;
-      padding: 0;
+      padding: 0 0 0 24px;
       counter-increment: item;
       margin: 0;
       \${({ theme }) => styledText(theme)};
 
       &::before {
         content: counter(item) ".";
-        display: inline-block;
-        margin: 0 4px 0 0;
+        position: absolute;
+        left: 2px;
         font-weight: 700;
         color: \${({ theme }) => theme.colors.primary};
-        min-width: max-content;
       }
     }
   }

@@ -44,23 +44,24 @@ const CodeWrapper = styled.span<{ theme: Theme }>\`
   display: block;
   width: 100%;
   border-radius: \${({ theme }) => theme.spacing.radius.lg};
-  border: solid 1px rgba(0, 0, 0, 0.1);
-
-  :root.dark & {
-    border-color: rgba(255, 255, 255, 0.2);
-  }
+  border: solid 1px \${({ theme }) => theme.colors.grayLight};
+  background: \${({ theme }) => theme.colors.light};
 \`;
 
-/* Code block uses a fixed GitHub-style palette in both modes. Independent of
-   theme.json so syntax highlighting stays legible regardless of brand colors.
-   Dark variants live in :root.dark & blocks so the swap happens via the
-   active <html> class with no re-render. */
+/* Code block uses a fixed GitHub-style palette for the syntax tokens in both
+   modes so highlighting stays legible regardless of brand colors. The dark-mode
+   surface, however, matches the left sidebar's translucent brand tint
+   (color-mix of theme.colors.primaryLight over the black page) instead of
+   GitHub's #0d1117, so the window sits on the same background as the nav. Dark
+   variants live in :root.dark & blocks so the swap happens via the active
+   <html> class with no re-render. */
 const TopBar = styled.div<{ theme: Theme }>\`
   position: relative;
-  background: #f6f8fa;
+  background: \${({ theme }) =>
+    \`color-mix(in srgb, \${theme.colors.primaryLight} 5%, transparent)\`};
   border-top-left-radius: \${({ theme }) => theme.spacing.radius.lg};
   border-top-right-radius: \${({ theme }) => theme.spacing.radius.lg};
-  border-bottom: solid 1px rgba(0, 0, 0, 0.1);
+  border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
   height: 33px;
   width: 100%;
   display: flex;
@@ -68,11 +69,6 @@ const TopBar = styled.div<{ theme: Theme }>\`
   align-items: center;
   gap: 5px;
   padding: 0 10px;
-
-  :root.dark & {
-    background: #0d1117;
-    border-bottom-color: rgba(255, 255, 255, 0.1);
-  }
 \`;
 
 const DotsContainer = styled.div\`
@@ -92,16 +88,15 @@ const Dot = styled.span<{ theme: Theme }>\`
 \`;
 
 /* Icon-only copy button. interactiveStyles supplies the border highlight on
-   hover plus the focus/active rings (no scale effect); the GitHub-style
-   copied/base colors stay fixed like the rest of the code block. The dark
-   block re-declares the hover border because its higher-specificity
-   :root.dark & border-color would otherwise override the mixin's hover. */
+   hover plus the focus/active rings (no scale effect). Colors come from theme
+   tokens (grayLight border, success/grayDark icon) that swap for dark mode via
+   the theme prop, so no :root.dark & override is needed and the copied state
+   reads consistently in both modes. */
 const CopyButton = styled.button<{ theme: Theme; $copied: boolean }>\`
   \${resetButton}
   \${interactiveStyles}
-  background: \${({ $copied }) =>
-    $copied ? "rgba(45, 164, 78, 0.1)" : "transparent"};
-  border-color: \${({ $copied }) => ($copied ? "#2da44e" : "rgba(0, 0, 0, 0.1)")};
+  background: \${({ theme }) => theme.colors.light};
+  border-color: \${({ theme }) => theme.colors.grayLight};
   border-radius: \${({ theme }) => theme.spacing.radius.xs};
   padding: 4px;
   display: flex;
@@ -111,29 +106,15 @@ const CopyButton = styled.button<{ theme: Theme; $copied: boolean }>\`
 
   & svg.lucide {
     margin: 0;
-    color: \${({ $copied }) => ($copied ? "#2da44e" : "#57606a")};
-  }
-
-  :root.dark & {
-    background: \${({ $copied }) =>
-      $copied ? "rgba(126, 231, 135, 0.2)" : "transparent"};
-    border-color: \${({ $copied }) =>
-      $copied ? "#7ee787" : "rgba(255, 255, 255, 0.1)"};
-
-    & svg.lucide {
-      color: \${({ $copied }) => ($copied ? "#7ee787" : "#c9d1d9")};
-    }
-
-    &:hover {
-      border-color: \${({ theme }) => theme.colors.primary};
-    }
+    color: \${({ theme, $copied }) =>
+      $copied ? theme.colors.success : theme.colors.grayDark};
   }
 \`;
 
 /* Centered file name in the TopBar. Sits absolutely over the flex row so the
-   dots and copy button keep their edge alignment. Monospace + muted GitHub
-   grays, swapped via :root.dark like the rest of the block. pointer-events off
-   so clicks fall through to nothing and never steal focus from the buttons. */
+   dots and copy button keep their edge alignment. Monospace + a muted grayDark
+   token that swaps for dark mode via the theme prop. pointer-events off so
+   clicks fall through to nothing and never steal focus from the buttons. */
 const TopBarTitle = styled.span<{ theme: Theme }>\`
   position: absolute;
   left: 50%;
@@ -146,11 +127,7 @@ const TopBarTitle = styled.span<{ theme: Theme }>\`
   font-family: \${({ theme }) => theme.fonts.mono};
   font-size: 12px;
   line-height: 2;
-  color: #57606a;
-
-  :root.dark & {
-    color: #8b949e;
-  }
+  color: \${({ theme }) => theme.colors.grayDark};
 \`;
 
 /* Segmented control living in the TopBar for CodeTabs. Scrolls horizontally
@@ -165,12 +142,13 @@ const TabList = styled.div<{ theme: Theme }>\`
   margin-left: -6px;
 \`;
 
-/* Individual tab button. Active tab reads as part of the window: a light body
-   fill (#ffffff) that echoes the code area, with a soft border. Inactive tabs
-   are muted and transparent. resetButton strips native styling; focus-visible
-   draws an inset brand primary ring on a pseudo-element so the scrolling
-   TabList can't clip it. All colors stay fixed and swap purely via :root.dark,
-   matching the no-re-render palette approach. */
+/* Individual tab button. The active tab reads as part of the window: a
+   theme.colors.light fill that echoes the code body, with a soft grayLight
+   border. Inactive tabs are muted (grayDark) and transparent. resetButton
+   strips native styling; focus-visible draws an inset brand primary ring on a
+   pseudo-element so the scrolling TabList can't clip it. Colors come from theme
+   tokens that swap for dark mode via the theme prop, so no :root.dark &
+   override is needed. */
 const CodeTab = styled.button<{ theme: Theme; $active: boolean }>\`
   \${resetButton}
   flex: 0 0 auto;
@@ -187,14 +165,19 @@ const CodeTab = styled.button<{ theme: Theme; $active: boolean }>\`
     background 0.15s ease,
     border-color 0.15s ease;
   border: solid 1px
-    \${({ $active }) => ($active ? "rgba(0, 0, 0, 0.1)" : "transparent")};
-  background: \${({ $active }) => ($active ? "#ffffff" : "transparent")};
-  color: \${({ $active }) => ($active ? "#24292f" : "#57606a")};
+    \${({ theme, $active }) =>
+      $active ? theme.colors.grayLight : "transparent"};
+  background: \${({ theme, $active }) =>
+    $active ? theme.colors.light : "transparent"};
+  color: \${({ theme, $active }) =>
+    $active ? theme.colors.dark : theme.colors.grayDark};
 
   &:hover {
-    color: #24292f;
-    background: \${({ $active }) =>
-      $active ? "#ffffff" : "rgba(0, 0, 0, 0.04)"};
+    color: \${({ theme }) => theme.colors.dark};
+    background: \${({ theme, $active }) =>
+      $active
+        ? theme.colors.light
+        : \`color-mix(in srgb, \${theme.colors.dark} 4%, transparent)\`};
   }
 
   &:focus-visible {
@@ -208,19 +191,6 @@ const CodeTab = styled.button<{ theme: Theme; $active: boolean }>\`
     border: solid 2px \${({ theme }) => theme.colors.primary};
     border-radius: \${({ theme }) => theme.spacing.radius.xs};
     pointer-events: none;
-  }
-
-  :root.dark & {
-    border-color: \${({ $active }) =>
-      $active ? "rgba(255, 255, 255, 0.15)" : "transparent"};
-    background: \${({ $active }) => ($active ? "#161b22" : "transparent")};
-    color: \${({ $active }) => ($active ? "#e6edf3" : "#8b949e")};
-
-    &:hover {
-      color: #e6edf3;
-      background: \${({ $active }) =>
-        $active ? "#161b22" : "rgba(255, 255, 255, 0.06)"};
-    }
   }
 \`;
 
@@ -314,7 +284,7 @@ const lightSyntaxHighlight = css\`
 const darkSyntaxHighlight = css\`
   & .hljs {
     color: #c9d1d9;
-    background: #0d1117;
+    background: transparent;
   }
   & .hljs-doctag,
   & .hljs-keyword,
@@ -416,7 +386,8 @@ const Body = styled.div<{ theme: Theme }>\`
   }
 
   :root.dark & {
-    background: #0d1117;
+    background: \${({ theme }) =>
+      \`color-mix(in srgb, \${theme.colors.primaryLight} 5%, transparent)\`};
     color: #ffffff;
     \${darkSyntaxHighlight};
   }
