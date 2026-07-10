@@ -222,6 +222,7 @@ export async function GET() {
   return NextResponse.json({
     ready: status.ready,
     chunks: status.chunkCount,
+    reason: status.reason,
   });
 }
 `;

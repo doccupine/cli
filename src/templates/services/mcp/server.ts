@@ -21,6 +21,40 @@ import type { DocsChunk } from "@/services/mcp/types";
 type IndexedChunk = DocsChunk & { embedding: Int8Array };
 
 /**
+ * Thrown when a query arrives but no usable prebuilt embeddings index exists AND
+ * the doc set is too large to embed within a single serverless request. Surfaced
+ * to the client as a clear "temporarily unavailable" message instead of letting
+ * the request hang until the platform's function timeout (the old failure mode:
+ * the chat connected, streamed heartbeats, and never answered on large docs).
+ */
+export class IndexNotBuiltError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "IndexNotBuiltError";
+  }
+}
+
+/**
+ * Max chunks we will embed on demand inside one request when the prebuilt index
+ * is missing. Above this, embedding the whole set (one round trip per BATCH_SIZE
+ * chunks) cannot finish within a serverless function's time limit, so the chat
+ * would hang forever. Only enforced in production - \`next dev\` has no time cap,
+ * so it keeps embedding on demand and works without running the build. Override
+ * per deployment with RAG_RUNTIME_EMBED_MAX_CHUNKS (0 = always require a prebuilt
+ * index). Parsed defensively so a bad value falls back to the default rather
+ * than silently disabling the guard; note \`Number(x) || 400\` would drop a valid 0.
+ */
+function resolveRuntimeEmbedMax(): number {
+  const raw = process.env.RAG_RUNTIME_EMBED_MAX_CHUNKS;
+  if (raw !== undefined && raw !== "") {
+    const parsed = Number(raw);
+    if (Number.isFinite(parsed) && parsed >= 0) return Math.floor(parsed);
+  }
+  return 400;
+}
+const RUNTIME_EMBED_MAX_CHUNKS = resolveRuntimeEmbedMax();
+
+/**
  * In-memory cache for document embeddings.
  * Built once at server startup since docs are static.
  */
@@ -36,6 +70,13 @@ let docsIndex: {
 
 /** Resolves when the initial index build completes */
 let indexReady: Promise<void> | null = null;
+
+/**
+ * Human-readable reason the index is unavailable, or null when healthy. Surfaced
+ * by getIndexStatus (and GET /api/rag) so a missing/broken index is diagnosable
+ * from outside without reading server logs.
+ */
+let indexUnavailableReason: string | null = null;
 
 /**
  * Absolute path to the embeddings index precomputed at build time by
@@ -106,6 +147,7 @@ async function buildDocsIndex(force = false): Promise<void> {
   if (docsIndex.ready && !force) return;
 
   docsIndex.building = true;
+  indexUnavailableReason = null;
   try {
     // Prefer embeddings precomputed at build time - avoids re-embedding the
     // entire doc set on every cold start (the main cause of slow first chats).
@@ -125,6 +167,37 @@ async function buildDocsIndex(force = false): Promise<void> {
       docsIndex.ready = true;
       return;
     }
+
+    // Reaching here means no usable prebuilt index was loaded (missing, empty,
+    // or built with a different provider/model/dims). Embedding the whole set on
+    // demand only completes in time for small doc sets; for large ones it runs
+    // one round trip per BATCH_SIZE chunks and blows past the serverless function
+    // limit, so the chat connects and then hangs forever with no answer. In
+    // production, fail fast with an actionable error instead of hanging (this
+    // also stops a client-forced \`refresh\` from burning embedding quota).
+    if (
+      process.env.NODE_ENV === "production" &&
+      chunks.length > RUNTIME_EMBED_MAX_CHUNKS
+    ) {
+      indexUnavailableReason =
+        \`Prebuilt embeddings index missing; refusing to embed \${chunks.length} \` +
+        \`chunks at request time (limit \${RUNTIME_EMBED_MAX_CHUNKS}). Run the build \` +
+        \`with an embedding API key set so scripts/build-docs-index.mts writes \` +
+        \`services/mcp/docs-index.json, then redeploy.\`;
+      console.error(\`[doccupine] \${indexUnavailableReason}\`);
+      throw new IndexNotBuiltError(
+        "The AI assistant is temporarily unavailable: its documentation search " +
+          "index has not been built for this deployment. If you are the site " +
+          "owner, redeploy with an embedding API key available at build time.",
+      );
+    }
+
+    // Small enough (or local dev): embed on demand. This still re-embeds on every
+    // cold start, so a prebuilt index is strongly preferred in production.
+    console.warn(
+      \`[doccupine] No prebuilt embeddings index found; embedding \${chunks.length} \` +
+        \`chunks on demand. Precompute at build time to avoid this on each cold start.\`,
+    );
 
     const config = getLLMConfig();
     const embeddings = createEmbeddings(config);
@@ -183,7 +256,12 @@ export async function ensureDocsIndex(force = false): Promise<void> {
 
 // Eagerly start building the index on server startup if LLM is configured
 if (isLLMAvailable()) {
-  indexReady = buildDocsIndex();
+  const initialBuild = buildDocsIndex();
+  indexReady = initialBuild;
+  // A failed eager build (e.g. a missing prebuilt index on a large doc set) must
+  // not surface as an unhandledRejection at startup; the first request retries
+  // via ensureDocsIndex and returns a real error to the client.
+  void initialBuild.catch(() => {});
 }
 
 /** Cached embeddings instance for search queries */
@@ -225,10 +303,15 @@ export async function searchDocs(
 /**
  * Get the current index status
  */
-export function getIndexStatus(): { ready: boolean; chunkCount: number } {
+export function getIndexStatus(): {
+  ready: boolean;
+  chunkCount: number;
+  reason: string | null;
+} {
   return {
     ready: docsIndex.ready,
     chunkCount: docsIndex.chunks.length,
+    reason: indexUnavailableReason,
   };
 }
 
