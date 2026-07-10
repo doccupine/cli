@@ -1033,8 +1033,21 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
       });
 
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Request failed");
+        // The body may be a proxy/gateway HTML error page (e.g. Cloudflare
+        // 524), not our JSON - never blindly JSON.parse it.
+        const contentType = res.headers.get("content-type") || "";
+        let message = "Request failed";
+        if (contentType.includes("application/json")) {
+          try {
+            const errorData = await res.json();
+            message = errorData.error || message;
+          } catch {
+            // Non-JSON despite the header - fall through to the default.
+          }
+        } else if ([502, 503, 504, 524].includes(res.status)) {
+          message = "The assistant took too long to respond. Please try again.";
+        }
+        throw new Error(message);
       }
 
       const reader = res.body?.getReader();
