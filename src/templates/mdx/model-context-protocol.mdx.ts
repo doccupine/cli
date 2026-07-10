@@ -192,11 +192,13 @@ Doccupine's MCP server uses semantic search powered by vector embeddings to prov
 
 ### Indexing Process
 
-1. **Document Discovery**: The server scans your \`app/\` directory for all \`page.tsx\`, \`page.ts\`, \`page.jsx\`, and \`page.js\` files.
+Doccupine runs this pipeline at build time and ships the resulting vectors with your site, so the server loads a ready-made index instead of re-embedding your docs on every cold start.
+
+1. **Document Discovery**: Doccupine scans your \`app/\` directory for all \`page.tsx\`, \`page.ts\`, \`page.jsx\`, and \`page.js\` files.
 2. **Content Extraction**: It extracts content from \`const content =\` declarations in your page files.
 3. **Chunking**: Large documents are split into chunks of approximately 800 characters with 100 character overlap for better context preservation.
 4. **Embedding Generation**: Each chunk is converted to a vector embedding using your configured LLM provider's embedding model.
-5. **Index Building**: All embeddings are stored in memory for fast similarity search.
+5. **Index Building**: The embeddings are written to \`services/mcp/docs-index.json\`, bundled into your serverless functions, and loaded into memory at runtime for fast similarity search.
 
 ### Search Process
 
@@ -206,7 +208,7 @@ Doccupine's MCP server uses semantic search powered by vector embeddings to prov
 4. **Response**: The top N results (based on the limit parameter) are returned with their paths, URIs, scores, and text content.
 
 <Callout type="note">
-  The index is built automatically when the server starts. It is stored in memory and persists for the lifetime of the server process. If you update your documentation, restart the server to rebuild the index.
+  Embeddings are precomputed at build time and bundled with your site, so the server loads the ready-made index into memory on startup instead of re-embedding your docs on every cold start. It only embeds at runtime when the precomputed index is missing or was built with a different provider or model. When you update your documentation, rebuild or redeploy your site to regenerate the index with fresh content.
 </Callout>
 
 ## Use your MCP server
@@ -362,8 +364,9 @@ If searches return no results:
 
 ### Slow search performance
 
-The first search may be slower as it builds the index. Subsequent searches are fast as they use the in-memory index. If performance is consistently slow:
+Searches use the precomputed in-memory index and are fast. The first search is only slow when the app has to embed your docs at runtime, which happens when the precomputed index is missing or was built with a different provider or model. If performance is consistently slow:
 
+- Confirm the build ran the doc-index precompute step (the \`build\` script runs it before \`next build\`) with a valid API key
 - Check your embedding API response times
 - Consider reducing the number of documentation pages
 - Verify your server has sufficient memory
@@ -398,7 +401,7 @@ In Cloudflare dashboard:
 
 ## Best practices
 
-- **Keep content up-to-date**: Restart your server after updating documentation to rebuild the index with fresh content.
+- **Keep content up-to-date**: Rebuild or redeploy your site after updating documentation to regenerate the index with fresh content.
 - **Use descriptive queries**: More specific queries yield better semantic search results.
 - **Monitor index status**: Use the GET endpoint to check if your index is ready before performing searches.
 - **Optimize content structure**: Well-structured markdown with clear headings improves search relevance.`;
