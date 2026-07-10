@@ -4,6 +4,8 @@
 export const docsIndexStubTemplate = `{
   "provider": null,
   "embeddingModel": null,
+  "dims": 0,
+  "quantization": "none",
   "chunks": []
 }
 `;

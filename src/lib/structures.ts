@@ -62,6 +62,7 @@ import { mcpIndexTemplate } from "../templates/services/mcp/index.js";
 import { mcpServerTemplate } from "../templates/services/mcp/server.js";
 import { mcpToolsTemplate } from "../templates/services/mcp/tools.js";
 import { mcpTypesTemplate } from "../templates/services/mcp/types.js";
+import { vectorHelpersTemplate } from "../templates/services/mcp/vector.js";
 import { docsIndexStubTemplate } from "../templates/services/mcp/docsIndexStub.js";
 import { llmConfigTemplate } from "../templates/services/llm/config.js";
 import { llmFactoryTemplate } from "../templates/services/llm/factory.js";
@@ -150,6 +151,7 @@ export const appStructure: Record<string, string> = {
   "services/mcp/server.ts": mcpServerTemplate,
   "services/mcp/tools.ts": mcpToolsTemplate,
   "services/mcp/types.ts": mcpTypesTemplate,
+  "services/mcp/vector.ts": vectorHelpersTemplate,
   "services/mcp/docs-index.json": docsIndexStubTemplate,
   "services/llm/config.ts": llmConfigTemplate,
   "services/llm/factory.ts": llmFactoryTemplate,

@@ -34,4 +34,12 @@ GOOGLE_API_KEY=your_google_api_key_here
 
 # Optional: Set temperature (0-1, default: 0)
 # LLM_TEMPERATURE=0
+
+# Optional: Embedding dimensions for the prebuilt search index (default: 512)
+# Doc vectors are Matryoshka-truncated to this many dimensions and stored as
+# int8, which keeps services/mcp/docs-index.json small (~20x smaller than raw
+# floats) so large doc sets don't stall the AI chat on serverless cold starts.
+# Lower = smaller index, slightly lower recall. Values >= the model's native
+# dimension keep full precision. Rebuild after changing this.
+# LLM_EMBEDDING_DIMS=512
 `;

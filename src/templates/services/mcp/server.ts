@@ -9,7 +9,16 @@ import {
   DOCS_TOOLS,
 } from "@/services/mcp/tools";
 import { getLLMConfig, isLLMAvailable, createEmbeddings } from "@/services/llm";
+import {
+  reduceDims,
+  quantizeInt8,
+  decodeInt8,
+  cosineFloatInt8,
+} from "@/services/mcp/vector";
 import type { DocsChunk } from "@/services/mcp/types";
+
+/** A doc chunk with its stored int8-quantized embedding. */
+type IndexedChunk = DocsChunk & { embedding: Int8Array };
 
 /**
  * In-memory cache for document embeddings.
@@ -18,7 +27,7 @@ import type { DocsChunk } from "@/services/mcp/types";
 let docsIndex: {
   ready: boolean;
   building: boolean;
-  chunks: (DocsChunk & { embedding: number[] })[];
+  chunks: IndexedChunk[];
 } = {
   ready: false,
   building: false,
@@ -27,24 +36,6 @@ let docsIndex: {
 
 /** Resolves when the initial index build completes */
 let indexReady: Promise<void> | null = null;
-
-/**
- * Cosine similarity between two vectors
- */
-function cosineSim(a: number[], b: number[]): number {
-  let dot = 0,
-    na = 0,
-    nb = 0;
-  for (let i = 0; i < a.length; i++) {
-    const x = a[i];
-    const y = b[i];
-    dot += x * y;
-    na += x * x;
-    nb += y * y;
-  }
-  if (na === 0 || nb === 0) return 0;
-  return dot / (Math.sqrt(na) * Math.sqrt(nb));
-}
 
 /**
  * Absolute path to the embeddings index precomputed at build time by
@@ -60,26 +51,48 @@ const INDEX_FILE = path.join(
 
 /**
  * Load embeddings precomputed at build time. Returns null when the file is
- * missing/empty or was built with a different provider/model than the current
- * config - query and document vectors must come from the same embedding model.
+ * missing/empty, was built with a different provider/model/dimension than the
+ * current config, or is not int8-quantized - query and document vectors must
+ * come from the same embedding model and the same transform (dims + int8).
+ * A null return makes the caller fall back to embedding on demand at runtime.
  */
-function loadPrecomputedIndex():
-  (DocsChunk & { embedding: number[] })[] | null {
+function loadPrecomputedIndex(): IndexedChunk[] | null {
   try {
     const parsed = JSON.parse(fs.readFileSync(INDEX_FILE, "utf8")) as {
       provider?: string;
       embeddingModel?: string;
-      chunks?: (DocsChunk & { embedding: number[] })[];
+      dims?: number;
+      quantization?: string;
+      chunks?: (DocsChunk & { embedding: string })[];
     };
     if (!parsed.chunks || parsed.chunks.length === 0) return null;
     const config = getLLMConfig();
+    // Guard on the exact transform: the same dims value at build and query time
+    // guarantees reduceDims produces matching-length vectors on both sides.
     if (
       parsed.provider !== config.provider ||
-      parsed.embeddingModel !== config.embeddingModel
+      parsed.embeddingModel !== config.embeddingModel ||
+      parsed.dims !== config.embeddingDims ||
+      parsed.quantization !== "int8"
     ) {
       return null;
     }
-    return parsed.chunks;
+    const decoded: IndexedChunk[] = [];
+    let expectedLen = -1;
+    for (const c of parsed.chunks) {
+      const embedding = decodeInt8(c.embedding);
+      // Reject a corrupt index rather than scoring against ragged vectors.
+      if (expectedLen === -1) expectedLen = embedding.length;
+      else if (embedding.length !== expectedLen) return null;
+      decoded.push({
+        id: c.id,
+        text: c.text,
+        path: c.path,
+        uri: c.uri,
+        embedding,
+      });
+    }
+    return decoded;
   } catch {
     return null;
   }
@@ -116,21 +129,27 @@ async function buildDocsIndex(force = false): Promise<void> {
     const config = getLLMConfig();
     const embeddings = createEmbeddings(config);
 
-    // Process embeddings in small batches to avoid exceeding token limits
+    // Process embeddings in small batches to avoid exceeding token limits.
+    // Reduce + quantize to the same int8 representation as the precomputed
+    // index so searchDocs scores identically on either path.
     const BATCH_SIZE = 10;
     const texts = chunks.map((c) => c.text);
-    const vectors: number[][] = [];
+    const built: IndexedChunk[] = [];
 
     for (let i = 0; i < texts.length; i += BATCH_SIZE) {
       const batch = texts.slice(i, i + BATCH_SIZE);
       const batchVectors = await embeddings.embedDocuments(batch);
-      vectors.push(...batchVectors);
+      for (let j = 0; j < batchVectors.length; j++) {
+        built.push({
+          ...chunks[i + j],
+          embedding: quantizeInt8(
+            reduceDims(batchVectors[j], config.embeddingDims),
+          ),
+        });
+      }
     }
 
-    docsIndex.chunks = chunks.map((c, i) => ({
-      ...c,
-      embedding: vectors[i],
-    }));
+    docsIndex.chunks = built;
     docsIndex.ready = true;
   } catch (error) {
     // Reset so the next call to ensureDocsIndex retries
@@ -186,12 +205,16 @@ export async function searchDocs(
 ): Promise<{ chunk: DocsChunk; score: number }[]> {
   await ensureDocsIndex();
 
-  const queryVector = await getEmbeddings().embedQuery(query);
+  // Reduce the query vector with the exact same transform used at index time so
+  // dimensions line up. Scoring runs directly against the int8 vectors - cosine
+  // is scale-invariant, so no dequantization is needed.
+  const rawQueryVector = await getEmbeddings().embedQuery(query);
+  const queryVector = reduceDims(rawQueryVector, getLLMConfig().embeddingDims);
 
   const scored = docsIndex.chunks
     .map((c) => ({
       chunk: { id: c.id, text: c.text, path: c.path, uri: c.uri },
-      score: cosineSim(queryVector, c.embedding),
+      score: cosineFloatInt8(queryVector, c.embedding),
     }))
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);

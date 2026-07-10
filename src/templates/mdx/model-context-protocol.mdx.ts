@@ -198,7 +198,8 @@ Doccupine runs this pipeline at build time and ships the resulting vectors with 
 2. **Content Extraction**: It extracts content from \`const content =\` declarations in your page files.
 3. **Chunking**: Large documents are split into chunks of approximately 800 characters with 100 character overlap for better context preservation.
 4. **Embedding Generation**: Each chunk is converted to a vector embedding using your configured LLM provider's embedding model.
-5. **Index Building**: The embeddings are written to \`services/mcp/docs-index.json\`, bundled into your serverless functions, and loaded into memory at runtime for fast similarity search.
+5. **Compaction**: Each vector is truncated to \`LLM_EMBEDDING_DIMS\` dimensions (default 512) and quantized to int8, keeping the index roughly 20x smaller than raw floats so large doc sets don't stall the chat on cold start.
+6. **Index Building**: The compact embeddings are written to \`services/mcp/docs-index.json\`, bundled into your serverless functions, and loaded into memory at runtime for fast similarity search.
 
 ### Search Process
 

@@ -18,6 +18,7 @@ import nextEnv from "@next/env";
 import { getAllDocsChunks } from "../services/mcp/tools";
 import { getLLMConfig, isLLMAvailable } from "../services/llm/config";
 import { createEmbeddings } from "../services/llm/factory";
+import { reduceDims, quantizeInt8, encodeInt8 } from "../services/mcp/vector";
 
 // This runs as a standalone process before \`next build\`, so it must load
 // .env / .env.local / .env.production itself (the same way Next does). Real
@@ -45,20 +46,29 @@ async function main() {
   const config = getLLMConfig();
   const embeddings = createEmbeddings(config);
 
-  // Embed in small batches to stay within provider token limits.
+  // Embed in small batches to stay within provider token limits, then reduce
+  // each vector to config.embeddingDims and quantize to int8. Storing raw float
+  // arrays as JSON balloons to 100MB+ on large doc sets, which OOMs / stalls the
+  // serverless chat on cold start; int8 base64 keeps the index ~20x smaller.
   const texts = chunks.map((c) => c.text);
-  const vectors: number[][] = [];
+  const encoded: string[] = [];
   for (let i = 0; i < texts.length; i += BATCH_SIZE) {
     const batch = await embeddings.embedDocuments(
       texts.slice(i, i + BATCH_SIZE),
     );
-    vectors.push(...batch);
+    for (const vector of batch) {
+      encoded.push(
+        encodeInt8(quantizeInt8(reduceDims(vector, config.embeddingDims))),
+      );
+    }
   }
 
   const data = {
     provider: config.provider,
     embeddingModel: config.embeddingModel,
-    chunks: chunks.map((c, i) => ({ ...c, embedding: vectors[i] })),
+    dims: config.embeddingDims,
+    quantization: "int8",
+    chunks: chunks.map((c, i) => ({ ...c, embedding: encoded[i] })),
   };
 
   writeFileSync(OUTPUT, JSON.stringify(data));

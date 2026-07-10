@@ -57,10 +57,21 @@ export function getLLMConfig(): LLMConfig {
   }
   validateAPIKeys(provider);
   const defaults = PROVIDER_DEFAULTS[provider];
+  // Vectors are Matryoshka-truncated to this many dimensions before being
+  // stored as int8, keeping the prebuilt search index small. Must match between
+  // build time and runtime; a mismatch forces a re-embed. Values >= the model's
+  // native dimension keep full precision (default: 512).
+  const rawDims = process.env.LLM_EMBEDDING_DIMS;
+  let embeddingDims = 512;
+  if (rawDims !== undefined && rawDims !== "") {
+    const parsed = parseInt(rawDims, 10);
+    if (Number.isFinite(parsed) && parsed >= 0) embeddingDims = parsed;
+  }
   return {
     provider,
     chatModel: process.env.LLM_CHAT_MODEL || defaults.chat,
     embeddingModel: process.env.LLM_EMBEDDING_MODEL || defaults.embedding,
+    embeddingDims,
     temperature: parseFloat(process.env.LLM_TEMPERATURE || "0"),
   };
 }

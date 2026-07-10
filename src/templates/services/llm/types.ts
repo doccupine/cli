@@ -4,6 +4,7 @@ export interface LLMConfig {
   provider: LLMProvider;
   chatModel: string;
   embeddingModel: string;
+  embeddingDims: number;
   temperature: number;
 }
 
