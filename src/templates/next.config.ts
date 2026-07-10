@@ -13,6 +13,12 @@ const nextConfig: NextConfig = {
   compiler: {
     styledComponents: true,
   },
+  // Bundle the precomputed embeddings index into the serverless functions that
+  // read it (a dynamic fs read is invisible to Next's file tracing).
+  outputFileTracingIncludes: {
+    "/api/rag": ["./services/mcp/docs-index.json"],
+    "/api/mcp": ["./services/mcp/docs-index.json"],
+  },
 };
 
 export default nextConfig;
@@ -30,6 +36,12 @@ export default nextConfig;
 const nextConfig: NextConfig = {
   compiler: {
     styledComponents: true,
+  },
+  // Bundle the precomputed embeddings index into the serverless functions that
+  // read it (a dynamic fs read is invisible to Next's file tracing).
+  outputFileTracingIncludes: {
+    "/api/rag": ["./services/mcp/docs-index.json"],
+    "/api/mcp": ["./services/mcp/docs-index.json"],
   },
   async rewrites() {
     return [

@@ -6,7 +6,7 @@ export const packageJsonTemplate =
       private: true,
       scripts: {
         dev: "next dev",
-        build: "next build",
+        build: "tsx scripts/build-docs-index.mts && next build",
         start: "next start",
         lint: "eslint .",
         format: "prettier --write .",
@@ -39,6 +39,7 @@ export const packageJsonTemplate =
         zod: "^4.4.3",
       },
       devDependencies: {
+        "@next/env": "16.2.10",
         "@next/eslint-plugin-next": "16.2.10",
         "@types/node": "^26",
         "@types/react": "^19",
@@ -53,6 +54,7 @@ export const packageJsonTemplate =
         "eslint-plugin-react-hooks": "^7.1.1",
         globals: "^17.7.0",
         prettier: "^3.9.5",
+        tsx: "^4.23.0",
         typescript: "npm:@typescript/typescript6@^6.0.2",
       },
     },
