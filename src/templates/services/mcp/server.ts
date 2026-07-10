@@ -1,4 +1,6 @@
-export const mcpServerTemplate = `import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+export const mcpServerTemplate = `import path from "node:path";
+import fs from "node:fs";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import {
   listDocs,
@@ -45,6 +47,45 @@ function cosineSim(a: number[], b: number[]): number {
 }
 
 /**
+ * Absolute path to the embeddings index precomputed at build time by
+ * scripts/build-docs-index.mts. Bundled into serverless functions via
+ * outputFileTracingIncludes in next.config.ts.
+ */
+const INDEX_FILE = path.join(
+  process.cwd(),
+  "services",
+  "mcp",
+  "docs-index.json",
+);
+
+/**
+ * Load embeddings precomputed at build time. Returns null when the file is
+ * missing/empty or was built with a different provider/model than the current
+ * config - query and document vectors must come from the same embedding model.
+ */
+function loadPrecomputedIndex():
+  (DocsChunk & { embedding: number[] })[] | null {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(INDEX_FILE, "utf8")) as {
+      provider?: string;
+      embeddingModel?: string;
+      chunks?: (DocsChunk & { embedding: number[] })[];
+    };
+    if (!parsed.chunks || parsed.chunks.length === 0) return null;
+    const config = getLLMConfig();
+    if (
+      parsed.provider !== config.provider ||
+      parsed.embeddingModel !== config.embeddingModel
+    ) {
+      return null;
+    }
+    return parsed.chunks;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Build or rebuild the documentation index
  */
 async function buildDocsIndex(force = false): Promise<void> {
@@ -53,6 +94,17 @@ async function buildDocsIndex(force = false): Promise<void> {
 
   docsIndex.building = true;
   try {
+    // Prefer embeddings precomputed at build time - avoids re-embedding the
+    // entire doc set on every cold start (the main cause of slow first chats).
+    if (!force) {
+      const precomputed = loadPrecomputedIndex();
+      if (precomputed) {
+        docsIndex.chunks = precomputed;
+        docsIndex.ready = true;
+        return;
+      }
+    }
+
     const chunks = await getAllDocsChunks();
 
     if (chunks.length === 0) {

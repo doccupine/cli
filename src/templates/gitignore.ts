@@ -38,4 +38,7 @@ next-env.d.ts
 
 .env
 .vscode
+
+# generated build artifact (precomputed embeddings)
+services/mcp/docs-index.json
 `;
