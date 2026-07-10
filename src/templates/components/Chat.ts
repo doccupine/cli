@@ -874,7 +874,7 @@ function Chat() {
               )}
             </React.Fragment>
           ))}
-        {loading && (
+        {loading && !answer[answer.length - 1]?.answer && (
           <StyledLoading>
             Answering<span>.</span>
             <span>.</span>
@@ -1058,8 +1058,11 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
         throw new Error("Failed to get response reader");
       }
 
+      // Don't insert the answer bubble yet - an empty bubble renders a blank
+      // gap above the "Answering..." loader. The bubble is created on the first
+      // streamed token (or the done event) instead, so the loader stays put
+      // until real text appears.
       const streamingAnswerIndex = mergedQuestions.length;
-      setAnswer([...mergedQuestions, { text: "", answer: true }]);
 
       let buffer = "";
       while (true) {

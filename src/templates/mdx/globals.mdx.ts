@@ -2,6 +2,7 @@ import {
   DEFAULT_DESCRIPTION,
   DEFAULT_FAVICON,
   DEFAULT_OG_IMAGE,
+  DEFAULT_URL,
 } from "../../lib/constants.js";
 
 export const globalsMdxTemplate = `---
@@ -28,7 +29,7 @@ Place a \`config.json\` at your project root (the same directory where you execu
   "description": "${DEFAULT_DESCRIPTION}",
   "icon": "${DEFAULT_FAVICON}",
   "image": "${DEFAULT_OG_IMAGE}",
-  "url": "https://docs.example.com"
+  "url": "${DEFAULT_URL}"
 }
 \`\`\`
 
