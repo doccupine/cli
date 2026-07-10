@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.118
+
+- Let long spaceless inline `code`/`kbd` tokens wrap in the generated docs instead of overflowing the page: a URL or path with no spaces (for example a long AWS console link like `https://{region}.console.aws.amazon.com/.../catalog-info.yaml`) has no legal break point, so `hyphens: auto` could not break it and the token pushed the document wider than the viewport; the inline `code`/`kbd` rule now sets `overflow-wrap: anywhere` so the browser breaks inside such a token only when it would otherwise overflow. This completes the 0.0.113 fix, which dropped `white-space: pre` to allow wrapping at spaces but still left spaceless tokens overflowing
+
 ## 0.0.117
 
 - Fix numbered lists so multi-digit numbers render cleanly: the number marker is now an in-flow element sized to its content with a hanging indent instead of a fixed-width gutter, so `1.`, `10.`, and `100.` keep a consistent gap and never overlap the item's text. Nested ordered lists also number independently now instead of continuing the parent list's count
