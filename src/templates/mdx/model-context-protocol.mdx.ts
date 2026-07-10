@@ -63,8 +63,12 @@ Authorization: Bearer your-secret-key
 Requests without a valid token receive a \`401 Unauthorized\` response. When \`DOCS_API_KEY\` is not set, the MCP server is publicly accessible with no authentication required.
 
 <Callout type="note">
-  Authentication only applies to the \`/api/mcp\` endpoint. The \`/api/rag\` endpoint used by the built-in AI Assistant chat is not affected by this setting.
+  The \`DOCS_API_KEY\` check only applies to the \`/api/mcp\` endpoint. It does not affect the \`/api/rag\` endpoint used by the built-in AI Assistant chat. To gate the entire site (including the chat and search APIs) behind a shared password instead, see the [Authentication](/authentication) documentation.
 </Callout>
+
+### Rate limiting
+
+Tool calls to \`POST /api/mcp\` are rate limited per client IP address. When a client exceeds the limit, the server responds with \`429 Too Many Requests\` and a \`Retry-After\` header indicating how many seconds to wait before retrying.
 
 ### API Endpoints
 

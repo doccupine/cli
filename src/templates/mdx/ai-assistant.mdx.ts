@@ -46,6 +46,12 @@ GOOGLE_API_KEY=your_google_api_key_here
 
 # Optional: Set temperature (0-1, default: 0)
 # LLM_TEMPERATURE=0
+
+# Optional: Embedding dimensions for the prebuilt search index (default: 512)
+# Doc vectors are truncated to this many dimensions and stored as int8 to keep
+# the search index small. Lower = smaller index, slightly lower recall.
+# Rebuild after changing this.
+# LLM_EMBEDDING_DIMS=512
 \`\`\`
 
 ## Provider Selection
@@ -126,4 +132,13 @@ Override the default embedding model by uncommenting and setting \`LLM_EMBEDDING
 Control the randomness of AI responses by setting \`LLM_TEMPERATURE\` to a value between 0 and 1:
 
 - \`0\` - More deterministic and focused responses (default)
-- \`1\` - More creative and varied responses`;
+- \`1\` - More creative and varied responses
+
+### Embedding Dimensions
+
+Control the size of the prebuilt search index by setting \`LLM_EMBEDDING_DIMS\` (default: 512). Doc vectors are truncated to this many dimensions and stored as int8, keeping \`services/mcp/docs-index.json\` small so large doc sets don't stall the AI chat on serverless cold starts.
+
+- Lower values produce a smaller index with slightly lower search recall.
+- Values greater than or equal to the model's native dimension keep full precision.
+
+This value must match between build time and runtime. A mismatch forces Doccupine to re-embed your docs at runtime, so rebuild or redeploy your site after changing it.`;
