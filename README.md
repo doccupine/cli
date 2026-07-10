@@ -45,11 +45,12 @@ doccupine config --reset    # Re-prompt for configuration
 
 `watch` (default):
 
-| Flag            | Description                                                          |
-| --------------- | -------------------------------------------------------------------- |
-| `--port <port>` | Port for the dev server (default: `3000`). Auto-increments if taken. |
-| `--verbose`     | Show all Next.js output including compilation details                |
-| `--reset`       | Re-prompt for watch/output directories                               |
+| Flag                       | Description                                                                                                                              |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `--port <port>`            | Port for the dev server (default: `3000`). Auto-increments if taken.                                                                     |
+| `--verbose`                | Show all Next.js output including compilation details                                                                                    |
+| `--reset`                  | Re-prompt for watch/output directories                                                                                                   |
+| `--package-manager <name>` | Package manager for the generated app: `pnpm` or `npm` (default: auto-detect). Overrides the `packageManager` field in `doccupine.json`. |
 
 `build`:
 
@@ -75,10 +76,13 @@ description: "Page description for SEO"
 category: "Getting Started"
 categoryOrder: 0 # Sort order for the category group
 order: 1 # Sort order within the category
+navIcon: "book-open" # Lucide icon name shown next to the page in the sidebar
+categoryIcon: "rocket" # Lucide icon name shown next to the category group
 name: "My Docs" # Override site name in title suffix
 icon: "https://..." # Page favicon URL
 image: "https://..." # OpenGraph image URL
 date: "2025-01-01" # Page date metadata
+updated: "2025-02-01" # Last-modified date (JSON-LD dateModified)
 section: "API Reference" # Section this page belongs to
 sectionOrder: 1 # Sort order for the section in the tab bar
 ---
