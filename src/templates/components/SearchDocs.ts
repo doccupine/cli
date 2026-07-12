@@ -2,6 +2,7 @@ export const searchDocsTemplate = `"use client";
 import React, {
   createContext,
   useCallback,
+  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -12,6 +13,7 @@ import dynamic from "next/dynamic";
 import styled from "styled-components";
 import { mq, Theme } from "@/app/theme";
 import { interactiveStyles } from "@/components/layout/SharedStyled";
+import { ChatContext } from "@/components/Chat";
 import type { PageItem, MergedResult } from "@/components/SearchModalContent";
 
 const SearchModalContent = dynamic(
@@ -108,6 +110,7 @@ function SearchProvider({
   const abortRef = useRef<AbortController | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
   const router = useRouter();
+  const { isChatActive, askAssistant } = useContext(ChatContext);
 
   const sectionLabels = useMemo(() => {
     const map: Record<string, string> = {};
@@ -217,12 +220,52 @@ function SearchProvider({
   }, [query]);
 
   const navigate = useCallback(
-    (slug: string) => {
+    (
+      slug: string,
+      modifiers?: { metaKey?: boolean; ctrlKey?: boolean; shiftKey?: boolean },
+    ) => {
+      const url = \`/\${slug}\`;
+
+      // Shift+Enter / Shift+Click: open in a separate browser window. Window
+      // features (dimensions) are what make the browser spawn a window instead
+      // of a tab; noopener/noreferrer keep the new window from reaching back
+      // into this one via window.opener.
+      if (modifiers?.shiftKey) {
+        const width = Math.min(1024, window.screen.availWidth);
+        const height = Math.min(800, window.screen.availHeight);
+        const left = Math.round((window.screen.availWidth - width) / 2);
+        const top = Math.round((window.screen.availHeight - height) / 2);
+        window.open(
+          url,
+          "_blank",
+          \`popup=yes,noopener,noreferrer,width=\${width},height=\${height},left=\${left},top=\${top}\`,
+        );
+        return;
+      }
+
+      // Cmd+Enter / Ctrl+Enter / Cmd+Click: open in a new background tab. With
+      // no dimension features the browser keeps this as a tab.
+      if (modifiers?.metaKey || modifiers?.ctrlKey) {
+        window.open(url, "_blank", "noopener,noreferrer");
+        return;
+      }
+
+      // Plain Enter / Click: navigate in place within the app.
       closeSearch();
-      router.push(\`/\${slug}\`);
+      router.push(url);
     },
     [closeSearch, router],
   );
+
+  // Hand the current query to the AI assistant, then dismiss the search modal.
+  // \`askAssistant\` opens the chat and either submits the question or (if a
+  // response is already streaming) pre-fills it, ready to send.
+  const askAssistantWithQuery = useCallback(() => {
+    const q = query.trim();
+    if (!q) return;
+    askAssistant(q);
+    closeSearch();
+  }, [query, askAssistant, closeSearch]);
 
   // Global Cmd+K / Ctrl+K listener
   const isVisibleRef = useRef(false);
@@ -246,12 +289,9 @@ function SearchProvider({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [closeSearch, openSearch]);
 
-  // Scroll active item into view
-  useEffect(() => {
-    if (!resultsRef.current) return;
-    const active = resultsRef.current.children[activeIndex] as HTMLElement;
-    active?.scrollIntoView({ block: "nearest" });
-  }, [activeIndex]);
+  // Active-row scrolling now lives in SearchModalContent's layout effect,
+  // alongside the highlight measurement, so highlight + scroll update together
+  // before paint (no flicker) and stay in sync on query changes.
 
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === "ArrowDown") {
@@ -262,8 +302,13 @@ function SearchProvider({
       setActiveIndex((i) => (i > 0 ? i - 1 : merged.length - 1));
     } else if (e.key === "Enter") {
       e.preventDefault();
+      // Option/Alt+Enter is reserved for handing the query to the AI assistant.
+      if (e.altKey) {
+        if (isChatActive) askAssistantWithQuery();
+        return;
+      }
       if (merged[activeIndex]) {
-        navigate(merged[activeIndex].page.slug);
+        navigate(merged[activeIndex].page.slug, e);
       }
     } else if (e.key === "Escape") {
       closeSearch();
@@ -288,6 +333,8 @@ function SearchProvider({
           sectionLabels={sectionLabels}
           isSearching={isSearching}
           navigate={navigate}
+          canAskAssistant={isChatActive}
+          onAskAssistant={askAssistantWithQuery}
         />
       )}
     </SearchContext.Provider>

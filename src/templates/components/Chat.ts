@@ -924,6 +924,7 @@ const ChatContext = createContext<{
   answer: Answer[];
   setAnswer: (answers: Answer[]) => void;
   ask: (e: React.FormEvent) => void;
+  askAssistant: (question: string) => void;
   closeChat: () => void;
   resetChat: () => void;
   chatInputRef: React.RefObject<HTMLInputElement | null>;
@@ -939,6 +940,7 @@ const ChatContext = createContext<{
   answer: [],
   setAnswer: () => {},
   ask: () => {},
+  askAssistant: () => {},
   closeChat: () => {},
   resetChat: () => {},
   chatInputRef: { current: null },
@@ -948,6 +950,8 @@ interface ChatContextProviderProps {
   children: React.ReactNode;
   isChatActive: boolean;
 }
+
+const INITIAL_GREETING = "Hey there, how can I assist you?";
 
 const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -968,9 +972,7 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
   const openChat = useCallback(() => {
     setIsOpen(true);
     setAnswer((prev) =>
-      prev.length === 0
-        ? [{ text: "Hey there, how can I assist you?", answer: true }]
-        : prev,
+      prev.length === 0 ? [{ text: INITIAL_GREETING, answer: true }] : prev,
     );
     setTimeout(() => {
       chatInputRef.current?.focus();
@@ -998,19 +1000,15 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isChatActive, toggleChat]);
 
-  async function ask(e: React.FormEvent) {
-    e.preventDefault();
-    if (loading || question.trim() === "") return;
-    const currentQuestion = question;
+  async function runQuestion(currentQuestion: string) {
     setQuestion("");
     setIsOpen(true);
     setLoading(true);
     setError(null);
 
-    const mergedQuestions =
-      answer.length > 0
-        ? [...answer, { text: currentQuestion, answer: false }]
-        : [{ text: currentQuestion, answer: false }];
+    const base =
+      answer.length > 0 ? answer : [{ text: INITIAL_GREETING, answer: true }];
+    const mergedQuestions = [...base, { text: currentQuestion, answer: false }];
 
     setAnswer(mergedQuestions);
 
@@ -1149,6 +1147,27 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
     }
   }
 
+  async function ask(e: React.FormEvent) {
+    e.preventDefault();
+    if (loading || question.trim() === "") return;
+    await runQuestion(question);
+  }
+
+  // Bridge from the search modal: hand the typed query to the assistant. If a
+  // response is already streaming (loading), we can't submit yet - open the
+  // panel and pre-fill the input so the user can send it the moment the
+  // current answer finishes. Otherwise submit it right away.
+  function askAssistant(rawQuestion: string) {
+    const trimmed = rawQuestion.trim();
+    if (trimmed === "") return;
+    if (loading) {
+      openChat();
+      setQuestion(trimmed);
+    } else {
+      void runQuestion(trimmed);
+    }
+  }
+
   function closeChat() {
     setIsOpen(false);
   }
@@ -1157,7 +1176,7 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
     abortRef.current?.abort();
     setLoading(false);
     setError(null);
-    setAnswer([{ text: "Hey there, how can I assist you?", answer: true }]);
+    setAnswer([{ text: INITIAL_GREETING, answer: true }]);
   }
 
   return (
@@ -1174,6 +1193,7 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
         answer,
         setAnswer,
         ask,
+        askAssistant,
         closeChat,
         resetChat,
         chatInputRef,

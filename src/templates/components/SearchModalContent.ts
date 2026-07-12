@@ -5,7 +5,10 @@ import { Search, X } from "lucide-react";
 import { IconButton } from "cherry-styled-components";
 import { mq, Theme } from "@/app/theme";
 import { Spinner } from "@/components/Spinner";
-import { thinScrollbar } from "@/components/layout/SharedStyled";
+import {
+  interactiveStyles,
+  thinScrollbar,
+} from "@/components/layout/SharedStyled";
 
 export interface PageItem {
   slug: string;
@@ -33,7 +36,12 @@ export interface SearchModalContentProps {
   merged: MergedResult[];
   sectionLabels: Record<string, string>;
   isSearching: boolean;
-  navigate: (slug: string) => void;
+  navigate: (
+    slug: string,
+    modifiers?: { metaKey?: boolean; ctrlKey?: boolean; shiftKey?: boolean },
+  ) => void;
+  canAskAssistant: boolean;
+  onAskAssistant: () => void;
 }
 
 const ANIMATION_MS = 300;
@@ -127,8 +135,74 @@ const StyledInput = styled.input<{ theme: Theme }>\`
   }
 \`;
 
+// "Ask AI" affordance shown before the close button when the AI chat is
+// enabled. Desktop-only (like the header's Cmd+K hint) since it advertises the
+// Option+Enter shortcut; mobile users reach the assistant from the header CTA.
+const StyledAskAssistant = styled.button<{ theme: Theme }>\`
+  \${interactiveStyles};
+  display: none;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  border: solid 1px \${({ theme }) => theme.colors.grayLight};
+  background: \${({ theme }) => theme.colors.light};
+  color: \${({ theme }) => theme.colors.grayDark};
+  border-radius: \${({ theme }) => theme.spacing.radius.xs};
+  padding: 5px 8px;
+  font-family: inherit;
+  font-size: \${({ theme }) => theme.fontSizes.small.lg};
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+
+    &:hover {
+      border-color: \${({ theme }) => theme.colors.grayLight};
+    }
+  }
+
+  \${mq("lg")} {
+    display: inline-flex;
+  }
+\`;
+
+const StyledAskKeys = styled.span\`
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+\`;
+
+const StyledAskKbd = styled.kbd<{ theme: Theme }>\`
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: \${({ theme }) => theme.colors.grayLight};
+  color: \${({ theme }) => theme.colors.grayDark};
+  border-radius: 4px;
+\`;
+
+// The return glyph's ink sits high in its em box, so it reads top-aligned even
+// when the keycap flex-centers it. Nudge just the character (not the pill) down
+// a pixel so it optically centers and lines up with the option glyph.
+const StyledReturnGlyph = styled.span\`
+  display: inline-block;
+  transform: translateY(1.5px);
+\`;
+
 const StyledResults = styled.ul<{ theme: Theme }>\`
   list-style: none;
+  position: relative;
   margin: 8px 0 0 0;
   padding: 0 8px;
   overflow-y: auto;
@@ -147,26 +221,44 @@ const StyledResults = styled.ul<{ theme: Theme }>\`
   }
 \`;
 
+// Single indicator that slides between result items instead of each item
+// fading its own background in and out. Positioned/sized inline from the active
+// item's measured offset (see the layout effect below); the transition on
+// transform + height produces the up/down glide as the active item changes.
+const StyledHighlight = styled.div<{ theme: Theme }>\`
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: \${({ theme }) => theme.spacing.radius.xs};
+  background: \${({ theme }) =>
+    \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
+  transition:
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, height;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+\`;
+
 const StyledResultItem = styled.li<{ theme: Theme; $isActive: boolean }>\`
+  position: relative;
+  z-index: 1;
   padding: 10px 12px;
   border-radius: \${({ theme }) => theme.spacing.radius.xs};
   cursor: pointer;
-  transition: background 0.15s ease;
 
   \${({ $isActive, theme }) =>
     $isActive &&
     css\`
-      background: color-mix(
-        in srgb,
-        \${theme.colors.primaryLight} 20%,
-        transparent
-      );
+      & > span:first-of-type {
+        color: \${theme.colors.primary};
+      }
     \`}
-
-  &:hover {
-    background: \${({ theme }) =>
-      \`color-mix(in srgb, \${theme.colors.primaryLight} 15%, transparent)\`};
-  }
 \`;
 
 const StyledResultTitle = styled.span<{ theme: Theme }>\`
@@ -174,6 +266,7 @@ const StyledResultTitle = styled.span<{ theme: Theme }>\`
   font-weight: 500;
   color: \${({ theme }) => theme.colors.dark};
   display: block;
+  transition: color 0.15s ease;
 \`;
 
 const StyledResultMeta = styled.span<{ theme: Theme }>\`
@@ -246,7 +339,51 @@ export function SearchModalContent({
   sectionLabels,
   isSearching,
   navigate,
+  canAskAssistant,
+  onAskAssistant,
 }: SearchModalContentProps) {
+  // Measure the active item so the sliding highlight can be placed over it.
+  // useLayoutEffect runs before paint, so the first position is committed
+  // without a transition (no slide-in on open); later activeIndex/hover
+  // changes glide because only the transform + height differ.
+  const [indicator, setIndicator] = React.useState<{
+    top: number;
+    height: number;
+  } | null>(null);
+
+  React.useLayoutEffect(() => {
+    const list = resultsRef.current;
+    if (!list) {
+      setIndicator(null);
+      return;
+    }
+    const items = list.querySelectorAll("li");
+    const active = items[activeIndex] as HTMLElement | undefined;
+    if (!active) {
+      setIndicator(null);
+      return;
+    }
+    setIndicator({ top: active.offsetTop, height: active.offsetHeight });
+
+    // Keep the active row inside the scroll viewport in the SAME pre-paint pass
+    // that positions the highlight, so the two never desync into a one-frame
+    // flicker. merged is a dependency, so re-filtering (a new query) also
+    // re-scrolls the reset active row into view even when its index is
+    // unchanged. This list is flat (no group headers), so no header inclusion
+    // is needed; a small margin keeps rows off the container's hard edges.
+    // Adjust scrollTop directly (never scrollIntoView, which can also pan
+    // ancestors).
+    const margin = 8;
+    const viewTop = active.offsetTop - margin;
+    const viewBottom = active.offsetTop + active.offsetHeight + margin;
+
+    if (viewTop < list.scrollTop) {
+      list.scrollTop = viewTop;
+    } else if (viewBottom > list.scrollTop + list.clientHeight) {
+      list.scrollTop = viewBottom - list.clientHeight;
+    }
+  }, [activeIndex, merged, resultsRef]);
+
   return (
     <StyledBackdrop
       $isClosing={isClosing}
@@ -275,6 +412,23 @@ export function SearchModalContent({
             autoComplete="off"
             spellCheck={false}
           />
+          {canAskAssistant && (
+            <StyledAskAssistant
+              type="button"
+              onClick={onAskAssistant}
+              disabled={!query.trim()}
+              aria-label="Ask AI"
+              title="Ask AI"
+            >
+              Ask AI
+              <StyledAskKeys aria-hidden="true">
+                <StyledAskKbd>&#8997;</StyledAskKbd>
+                <StyledAskKbd>
+                  <StyledReturnGlyph>&#8629;</StyledReturnGlyph>
+                </StyledAskKbd>
+              </StyledAskKeys>
+            </StyledAskAssistant>
+          )}
           <IconButton
             onClick={closeSearch}
             aria-label="Close search"
@@ -285,11 +439,20 @@ export function SearchModalContent({
         </StyledInputWrapper>
         {merged.length > 0 ? (
           <StyledResults ref={resultsRef}>
+            {indicator && (
+              <StyledHighlight
+                aria-hidden="true"
+                style={{
+                  transform: \`translateY(\${indicator.top}px)\`,
+                  height: \`\${indicator.height}px\`,
+                }}
+              />
+            )}
             {merged.map((result, index) => (
               <StyledResultItem
                 key={result.page.slug + result.page.section}
                 $isActive={index === activeIndex}
-                onClick={() => navigate(result.page.slug)}
+                onClick={(e) => navigate(result.page.slug, e)}
                 onMouseEnter={() => setActiveIndex(index)}
               >
                 <StyledResultTitle>{result.page.title}</StyledResultTitle>

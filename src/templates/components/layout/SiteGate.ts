@@ -171,7 +171,7 @@ export function SiteGate({ hideBranding }: { hideBranding?: boolean }) {
           )}
         </StyledCard>
         <StyledFooter>
-          <ThemeToggle />
+          <ThemeToggle $shortcut />
           {!hideBranding && (
             <StyledBranding>
               Powered by{" "}

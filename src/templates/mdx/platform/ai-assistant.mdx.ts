@@ -61,12 +61,6 @@ Completely disables the AI assistant on your site.
   AI settings are stored as environment variables on your deployment, not in a JSON file. After saving, a redeploy is triggered automatically to apply the changes.
 </Callout>
 
-## MCP server authentication
-
-Every Doccupine site exposes an MCP (Model Context Protocol) endpoint at \`/api/mcp\`. This lets external AI tools query your documentation programmatically.
-
-You can set an optional **API key** to restrict access to the MCP endpoint. When set, requests must include the key in their authorization header.
-
 <Callout type="note">
-  For more details on how the MCP endpoint works and how to connect it to AI tools, see the [Model Context Protocol documentation](/model-context-protocol).
+  Connecting external AI tools (Claude, Cursor, and others) to your site is configured on the dedicated [MCP](/platform/mcp) page, which also covers MCP server authentication.
 </Callout>`;

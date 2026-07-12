@@ -253,7 +253,7 @@ function SideBar({ result }: SideBarProps) {
           })}
         <StyledSidebarFooter ref={footerRef}>
           <Flex $xsJustifyContent="flex-start" $lgJustifyContent="flex-end">
-            <ThemeToggle />
+            <ThemeToggle $shortcut />
           </Flex>
         </StyledSidebarFooter>
       </StyledSidebar>
