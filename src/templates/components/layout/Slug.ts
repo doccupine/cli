@@ -11,7 +11,7 @@ export const slugTemplate = `// Shared heading/anchor id helpers.
 // resolves to exactly one heading.
 
 export function slugify(text: string): string {
-  return text
+  return (text ?? "")
     .toLowerCase()
     .replace(/[^\\w\\s-]/g, "")
     .replace(/\\s+/g, "-")

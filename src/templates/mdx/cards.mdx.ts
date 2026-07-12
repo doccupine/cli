@@ -45,8 +45,8 @@ Pass a \`href\` prop to turn the card into a clickable link. The card will displ
 
 ## Properties
 
-<Field value="title" type="string" required>
-  The title of the card.
+<Field value="title" type="string">
+  An optional title for the card. When omitted, the card renders without a title.
 </Field>
 
 <Field value="icon" type="string">

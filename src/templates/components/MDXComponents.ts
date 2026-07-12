@@ -164,9 +164,11 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     Columns,
     Field,
     // Share the heading slugger so an <Update> label anchor stays unique and
-    // in document order alongside the surrounding headings.
+    // in document order alongside the surrounding headings. Only consume a
+    // slug when a label is present so a label-less <Update> does not crash the
+    // slugger (Update itself renders gracefully without a label anchor).
     Update: (props: React.ComponentProps<typeof Update>) => (
-      <Update {...props} id={slug(props.label)} />
+      <Update {...props} id={props.label ? slug(props.label) : undefined} />
     ),
     Steps,
     Step,

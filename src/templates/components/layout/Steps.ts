@@ -75,7 +75,7 @@ const StepContent = styled.div<{ theme: Theme }>\`
 \`;
 
 interface StepProps extends React.HTMLAttributes<HTMLDivElement> {
-  title: string;
+  title?: string;
   children: React.ReactNode;
   icon?: IconProps;
 }
@@ -104,10 +104,12 @@ function Steps({ children }: StepsProps) {
         return (
           <StyledStep key={index} theme={theme}>
             <StepNumber theme={theme}>{index + 1}</StepNumber>
-            <StyledStepTitle theme={theme}>
-              {icon && <Icon name={icon} color={theme.colors.primary} />}
-              {title}
-            </StyledStepTitle>
+            {(title || icon) && (
+              <StyledStepTitle theme={theme}>
+                {icon && <Icon name={icon} color={theme.colors.primary} />}
+                {title}
+              </StyledStepTitle>
+            )}
             <StepContent theme={theme}>{stepContent}</StepContent>
           </StyledStep>
         );

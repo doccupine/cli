@@ -56,8 +56,8 @@ You can combine multiple \`Update\` components to build complete changelogs.
   navigation and acts as a deep-link anchor to this entry.
 </Field>
 
-<Field value="description" type="string" required>
-  The description of the update.
+<Field value="description" type="string">
+  An optional description for the update. When omitted, no description is shown.
 </Field>
 
 <Field value="children" type="node" required>

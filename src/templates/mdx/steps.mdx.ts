@@ -45,8 +45,8 @@ You can use the \`Steps\` component to create a step-by-step guide. Each step is
 
 ## Properties
 
-<Field value="title" type="string" required>
-  The title of the step.
+<Field value="title" type="string">
+  An optional title for the step. When omitted, the step renders without a title row.
 </Field>
 
 <Field value="icon" type="string">

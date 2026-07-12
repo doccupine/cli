@@ -59,10 +59,10 @@ const StyledUpdateChildren = styled.div\`
 interface UpdateProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   label: string;
-  description: string;
+  description?: string;
 }
 
-function Update({ children, label, description, id }: UpdateProps) {
+function Update({ children, label = "Label", description, id }: UpdateProps) {
   // MDXComponents injects a de-duplicated id from the shared slugger so the
   // index sidebar anchor resolves here; fall back to a plain slug when used
   // outside the MDX pipeline. The label doubles as an anchor so readers can
@@ -75,7 +75,9 @@ function Update({ children, label, description, id }: UpdateProps) {
         <div>
           <StyledUpdateLabel href={\`#\${anchor}\`}>{label}</StyledUpdateLabel>
         </div>
-        <StyledUpdateDescription>{description}</StyledUpdateDescription>
+        {description && (
+          <StyledUpdateDescription>{description}</StyledUpdateDescription>
+        )}
       </StyledUpdateSidebar>
       <StyledUpdateChildren>{children}</StyledUpdateChildren>
     </StyledUpdate>

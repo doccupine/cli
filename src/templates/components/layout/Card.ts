@@ -35,7 +35,7 @@ const StyledCardTitle = styled.p<{ theme: Theme }>\`
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
-  title: string;
+  title?: string;
   icon?: IconProps;
   href?: string;
 }
@@ -46,7 +46,7 @@ function Card({ children, title, icon, href }: CardProps) {
   const content = (
     <>
       {icon && <Icon name={icon} color={theme.colors.primary} />}
-      <StyledCardTitle>{title}</StyledCardTitle>
+      {title && <StyledCardTitle>{title}</StyledCardTitle>}
       {children}
     </>
   );
