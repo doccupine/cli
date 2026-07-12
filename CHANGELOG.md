@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.125
+
+- Keep each `<Update>` entry's sidebar (its label and description) pinned in view while its content scrolls past: at the `lg` breakpoint, where the update renders as a two-column row, the sidebar is now `position: sticky` at `top: 80px` (matching the site's `scroll-padding-top` header offset) with `align-self: flex-start` so the flex row no longer stretches it to full height and leaves it room to travel. Below `lg` the layout still stacks, so the sticky behavior applies only to the desktop two-column view
+
 ## 0.0.124
 
 - Let the `Card`, `Step`, and `Update` components omit their title/description text so no empty element is rendered when it is missing: `Card`'s `title` and `Step`'s `title` are now optional (the title element renders only when a title is present, or for a step when a title or icon is present), and `Update`'s `description` is now optional (the description line renders only when provided), so a title-less card or step no longer leaves an empty bold line and a description-less update no longer leaves an empty styled box consuming the sidebar gap. The Cards, Steps, and Update docs pages mark these props optional

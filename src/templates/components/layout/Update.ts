@@ -45,6 +45,9 @@ const StyledUpdateSidebar = styled.div\`
   gap: 10px;
 
   \${mq("lg")} {
+    position: sticky;
+    top: 80px;
+    align-self: flex-start;
     min-width: 160px;
   }
 \`;
