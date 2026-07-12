@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.124
+
+- Let the `Card`, `Step`, and `Update` components omit their title/description text so no empty element is rendered when it is missing: `Card`'s `title` and `Step`'s `title` are now optional (the title element renders only when a title is present, or for a step when a title or icon is present), and `Update`'s `description` is now optional (the description line renders only when provided), so a title-less card or step no longer leaves an empty bold line and a description-less update no longer leaves an empty styled box consuming the sidebar gap. The Cards, Steps, and Update docs pages mark these props optional
+- Stop a label-less `<Update>` from crashing the generated page: the shared heading slugger is now fed only when an `<Update>` actually has a `label` (the injected anchor id falls back to `undefined` otherwise), and `slugify` tolerates nullish input, so the shared helper can no longer throw a `TypeError` on an undefined label and blank the whole page
+
 ## 0.0.123
 
 - Let the search modal hand its query straight to the AI assistant: when chat is enabled, the modal shows a desktop "Ask AI" button (advertising an Option+Enter shortcut) that submits the typed query to the assistant and closes the modal, opening the chat panel on the answer. A new `askAssistant` bridge on the chat context submits immediately when the assistant is idle, or - if a response is already streaming - opens the panel and pre-fills the input so the question is ready to send the moment the current answer finishes. The greeting is seeded consistently as the first turn (via a shared `INITIAL_GREETING`) so a handed-off question always reads against a started conversation
