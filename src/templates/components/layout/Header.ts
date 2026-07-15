@@ -69,7 +69,7 @@ const StyledHeader = styled.header<{ theme: Theme; $hasChildren: boolean }>\`
       max-width: 182px;
       max-height: 30px;
 
-      & path[fill] {
+      & path[fill]:not(.ignore-fill) {
         fill: \${({ theme }) => theme.colors.primary};
       }
     }
