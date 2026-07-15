@@ -52,7 +52,8 @@ The simplest format is an array of categories. When using [sections](/sections),
     "label": "Getting Started",
     "links": [
       { "slug": "", "title": "Introduction" },
-      { "slug": "commands", "title": "Commands" }
+      { "slug": "commands", "title": "Commands" },
+      { "slug": "what-is-doccupine", "title": "What is Doccupine" }
     ]
   },
   {

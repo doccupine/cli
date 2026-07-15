@@ -110,6 +110,7 @@ import { stepsMdxTemplate } from "../templates/mdx/steps.mdx.js";
 import { tabsMdxTemplate } from "../templates/mdx/tabs.mdx.js";
 import { themeMdxTemplate } from "../templates/mdx/theme.mdx.js";
 import { updateMdxTemplate } from "../templates/mdx/update.mdx.js";
+import { whatIsDoccupineMdxTemplate } from "../templates/mdx/what-is-doccupine.mdx.js";
 
 import { platformIndexMdxTemplate } from "../templates/mdx/platform/index.mdx.js";
 import { platformFileEditorMdxTemplate } from "../templates/mdx/platform/file-editor.mdx.js";
@@ -255,6 +256,7 @@ export const startingDocsStructure: Record<string, string> = {
   "tabs.mdx": tabsMdxTemplate,
   "theme.mdx": themeMdxTemplate,
   "update.mdx": updateMdxTemplate,
+  "what-is-doccupine.mdx": whatIsDoccupineMdxTemplate,
   "platform/index.mdx": platformIndexMdxTemplate,
   "platform/file-editor.mdx": platformFileEditorMdxTemplate,
   "platform/publishing.mdx": platformPublishingMdxTemplate,
