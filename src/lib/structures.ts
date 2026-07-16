@@ -20,6 +20,11 @@ import { lockBodyScrollTemplate } from "../templates/components/LockBodyScroll.j
 import { docsTemplate } from "../templates/components/Docs.js";
 import { docsSideBarTemplate } from "../templates/components/DocsSideBar.js";
 import { mdxComponentsTemplate } from "../templates/components/MDXComponents.js";
+import { mermaidPreTemplate } from "../templates/components/MermaidPre.js";
+import { mermaidViewTemplate } from "../templates/components/layout/Mermaid.js";
+import { mermaidTemplate } from "../templates/utils/mermaid.js";
+import { parseCodeMetaTemplate } from "../templates/utils/parseCodeMeta.js";
+import { rehypeCodeMetaTemplate } from "../templates/utils/rehypeCodeMeta.js";
 import { sectionNavProviderTemplate } from "../templates/components/SectionNavProvider.js";
 import { postHogProviderTemplate } from "../templates/components/PostHogProvider.js";
 import { postHogProviderLazyTemplate } from "../templates/components/PostHogProviderLazy.js";
@@ -103,6 +108,7 @@ import { indexMdxTemplate } from "../templates/mdx/index.mdx.js";
 import { footerLinksMdxTemplate } from "../templates/mdx/footer-links.mdx.js";
 import { listsAndTablesMdxTemplate } from "../templates/mdx/lists-and-tables.mdx.js";
 import { mediaAndAssetsMdxTemplate } from "../templates/mdx/media-and-assets.mdx.js";
+import { mermaidMdxTemplate } from "../templates/mdx/mermaid.mdx.js";
 import { mcpMdxTemplate } from "../templates/mdx/model-context-protocol.mdx.js";
 import { navigationMdxTemplate } from "../templates/mdx/navigation.mdx.js";
 import { sectionsMdxTemplate } from "../templates/mdx/sections.mdx.js";
@@ -168,8 +174,11 @@ export const appStructure: Record<string, string> = {
   "lib/siteGate.ts": siteGateTemplate,
 
   "utils/branding.ts": brandingTemplate,
+  "utils/mermaid.ts": mermaidTemplate,
   "utils/orderNavItems.ts": orderNavItemsTemplate,
+  "utils/parseCodeMeta.ts": parseCodeMetaTemplate,
   "utils/rateLimit.ts": rateLimitTemplate,
+  "utils/rehypeCodeMeta.ts": rehypeCodeMetaTemplate,
   "utils/config.ts": configTemplate,
 
   "components/Chat.tsx": chatTemplate,
@@ -177,6 +186,7 @@ export const appStructure: Record<string, string> = {
   "components/Docs.tsx": docsTemplate,
   "components/DocsSideBar.tsx": docsSideBarTemplate,
   "components/MDXComponents.tsx": mdxComponentsTemplate,
+  "components/MermaidPre.tsx": mermaidPreTemplate,
   "components/SectionNavProvider.tsx": sectionNavProviderTemplate,
   "components/PostHogProvider.tsx": postHogProviderTemplate,
   "components/PostHogProviderLazy.tsx": postHogProviderLazyTemplate,
@@ -203,6 +213,7 @@ export const appStructure: Record<string, string> = {
   "components/layout/GlobalStyles.ts": globalStylesTemplate,
   "components/layout/Header.tsx": headerTemplate,
   "components/layout/Icon.tsx": iconTemplate,
+  "components/layout/Mermaid.tsx": mermaidViewTemplate,
   "components/layout/Pictograms.tsx": pictogramsTemplate,
   "components/layout/SharedStyled.ts": sharedStyledTemplate,
   "components/layout/NotFound.tsx": notFoundComponentTemplate,
@@ -249,6 +260,7 @@ export const startingDocsStructure: Record<string, string> = {
   "footer-links.mdx": footerLinksMdxTemplate,
   "lists-and-tables.mdx": listsAndTablesMdxTemplate,
   "media-and-assets.mdx": mediaAndAssetsMdxTemplate,
+  "mermaid.mdx": mermaidMdxTemplate,
   "model-context-protocol.mdx": mcpMdxTemplate,
   "navigation.mdx": navigationMdxTemplate,
   "sections.mdx": sectionsMdxTemplate,

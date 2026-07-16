@@ -969,7 +969,12 @@ class MDXToNextJSGenerator {
     }
 
     if (isSectionIndex) {
-      await this.updateSectionIndex(sectionSlug, frontmatter, mdxContent);
+      await this.updateSectionIndex(
+        sectionSlug,
+        frontmatter,
+        mdxContent,
+        filePath,
+      );
     }
   }
 
@@ -1186,7 +1191,7 @@ export default function Page() {
   return (
     <>
       ${jsonLd.element}
-      <Docs content={content} />
+      <Docs content={content} sourcePath={${JSON.stringify(mdxFile.path)}} />
     </>
   );
 }
@@ -1280,7 +1285,7 @@ export default function Home() {
   return (
     <>
       ${homeJsonLd.element}
-      <Docs content={content} />
+      <Docs content={content} sourcePath="index.mdx" />
     </>
   );
 }
@@ -1295,6 +1300,7 @@ export default function Home() {
     sectionSlug: string,
     frontmatter: Record<string, any>,
     mdxContent: string,
+    sourcePath?: string,
   ) {
     const metadataBlock = generateMetadataBlock({
       title: frontmatter.title,
@@ -1339,7 +1345,7 @@ export default function Page() {
   return (
     <>
       ${sectionJsonLd.element}
-      <Docs content={content} />
+      <Docs content={content} sourcePath={${JSON.stringify(sourcePath ?? `${sectionSlug}/index.mdx`)}} />
     </>
   );
 }

@@ -43,9 +43,20 @@ const darkVars = [
   \`  --color-surface: var(--color-dark);\`,
 ].join("\\n");
 
+const diagramVars = [
+  \`  --mermaid-bg: var(--color-light);\`,
+  \`  --mermaid-fg: var(--color-dark);\`,
+  \`  --mermaid-line: var(--color-grayDark);\`,
+  \`  --mermaid-accent: var(--color-accent);\`,
+  \`  --mermaid-muted: var(--color-grayDark);\`,
+  \`  --mermaid-surface: var(--color-grayLight);\`,
+  \`  --mermaid-border: var(--color-gray);\`,
+].join("\\n");
+
 const GlobalStyles = createGlobalStyle\`
 :root {
 \${lightVars}
+\${diagramVars}
 }
 
 :root.dark {

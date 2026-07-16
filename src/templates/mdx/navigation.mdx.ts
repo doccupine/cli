@@ -74,7 +74,8 @@ The simplest format is an array of categories. When using [sections](/sections),
       { "slug": "update", "title": "Update" },
       { "slug": "columns", "title": "Columns" },
       { "slug": "steps", "title": "Steps" },
-      { "slug": "color-swatches", "title": "Color Swatches" }
+      { "slug": "color-swatches", "title": "Color Swatches" },
+      { "slug": "mermaid", "title": "Mermaid" }
     ]
   },
   {

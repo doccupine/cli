@@ -8,12 +8,15 @@ import {
 import { MDXRemote } from "next-mdx-remote/rsc";
 import remarkGfm from "remark-gfm";
 import { useMDXComponents } from "@/components/MDXComponents";
+import { createMermaidPre } from "@/components/MermaidPre";
 import { DocsSideBar } from "@/components/DocsSideBar";
 import { ActionBar } from "@/components/layout/ActionBar";
 import { createSlugger } from "@/components/layout/Slug";
+import { rehypeCodeMeta } from "@/utils/rehypeCodeMeta";
 
 interface DocsProps {
   content: string;
+  sourcePath?: string;
 }
 
 interface Heading {
@@ -77,9 +80,9 @@ function MissingComponent({
   );
 }
 
-function Docs({ content }: DocsProps) {
+function Docs({ content, sourcePath }: DocsProps) {
   const headings = extractHeadings(content);
-  const components = useMDXComponents({});
+  const components = useMDXComponents({ pre: createMermaidPre(sourcePath) });
 
   const knownNames = Object.keys(components);
   const usedNames = extractComponentNames(content);
@@ -108,6 +111,7 @@ function Docs({ content }: DocsProps) {
                     blockJS: false,
                     mdxOptions: {
                       remarkPlugins: [remarkGfm],
+                      rehypePlugins: [rehypeCodeMeta],
                     },
                   }}
                   components={allComponents}

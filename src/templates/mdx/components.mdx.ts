@@ -12,7 +12,7 @@ order: 0
 
 Doccupine includes a rich set of built-in components you can use directly in your MDX files - no imports needed. Browse the full library below.
 
-<Columns cols={3}>
+<Columns cols={2}>
   <Card title="Headers and Text" icon="heading" href="/headers-and-text">
     Headings, paragraphs, bold, italic, links, and other text formatting.
   </Card>
@@ -57,5 +57,8 @@ Doccupine includes a rich set of built-in components you can use directly in you
   </Card>
   <Card title="Color Swatches" icon="palette" href="/color-swatches">
     Visual color palette swatches to document your theme colors.
+  </Card>
+  <Card title="Mermaid" icon="workflow" href="/mermaid">
+    Flowcharts, sequence diagrams, and other visualizations from Mermaid syntax.
   </Card>
 </Columns>`;

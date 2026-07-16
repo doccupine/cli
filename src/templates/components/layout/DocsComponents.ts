@@ -107,7 +107,6 @@ export const StyledMarkdownContainer = styled.div\`
   display: flex;
   flex-direction: column;
   gap: 20px;
-  flex-wrap: wrap;
   flex: 1;
   max-width: 640px;
   margin: auto;

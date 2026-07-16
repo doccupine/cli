@@ -27,7 +27,7 @@ interface PreProps extends React.HTMLAttributes<HTMLPreElement> {
   children?: React.ReactNode;
 }
 
-function extractAllTextFromChildren(children: React.ReactNode): string {
+export function extractAllTextFromChildren(children: React.ReactNode): string {
   if (children == null) return "";
   if (typeof children === "string") return children;
   if (typeof children === "number") return String(children);
@@ -44,7 +44,7 @@ function extractAllTextFromChildren(children: React.ReactNode): string {
 }
 
 // Map <pre><code class="language-xyz"> to our <Code /> component
-function Pre(props: PreProps) {
+export function Pre(props: PreProps) {
   const child = React.Children.only(props.children) as React.ReactElement<{
     className?: string;
     children?: React.ReactNode;
