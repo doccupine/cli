@@ -7,6 +7,7 @@
 - Forward the reader's PostHog session and device ids from the client cookie onto server-captured pageviews, so a server event joins the session the browser already started instead of appearing outside every session
 - Point `ui_host` at the PostHog dashboard rather than the ingestion endpoint. It was being handed the `host` value from `analytics.json` (`https://eu.i.posthog.com`), so the toolbar and "view in PostHog" links pointed at an ingestion origin that serves no UI; it is now derived by dropping the `.i.` segment, leaving self-hosted instances (which serve both from one origin) untouched
 - Correct the analytics documentation, which described the tracking model inaccurately in two directions. The platform analytics page claimed page views are tracked client-side and that "no data is sent directly to PostHog", both of which were false - server-side capture exists, and it posts straight from your server to PostHog, since the `/ingest` proxy only ever covered the browser. The CLI analytics page documented both layers but presented the duplication as a feature ("two layers of tracking") without noting counts were doubled, and repeated a "no third-party domains appear in network requests" claim true only of the browser half
+- Drop `@posthog/react` from generated sites' dependencies. It was declared but never imported by any generated file
 
 ## 0.0.127
 

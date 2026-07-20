@@ -19,7 +19,6 @@ export const packageJsonTemplate =
         "@langchain/openai": "^1.5.5",
         "@mdx-js/react": "^3.1.1",
         "@modelcontextprotocol/sdk": "^1.29.0",
-        "@posthog/react": "^1.10.3",
         "beautiful-mermaid": "^1.1.3",
         "cherry-styled-components": "^0.2.11",
         langchain: "^1.5.3",

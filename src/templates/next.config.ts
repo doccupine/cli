@@ -26,10 +26,11 @@ export default nextConfig;
   }
 
   const host = analyticsConfig.posthog.host || "https://us.i.posthog.com";
-  // Derive the assets host from the API host (e.g. https://us.i.posthog.com -> https://us-assets.i.posthog.com)
-  const assetsHost = host
-    .replace("://", "://" + "")
-    .replace(".i.", "-assets.i.");
+  // Derive the assets host from the API host
+  // (https://us.i.posthog.com -> https://us-assets.i.posthog.com). Self-hosted
+  // instances have no ".i." segment and serve assets from the same origin, so
+  // they correctly fall through unchanged.
+  const assetsHost = host.replace(".i.", "-assets.i.");
 
   return `import type { NextConfig } from "next";
 
