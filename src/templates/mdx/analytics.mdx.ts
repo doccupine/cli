@@ -40,26 +40,44 @@ When \`analytics.json\` is configured, Doccupine enables two layers of tracking:
 
 ### Client-side
 
-- **Page views**: Captured on every client-side navigation using Next.js router hooks.
+- **Page views**: Captured on client-side (soft) navigations using Next.js router hooks. The initial page load is counted by the server instead, so one view is never counted twice.
 - **Page leave**: Automatically captured when a user navigates away from a page.
 
 ### Server-side
 
-- **Page views**: Captured in middleware on every page request, including the initial server render.
+- **Page views**: Captured in middleware on document requests - the initial load of a page. Requests behind client-side navigations carry an \`RSC\` header and are skipped, because the browser already counts those.
 - **Request metadata**: URL, pathname, host, referrer, and user agent are sent with each event.
 - **Smart filtering**: API routes, internal Next.js routes, and prefetch requests are automatically excluded.
+- **Ad-blocked readers**: because this half runs on your server, readers who block PostHog in the browser are still counted.
 
 ## Privacy proxy
 
-Doccupine routes all analytics traffic through your documentation domain using Next.js rewrites. Instead of sending data directly to PostHog (which ad blockers may intercept), requests go through \`/ingest\` on your own domain and are proxied to PostHog.
+Doccupine routes **browser** analytics traffic through your documentation domain using Next.js rewrites. Instead of the browser talking to PostHog directly (which ad blockers intercept), requests go through \`/ingest\` on your own domain and are proxied on.
 
 This means:
 
-- No third-party domains appear in network requests.
+- No third-party domains appear in the browser's network requests.
 - Ad blockers are less likely to interfere with tracking.
 - Your users' browsing data stays within your domain boundary before reaching PostHog.
 
 The proxy destinations are derived automatically from the \`host\` field in your configuration.
+
+<Callout type="warning">
+  The proxy covers browser traffic only. Server-side page views are sent from
+  your server straight to PostHog - that is exactly what lets them survive an
+  ad blocker.
+</Callout>
+
+## Cookies
+
+An analytics-enabled site sets two first-party cookies:
+
+- \`ph_<key>_posthog\` - set by posthog-js, holding its anonymous distinct id and session.
+- \`dcp_anon_id\` - httpOnly, one year, set by the server so an ad-blocked reader (who never receives the posthog-js cookie) counts as one person instead of a new person on every request.
+
+Both hold nothing but a random identifier. Whether they require a consent notice
+under GDPR/ePrivacy depends on your jurisdiction and what you do with the data;
+that call is yours.
 
 ## Getting a PostHog key
 
