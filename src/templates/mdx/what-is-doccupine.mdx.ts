@@ -1,6 +1,6 @@
 export const whatIsDoccupineMdxTemplate = `---
 title: "What is Doccupine"
-description: "Doccupine is a CLI that turns a folder of MDX files into a complete, production-ready documentation website - no frontend work required."
+description: "Doccupine is a CLI that turns a directory of MDX files into a complete, production-ready documentation website - no frontend work required."
 date: "2026-02-19"
 category: "Getting Started"
 categoryOrder: 0

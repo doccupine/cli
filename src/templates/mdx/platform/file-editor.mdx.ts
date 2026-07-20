@@ -18,7 +18,7 @@ The file editor is the main workspace for your documentation project. It provide
 The left panel has three tabs:
 
 - **Files** - browse your repository's file tree, create and manage files and directories
-- **Media** - browse folders and manage uploaded images and binary assets
+- **Media** - browse directories and manage uploaded images and binary assets
 - **Navigation** - open the [Navigation Builder](/platform/navigation-settings) to configure your sidebar structure with drag-and-drop
 
 In the Files tab, you can:
@@ -61,21 +61,21 @@ The editor has three modes: **Code**, **Split**, and **Preview**. Split shows yo
 The preview renders your document the way your published site will:
 
 - **Components** render as themselves, not as raw tags
-- **Images** resolve from your repository, so \`![Logo](/logo.png)\` shows the file from your \`public\` directory. Relative paths like \`./diagram.png\` resolve against the document's own folder, and images you've uploaded but not yet published appear too
+- **Images** resolve from your repository, so \`![Logo](/logo.png)\` shows the file from your \`public\` directory. Relative paths like \`./diagram.png\` resolve against the document's own directory, and images you've uploaded but not yet published appear too
 - **Mermaid diagrams** render as diagrams rather than code blocks
 
 If a component is missing or a diagram can't be parsed, the preview says so in place rather than failing, so you can see what went wrong and keep editing.
 
-## Media folders
+## Media directories
 
-The **Media** tab browses folders, not just a flat list. Click a folder to open it, and use the breadcrumb to go back.
+The **Media** tab browses directories, not just a flat list. Click a directory to open it, and use the breadcrumb to go back.
 
-- **New folder** creates a folder in the folder you're currently viewing
-- **Uploads** go into the folder you're viewing, not always the top level
+- **New directory** creates a directory in the directory you're currently viewing
+- **Uploads** go into the directory you're viewing, not always the top level
 - **Copy path** gives you the path to paste into MDX, relative to your site root
 
 <Callout type="note">
-  Git can't store an empty folder, so a new folder holds a hidden placeholder file until you add something to it. You'll never see the placeholder in the Media tab.
+  Git can't store an empty directory, so a new directory holds a hidden placeholder file until you add something to it. You'll never see the placeholder in the Media tab.
 </Callout>
 
 ## Version history
