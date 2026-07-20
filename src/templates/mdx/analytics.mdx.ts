@@ -8,7 +8,7 @@ order: 10
 ---
 # Analytics
 
-Track how users interact with your documentation using PostHog. Doccupine supports both client-side and server-side tracking out of the box, with a privacy-first proxy that routes analytics through your own domain.
+Track how users interact with your documentation using PostHog. Doccupine captures page views in two layers out of the box - in the browser and on the server - so readers running ad blockers are still counted. Browser traffic is proxied through your own domain rather than going to PostHog directly.
 
 ## analytics.json
 
