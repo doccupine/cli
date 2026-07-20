@@ -1593,8 +1593,7 @@ export default function Page() {
     const nextRelativePaths = new Set<string>();
     await Promise.all(
       pagesWithBodies.map(async (page) => {
-        if (page.slug === "") return;
-        const relPath = `${page.slug}.md`;
+        const relPath = page.slug === "" ? "index.md" : `${page.slug}.md`;
         const targetPath = path.join(publicDir, relPath);
         await fs.ensureDir(path.dirname(targetPath));
         await fs.writeFile(targetPath, llmsPageTemplate(page, baseUrl), "utf8");
