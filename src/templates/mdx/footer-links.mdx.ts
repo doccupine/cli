@@ -6,7 +6,6 @@ category: "Configuration"
 categoryOrder: 3
 order: 4
 ---
-
 # Footer Links
 
 Add a row of static links at the bottom of your documentation pages, just above the footer. Links open in a new tab and are useful for pointing users to related resources, repositories, or external docs.

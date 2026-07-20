@@ -7,7 +7,6 @@ categoryOrder: 2
 order: 5
 section: "Platform"
 ---
-
 # External Links
 
 The External Links settings page lets you add external link buttons to your documentation site's footer. These provide quick access to your project's GitHub repository, Discord server, social profiles, and other resources.

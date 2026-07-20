@@ -9,7 +9,6 @@ categoryOrder: 0
 categoryIcon: "rocket"
 order: 0
 ---
-
 # Welcome to Doccupine
 
 Doccupine turns a directory of MDX files into a beautiful, production-ready documentation website. Write in standard Markdown, use any of the built-in components, and get a fully themed site with AI-powered search and automatic navigation - all from one command.

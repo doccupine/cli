@@ -8,7 +8,6 @@ categoryIcon: "user"
 order: 2
 section: "Platform"
 ---
-
 # Project Settings
 
 The Project settings page provides basic project management options including renaming and deletion.

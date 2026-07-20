@@ -6,7 +6,6 @@ category: "Configuration"
 categoryOrder: 3
 order: 6
 ---
-
 # Media and assets
 
 Doccupine watches a \`public\` directory in your project root (the same directory where you execute \`npx doccupine\`) and copies its contents into the generated Next.js \`public\` directory. Use it to serve static files such as favicons, Open Graph preview images, custom fonts, or any other media your documentation needs.

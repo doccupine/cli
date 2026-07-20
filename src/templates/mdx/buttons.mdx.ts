@@ -6,7 +6,6 @@ category: "Components"
 categoryOrder: 1
 order: 7
 ---
-
 # Buttons
 
 A flexible action component supporting variants, sizes, icons, and links.

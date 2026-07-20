@@ -7,7 +7,6 @@ categoryOrder: 2
 order: 2
 section: "Platform"
 ---
-
 # Navigation Settings
 
 The Navigation Builder lets you define your sidebar structure through a visual, drag-and-drop interface. It lives inside the **File Explorer** as a dedicated **Navigation** tab, alongside the Files and Media tabs.

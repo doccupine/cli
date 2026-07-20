@@ -6,7 +6,6 @@ category: "Components"
 categoryOrder: 1
 order: 16
 ---
-
 # Mermaid
 
 Create flowcharts, sequence diagrams, and other visualizations using Mermaid syntax with automatic rendering.

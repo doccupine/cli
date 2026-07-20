@@ -6,7 +6,6 @@ category: "Components"
 categoryOrder: 1
 order: 2
 ---
-
 # Lists and Tables
 
 Present structured information using lists or tables.

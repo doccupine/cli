@@ -7,7 +7,6 @@ categoryOrder: 2
 order: 6
 section: "Platform"
 ---
-
 # AI Assistant
 
 Every Doccupine site ships with a built-in AI assistant that helps visitors find answers across your documentation. The AI settings page lets you choose how it's powered.

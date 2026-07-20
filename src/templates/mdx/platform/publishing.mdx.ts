@@ -7,7 +7,6 @@ categoryOrder: 1
 order: 1
 section: "Platform"
 ---
-
 # Publishing Changes
 
 When you edit files in Doccupine, your changes are staged as pending. Nothing goes live until you explicitly publish.

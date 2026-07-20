@@ -6,7 +6,6 @@ category: "Components"
 categoryOrder: 1
 order: 8
 ---
-
 # Callouts
 
 Make your content stand out by using callouts for extra emphasis.

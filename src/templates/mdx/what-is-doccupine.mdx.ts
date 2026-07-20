@@ -6,7 +6,6 @@ category: "Getting Started"
 categoryOrder: 0
 order: 2
 ---
-
 # What is Doccupine
 
 **Doccupine** is a CLI tool that turns a directory of MDX files into a complete Next.js documentation website. It is less of a framework you assemble and more of a tool that does the assembling for you - you bring the content, Doccupine builds the site.

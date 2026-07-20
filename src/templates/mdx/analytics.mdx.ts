@@ -6,7 +6,6 @@ category: "Configuration"
 categoryOrder: 3
 order: 10
 ---
-
 # Analytics
 
 Track how users interact with your documentation using PostHog. Doccupine supports both client-side and server-side tracking out of the box, with a privacy-first proxy that routes analytics through your own domain.

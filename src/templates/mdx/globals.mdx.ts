@@ -14,7 +14,6 @@ categoryOrder: 3
 categoryIcon: "settings"
 order: 1
 ---
-
 # Global Configuration
 
 Use a \`config.json\` file to define project‑wide metadata for your documentation site. These values are applied to every generated page unless a page overrides them in its own frontmatter.

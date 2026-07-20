@@ -8,7 +8,6 @@ categoryIcon: "rocket"
 order: 0
 section: "Platform"
 ---
-
 # Platform Overview
 
 The Doccupine platform gives you everything you need to create, customize, and host beautiful documentation websites - all from your browser. No local setup, no CI pipelines, no infrastructure to manage.

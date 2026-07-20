@@ -6,7 +6,6 @@ category: "Components"
 categoryOrder: 1
 order: 9
 ---
-
 # Images and embeds
 
 Enrich your documentation with visuals, videos, and interactive embeds.

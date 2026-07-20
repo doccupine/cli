@@ -8,7 +8,6 @@ categoryIcon: "pencil"
 order: 0
 section: "Platform"
 ---
-
 # File Editor
 
 The file editor is the main workspace for your documentation project. It provides a browser-based file explorer and editor for working with your MDX files and assets.

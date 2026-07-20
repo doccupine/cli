@@ -6,7 +6,6 @@ category: "Configuration"
 categoryOrder: 3
 order: 11
 ---
-
 # Deployment & Hosting
 
 The fastest way to deploy your documentation is with the [Doccupine Platform](https://www.doccupine.com). If you prefer to manage your own infrastructure, you can self-host the generated Next.js app on any platform.

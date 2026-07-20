@@ -6,7 +6,6 @@ category: "Configuration"
 categoryOrder: 3
 order: 3
 ---
-
 # Sections
 
 Sections let you divide your documentation into separate top-level areas - for example "Guides", "API Reference", and "SDKs". Each section gets its own sidebar and appears as a horizontal tab bar below the site header.

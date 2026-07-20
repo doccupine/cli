@@ -6,7 +6,6 @@ category: "Configuration"
 categoryOrder: 3
 order: 5
 ---
-
 # Theme
 
 Define your site’s color system with a \`theme.json\` file. This lets you tailor the look and feel of your documentation without changing content.

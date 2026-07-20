@@ -7,7 +7,6 @@ categoryOrder: 2
 order: 7
 section: "Platform"
 ---
-
 # MCP
 
 The **MCP** settings page lets external AI applications connect to your documentation through a hosted Model Context Protocol (MCP) server. Every Doccupine site exposes an MCP endpoint at \`/api/mcp\` that AI tools can query to search and read your content.

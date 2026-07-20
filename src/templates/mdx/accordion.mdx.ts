@@ -6,7 +6,6 @@ category: "Components"
 categoryOrder: 1
 order: 4
 ---
-
 # Accordion
 
 Interactive panels for toggling visibility of content.

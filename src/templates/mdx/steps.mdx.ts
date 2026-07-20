@@ -6,7 +6,6 @@ category: "Components"
 categoryOrder: 1
 order: 14
 ---
-
 # Steps
 
 Guide readers step-by-step using the Steps component.

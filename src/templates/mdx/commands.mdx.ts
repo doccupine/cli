@@ -6,7 +6,6 @@ category: "Getting Started"
 categoryOrder: 0
 order: 1
 ---
-
 # Commands
 
 In this page, you can find all the commands available in Doccupine CLI.

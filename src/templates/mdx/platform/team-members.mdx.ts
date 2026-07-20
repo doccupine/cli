@@ -7,7 +7,6 @@ categoryOrder: 4
 order: 0
 section: "Platform"
 ---
-
 # Team Members
 
 The Members settings page lets project owners invite collaborators and manage their access levels. Team members can view, edit, or manage billing depending on their assigned role.

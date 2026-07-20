@@ -8,7 +8,6 @@ categoryIcon: "server"
 order: 1
 section: "Platform"
 ---
-
 # Build & Deploy
 
 The Build & Deploy page shows your documentation site's build and deployment history. Every time you publish changes or push to GitHub, a new deployment is created.

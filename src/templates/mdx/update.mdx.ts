@@ -6,7 +6,6 @@ category: "Components"
 categoryOrder: 1
 order: 12
 ---
-
 # Update
 
 Easily manage and present change history.

@@ -7,7 +7,6 @@ categoryOrder: 4
 order: 1
 section: "Platform"
 ---
-
 # Billing
 
 Doccupine offers a free trial and two paid plans. The Billing settings page lets you manage your subscription and access the Stripe billing portal.

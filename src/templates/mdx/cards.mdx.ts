@@ -6,7 +6,6 @@ category: "Components"
 categoryOrder: 1
 order: 6
 ---
-
 # Cards
 
 Duplicate a page or section with ease, then emphasize important information or links using customizable layouts and icons.

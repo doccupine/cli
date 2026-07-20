@@ -6,7 +6,6 @@ category: "Configuration"
 categoryOrder: 3
 order: 12
 ---
-
 # Authentication
 
 Keep your documentation private by putting the whole site behind a shared password. Set one environment variable and Doccupine gates every page behind a login screen, blocks the content APIs, and hides the site from search engines - no accounts, no database, no extra services.

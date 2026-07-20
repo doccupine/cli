@@ -6,7 +6,6 @@ category: "Configuration"
 categoryOrder: 3
 order: 9
 ---
-
 # Model Context Protocol
 
 Connect your documentation to AI tools with a hosted MCP server.

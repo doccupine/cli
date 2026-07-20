@@ -6,7 +6,6 @@ category: "Components"
 categoryOrder: 1
 order: 5
 ---
-
 # Tabs
 
 Use the Tabs component to display different content sections in a switchable panel layout.

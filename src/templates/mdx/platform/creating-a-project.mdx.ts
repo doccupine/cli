@@ -7,7 +7,6 @@ categoryOrder: 0
 order: 1
 section: "Platform"
 ---
-
 # Creating a Project
 
 From your dashboard, click **Create new project** to get started. You'll name your project and choose how its Git repository is managed.

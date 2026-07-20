@@ -7,7 +7,6 @@ categoryOrder: 2
 order: 1
 section: "Platform"
 ---
-
 # Theme Settings
 
 The Theme settings page gives you full control over your documentation site's visual appearance. Customize colors, upload logos, and configure separate light and dark mode palettes.

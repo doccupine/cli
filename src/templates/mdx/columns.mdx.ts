@@ -6,7 +6,6 @@ category: "Components"
 categoryOrder: 1
 order: 13
 ---
-
 # Columns
 
 Arrange multiple cards neatly in a side-by-side grid layout.

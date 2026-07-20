@@ -6,7 +6,6 @@ category: "Components"
 categoryOrder: 1
 order: 11
 ---
-
 # Fields
 
 Configure parameters for your API or SDK documentation.

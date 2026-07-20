@@ -6,7 +6,6 @@ category: "Components"
 categoryOrder: 1
 order: 15
 ---
-
 # Color Swatches
 
 Display color palettes with labeled swatches to document your theme colors.

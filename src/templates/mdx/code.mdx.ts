@@ -6,7 +6,6 @@ category: "Components"
 categoryOrder: 1
 order: 3
 ---
-
 # Code
 
 Learn how to display inline code and code blocks in documentation.

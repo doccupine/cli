@@ -6,7 +6,6 @@ category: "Configuration"
 categoryOrder: 3
 order: 7
 ---
-
 # Fonts
 
 Define your site’s typography with a \`fonts.json\` file. You can load fonts from Google Fonts or from local font files bundled with your project.

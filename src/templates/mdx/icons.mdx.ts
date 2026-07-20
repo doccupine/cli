@@ -6,7 +6,6 @@ category: "Components"
 categoryOrder: 1
 order: 10
 ---
-
 # Icons
 
 Integrate visual icons from well-known libraries to enrich your documentation.

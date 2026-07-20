@@ -8,7 +8,6 @@ categoryIcon: "settings"
 order: 0
 section: "Platform"
 ---
-
 # Site Settings
 
 The Site settings page lets you configure the core metadata for your documentation site. These values are stored in \`config.json\` at the root of your repository.

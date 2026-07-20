@@ -7,7 +7,6 @@ categoryOrder: 1
 categoryIcon: "blocks"
 order: 0
 ---
-
 # Components
 
 Doccupine includes a rich set of built-in components you can use directly in your MDX files - no imports needed. Browse the full library below.

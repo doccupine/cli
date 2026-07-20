@@ -7,7 +7,6 @@ categoryOrder: 2
 order: 4
 section: "Platform"
 ---
-
 # Fonts Settings
 
 The Fonts settings page lets you customize your documentation site's typography using Google Fonts or locally uploaded font files.

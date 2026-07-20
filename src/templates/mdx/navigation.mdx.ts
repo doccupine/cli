@@ -6,7 +6,6 @@ category: "Configuration"
 categoryOrder: 3
 order: 2
 ---
-
 # Navigation
 
 Doccupine builds your sidebar automatically from your MDX pages. By default, it reads the page frontmatter and groups pages into categories in the order you define. For larger docs, you can take full control with a \`navigation.json\` file.

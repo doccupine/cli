@@ -7,7 +7,6 @@ categoryOrder: 2
 order: 3
 section: "Platform"
 ---
-
 # Analytics
 
 The Analytics settings page lets you add PostHog analytics to your documentation site. Page views are tracked client-side and proxied through your own domain for privacy - no data is sent directly to PostHog.

@@ -7,7 +7,6 @@ categoryOrder: 3
 order: 0
 section: "Platform"
 ---
-
 # Custom Domains
 
 By default, your documentation site is available at a \`.doccupine.app\` subdomain. You can connect your own custom domain for a branded experience.

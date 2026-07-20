@@ -6,7 +6,6 @@ category: "Components"
 categoryOrder: 1
 order: 1
 ---
-
 # Headers and Text
 
 Learn how to structure and style your content with headers, formatting, and links.
