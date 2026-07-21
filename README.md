@@ -148,7 +148,7 @@ Place these JSON files in your project root (where you run `doccupine`). They ar
 
 | File              | Purpose                                                                                                   |
 | ----------------- | --------------------------------------------------------------------------------------------------------- |
-| `doccupine.json`  | CLI config (watchDir, outputDir, port). Auto-generated on first run.                                      |
+| `doccupine.json`  | CLI config (watchDir, outputDir, port). Auto-generated on first run. Paths are stored relative to the project root, so the file is safe to commit. |
 | `config.json`     | Site metadata: `name`, `description`, `icon`, `image`, `url` (public site URL for sitemap/robots)         |
 | `theme.json`      | Theme overrides for [cherry-styled-components](https://github.com/cherry-design-system/styled-components) |
 | `navigation.json` | Manual navigation structure (overrides auto-generated)                                                    |

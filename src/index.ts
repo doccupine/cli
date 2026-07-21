@@ -1690,6 +1690,9 @@ program
       config.outputDir,
     );
 
+    // Config paths are project-relative; child processes get an absolute cwd.
+    const outputDir = path.resolve(process.cwd(), config.outputDir);
+
     await generator.init();
 
     let devServer: ReturnType<typeof spawn> | null = null;
@@ -1707,7 +1710,7 @@ program
     console.log(chalk.blue(`📦 Using ${packageManager.name}...`));
 
     const install = spawn(packageManager.bin, ["install"], {
-      cwd: config.outputDir,
+      cwd: outputDir,
       stdio: "inherit",
     });
 
@@ -1744,7 +1747,7 @@ program
         ? ["run", "dev", "--", "--port", portStr]
         : ["run", "dev", "--port", portStr];
     devServer = spawn(packageManager.bin, devArgs, {
-      cwd: config.outputDir,
+      cwd: outputDir,
       stdio: ["ignore", "pipe", "pipe"],
     });
 
@@ -1858,4 +1861,36 @@ program
     }
   });
 
-program.parse();
+/**
+ * True when this file is what node was asked to run, rather than a module some
+ * other process imported. The test suite imports this file for its exported
+ * helpers; without this guard, that import parses argv, falls through to the
+ * default `watch` command, and prompts for config / starts file watchers.
+ *
+ * Compares realpaths because npm installs the bin as a symlink
+ * (`node_modules/.bin/doccupine` -> `dist/index.js`), so `process.argv[1]` and
+ * `import.meta.url` can name the same file by different paths.
+ */
+export function isProcessEntrypoint(
+  entry: string | undefined = process.argv[1],
+  self: string = __filename,
+): boolean {
+  if (!entry) return false;
+
+  // Windows paths are case-insensitive; a false negative here would make the
+  // CLI exit silently without running any command.
+  const normalize = (filePath: string) =>
+    process.platform === "win32" ? filePath.toLowerCase() : filePath;
+
+  try {
+    return (
+      normalize(fs.realpathSync(entry)) === normalize(fs.realpathSync(self))
+    );
+  } catch {
+    return false;
+  }
+}
+
+if (isProcessEntrypoint()) {
+  program.parse();
+}
