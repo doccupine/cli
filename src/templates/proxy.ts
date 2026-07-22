@@ -129,7 +129,8 @@ function resolveTrackingIdentity(req: NextRequest): TrackingIdentity {
   if (phCookie) {
     try {
       const parsed = JSON.parse(phCookie);
-      if (typeof parsed.distinct_id === "string") distinctId = parsed.distinct_id;
+      if (typeof parsed.distinct_id === "string")
+        distinctId = parsed.distinct_id;
       // Note we deliberately do NOT read \`$sesid\` — see resolveSession above.
       if (typeof parsed.$device_id === "string") deviceId = parsed.$device_id;
     } catch {
