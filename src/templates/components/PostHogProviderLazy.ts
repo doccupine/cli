@@ -22,8 +22,9 @@ const posthogKey =
 // dashboard it belongs to (us.posthog.com), which is what "view in PostHog"
 // links and the toolbar point at. Self-hosted instances serve both from one
 // origin, so leaving those untouched is correct.
-const uiHost = (analyticsConfig.posthog?.host || "https://us.i.posthog.com")
-  .replace(".i.posthog.com", ".posthog.com");
+const uiHost = (
+  analyticsConfig.posthog?.host || "https://us.i.posthog.com"
+).replace(".i.posthog.com", ".posthog.com");
 
 /**
  * Adopt the session id the middleware already decided on (see proxy.ts), so the
