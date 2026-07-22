@@ -40,6 +40,10 @@ const uiHost = (analyticsConfig.posthog?.host || "https://us.i.posthog.com")
  * undefined if absent or malformed, in which case posthog-js mints its own id
  * as before: degraded, never broken.
  */
+// Both the middleware and this file WRITE the session cookie, so these three
+// must stay identical to their counterparts in proxy.ts. They are duplicated
+// rather than shared because a client component cannot import from the
+// middleware. A drifted max-age here would silently expire live sessions.
 const SESSION_COOKIE = "dcp_sid";
 const SESSION_MAX_MS = 24 * 60 * 60 * 1000;
 
@@ -106,30 +110,41 @@ function PostHogInit({ onReady }: { onReady: () => void }) {
   const initRef = useRef(false);
 
   useEffect(() => {
-    if (initRef.current || !posthogKey) return;
-    initRef.current = true;
+    if (!posthogKey) return;
 
-    const sessionID = readEdgeSessionId();
+    // The init guard deliberately does NOT wrap the subscription below.
+    //
+    // Under React StrictMode's dev double-invoke the effect runs, is cleaned
+    // up, then runs again. With an early \`return\` here, that second run would
+    // skip past the subscription and leave \`onSessionId\` permanently
+    // unsubscribed — in dev only, which is precisely where you would go to
+    // check that any of this works. Initialising once while re-subscribing on
+    // every run is correct in both modes.
+    if (!initRef.current) {
+      initRef.current = true;
 
-    posthog.init(posthogKey, {
-      api_host: "/ingest",
-      ui_host: uiHost,
-      capture_pageview: false,
-      capture_pageleave: true,
-      // The middleware owns session identity; this makes the SDK agree with it.
-      ...(sessionID ? { bootstrap: { sessionID } } : {}),
-      loaded: (ph) => {
-        // Write once at startup so a session the middleware adopted (and
-        // therefore did not rewrite) still gets its last-activity advanced.
-        syncSessionCookie(ph.get_session_id());
-        onReady();
-      },
-    });
+      const sessionID = readEdgeSessionId();
+
+      posthog.init(posthogKey, {
+        api_host: "/ingest",
+        ui_host: uiHost,
+        capture_pageview: false,
+        capture_pageleave: true,
+        // The middleware owns session identity; this makes the SDK agree.
+        ...(sessionID ? { bootstrap: { sessionID } } : {}),
+        loaded: (ph) => {
+          // Write once at startup so a session the middleware adopted (and
+          // therefore did not rewrite) still gets its last-activity advanced.
+          syncSessionCookie(ph.get_session_id());
+          onReady();
+        },
+      });
+    }
 
     // Fires when the session id first appears and on every rotation, so the
     // cookie follows posthog-js rather than drifting from it. posthog-js is the
     // better judge of idleness — it sees every captured event, not just
-    // navigations.
+    // navigations. Returning its unsubscribe doubles as the effect cleanup.
     return posthog.onSessionId((id: string) => syncSessionCookie(id));
   }, [onReady]);
 

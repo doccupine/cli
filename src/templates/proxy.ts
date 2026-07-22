@@ -39,6 +39,10 @@ const ANON_ID_MAX_AGE = 60 * 60 * 24 * 365;
  * one to hand back to \`posthog.init({ bootstrap })\`. It grants no privilege,
  * and posthog-js already keeps an equivalent id in a readable cookie of its own.
  */
+// SESSION_COOKIE, SESSION_MAX_MS and isValidSessionId are mirrored in
+// PostHogProviderLazy, which also writes this cookie. Keep them in sync — a
+// drifted max-age would silently expire live sessions. They are duplicated
+// rather than shared because a client component cannot import from here.
 const SESSION_COOKIE = "dcp_sid";
 
 /** Same rules posthog-js uses internally. */
