@@ -32,12 +32,80 @@ const ANON_ID_COOKIE = "dcp_anon_id";
 
 const ANON_ID_MAX_AGE = 60 * 60 * 24 * 365;
 
+/**
+ * Session id, shared between the edge and posthog-js.
+ *
+ * Deliberately NOT httpOnly, unlike the anon id: the browser has to read this
+ * one to hand back to \`posthog.init({ bootstrap })\`. It grants no privilege,
+ * and posthog-js already keeps an equivalent id in a readable cookie of its own.
+ */
+const SESSION_COOKIE = "dcp_sid";
+
+/** Same rules posthog-js uses internally. */
+const SESSION_IDLE_MS = 30 * 60 * 1000;
+const SESSION_MAX_MS = 24 * 60 * 60 * 1000;
+const SESSION_TOUCH_MS = 60 * 1000;
+
 interface TrackingIdentity {
   distinctId: string;
   /** Set only when the id was just minted and still needs writing to a cookie. */
   anonIdToPersist?: string;
-  sessionId?: string;
+  sessionId: string;
+  /** Set when the session cookie needs writing. */
+  sessionToPersist?: string;
   deviceId?: string;
+}
+
+/** posthog-js strips dashes and requires exactly 32 hex characters. */
+function isValidSessionId(id: string): boolean {
+  return /^[0-9a-f]{32}$/i.test(id.replace(/-/g, ""));
+}
+
+/**
+ * Owns session identity, rather than borrowing posthog-js's.
+ *
+ * We used to read posthog-js's \`$sesid\` cookie and forward \`$sesid[1]\` (the
+ * id) while ignoring \`$sesid[0]\` (last activity) and \`$sesid[2]\` (session
+ * start) — the fields posthog-js itself checks before deciding a session is
+ * still alive. A returning reader's pageview therefore went out stamped with a
+ * session that had expired days earlier: it stretched that dead session's
+ * duration, and the real new session began with no pageview in it, losing the
+ * landing page. Both feed bounce rate and entry-path reports.
+ *
+ * Now the edge decides and posthog-js adopts it via bootstrap, so there is one
+ * authority instead of two disagreeing.
+ */
+function resolveSession(
+  req: NextRequest,
+  now: number,
+  isActivity: boolean,
+): { sessionId: string; sessionToPersist?: string } {
+  const parts = req.cookies.get(SESSION_COOKIE)?.value?.split(".");
+
+  if (parts?.length === 3) {
+    const [id, startRaw, lastRaw] = parts;
+    const startTs = Number(startRaw);
+    const lastTs = Number(lastRaw);
+    const alive =
+      isValidSessionId(id) &&
+      Number.isFinite(startTs) &&
+      Number.isFinite(lastTs) &&
+      now - lastTs <= SESSION_IDLE_MS &&
+      now - startTs <= SESSION_MAX_MS;
+
+    if (alive) {
+      // A prefetch is the router speculating, not the reader acting, so it
+      // must not keep a session alive that would otherwise have expired.
+      const touch = isActivity && now - lastTs > SESSION_TOUCH_MS;
+      return {
+        sessionId: id,
+        sessionToPersist: touch ? \`\${id}.\${startTs}.\${now}\` : undefined,
+      };
+    }
+  }
+
+  const id = crypto.randomUUID();
+  return { sessionId: id, sessionToPersist: \`\${id}.\${now}.\${now}\` };
 }
 
 /**
@@ -45,9 +113,11 @@ interface TrackingIdentity {
  * established for this browser, else our own anonymous cookie, else a fresh id
  * that the caller persists.
  */
-function resolveTrackingIdentity(req: NextRequest): TrackingIdentity {
+function resolveTrackingIdentity(
+  req: NextRequest,
+  isActivity: boolean,
+): TrackingIdentity {
   let distinctId: string | undefined;
-  let sessionId: string | undefined;
   let deviceId: string | undefined;
 
   const phCookie = req.cookies.get(
@@ -57,24 +127,22 @@ function resolveTrackingIdentity(req: NextRequest): TrackingIdentity {
     try {
       const parsed = JSON.parse(phCookie);
       if (typeof parsed.distinct_id === "string") distinctId = parsed.distinct_id;
-      // \`$sesid\` is [lastActivityTs, sessionId, sessionStartTs]. Forwarding it
-      // keeps server events inside the client's session instead of floating free.
-      if (Array.isArray(parsed.$sesid) && typeof parsed.$sesid[1] === "string") {
-        sessionId = parsed.$sesid[1];
-      }
+      // Note we deliberately do NOT read \`$sesid\` — see resolveSession above.
       if (typeof parsed.$device_id === "string") deviceId = parsed.$device_id;
     } catch {
       // ignore malformed cookie
     }
   }
 
-  if (distinctId) return { distinctId, sessionId, deviceId };
+  const session = resolveSession(req, Date.now(), isActivity);
+
+  if (distinctId) return { distinctId, deviceId, ...session };
 
   const anonId = req.cookies.get(ANON_ID_COOKIE)?.value;
-  if (anonId) return { distinctId: anonId, sessionId, deviceId };
+  if (anonId) return { distinctId: anonId, deviceId, ...session };
 
   const minted = crypto.randomUUID();
-  return { distinctId: minted, anonIdToPersist: minted, sessionId, deviceId };
+  return { distinctId: minted, anonIdToPersist: minted, deviceId, ...session };
 }
 
 /**
@@ -90,19 +158,24 @@ function captureServerPageview(
 
   if (SKIP_PAGEVIEW_PATTERN.test(pathname)) return null;
 
+  // A prefetch is the router speculating, not the reader acting: it neither
+  // counts as a pageview nor keeps a session alive.
   const isPrefetch =
     req.headers.get("next-router-prefetch") === "1" ||
     req.headers.get("purpose") === "prefetch";
   if (isPrefetch) return null;
 
+  const identity = resolveTrackingIdentity(req, true);
+
   // A soft navigation fetches an RSC payload rather than a document, and
-  // carries this header. The client tracker owns those.
-  if (req.headers.get("RSC")) return null;
+  // carries this header. The client tracker owns counting those — but browsing
+  // that way is still real activity, so we return the identity anyway to keep
+  // the session cookie alive. Returning null here would let a reader who
+  // navigates only via client-side links expire mid-visit.
+  if (req.headers.get("RSC")) return identity;
 
   const posthog = getPostHogServerClient();
-  if (!posthog) return null;
-
-  const identity = resolveTrackingIdentity(req);
+  if (!posthog) return identity;
 
   posthog.capture({
     distinctId: identity.distinctId,
@@ -140,6 +213,17 @@ function applyTracking(
       maxAge: ANON_ID_MAX_AGE,
       sameSite: "lax",
       httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+    });
+  }
+  if (tracking?.sessionToPersist) {
+    // httpOnly: false is required — the browser reads this to bootstrap
+    // posthog-js so the client agrees with the edge about the session.
+    res.cookies.set(SESSION_COOKIE, tracking.sessionToPersist, {
+      path: "/",
+      maxAge: SESSION_MAX_MS / 1000,
+      sameSite: "lax",
+      httpOnly: false,
       secure: process.env.NODE_ENV === "production",
     });
   }
