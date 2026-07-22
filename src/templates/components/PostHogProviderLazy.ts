@@ -40,7 +40,14 @@ const uiHost = (analyticsConfig.posthog?.host || "https://us.i.posthog.com")
  * undefined if absent or malformed, in which case posthog-js mints its own id
  * as before: degraded, never broken.
  */
-function readEdgeSessionId(): string | undefined {
+const SESSION_COOKIE = "dcp_sid";
+const SESSION_MAX_MS = 24 * 60 * 60 * 1000;
+
+function isValidSessionId(id: string): boolean {
+  return /^[0-9a-f]{32}$/i.test(id.replace(/-/g, ""));
+}
+
+function readSessionCookie(): { id: string; startTs: number } | undefined {
   if (typeof document === "undefined") return undefined;
 
   const match = document.cookie.match(/(?:^|;\\s*)dcp_sid=([^;]*)/);
@@ -48,8 +55,51 @@ function readEdgeSessionId(): string | undefined {
 
   // Cookie is \`id.startTs.lastTs\`; posthog-js requires the id be a UUID and
   // logs an error if not, so check before handing it over.
-  const id = decodeURIComponent(match[1]).split(".")[0];
-  return /^[0-9a-f]{32}$/i.test(id.replace(/-/g, "")) ? id : undefined;
+  const [id, startRaw] = decodeURIComponent(match[1]).split(".");
+  const startTs = Number(startRaw);
+  if (!isValidSessionId(id) || !Number.isFinite(startTs)) return undefined;
+
+  return { id, startTs };
+}
+
+function readEdgeSessionId(): string | undefined {
+  return readSessionCookie()?.id;
+}
+
+/**
+ * Keep the session cookie's last-activity fresh, from the browser.
+ *
+ * This is the half of session upkeep the middleware deliberately does NOT do.
+ * A response carrying \`Set-Cookie\` is not cacheable by Vercel's CDN, so
+ * refreshing last-activity server-side would have put one on roughly every doc
+ * page an engaged reader loads. A \`document.cookie\` write sets no response
+ * header at all, so your doc pages stay cacheable — and the browser is the side
+ * that actually sees soft navigations and in-page activity.
+ *
+ * \`startTs\` is carried forward while the id is unchanged, so the 24h hard cap
+ * still measures from when the session really began; a rotation restarts it.
+ */
+function syncSessionCookie(sessionId: string | undefined) {
+  if (typeof document === "undefined" || !sessionId) return;
+  if (!isValidSessionId(sessionId)) return;
+
+  const now = Date.now();
+  const existing = readSessionCookie();
+  const startTs = existing?.id === sessionId ? existing.startTs : now;
+  const secure = location.protocol === "https:" ? "; secure" : "";
+
+  document.cookie =
+    SESSION_COOKIE +
+    "=" +
+    sessionId +
+    "." +
+    startTs +
+    "." +
+    now +
+    "; path=/; max-age=" +
+    SESSION_MAX_MS / 1000 +
+    "; samesite=lax" +
+    secure;
 }
 
 function PostHogInit({ onReady }: { onReady: () => void }) {
@@ -66,10 +116,21 @@ function PostHogInit({ onReady }: { onReady: () => void }) {
       ui_host: uiHost,
       capture_pageview: false,
       capture_pageleave: true,
-      // The edge owns session identity; this makes the SDK agree with it.
+      // The middleware owns session identity; this makes the SDK agree with it.
       ...(sessionID ? { bootstrap: { sessionID } } : {}),
-      loaded: onReady,
+      loaded: (ph) => {
+        // Write once at startup so a session the middleware adopted (and
+        // therefore did not rewrite) still gets its last-activity advanced.
+        syncSessionCookie(ph.get_session_id());
+        onReady();
+      },
     });
+
+    // Fires when the session id first appears and on every rotation, so the
+    // cookie follows posthog-js rather than drifting from it. posthog-js is the
+    // better judge of idleness — it sees every captured event, not just
+    // navigations.
+    return posthog.onSessionId((id: string) => syncSessionCookie(id));
   }, [onReady]);
 
   return null;
@@ -98,6 +159,12 @@ function PostHogPageviewTracker() {
         ? \`\${pathname}?\${searchParams.toString()}\`
         : pathname;
       posthog.capture("$pageview", { $current_url: url });
+
+      // A soft navigation is activity the middleware never sees, and
+      // \`onSessionId\` won't fire because the id hasn't changed. Without this, a
+      // reader who browses only via client-side links would look idle to the
+      // next document load and have their session rotated out from under them.
+      syncSessionCookie(posthog.get_session_id());
     }
   }, [pathname, searchParams]);
 

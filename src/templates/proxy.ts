@@ -44,7 +44,6 @@ const SESSION_COOKIE = "dcp_sid";
 /** Same rules posthog-js uses internally. */
 const SESSION_IDLE_MS = 30 * 60 * 1000;
 const SESSION_MAX_MS = 24 * 60 * 60 * 1000;
-const SESSION_TOUCH_MS = 60 * 1000;
 
 interface TrackingIdentity {
   distinctId: string;
@@ -72,13 +71,23 @@ function isValidSessionId(id: string): boolean {
  * duration, and the real new session began with no pageview in it, losing the
  * landing page. Both feed bounce rate and entry-path reports.
  *
- * Now the edge decides and posthog-js adopts it via bootstrap, so there is one
- * authority instead of two disagreeing.
+ * Now the middleware decides and posthog-js adopts it via bootstrap, so there is
+ * one authority instead of two disagreeing.
+ *
+ * **The middleware writes this cookie only when it mints a new session.**
+ * Keeping \`lastTs\` fresh is the browser's job (see PostHogSetup). That split is
+ * deliberate: a response carrying \`Set-Cookie\` is not cacheable by Vercel's CDN,
+ * and refreshing last-activity here would have put one on roughly every doc page
+ * an engaged reader loads. A \`document.cookie\` write from the browser sets no
+ * response header at all, so your doc pages stay cacheable.
+ *
+ * Consequence: if an ad blocker stops posthog-js, nothing refreshes \`lastTs\`, so
+ * that reader's sessions become fixed ~30-minute windows rather than idle-based.
+ * Coarser, but still correct.
  */
 function resolveSession(
   req: NextRequest,
   now: number,
-  isActivity: boolean,
 ): { sessionId: string; sessionToPersist?: string } {
   const parts = req.cookies.get(SESSION_COOKIE)?.value?.split(".");
 
@@ -93,15 +102,8 @@ function resolveSession(
       now - lastTs <= SESSION_IDLE_MS &&
       now - startTs <= SESSION_MAX_MS;
 
-    if (alive) {
-      // A prefetch is the router speculating, not the reader acting, so it
-      // must not keep a session alive that would otherwise have expired.
-      const touch = isActivity && now - lastTs > SESSION_TOUCH_MS;
-      return {
-        sessionId: id,
-        sessionToPersist: touch ? \`\${id}.\${startTs}.\${now}\` : undefined,
-      };
-    }
+    // Alive: adopt it and write nothing, so the response stays cacheable.
+    if (alive) return { sessionId: id };
   }
 
   const id = crypto.randomUUID();
@@ -113,10 +115,7 @@ function resolveSession(
  * established for this browser, else our own anonymous cookie, else a fresh id
  * that the caller persists.
  */
-function resolveTrackingIdentity(
-  req: NextRequest,
-  isActivity: boolean,
-): TrackingIdentity {
+function resolveTrackingIdentity(req: NextRequest): TrackingIdentity {
   let distinctId: string | undefined;
   let deviceId: string | undefined;
 
@@ -134,7 +133,7 @@ function resolveTrackingIdentity(
     }
   }
 
-  const session = resolveSession(req, Date.now(), isActivity);
+  const session = resolveSession(req, Date.now());
 
   if (distinctId) return { distinctId, deviceId, ...session };
 
@@ -165,17 +164,16 @@ function captureServerPageview(
     req.headers.get("purpose") === "prefetch";
   if (isPrefetch) return null;
 
-  const identity = resolveTrackingIdentity(req, true);
-
   // A soft navigation fetches an RSC payload rather than a document, and
-  // carries this header. The client tracker owns counting those — but browsing
-  // that way is still real activity, so we return the identity anyway to keep
-  // the session cookie alive. Returning null here would let a reader who
-  // navigates only via client-side links expire mid-visit.
-  if (req.headers.get("RSC")) return identity;
+  // carries this header. The client tracker owns those — and it also keeps the
+  // session cookie fresh from the browser, so there is nothing for us to do
+  // here.
+  if (req.headers.get("RSC")) return null;
 
   const posthog = getPostHogServerClient();
-  if (!posthog) return identity;
+  if (!posthog) return null;
+
+  const identity = resolveTrackingIdentity(req);
 
   posthog.capture({
     distinctId: identity.distinctId,
