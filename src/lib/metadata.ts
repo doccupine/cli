@@ -44,11 +44,11 @@ export function generateJsonLdScript(opts: JsonLdOptions): {
       ? JSON.stringify(opts.date)
       : "undefined";
   const defaultFaviconLiteral = JSON.stringify(DEFAULT_FAVICON);
+  // When the page declares an image, it always wins - emitting a `||` chain
+  // after a string literal makes TypeScript fail the build with
+  // "This kind of expression is always truthy".
   const faviconLine = opts.image
-    ? `const faviconUrl =
-      ${JSON.stringify(opts.image)} ||
-      config.icon ||
-      ${defaultFaviconLiteral};`
+    ? `const faviconUrl = ${JSON.stringify(opts.image)};`
     : `const faviconUrl = config.icon || ${defaultFaviconLiteral};`;
   // Indent 10 + "description: ".length(13) + ",".length(1) = 24. Prettier
   // wraps the value to the next line (indent 12) once total exceeds 80.
