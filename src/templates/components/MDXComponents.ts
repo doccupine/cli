@@ -12,6 +12,7 @@ import { Callout } from "@/components/layout/Callout";
 import { Icon } from "@/components/layout/Icon";
 import { Columns } from "@/components/layout/Columns";
 import { Field } from "@/components/layout/Field";
+import { Frame } from "@/components/layout/Frame";
 import { Update } from "@/components/layout/Update";
 import { Steps, Step } from "@/components/layout/Steps";
 import { Button } from "@/components/layout/Button";
@@ -163,6 +164,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     Icon,
     Columns,
     Field,
+    Frame,
     // Share the heading slugger so an <Update> label anchor stays unique and
     // in document order alongside the surrounding headings. Only consume a
     // slug when a label is present so a label-less <Update> does not crash the

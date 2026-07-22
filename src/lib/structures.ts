@@ -48,6 +48,7 @@ import { docsComponentsTemplate } from "../templates/components/layout/DocsCompo
 import { docsNavigationTemplate } from "../templates/components/layout/DocsNavigation.js";
 import { fieldTemplate } from "../templates/components/layout/Field.js";
 import { footerTemplate } from "../templates/components/layout/Footer.js";
+import { frameTemplate } from "../templates/components/layout/Frame.js";
 import { globalStylesTemplate } from "../templates/components/layout/GlobalStyles.js";
 import { headerTemplate } from "../templates/components/layout/Header.js";
 import { iconTemplate } from "../templates/components/layout/Icon.js";
@@ -106,6 +107,7 @@ import { iconsMdxTemplate } from "../templates/mdx/icons.mdx.js";
 import { imageAndEmbedsMdxTemplate } from "../templates/mdx/image-and-embeds.mdx.js";
 import { indexMdxTemplate } from "../templates/mdx/index.mdx.js";
 import { footerLinksMdxTemplate } from "../templates/mdx/footer-links.mdx.js";
+import { framesMdxTemplate } from "../templates/mdx/frames.mdx.js";
 import { listsAndTablesMdxTemplate } from "../templates/mdx/lists-and-tables.mdx.js";
 import { mediaAndAssetsMdxTemplate } from "../templates/mdx/media-and-assets.mdx.js";
 import { mermaidMdxTemplate } from "../templates/mdx/mermaid.mdx.js";
@@ -210,6 +212,7 @@ export const appStructure: Record<string, string> = {
   "components/layout/SectionBar.tsx": sectionBarTemplate,
   "components/layout/Field.tsx": fieldTemplate,
   "components/layout/Footer.tsx": footerTemplate,
+  "components/layout/Frame.tsx": frameTemplate,
   "components/layout/GlobalStyles.ts": globalStylesTemplate,
   "components/layout/Header.tsx": headerTemplate,
   "components/layout/Icon.tsx": iconTemplate,
@@ -258,6 +261,7 @@ export const startingDocsStructure: Record<string, string> = {
   "image-and-embeds.mdx": imageAndEmbedsMdxTemplate,
   "index.mdx": indexMdxTemplate,
   "footer-links.mdx": footerLinksMdxTemplate,
+  "frames.mdx": framesMdxTemplate,
   "lists-and-tables.mdx": listsAndTablesMdxTemplate,
   "media-and-assets.mdx": mediaAndAssetsMdxTemplate,
   "mermaid.mdx": mermaidMdxTemplate,

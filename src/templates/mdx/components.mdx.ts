@@ -39,6 +39,9 @@ Doccupine includes a rich set of built-in components you can use directly in you
   <Card title="Images and Embeds" icon="image" href="/image-and-embeds">
     Images, videos, and embedded content.
   </Card>
+  <Card title="Frames" icon="frame" href="/frames">
+    Bordered containers with captions for images, videos, and diagrams.
+  </Card>
   <Card title="Icons" icon="smile" href="/icons">
     Lucide icons you can use anywhere in your docs.
   </Card>
