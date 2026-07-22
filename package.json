@@ -1,6 +1,6 @@
 {
   "name": "doccupine",
-  "version": "0.0.130",
+  "version": "0.0.131",
   "description": "Free and open-source documentation platform. Write MDX, get a production-ready site with AI chat, built-in components, and an MCP server - in one command.",
   "main": "dist/index.js",
   "bin": {
@@ -39,10 +39,10 @@
     "commander": "^15.0.0",
     "fs-extra": "^11.3.6",
     "gray-matter": "^4.0.3",
-    "next": "^16.2.10",
+    "next": "^16.2.11",
     "prompts": "^2.4.2",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
