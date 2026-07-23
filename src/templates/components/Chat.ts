@@ -524,10 +524,14 @@ const StyledAnswer = styled.div<{ theme: Theme; $isAnswer: boolean }>\`
   \${thinScrollbar};
   background: \${({ theme }) => theme.colors.primary};
   color: \${({ theme }) => theme.colors.surface};
-  padding: 10px 15px;
-  border-radius: 18px;
+  padding: 9px 14px;
+  border-radius: 16px 16px 4px 16px;
   margin: 20px 0 20px auto;
   width: fit-content;
+  max-width: min(560px, 88%);
+  font-weight: 500;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   \${styledText};
 
   & p {
@@ -544,6 +548,8 @@ const StyledAnswer = styled.div<{ theme: Theme; $isAnswer: boolean }>\`
       max-width: 100%;
       margin: 20px 0;
       border-radius: 0;
+      font-weight: inherit;
+      white-space: normal;
     \`}
 
   & code:not([class]) {
