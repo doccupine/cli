@@ -201,10 +201,6 @@ const lightSyntaxHighlight = css\`
   & .hljs {
     color: #24292f;
     background: #ffffff;
-    min-width: min-content;
-    width: 100%;
-    display: block;
-    padding-right: 20px;
   }
   & .hljs-doctag,
   & .hljs-keyword,
@@ -270,14 +266,6 @@ const lightSyntaxHighlight = css\`
   & .hljs-strong {
     color: #24292f;
     font-weight: 700;
-  }
-  & .hljs-addition {
-    color: #116329;
-    background-color: #dafbe1;
-  }
-  & .hljs-deletion {
-    color: #82071e;
-    background-color: #ffebe9;
   }
 \`;
 
@@ -351,14 +339,6 @@ const darkSyntaxHighlight = css\`
     color: #c9d1d9;
     font-weight: 700;
   }
-  & .hljs-addition {
-    color: #aff5b4;
-    background-color: #033a16;
-  }
-  & .hljs-deletion {
-    color: #ffdcd7;
-    background-color: #67060c;
-  }
 \`;
 
 const Body = styled.div<{ theme: Theme }>\`
@@ -366,7 +346,7 @@ const Body = styled.div<{ theme: Theme }>\`
   border-bottom-left-radius: \${({ theme }) => theme.spacing.radius.lg};
   border-bottom-right-radius: \${({ theme }) => theme.spacing.radius.lg};
   color: #24292f;
-  padding: 20px;
+  padding: 20px 0;
   font-family: \${({ theme }) => theme.fonts.mono};
   text-align: left;
   overflow-x: auto;
@@ -376,13 +356,43 @@ const Body = styled.div<{ theme: Theme }>\`
   \${({ theme }) => styledCode(theme)};
   \${lightSyntaxHighlight};
 
-  /* Diff lines: highlight.js wraps each +/- line in a single span, so
-     stretching it to the full row reads like a GitHub diff. inline-block keeps
-     the trailing newline as the line break instead of adding an empty row. */
+  /* The 20px side gutter sits on the <code> element instead of the Body so it
+     scrolls with the content: the right gutter survives a scroll to the end of
+     a long line, and diff rows can bleed back through it to the window edge. */
+  & .hljs {
+    display: block;
+    width: 100%;
+    min-width: min-content;
+    padding: 0 20px;
+  }
+
+  /* Diff rows: highlight.js wraps each +/- line in its own span, so tinting it
+     edge to edge reads like a GitHub diff. inline-table keeps the trailing
+     newline as the line break instead of adding an empty row, and the negative
+     margin pulls the row back through the gutter so the accent bar sits flush
+     against the window edge. border-left + padding-left add up to the same
+     20px, keeping the code itself aligned with the untouched lines. The tints
+     are the success/error tokens at low alpha, so a custom theme.json palette
+     carries through and the syntax colors underneath stay legible. */
   & .hljs-addition,
   & .hljs-deletion {
     display: inline-table;
-    width: 100%;
+    width: calc(100% + 40px);
+    margin: 0 -20px;
+    padding: 0 20px 0 17px;
+    border-left: solid 3px transparent;
+  }
+
+  & .hljs-addition {
+    background: \${({ theme }) =>
+      \`color-mix(in srgb, \${theme.colors.success} 12%, transparent)\`};
+    border-left-color: \${({ theme }) => theme.colors.success};
+  }
+
+  & .hljs-deletion {
+    background: \${({ theme }) =>
+      \`color-mix(in srgb, \${theme.colors.error} 12%, transparent)\`};
+    border-left-color: \${({ theme }) => theme.colors.error};
   }
 
   :root.dark & {
@@ -390,6 +400,18 @@ const Body = styled.div<{ theme: Theme }>\`
       \`color-mix(in srgb, \${theme.colors.primaryLight} 5%, transparent)\`};
     color: #ffffff;
     \${darkSyntaxHighlight};
+
+    /* The tints sit on a near-black surface in dark mode, so they need a few
+       more points of alpha to read at the same strength as in light. */
+    & .hljs-addition {
+      background: \${({ theme }) =>
+        \`color-mix(in srgb, \${theme.colors.success} 16%, transparent)\`};
+    }
+
+    & .hljs-deletion {
+      background: \${({ theme }) =>
+        \`color-mix(in srgb, \${theme.colors.error} 16%, transparent)\`};
+    }
   }
 \`;
 

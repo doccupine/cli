@@ -50,7 +50,7 @@ class HelloWorld {
 
 ## Highlighting Diffs
 
-Show a visual diff of added or removed lines in your code blocks. Added lines are highlighted in green and removed lines are highlighted in red. Set the language to \`diff\` and prefix each changed line with \`+\` or \`-\`:
+Show a visual diff of added or removed lines in your code blocks. Each changed line becomes a full-width row tinted with your theme's success or error color, with a matching accent bar down the edge of the window. Set the language to \`diff\` and prefix each changed line with \`+\` or \`-\`:
 
 \`\`\`\`text
 \`\`\`diff
