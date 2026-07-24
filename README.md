@@ -146,16 +146,16 @@ Each entry has:
 
 Place these JSON files in your project root (where you run `doccupine`). They are auto-copied to the generated app and watched for changes.
 
-| File              | Purpose                                                                                                   |
-| ----------------- | --------------------------------------------------------------------------------------------------------- |
+| File              | Purpose                                                                                                                                            |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `doccupine.json`  | CLI config (watchDir, outputDir, port). Auto-generated on first run. Paths are stored relative to the project root, so the file is safe to commit. |
-| `config.json`     | Site metadata: `name`, `description`, `icon`, `image`, `url` (public site URL for sitemap/robots)         |
-| `theme.json`      | Theme overrides for [cherry-styled-components](https://github.com/cherry-design-system/styled-components) |
-| `navigation.json` | Manual navigation structure (overrides auto-generated)                                                    |
-| `links.json`      | Static header/footer links                                                                                |
-| `fonts.json`      | Font configuration (Google Fonts or local)                                                                |
-| `sections.json`   | Section definitions for tabbed doc groups (see [Sections](#sections))                                     |
-| `analytics.json`  | Analytics provider configuration (PostHog supported)                                                      |
+| `config.json`     | Site metadata: `name`, `description`, `icon`, `image`, `url` (public site URL for sitemap/robots)                                                  |
+| `theme.json`      | Theme overrides for [cherry-styled-components](https://github.com/cherry-design-system/styled-components)                                          |
+| `navigation.json` | Manual navigation structure (overrides auto-generated)                                                                                             |
+| `links.json`      | Static header/footer links                                                                                                                         |
+| `fonts.json`      | Font configuration (Google Fonts or local)                                                                                                         |
+| `sections.json`   | Section definitions for tabbed doc groups (see [Sections](#sections))                                                                              |
+| `analytics.json`  | Analytics provider configuration (PostHog supported)                                                                                               |
 
 ## Public Directory
 
