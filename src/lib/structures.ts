@@ -124,6 +124,8 @@ import { platformIndexMdxTemplate } from "../templates/mdx/platform/index.mdx.js
 import { platformFileEditorMdxTemplate } from "../templates/mdx/platform/file-editor.mdx.js";
 import { platformPublishingMdxTemplate } from "../templates/mdx/platform/publishing.mdx.js";
 import { platformCreatingAProjectMdxTemplate } from "../templates/mdx/platform/creating-a-project.mdx.js";
+import { platformImportFromGithubMdxTemplate } from "../templates/mdx/platform/import-from-github.mdx.js";
+import { platformSelfUpdatingDocsMdxTemplate } from "../templates/mdx/platform/self-updating-docs.mdx.js";
 import { platformSiteSettingsMdxTemplate } from "../templates/mdx/platform/site-settings.mdx.js";
 import { platformThemeSettingsMdxTemplate } from "../templates/mdx/platform/theme-settings.mdx.js";
 import { platformNavigationSettingsMdxTemplate } from "../templates/mdx/platform/navigation-settings.mdx.js";
@@ -277,6 +279,8 @@ export const startingDocsStructure: Record<string, string> = {
   "platform/file-editor.mdx": platformFileEditorMdxTemplate,
   "platform/publishing.mdx": platformPublishingMdxTemplate,
   "platform/creating-a-project.mdx": platformCreatingAProjectMdxTemplate,
+  "platform/import-from-github.mdx": platformImportFromGithubMdxTemplate,
+  "platform/self-updating-docs.mdx": platformSelfUpdatingDocsMdxTemplate,
   "platform/site-settings.mdx": platformSiteSettingsMdxTemplate,
   "platform/theme-settings.mdx": platformThemeSettingsMdxTemplate,
   "platform/navigation-settings.mdx": platformNavigationSettingsMdxTemplate,

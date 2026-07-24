@@ -1,6 +1,6 @@
 export const platformCreatingAProjectMdxTemplate = `---
 title: "Creating a Project"
-description: "Set up a new documentation project with a managed or user-connected GitHub repository."
+description: "Set up a new documentation project with a managed repository, your own GitHub account, or a repository you already have."
 date: "2026-02-19"
 category: "Getting Started"
 categoryOrder: 0
@@ -13,7 +13,7 @@ From your dashboard, click **Create new project** to get started. You'll name yo
 
 ## Repository modes
 
-Doccupine needs a GitHub repository to store your documentation files. You have two options:
+Doccupine needs a GitHub repository to store your documentation files. You have three options:
 
 ### Managed repository
 
@@ -23,8 +23,18 @@ Choose **Use managed repository** and Doccupine creates and manages the GitHub r
 
 Choose **Connect to GitHub** to link your own GitHub account via OAuth. Doccupine creates the repo in your account, giving you full ownership and direct access to the source files.
 
+### Existing repository
+
+Already have a Doccupine site in a repository? Choose **Connect an existing repository** to wire it up in place. Doccupine doesn't create a new repo or generate any content - it connects the one you have, sets up hosting, and installs the deploy webhook.
+
+Your repo needs a \`doccupine.json\` file. Its location defines the root of the documentation project, so a site living in a subfolder of a larger repository works too - Doccupine builds from that folder.
+
 <Callout type="note">
   You can connect your GitHub account at any time. If you're not sure, start with a managed repository - you can always migrate later.
+</Callout>
+
+<Callout type="info">
+  Want the documentation written for you? [Import from GitHub](/platform/import-from-github) points the AI at any repository and generates a complete site instead of a starter one.
 </Callout>
 
 ## What happens during setup
