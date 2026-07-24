@@ -52,11 +52,12 @@ const StyledUpdateSidebar = styled.div\`
   }
 \`;
 
-const StyledUpdateChildren = styled.div\`
+const StyledUpdateChildren = styled.div<{ theme: Theme }>\`
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  color: \${({ theme }) => theme.colors.gray};
 \`;
 
 interface UpdateProps extends React.HTMLAttributes<HTMLDivElement> {

@@ -11,7 +11,6 @@ const StyledStepsContainer = styled.div<{ theme: Theme }>\`
 \`;
 
 const StyledStep = styled.div<{ theme: Theme }>\`
-  background: \${({ theme }) => theme.colors.light};
   border-radius: \${({ theme }) => theme.spacing.radius.lg};
   padding: 0 0 20px 52px;
   margin: 0;
