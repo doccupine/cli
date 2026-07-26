@@ -1996,9 +1996,7 @@ export default function Page() {
     }
     if (this.openApiWatcher) {
       await this.openApiWatcher.close();
-      console.log(
-        chalk.yellow("👋 Stopped watching for OpenAPI spec changes"),
-      );
+      console.log(chalk.yellow("👋 Stopped watching for OpenAPI spec changes"));
     }
     if (this.publicWatcher) {
       await this.publicWatcher.close();
