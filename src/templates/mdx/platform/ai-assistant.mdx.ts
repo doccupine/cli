@@ -2,9 +2,10 @@ export const platformAiAssistantMdxTemplate = `---
 title: "AI Assistant"
 description: "Configure the built-in AI assistant that ships with every Doccupine documentation site."
 date: "2026-02-19"
-category: "Configuration"
-categoryOrder: 2
-order: 6
+category: "AI & Integrations"
+categoryOrder: 3
+categoryIcon: "sparkles"
+order: 0
 section: "Platform"
 ---
 # AI Assistant

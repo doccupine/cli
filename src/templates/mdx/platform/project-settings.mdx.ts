@@ -3,7 +3,7 @@ title: "Project Settings"
 description: "Rename or delete your documentation project."
 date: "2026-02-19"
 category: "Account"
-categoryOrder: 4
+categoryOrder: 5
 categoryIcon: "user"
 order: 2
 section: "Platform"

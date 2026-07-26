@@ -2,8 +2,8 @@ export const platformAnalyticsMdxTemplate = `---
 title: "Analytics"
 description: "Enable PostHog analytics to track page views on your documentation site."
 date: "2026-02-24"
-category: "Configuration"
-categoryOrder: 2
+category: "AI & Integrations"
+categoryOrder: 3
 order: 3
 section: "Platform"
 ---

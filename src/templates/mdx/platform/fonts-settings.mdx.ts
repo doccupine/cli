@@ -4,7 +4,7 @@ description: "Configure custom typography with Google Fonts or local font files.
 date: "2026-02-19"
 category: "Configuration"
 categoryOrder: 2
-order: 4
+order: 3
 section: "Platform"
 ---
 # Fonts Settings

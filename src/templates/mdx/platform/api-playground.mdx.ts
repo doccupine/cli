@@ -2,9 +2,9 @@ export const platformApiPlaygroundMdxTemplate = `---
 title: "API Playground"
 description: "Register an OpenAPI spec and turn it into an interactive API reference with a live request playground."
 date: "2026-07-26"
-category: "Configuration"
-categoryOrder: 2
-order: 8
+category: "AI & Integrations"
+categoryOrder: 3
+order: 2
 section: "Platform"
 ---
 # API Playground

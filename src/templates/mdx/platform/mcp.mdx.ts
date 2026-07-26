@@ -2,9 +2,9 @@ export const platformMcpMdxTemplate = `---
 title: "MCP"
 description: "Connect external AI apps like Claude and Cursor to your documentation with a Model Context Protocol server, and protect it with an API key."
 date: "2026-07-12"
-category: "Configuration"
-categoryOrder: 2
-order: 7
+category: "AI & Integrations"
+categoryOrder: 3
+order: 1
 section: "Platform"
 ---
 # MCP

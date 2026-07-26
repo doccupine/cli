@@ -3,7 +3,7 @@ title: "Billing"
 description: "Manage your subscription, upgrade plans, and access the billing portal."
 date: "2026-02-19"
 category: "Account"
-categoryOrder: 4
+categoryOrder: 5
 order: 1
 section: "Platform"
 ---

@@ -4,7 +4,7 @@ description: "Add quick-access link buttons to your site's footer for GitHub, Di
 date: "2026-02-19"
 category: "Configuration"
 categoryOrder: 2
-order: 5
+order: 4
 section: "Platform"
 ---
 # Footer Links
