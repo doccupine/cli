@@ -4,7 +4,7 @@ description: "Interactive panels for toggling visibility of content."
 date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
-order: 4
+order: 5
 ---
 # Accordion
 
@@ -42,6 +42,20 @@ You can use the Accordion component directly within your MDX files without any i
   \`\`\`
 </Accordion>
 
+## Open by default
+
+Pass \`defaultOpen\` to have the panel expanded on first render instead of collapsed:
+
+\`\`\`\`html
+<Accordion title="Read me first" defaultOpen>
+  This panel starts expanded.
+</Accordion>
+\`\`\`\`
+
+<Accordion title="Read me first" defaultOpen>
+  This panel starts expanded.
+</Accordion>
+
 ## Properties
 
 <Field value="title" type="string" required>
@@ -50,4 +64,8 @@ You can use the Accordion component directly within your MDX files without any i
 
 <Field value="children" type="node" required>
   The content of the accordion.
+</Field>
+
+<Field value="defaultOpen" type="boolean">
+  Whether the panel is expanded on first render. Defaults to \`false\`.
 </Field>`;

@@ -1,5 +1,11 @@
 export const mermaidViewTemplate = `"use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import styled, { css } from "styled-components";
 import { interactiveStyles, resetButton } from "cherry-styled-components";
 import { Theme } from "@/app/theme";
@@ -10,6 +16,15 @@ const MAX_SCALE = 4;
 const SCALE_STEP = 0.25;
 const PAN_STEP = 48;
 const AUTO_ACTIONS_MIN_HEIGHT = 120;
+
+// Whether the Fullscreen API is available. Read via useSyncExternalStore so it
+// resolves during render (SSR-safe: false on the server) instead of via a
+// synchronous setState inside an effect. The capability never changes, so the
+// subscribe callback is a stable no-op.
+const subscribeFullscreenCapability = () => () => {};
+const getFullscreenCapability = () =>
+  typeof document !== "undefined" && Boolean(document.fullscreenEnabled);
+const getFullscreenCapabilityServer = () => false;
 
 export type MermaidPlacement =
   "top-left" | "top-right" | "bottom-left" | "bottom-right";
@@ -143,7 +158,11 @@ function MermaidView({
   const [autoShow, setAutoShow] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [canFullscreen, setCanFullscreen] = useState(false);
+  const canFullscreen = useSyncExternalStore(
+    subscribeFullscreenCapability,
+    getFullscreenCapability,
+    getFullscreenCapabilityServer,
+  );
   const viewportRef = useRef<HTMLDivElement>(null);
   const figureRef = useRef<HTMLElement>(null);
   const dragStart = useRef<{
@@ -170,7 +189,6 @@ function MermaidView({
   }, [actions]);
 
   useEffect(() => {
-    setCanFullscreen(Boolean(document.fullscreenEnabled));
     const onChange = () =>
       setIsFullscreen(document.fullscreenElement === figureRef.current);
     document.addEventListener("fullscreenchange", onChange);

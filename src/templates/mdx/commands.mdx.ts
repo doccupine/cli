@@ -4,7 +4,7 @@ description: "In this page, you can find all the commands available in Doccupine
 date: "2026-02-19"
 category: "Getting Started"
 categoryOrder: 0
-order: 1
+order: 2
 ---
 # Commands
 
@@ -20,6 +20,7 @@ npx doccupine
 
 Once you run the command, Doccupine will ask you to select a directory to store your MDX files. Choose the directory where you want to create your documentation files.
 After selecting the directory, Doccupine will ask you to enter the name of the directory for the generated website. Enter the name of the directory where you want to create your website.
+Finally, Doccupine will ask for an optional path to an OpenAPI document. Leave it blank to skip, or point it at a \`.yaml\`, \`.yml\`, or \`.json\` spec to generate an interactive [API Playground](/api-playground) from your API.
 
 This will start the development server on port 3000. Open your browser and navigate to http://localhost:3000 to view your documentation.
 
@@ -29,7 +30,7 @@ This will start the development server on port 3000. Open your browser and navig
 | --------------- | -------------------------------------------------------------------- |
 | \`--port <port>\` | Port for the dev server (default: \`3000\`). Auto-increments if taken. |
 | \`--verbose\`     | Show all Next.js output including compilation details.               |
-| \`--reset\`       | Re-prompt for watch/output directories.                              |
+| \`--reset\`       | Re-prompt for watch/output directories and the OpenAPI spec path.    |
 
 ## Verbose mode
 

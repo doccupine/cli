@@ -10,6 +10,7 @@ import {
   StyledSidebarListItem,
   StyledStrong,
   StyledSidebarListItemLink,
+  StyledSidebarMethodTag,
   StyledSidebarGroupButton,
   StyledSidebarGroupRow,
   StyledSidebarGroupLink,
@@ -28,6 +29,7 @@ type NavItemLink = {
   slug?: string;
   title: string;
   icon?: string;
+  httpMethod?: string;
   links?: NavItemLink[];
 };
 
@@ -85,6 +87,14 @@ function SidebarNavLink({
           onClick={onNavigate}
           style={indent}
         >
+          {link.httpMethod && (
+            <StyledSidebarMethodTag
+              $method={link.httpMethod}
+              $isActive={isActive}
+            >
+              {link.httpMethod}
+            </StyledSidebarMethodTag>
+          )}
           {link.icon && <Icon name={link.icon} size={16} />}
           {link.title}
         </StyledSidebarListItemLink>

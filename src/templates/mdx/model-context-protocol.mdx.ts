@@ -2,9 +2,9 @@ export const mcpMdxTemplate = `---
 title: "Model Context Protocol"
 description: "Connect your Doccupine documentation to AI tools with an MCP server for enhanced AI-powered documentation search."
 date: "2026-02-19"
-category: "Configuration"
+category: "AI & Integrations"
 categoryOrder: 3
-order: 9
+order: 2
 ---
 # Model Context Protocol
 

@@ -3,8 +3,8 @@ title: "Media and assets"
 description: "Serve static files like images, favicons, fonts, and Open Graph previews from the public directory."
 date: "2026-02-19"
 category: "Configuration"
-categoryOrder: 3
-order: 6
+categoryOrder: 2
+order: 7
 ---
 # Media and assets
 

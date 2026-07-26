@@ -11,12 +11,17 @@ import { useMDXComponents } from "@/components/MDXComponents";
 import { createMermaidPre } from "@/components/MermaidPre";
 import { DocsSideBar } from "@/components/DocsSideBar";
 import { ActionBar } from "@/components/layout/ActionBar";
+import { ApiPlaygroundDemo } from "@/components/layout/ApiPlaygroundDemo";
 import { createSlugger } from "@/components/layout/Slug";
 import { rehypeCodeMeta } from "@/utils/rehypeCodeMeta";
 
 interface DocsProps {
   content: string;
   sourcePath?: string;
+  // Extra content rendered inside the markdown column, after the MDX body.
+  // Used to place generated widgets (e.g. the API playground) inside the docs
+  // content area rather than outside its layout.
+  children?: React.ReactNode;
 }
 
 interface Heading {
@@ -80,9 +85,12 @@ function MissingComponent({
   );
 }
 
-function Docs({ content, sourcePath }: DocsProps) {
+function Docs({ content, sourcePath, children }: DocsProps) {
   const headings = extractHeadings(content);
-  const components = useMDXComponents({ pre: createMermaidPre(sourcePath) });
+  const components = useMDXComponents({
+    pre: createMermaidPre(sourcePath),
+    ApiPlaygroundDemo,
+  });
 
   const knownNames = Object.keys(components);
   const usedNames = extractComponentNames(content);
@@ -104,6 +112,7 @@ function Docs({ content, sourcePath }: DocsProps) {
         <ActionBar content={content}>
           <Flex $gap={20}>
             <StyledMarkdownContainer>
+              {children}
               {content && (
                 <MDXRemote
                   source={content}

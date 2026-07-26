@@ -2,9 +2,9 @@ export const authenticationMdxTemplate = `---
 title: "Authentication"
 description: "Password protect your documentation site with a single environment variable that gates pages, content APIs, and search crawlers behind a shared password."
 date: "2026-07-01"
-category: "Configuration"
-categoryOrder: 3
-order: 12
+category: "Deployment"
+categoryOrder: 4
+order: 2
 ---
 # Authentication
 

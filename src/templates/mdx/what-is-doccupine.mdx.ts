@@ -4,7 +4,7 @@ description: "Doccupine is a CLI that turns a directory of MDX files into a comp
 date: "2026-02-19"
 category: "Getting Started"
 categoryOrder: 0
-order: 2
+order: 1
 ---
 # What is Doccupine
 

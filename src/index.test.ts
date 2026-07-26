@@ -9,6 +9,7 @@ import { fileURLToPath } from "url";
 import {
   generateSlug,
   escapeTemplateContent,
+  toJsStringLiteral,
   getFullSlug,
   isProcessEntrypoint,
 } from "./index.js";
@@ -105,6 +106,29 @@ describe("escapeTemplateContent", () => {
 
   it("handles empty string", () => {
     expect(escapeTemplateContent("")).toBe("");
+  });
+});
+
+describe("toJsStringLiteral", () => {
+  it("uses double quotes for plain strings", () => {
+    expect(toJsStringLiteral("plain text")).toBe('"plain text"');
+  });
+
+  it("switches to single quotes for JSON so inner double quotes need no escaping", () => {
+    expect(toJsStringLiteral('{"a":"b"}')).toBe(`'{"a":"b"}'`);
+  });
+
+  it("escapes backslashes", () => {
+    expect(toJsStringLiteral("a\\b")).toBe('"a\\\\b"');
+  });
+
+  it("escapes the chosen quote when it appears in single-quote mode", () => {
+    // 4 double quotes vs 1 single -> single-quoted; the inner ' is escaped
+    expect(toJsStringLiteral(`{"x":"y'z"}`)).toBe(`'{"x":"y\\'z"}'`);
+  });
+
+  it("keeps double quotes (leaving single quotes unescaped) when singles are not fewer", () => {
+    expect(toJsStringLiteral("it's a 'test'")).toBe(`"it's a 'test'"`);
   });
 });
 

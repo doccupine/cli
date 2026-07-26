@@ -10,6 +10,7 @@ export const orderNavItemsTemplate = `export interface PagesProps {
   section?: string;
   navIcon?: string;
   categoryIcon?: string;
+  httpMethod?: string;
 }
 
 interface AccProps {
@@ -22,6 +23,7 @@ interface AccProps {
       title: string;
       order: number;
       icon?: string;
+      httpMethod?: string;
     }[];
   };
 }
@@ -48,6 +50,7 @@ function transformPagesToGroupedStructure(pages: PagesProps[]) {
       title: page.title,
       order: page.order || 0,
       icon: page.navIcon,
+      httpMethod: page.httpMethod,
     });
 
     return acc;

@@ -4,7 +4,7 @@ description: "Make your content stand out by using callouts for extra emphasis."
 date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
-order: 8
+order: 4
 ---
 # Callouts
 
