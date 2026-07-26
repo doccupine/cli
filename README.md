@@ -9,6 +9,7 @@
 - **Live preview** - watches your MDX files and regenerates pages on every save
 - **Auto-generated navigation** - sidebar built from frontmatter (`category`, `order`)
 - **Sections** - organize docs into tabbed sections via frontmatter or `sections.json`
+- **API reference** - point at an OpenAPI spec to generate interactive endpoint pages with a live playground
 - **Theming** - dark/light mode with customizable theme via `theme.json`
 - **AI chat assistant** - built-in RAG-powered chat (OpenAI, Anthropic, or Google)
 - **MCP server** - exposes `search_docs`, `get_doc`, and `list_docs` tools for AI agents
@@ -29,6 +30,7 @@ Doccupine will prompt you for:
 
 1. A directory to store your MDX files (default: `docs`)
 2. An output directory for the generated Next.js app (default: `nextjs-app`)
+3. An optional path to an OpenAPI spec for an API reference (blank to skip)
 
 It then scaffolds the app, installs dependencies, and starts the dev server. Open http://localhost:3000 to view your docs.
 
@@ -85,6 +87,7 @@ date: "2025-01-01" # Page date metadata
 updated: "2025-02-01" # Last-modified date (JSON-LD dateModified)
 section: "API Reference" # Section this page belongs to
 sectionOrder: 1 # Sort order for the section in the tab bar
+openapi: "GET /users/{id}" # Embed an API playground for this endpoint (see API Reference)
 ---
 ```
 
@@ -142,13 +145,45 @@ Each entry has:
 ]
 ```
 
+## API Reference
+
+Point Doccupine at an OpenAPI document (`.json`, `.yaml`, or `.yml`, OpenAPI 3.0/3.1) and it generates an interactive API reference: one page per operation, each with a live playground for sending requests. Set the `openapi` field in `doccupine.json`:
+
+```json
+{
+  "openapi": "openapi.json"
+}
+```
+
+The endpoint pages are grouped into their own "API Reference" tab, and your hand-written docs move under a "Documentation" tab. The spec file is watched, so edits regenerate the reference live.
+
+You can pass multiple specs as an array of paths, or name them explicitly:
+
+```json
+{
+  "openapi": [
+    { "name": "Public API", "file": "openapi.json" },
+    { "name": "Admin API", "file": "admin-openapi.yaml" }
+  ]
+}
+```
+
+To embed a single endpoint's playground inline within a hand-written page, add an `openapi` frontmatter field set to `"METHOD /path"` (or the operation's `operationId`):
+
+```yaml
+---
+title: "Fetch a User"
+openapi: "GET /users/{id}"
+---
+```
+
 ## Configuration Files
 
 Place these JSON files in your project root (where you run `doccupine`). They are auto-copied to the generated app and watched for changes.
 
 | File              | Purpose                                                                                                                                            |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `doccupine.json`  | CLI config (watchDir, outputDir, port). Auto-generated on first run. Paths are stored relative to the project root, so the file is safe to commit. |
+| `doccupine.json`  | CLI config (`watchDir`, `outputDir`, `port`, `packageManager`, `openapi`). Auto-generated on first run. Paths are stored relative to the project root, so the file is safe to commit. |
 | `config.json`     | Site metadata: `name`, `description`, `icon`, `image`, `url` (public site URL for sitemap/robots)                                                  |
 | `theme.json`      | Theme overrides for [cherry-styled-components](https://github.com/cherry-design-system/styled-components)                                          |
 | `navigation.json` | Manual navigation structure (overrides auto-generated)                                                                                             |
@@ -211,7 +246,11 @@ If `LLM_PROVIDER` is not set, the chat component is hidden automatically.
 LLM_CHAT_MODEL=gpt-4.1-nano                 # Override the default chat model
 LLM_EMBEDDING_MODEL=text-embedding-3-small  # Override the default embedding model
 LLM_TEMPERATURE=0                           # Set temperature (0-1, default: 0)
+LLM_EMBEDDING_DIMS=512                       # Dimensions for the prebuilt search index (default: 512)
+RAG_RUNTIME_EMBED_MAX_CHUNKS=400             # Max chunks embedded on demand in production (default: 400; 0 requires a prebuilt index)
 ```
+
+`LLM_EMBEDDING_DIMS` Matryoshka-truncates document vectors so the prebuilt search index stays small; lower values shrink the index at a slight cost to recall. `RAG_RUNTIME_EMBED_MAX_CHUNKS` caps how many chunks the chat will embed on demand in production before requiring a prebuilt index (it's unlimited under `next dev`).
 
 Default models per provider:
 
