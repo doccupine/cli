@@ -1,15 +1,15 @@
-export const platformExternalLinksMdxTemplate = `---
-title: "External Links"
+export const platformFooterLinksMdxTemplate = `---
+title: "Footer Links"
 description: "Add quick-access link buttons to your site's footer for GitHub, Discord, and other external resources."
 date: "2026-02-19"
 category: "Configuration"
 categoryOrder: 2
-order: 5
+order: 4
 section: "Platform"
 ---
-# External Links
+# Footer Links
 
-The External Links settings page lets you add external link buttons to your documentation site's footer. These provide quick access to your project's GitHub repository, Discord server, social profiles, and other resources.
+The Footer Links settings page lets you add link buttons to your documentation site's footer. These provide quick access to your project's GitHub repository, Discord server, social profiles, and other resources.
 
 ## Adding a link
 

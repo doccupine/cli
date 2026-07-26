@@ -4,7 +4,7 @@ description: "Give images, videos, and diagrams a bordered container with an opt
 date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
-order: 17
+order: 11
 ---
 # Frames
 

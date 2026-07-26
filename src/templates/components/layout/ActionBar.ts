@@ -113,26 +113,33 @@ const StyledToggle = styled.button<{ theme: Theme; $isActive?: boolean }>\`
   }
 \`;
 
+// The raw-content view renders a full-viewport textarea. That rule is scoped to
+// the raw view (\`$raw\`) so it never leaks into textareas rendered inside page
+// content - e.g. the API playground's request-body editor, which sits inside
+// this same ActionBar in the normal (view) mode.
 const StyledContent = styled.div<{
   theme: Theme;
   $hasSectionBar?: boolean;
+  $raw?: boolean;
 }>\`
   padding-top: 20px;
   transition: all 0.3s ease;
 
-  & textarea {
-    max-width: 640px;
-    margin: auto;
-    width: 100%;
-    height: 100%;
-    min-height: calc(
-      100vh - \${({ $hasSectionBar }) => ($hasSectionBar ? 202 : 160)}px
-    );
+  \${({ $raw, $hasSectionBar }) =>
+    $raw &&
+    css\`
+      & textarea {
+        max-width: 640px;
+        margin: auto;
+        width: 100%;
+        height: 100%;
+        min-height: calc(100vh - \${$hasSectionBar ? 202 : 160}px);
 
-    \${mq("lg")} {
-      min-height: calc(100vh - 159px);
-    }
-  }
+        \${mq("lg")} {
+          min-height: calc(100vh - 159px);
+        }
+      }
+    \`}
 \`;
 
 function ActionBar({ children, content }: ActionBarProps) {
@@ -181,7 +188,7 @@ function ActionBar({ children, content }: ActionBarProps) {
         <StyledContent $hasSectionBar={hasSectionBar}>{children}</StyledContent>
       )}
       {!isView && (
-        <StyledContent $hasSectionBar={hasSectionBar}>
+        <StyledContent $hasSectionBar={hasSectionBar} $raw>
           <Textarea defaultValue={content} $fullWidth />
         </StyledContent>
       )}

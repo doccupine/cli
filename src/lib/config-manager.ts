@@ -3,7 +3,77 @@ import path from "path";
 import chalk from "chalk";
 import prompts from "prompts";
 
-import type { DoccupineConfig } from "./types.js";
+import type { DoccupineConfig, NormalizedOpenApiSpec } from "./types.js";
+
+/** Strips a `.json`/`.yaml`/`.yml` extension to derive a spec's default name. */
+function basenameWithoutExt(file: string): string {
+  return path.basename(file).replace(/\.(json|ya?ml)$/i, "");
+}
+
+/**
+ * Collapses every accepted `openapi` config shape (a single path, a list of
+ * paths, or named-spec objects) into a uniform `NormalizedOpenApiSpec[]`. Names
+ * default to the file basename and are de-duplicated with a numeric suffix so
+ * two specs never share a route namespace.
+ */
+export function normalizeOpenApiConfig(
+  openapi: DoccupineConfig["openapi"],
+): NormalizedOpenApiSpec[] {
+  if (!openapi) return [];
+  const entries = Array.isArray(openapi) ? openapi : [openapi];
+  const used = new Set<string>();
+  const specs: NormalizedOpenApiSpec[] = [];
+
+  for (const entry of entries) {
+    let file: string | undefined;
+    let name: string | undefined;
+    if (typeof entry === "string") {
+      file = entry;
+    } else if (
+      entry &&
+      typeof entry === "object" &&
+      typeof entry.file === "string"
+    ) {
+      file = entry.file;
+      name = entry.name;
+    }
+    if (!file) continue;
+
+    const desired = name?.trim() || basenameWithoutExt(file) || "api";
+    let unique = desired;
+    let n = 2;
+    while (used.has(unique)) unique = `${desired}-${n++}`;
+    used.add(unique);
+    specs.push({ name: unique, file });
+  }
+  return specs;
+}
+
+/** Rewrites the spec file path(s) inside an `openapi` config to be portable. */
+function rewriteOpenApiPaths(
+  openapi: NonNullable<DoccupineConfig["openapi"]>,
+  rootDir: string,
+): { openapi: DoccupineConfig["openapi"]; changed: boolean } {
+  if (typeof openapi === "string") {
+    const next = toProjectRelativePath(openapi, rootDir);
+    return { openapi: next, changed: next !== openapi };
+  }
+  let changed = false;
+  const next = openapi.map((entry) => {
+    if (typeof entry === "string") {
+      const rel = toProjectRelativePath(entry, rootDir);
+      if (rel !== entry) changed = true;
+      return rel;
+    }
+    if (entry && typeof entry === "object" && typeof entry.file === "string") {
+      const rel = toProjectRelativePath(entry.file, rootDir);
+      if (rel !== entry.file) changed = true;
+      return { ...entry, file: rel };
+    }
+    return entry;
+  });
+  return { openapi: next as DoccupineConfig["openapi"], changed };
+}
 
 /**
  * Rewrites a path as project-relative so `doccupine.json` stays portable
@@ -48,10 +118,24 @@ export function normalizeConfigPaths(
 ): { config: DoccupineConfig; changed: boolean } {
   const watchDir = toProjectRelativePath(config.watchDir, rootDir);
   const outputDir = toProjectRelativePath(config.outputDir, rootDir);
-  const changed =
-    watchDir !== config.watchDir || outputDir !== config.outputDir;
 
-  return { config: { ...config, watchDir, outputDir }, changed };
+  let openapi = config.openapi;
+  let openapiChanged = false;
+  if (openapi !== undefined) {
+    const rewritten = rewriteOpenApiPaths(openapi, rootDir);
+    openapi = rewritten.openapi;
+    openapiChanged = rewritten.changed;
+  }
+
+  const changed =
+    watchDir !== config.watchDir ||
+    outputDir !== config.outputDir ||
+    openapiChanged;
+
+  const next: DoccupineConfig = { ...config, watchDir, outputDir };
+  if (openapi !== undefined) next.openapi = openapi;
+
+  return { config: next, changed };
 }
 
 export class ConfigManager {
@@ -95,7 +179,11 @@ export class ConfigManager {
   async promptForConfig(
     existingConfig?: Partial<DoccupineConfig>,
   ): Promise<DoccupineConfig> {
-    type PromptResult = { watchDir: string; outputDir: string };
+    type PromptResult = {
+      watchDir: string;
+      outputDir: string;
+      openapi: string;
+    };
 
     const questions: prompts.PromptObject[] = [
       {
@@ -110,9 +198,21 @@ export class ConfigManager {
         message: "Enter output directory for Next.js app:",
         initial: existingConfig?.outputDir || "nextjs-app",
       },
+      {
+        type: "text",
+        name: "openapi",
+        message:
+          "Path to an OpenAPI spec for an API reference (optional, blank to skip):",
+        initial:
+          typeof existingConfig?.openapi === "string"
+            ? existingConfig.openapi
+            : "",
+      },
     ];
 
-    const { watchDir, outputDir } = (await prompts(questions)) as PromptResult;
+    const { watchDir, outputDir, openapi } = (await prompts(
+      questions,
+    )) as PromptResult;
 
     if (!watchDir || !outputDir) {
       console.log(chalk.yellow("\n⚠️ Setup cancelled."));
@@ -121,11 +221,22 @@ export class ConfigManager {
 
     // Resolve first so "./docs" and "docs/" collapse to the same value, then
     // store project-relative for portability.
-    return {
+    const config: DoccupineConfig = {
       watchDir: toProjectRelativePath(path.resolve(process.cwd(), watchDir)),
       outputDir: toProjectRelativePath(path.resolve(process.cwd(), outputDir)),
       port: existingConfig?.port || "3000",
     };
+
+    // Only attach `openapi` when a path was entered; otherwise preserve any
+    // existing value (including non-string, multi-spec forms) untouched.
+    const openapiValue = openapi?.trim();
+    if (openapiValue) {
+      config.openapi = openapiValue;
+    } else if (existingConfig?.openapi !== undefined) {
+      config.openapi = existingConfig.openapi;
+    }
+
+    return config;
   }
 
   async getConfig(

@@ -4,7 +4,7 @@ description: "Cards act as visual containers for your content, giving you flexib
 date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
-order: 6
+order: 8
 ---
 # Cards
 

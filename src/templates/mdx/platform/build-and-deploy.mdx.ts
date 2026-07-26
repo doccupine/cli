@@ -3,7 +3,7 @@ title: "Build & Deploy"
 description: "Monitor your documentation site's build status and deployment history."
 date: "2026-02-19"
 category: "Infrastructure"
-categoryOrder: 3
+categoryOrder: 4
 categoryIcon: "server"
 order: 1
 section: "Platform"

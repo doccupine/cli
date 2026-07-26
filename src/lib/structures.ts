@@ -80,15 +80,25 @@ import { posthogServerTemplate } from "../templates/lib/posthog.js";
 import { siteGateTemplate } from "../templates/lib/siteGate.js";
 
 import { styledDTemplate } from "../templates/types/styled.js";
+import { openapiTypesTemplate } from "../templates/types/openapi.js";
 
 import { orderNavItemsTemplate } from "../templates/utils/orderNavItems.js";
 import { rateLimitTemplate } from "../templates/utils/rateLimit.js";
 import { brandingTemplate } from "../templates/utils/branding.js";
 import { configTemplate } from "../templates/utils/config.js";
+import { playgroundAllowlistTemplate } from "../templates/utils/playgroundAllowlist.js";
+import { ssrfGuardTemplate } from "../templates/utils/ssrfGuard.js";
+import { apiSnippetsTemplate } from "../templates/utils/apiSnippets.js";
+import { playgroundRoutesTemplate } from "../templates/app/api/playground/route.js";
+import { playgroundAllowlistStubTemplate } from "../templates/services/openapi/playgroundAllowlistStub.js";
+import { copyButtonTemplate } from "../templates/components/layout/CopyButton.js";
+import { apiPlaygroundTemplate } from "../templates/components/layout/ApiPlayground.js";
+import { apiPlaygroundDemoTemplate } from "../templates/components/layout/ApiPlaygroundDemo.js";
 
 import { accordionMdxTemplate } from "../templates/mdx/accordion.mdx.js";
 import { aiAssistantMdxTemplate } from "../templates/mdx/ai-assistant.mdx.js";
 import { analyticsMdxTemplate } from "../templates/mdx/analytics.mdx.js";
+import { apiPlaygroundMdxTemplate } from "../templates/mdx/api-playground.mdx.js";
 import { authenticationMdxTemplate } from "../templates/mdx/authentication.mdx.js";
 import { buttonsMdxTemplate } from "../templates/mdx/buttons.mdx.js";
 import { calloutsMdxTemplate } from "../templates/mdx/callouts.mdx.js";
@@ -130,8 +140,9 @@ import { platformSiteSettingsMdxTemplate } from "../templates/mdx/platform/site-
 import { platformThemeSettingsMdxTemplate } from "../templates/mdx/platform/theme-settings.mdx.js";
 import { platformNavigationSettingsMdxTemplate } from "../templates/mdx/platform/navigation-settings.mdx.js";
 import { platformFontsSettingsMdxTemplate } from "../templates/mdx/platform/fonts-settings.mdx.js";
-import { platformExternalLinksMdxTemplate } from "../templates/mdx/platform/external-links.mdx.js";
+import { platformFooterLinksMdxTemplate } from "../templates/mdx/platform/footer-links.mdx.js";
 import { platformAnalyticsMdxTemplate } from "../templates/mdx/platform/analytics.mdx.js";
+import { platformApiPlaygroundMdxTemplate } from "../templates/mdx/platform/api-playground.mdx.js";
 import { platformAiAssistantMdxTemplate } from "../templates/mdx/platform/ai-assistant.mdx.js";
 import { platformMcpMdxTemplate } from "../templates/mdx/platform/mcp.mdx.js";
 import { platformCustomDomainsMdxTemplate } from "../templates/mdx/platform/custom-domains.mdx.js";
@@ -157,6 +168,7 @@ export const appStructure: Record<string, string> = {
   "app/api/mcp/route.ts": mcpRoutesTemplate,
   "app/api/rag/route.ts": ragRoutesTemplate,
   "app/api/search/route.ts": searchRoutesTemplate,
+  "app/api/playground/route.ts": playgroundRoutesTemplate,
 
   "services/search.ts": searchServiceTemplate,
   "services/mcp/index.ts": mcpIndexTemplate,
@@ -169,10 +181,12 @@ export const appStructure: Record<string, string> = {
   "services/llm/factory.ts": llmFactoryTemplate,
   "services/llm/index.ts": llmIndexTemplate,
   "services/llm/types.ts": llmTypesTemplate,
+  "services/openapi/playground-allowlist.json": playgroundAllowlistStubTemplate,
 
   "scripts/build-docs-index.mts": buildDocsIndexScriptTemplate,
 
   "types/styled.d.ts": styledDTemplate,
+  "types/openapi.ts": openapiTypesTemplate,
 
   "lib/posthog.ts": posthogServerTemplate,
   "lib/siteGate.ts": siteGateTemplate,
@@ -184,6 +198,9 @@ export const appStructure: Record<string, string> = {
   "utils/rateLimit.ts": rateLimitTemplate,
   "utils/rehypeCodeMeta.ts": rehypeCodeMetaTemplate,
   "utils/config.ts": configTemplate,
+  "utils/playgroundAllowlist.ts": playgroundAllowlistTemplate,
+  "utils/ssrfGuard.ts": ssrfGuardTemplate,
+  "utils/apiSnippets.ts": apiSnippetsTemplate,
 
   "components/Chat.tsx": chatTemplate,
   "components/LockBodyScroll.ts": lockBodyScrollTemplate,
@@ -201,12 +218,15 @@ export const appStructure: Record<string, string> = {
 
   "components/layout/Accordion.tsx": accordionTemplate,
   "components/layout/ActionBar.tsx": actionBarTemplate,
+  "components/layout/ApiPlayground.tsx": apiPlaygroundTemplate,
+  "components/layout/ApiPlaygroundDemo.tsx": apiPlaygroundDemoTemplate,
   "components/layout/Button.tsx": buttonTemplate,
   "components/layout/Callout.tsx": calloutTemplate,
   "components/layout/Card.tsx": cardTemplate,
   "components/layout/CherryThemeProvider.tsx": cherryThemeProviderTemplate,
   "components/layout/ColorSwatch.tsx": colorSwatchTemplate,
   "components/layout/Code.tsx": codeTemplate,
+  "components/layout/CopyButton.tsx": copyButtonTemplate,
   "components/layout/Columns.tsx": columnsTemplate,
   "components/layout/DemoTheme.tsx": demoThemeTemplate,
   "components/layout/DocsComponents.tsx": docsComponentsTemplate,
@@ -245,6 +265,7 @@ export const startingDocsStructure: Record<string, string> = {
   "accordion.mdx": accordionMdxTemplate,
   "ai-assistant.mdx": aiAssistantMdxTemplate,
   "analytics.mdx": analyticsMdxTemplate,
+  "api-playground.mdx": apiPlaygroundMdxTemplate,
   "authentication.mdx": authenticationMdxTemplate,
   "buttons.mdx": buttonsMdxTemplate,
   "callouts.mdx": calloutsMdxTemplate,
@@ -285,10 +306,11 @@ export const startingDocsStructure: Record<string, string> = {
   "platform/theme-settings.mdx": platformThemeSettingsMdxTemplate,
   "platform/navigation-settings.mdx": platformNavigationSettingsMdxTemplate,
   "platform/fonts-settings.mdx": platformFontsSettingsMdxTemplate,
-  "platform/external-links.mdx": platformExternalLinksMdxTemplate,
+  "platform/footer-links.mdx": platformFooterLinksMdxTemplate,
   "platform/analytics.mdx": platformAnalyticsMdxTemplate,
   "platform/ai-assistant.mdx": platformAiAssistantMdxTemplate,
   "platform/mcp.mdx": platformMcpMdxTemplate,
+  "platform/api-playground.mdx": platformApiPlaygroundMdxTemplate,
   "platform/custom-domains.mdx": platformCustomDomainsMdxTemplate,
   "platform/build-and-deploy.mdx": platformBuildAndDeployMdxTemplate,
   "platform/team-members.mdx": platformTeamMembersMdxTemplate,

@@ -3,7 +3,7 @@ title: "Navigation"
 description: "Organize and structure your navigation."
 date: "2026-02-19"
 category: "Configuration"
-categoryOrder: 3
+categoryOrder: 2
 order: 2
 ---
 # Navigation
@@ -30,7 +30,7 @@ title: "Navigation"
 description: "Organize and structure your navigation."
 date: "2025-01-15"
 category: "Configuration"
-categoryOrder: 3
+categoryOrder: 2
 order: 2
 ---
 \`\`\`
@@ -51,8 +51,8 @@ The simplest format is an array of categories. When using [sections](/sections),
     "label": "Getting Started",
     "links": [
       { "slug": "", "title": "Introduction" },
-      { "slug": "commands", "title": "Commands" },
-      { "slug": "what-is-doccupine", "title": "What is Doccupine" }
+      { "slug": "what-is-doccupine", "title": "What is Doccupine" },
+      { "slug": "commands", "title": "Commands" }
     ]
   },
   {
@@ -62,20 +62,21 @@ The simplest format is an array of categories. When using [sections](/sections),
       { "slug": "headers-and-text", "title": "Headers and Text" },
       { "slug": "lists-and-tables", "title": "Lists and tables" },
       { "slug": "code", "title": "Code" },
+      { "slug": "callouts", "title": "Callouts" },
       { "slug": "accordion", "title": "Accordion" },
       { "slug": "tabs", "title": "Tabs" },
+      { "slug": "steps", "title": "Steps" },
       { "slug": "cards", "title": "Cards" },
       { "slug": "buttons", "title": "Buttons" },
-      { "slug": "callouts", "title": "Callouts" },
       { "slug": "image-and-embeds", "title": "Images and embeds" },
+      { "slug": "frames", "title": "Frames" },
       { "slug": "icons", "title": "Icons" },
-      { "slug": "fields", "title": "Fields" },
-      { "slug": "update", "title": "Update" },
       { "slug": "columns", "title": "Columns" },
-      { "slug": "steps", "title": "Steps" },
+      { "slug": "fields", "title": "Fields" },
+      { "slug": "api-playground", "title": "API Playground" },
+      { "slug": "update", "title": "Update" },
       { "slug": "color-swatches", "title": "Color Swatches" },
-      { "slug": "mermaid", "title": "Mermaid" },
-      { "slug": "frames", "title": "Frames" }
+      { "slug": "mermaid", "title": "Mermaid" }
     ]
   },
   {
@@ -86,11 +87,21 @@ The simplest format is an array of categories. When using [sections](/sections),
       { "slug": "sections", "title": "Sections" },
       { "slug": "footer-links", "title": "Footer Links" },
       { "slug": "theme", "title": "Theme" },
-      { "slug": "media-and-assets", "title": "Media and assets" },
       { "slug": "fonts", "title": "Fonts" },
+      { "slug": "media-and-assets", "title": "Media and assets" }
+    ]
+  },
+  {
+    "label": "AI & Integrations",
+    "links": [
       { "slug": "ai-assistant", "title": "AI Assistant" },
       { "slug": "model-context-protocol", "title": "Model Context Protocol" },
-      { "slug": "analytics", "title": "Analytics" },
+      { "slug": "analytics", "title": "Analytics" }
+    ]
+  },
+  {
+    "label": "Deployment",
+    "links": [
       { "slug": "deployment-and-hosting", "title": "Deployment & Hosting" },
       { "slug": "authentication", "title": "Authentication" }
     ]

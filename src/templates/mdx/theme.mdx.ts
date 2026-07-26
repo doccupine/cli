@@ -3,7 +3,7 @@ title: "Theme"
 description: "Customize the documentation UI colors with a theme.json file."
 date: "2026-02-19"
 category: "Configuration"
-categoryOrder: 3
+categoryOrder: 2
 order: 5
 ---
 # Theme

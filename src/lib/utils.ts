@@ -123,3 +123,18 @@ export function escapeTemplateContent(content: string): string {
     .replace(/`/g, "\\`")
     .replace(/\$\{/g, "\\${");
 }
+
+/**
+ * Renders `value` as a JS string literal using the same quote Prettier would
+ * choose: double by default, switching to single when that needs fewer escapes
+ * (JSON text, for instance, is full of `"`). Backslashes and the chosen quote
+ * are escaped. Lets generated code embed a string in a form Prettier leaves
+ * untouched, so emitted files stay format-stable without running a formatter.
+ */
+export function toJsStringLiteral(value: string): string {
+  const doubleQuotes = (value.match(/"/g) || []).length;
+  const singleQuotes = (value.match(/'/g) || []).length;
+  const quote = singleQuotes < doubleQuotes ? "'" : '"';
+  const escaped = value.replace(/\\/g, "\\\\").split(quote).join(`\\${quote}`);
+  return `${quote}${escaped}${quote}`;
+}

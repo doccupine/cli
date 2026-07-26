@@ -2,9 +2,10 @@ export const deploymentAndHostingMdxTemplate = `---
 title: "Deployment & Hosting"
 description: "Deploy your documentation site with the Doccupine Platform or self-host on any platform that supports Next.js."
 date: "2026-02-19"
-category: "Configuration"
-categoryOrder: 3
-order: 11
+category: "Deployment"
+categoryOrder: 4
+categoryIcon: "cloud-upload"
+order: 1
 ---
 # Deployment & Hosting
 

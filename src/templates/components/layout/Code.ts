@@ -139,20 +139,14 @@ const TabList = styled.div<{ theme: Theme }>\`
   min-width: 0;
   overflow-x: auto;
   \${thinScrollbar};
-  margin-left: -6px;
+  padding: 2px;
+  margin-left: -8px;
 \`;
 
-/* Individual tab button. The active tab reads as part of the window: a
-   theme.colors.light fill that echoes the code body, with a soft grayLight
-   border. Inactive tabs are muted (grayDark) and transparent. resetButton
-   strips native styling; focus-visible draws an inset brand primary ring on a
-   pseudo-element so the scrolling TabList can't clip it. Colors come from theme
-   tokens that swap for dark mode via the theme prop, so no :root.dark &
-   override is needed. */
 const CodeTab = styled.button<{ theme: Theme; $active: boolean }>\`
   \${resetButton}
+  \${interactiveStyles}
   flex: 0 0 auto;
-  position: relative;
   font-family: \${({ theme }) => theme.fonts.mono};
   font-size: 12px;
   line-height: 1;
@@ -160,10 +154,7 @@ const CodeTab = styled.button<{ theme: Theme; $active: boolean }>\`
   border-radius: \${({ theme }) => theme.spacing.radius.xs};
   cursor: pointer;
   white-space: nowrap;
-  transition:
-    color 0.15s ease,
-    background 0.15s ease,
-    border-color 0.15s ease;
+  transition: all 0.3s ease;
   border: solid 1px
     \${({ theme, $active }) =>
       $active ? theme.colors.grayLight : "transparent"};
@@ -171,6 +162,7 @@ const CodeTab = styled.button<{ theme: Theme; $active: boolean }>\`
     $active ? theme.colors.light : "transparent"};
   color: \${({ theme, $active }) =>
     $active ? theme.colors.dark : theme.colors.grayDark};
+  box-shadow: 0 0 0 0px \${({ theme }) => theme.colors.primary};
 
   &:hover {
     color: \${({ theme }) => theme.colors.dark};
@@ -180,17 +172,13 @@ const CodeTab = styled.button<{ theme: Theme; $active: boolean }>\`
         : \`color-mix(in srgb, \${theme.colors.dark} 4%, transparent)\`};
   }
 
-  &:focus-visible {
-    outline: none;
+  &:focus {
+    border-color: \${({ theme }) => theme.colors.primary};
+    box-shadow: 0 0 0 2px \${({ theme }) => theme.colors.primaryLight};
   }
 
-  &:focus-visible::after {
-    content: "";
-    position: absolute;
-    inset: 2px;
-    border: solid 2px \${({ theme }) => theme.colors.primary};
-    border-radius: \${({ theme }) => theme.spacing.radius.xs};
-    pointer-events: none;
+  &:active {
+    box-shadow: 0 0 0 1px \${({ theme }) => theme.colors.primaryLight};
   }
 \`;
 

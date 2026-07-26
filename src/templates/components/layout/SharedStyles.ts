@@ -110,10 +110,6 @@ export const stylesLists = css<{ theme: Theme }>\`
     padding: 0;
     margin: 0;
 
-    & ul {
-      padding-left: 15px;
-    }
-
     & > li {
       counter-increment: item;
       padding: 0 0 0 24px;

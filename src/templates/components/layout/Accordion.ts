@@ -74,10 +74,11 @@ const StyledAccordionContent = styled.div<{ theme: Theme; $isOpen: boolean }>\`
 interface AccordionProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   title: string;
+  defaultOpen?: boolean;
 }
 
-function Accordion({ children, title }: AccordionProps) {
-  const [isOpen, setIsOpen] = useState(false);
+function Accordion({ children, title, defaultOpen = false }: AccordionProps) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const contentId = useId();
 
   return (

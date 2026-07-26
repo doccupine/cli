@@ -15,12 +15,18 @@ import {
   startingDocsStructure,
 } from "./lib/structures.js";
 import { rootLayoutTemplate, siteLayoutTemplate } from "./lib/layout.js";
-import { ConfigManager } from "./lib/config-manager.js";
+import { ConfigManager, normalizeOpenApiConfig } from "./lib/config-manager.js";
+import {
+  OpenApiRegistry,
+  DEFAULT_API_BASE_SLUG,
+  buildEndpointDoc,
+} from "./lib/openapi.js";
 import {
   findAvailablePort,
   generateSlug,
   getFullSlug,
   escapeTemplateContent,
+  toJsStringLiteral,
   resolvePackageManager,
 } from "./lib/utils.js";
 import {
@@ -45,12 +51,15 @@ import type {
   SectionConfig,
   FontConfig,
   AnalyticsConfig,
+  NormalizedOpenApiSpec,
 } from "./lib/types.js";
+import type { OperationDescriptor } from "./lib/openapi-types.js";
 
 export {
   generateSlug,
   getFullSlug,
   escapeTemplateContent,
+  toJsStringLiteral,
 } from "./lib/utils.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -70,6 +79,7 @@ class MDXToNextJSGenerator {
   private publicWatcher: FSWatcher | null = null;
   private rootDirWatcher: FSWatcher | null = null;
   private analyticsWatcher: FSWatcher | null = null;
+  private openApiWatcher: FSWatcher | null = null;
   private configFiles = [
     "theme.json",
     "navigation.json",
@@ -85,11 +95,22 @@ class MDXToNextJSGenerator {
   private isReprocessing = false;
   /** Tracks per-page .md files written under public/ so we can clean up stale ones on rename/delete */
   private generatedLlmsPagePaths = new Set<string>();
+  /** OpenAPI specs (build config) that drive the generated API reference. */
+  private openApiSpecs: NormalizedOpenApiSpec[];
+  private apiBaseSlug = DEFAULT_API_BASE_SLUG;
+  private apiRegistry = new OpenApiRegistry();
+  /** Route slugs of the endpoint pages written last pass, for stale cleanup. */
+  private generatedApiPageSlugs = new Set<string>();
 
-  constructor(watchDir: string, outputDir: string) {
+  constructor(
+    watchDir: string,
+    outputDir: string,
+    openApiSpecs: NormalizedOpenApiSpec[] = [],
+  ) {
     this.watchDir = path.resolve(watchDir);
     this.outputDir = path.resolve(outputDir);
     this.rootDir = process.cwd();
+    this.openApiSpecs = openApiSpecs;
   }
 
   async init() {
@@ -106,6 +127,10 @@ class MDXToNextJSGenerator {
         chalk.blue(`📊 Analytics enabled: ${this.analyticsConfig.provider}`),
       );
     }
+
+    // Parse OpenAPI spec(s) before generating structure so the synthetic
+    // endpoint pages flow into the very first layout/sitemap/llms pass.
+    await this.loadOpenApiRegistry();
 
     await this.createNextJSStructure();
     await this.createStartingDocs();
@@ -127,6 +152,11 @@ class MDXToNextJSGenerator {
         ),
       );
     }
+
+    // Write the endpoint pages + request allowlist before the MDX pass so its
+    // aggregate refresh (nav/sitemap/llms) already sees them on disk and in the
+    // registry.
+    await this.writeApiPages();
 
     await this.processAllMDXFiles();
 
@@ -361,8 +391,29 @@ class MDXToNextJSGenerator {
 
   async resolveSections(): Promise<SectionConfig[] | null> {
     const fromFile = await this.loadSectionsConfig();
-    if (fromFile) return fromFile;
-    return this.discoverSectionsFromFrontmatter();
+    const base = fromFile ?? (await this.discoverSectionsFromFrontmatter());
+    return this.withApiReferenceSection(base);
+  }
+
+  /**
+   * Promotes the generated OpenAPI endpoints into a dedicated "API Reference"
+   * section so they get their own top-level nav, separate from hand-written
+   * docs. When the site had no sections, a root "Documentation" section is added
+   * for the existing pages so both appear in the section switcher.
+   */
+  private withApiReferenceSection(
+    sections: SectionConfig[] | null,
+  ): SectionConfig[] | null {
+    if (this.apiRegistry.isEmpty) return sections;
+    const apiSection: SectionConfig = {
+      label: "API Reference",
+      slug: this.apiBaseSlug,
+    };
+    if (!sections || sections.length === 0) {
+      return [{ label: "Documentation", slug: "" }, apiSection];
+    }
+    if (sections.some((s) => s.slug === this.apiBaseSlug)) return sections;
+    return [...sections, apiSection];
   }
 
   private async reloadSections(): Promise<void> {
@@ -378,7 +429,9 @@ class MDXToNextJSGenerator {
     const fromFile = await this.loadSectionsConfig();
     if (fromFile) return;
 
-    const newSections = await this.discoverSectionsFromFrontmatter();
+    const newSections = this.withApiReferenceSection(
+      await this.discoverSectionsFromFrontmatter(),
+    );
     const changed =
       JSON.stringify(newSections) !== JSON.stringify(this.sectionsConfig);
 
@@ -806,6 +859,25 @@ class MDXToNextJSGenerator {
         console.error(chalk.red("❌ Analytics watcher error:"), error);
       });
 
+    if (this.openApiSpecs.length > 0) {
+      const specPaths = this.openApiSpecs.map((spec) =>
+        path.resolve(this.rootDir, spec.file),
+      );
+
+      this.openApiWatcher = chokidar.watch(specPaths, {
+        persistent: true,
+        ignoreInitial: true,
+      });
+
+      this.openApiWatcher
+        .on("add", () => this.handleOpenApiChange())
+        .on("change", () => this.handleOpenApiChange())
+        .on("unlink", () => this.handleOpenApiChange())
+        .on("error", (error: unknown) => {
+          console.error(chalk.red("❌ OpenAPI watcher error:"), error);
+        });
+    }
+
     const publicDir = path.join(this.rootDir, "public");
 
     if (await fs.pathExists(publicDir)) {
@@ -905,6 +977,14 @@ class MDXToNextJSGenerator {
       }
     }
 
+    // A hand-written page that embeds an endpoint via `openapi:` frontmatter
+    // gets the same method badge in the sidebar as a generated endpoint page.
+    let httpMethod: string | undefined;
+    if (frontmatter.openapi) {
+      const op = this.apiRegistry.lookup(String(frontmatter.openapi));
+      if (op) httpMethod = op.method.toUpperCase();
+    }
+
     return {
       slug: fullSlug,
       title: frontmatter.title || "Untitled",
@@ -922,13 +1002,34 @@ class MDXToNextJSGenerator {
       ...(frontmatter.categoryIcon
         ? { categoryIcon: String(frontmatter.categoryIcon) }
         : {}),
+      ...(httpMethod ? { httpMethod } : {}),
       lastModified,
     };
   }
 
   private async buildAllPagesMeta(): Promise<PageMeta[]> {
     const files = await this.getAllMDXFiles();
-    return Promise.all(files.map((file) => this.parseMDXFile(file)));
+    const real = await Promise.all(
+      files.map((file) => this.parseMDXFile(file)),
+    );
+    if (this.apiRegistry.isEmpty) return real;
+
+    // Inject synthetic OpenAPI endpoint pages here - the single funnel every
+    // aggregate (nav, sitemap, llms) flows through - so they cannot be dropped
+    // by the .mdx-only disk scan. Hand-written pages win on any slug collision.
+    const realSlugs = new Set(real.map((page) => page.slug));
+    const synthetic = this.apiRegistry.syntheticPages().filter((page) => {
+      if (realSlugs.has(page.slug)) {
+        console.log(
+          chalk.yellow(
+            `⚠️ API page ${page.slug} is shadowed by a hand-written page; skipping`,
+          ),
+        );
+        return false;
+      }
+      return true;
+    });
+    return [...real, ...synthetic];
   }
 
   /**
@@ -965,7 +1066,25 @@ class MDXToNextJSGenerator {
         slug: fullSlug,
       };
 
-      await this.generatePageFromMDX(mdxFile);
+      // `openapi: <METHOD> <path>` (or an operationId) in frontmatter renders
+      // that operation's playground inline with the author's prose. An unknown
+      // reference is logged and the page still renders its prose (graceful).
+      let apiOperation: OperationDescriptor | undefined;
+      if (frontmatter.openapi) {
+        apiOperation = this.apiRegistry.lookup(String(frontmatter.openapi));
+        if (!apiOperation) {
+          console.error(
+            chalk.red(
+              `❌ openapi frontmatter "${frontmatter.openapi}" in ${filePath} not found in any spec`,
+            ),
+          );
+        }
+      }
+
+      await this.generatePageFromMDX(
+        mdxFile,
+        apiOperation ? { apiOperation } : undefined,
+      );
     }
 
     if (isSectionIndex) {
@@ -1142,8 +1261,12 @@ export default function SectionIndex() {
     }
   }
 
-  async generatePageFromMDX(mdxFile: MDXFile) {
+  async generatePageFromMDX(
+    mdxFile: MDXFile,
+    options?: { apiOperation?: OperationDescriptor },
+  ) {
     const fm = mdxFile.frontmatter;
+    const apiOperation = options?.apiOperation;
 
     const metadataBlock = generateMetadataBlock({
       title: fm.title,
@@ -1171,12 +1294,47 @@ export default function SectionIndex() {
       image: fm.image,
     });
 
+    // For an OpenAPI-backed page, embed the operation descriptor as a JS string
+    // literal parsed at load. Serializing to JSON then re-`JSON.parse`ing is
+    // total escaping for arbitrary JSON - unlike `escapeTemplateContent`, which
+    // only guards backticks/`${`/backslashes for the MDX prose literal.
+    const apiImport = apiOperation
+      ? `\nimport { ApiPlayground } from "@/components/layout/ApiPlayground";`
+      : "";
+    // The descriptor JSON always exceeds the 80-col print width, so emit the
+    // call pre-wrapped in the exact shape Prettier produces (argument on its own
+    // line with a trailing comma, single-quoted so the JSON's own double quotes
+    // need no escaping). Keeps generated endpoint pages Prettier-stable without
+    // running a formatter at build time.
+    const apiConst = apiOperation
+      ? (() => {
+          const arg = toJsStringLiteral(JSON.stringify(apiOperation));
+          const inline = `const operation = JSON.parse(${arg});`;
+          const decl =
+            inline.length <= 80
+              ? inline
+              : `const operation = JSON.parse(\n  ${arg},\n);`;
+          return `\n${decl}\n`;
+        })()
+      : "";
+    // The playground renders as a child of <Docs> so it sits inside the docs
+    // content column (a sibling would escape the layout and overlap the nav).
+    // Synthetic endpoint pages pass no `sourcePath`: it only namespaces Mermaid
+    // diagrams (which endpoint docs never contain), and its long `@openapi/...`
+    // value would push the opening tag past 80 cols and make Prettier rewrap it.
+    const sourcePathLiteral = JSON.stringify(mdxFile.path);
+    const docsElement = apiOperation
+      ? `<Docs content={content}>
+        <ApiPlayground operation={operation} />
+      </Docs>`
+      : `<Docs content={content} sourcePath={${sourcePathLiteral}} />`;
+
     const pageContent = `import { Metadata } from "next";
 import { Docs } from "@/components/Docs";
-import { config } from "@/utils/config";
+import { config } from "@/utils/config";${apiImport}
 
 const content = \`${escapeTemplateContent(mdxFile.content)}\`;
-
+${apiConst}
 ${metadataBlock}
 
 // Doc pages have no per-request data: theme resolves client-side via the
@@ -1191,7 +1349,7 @@ export default function Page() {
   return (
     <>
       ${jsonLd.element}
-      <Docs content={content} sourcePath={${JSON.stringify(mdxFile.path)}} />
+      ${docsElement}
     </>
   );
 }
@@ -1208,6 +1366,156 @@ export default function Page() {
     await fs.writeFile(pagePath, pageContent, "utf8");
   }
 
+  /** Parses the configured OpenAPI spec(s) into the shared registry. */
+  private async loadOpenApiRegistry(): Promise<void> {
+    if (this.openApiSpecs.length === 0) return;
+    await this.apiRegistry.load(
+      this.openApiSpecs,
+      this.rootDir,
+      this.apiBaseSlug,
+    );
+    if (!this.apiRegistry.isEmpty) {
+      console.log(
+        chalk.blue(
+          `📘 Loaded ${this.apiRegistry.all.length} API endpoint(s) from ${this.openApiSpecs.length} spec(s)`,
+        ),
+      );
+    }
+  }
+
+  /**
+   * Generates one page per OpenAPI operation, (re)writes the request-execution
+   * allowlist consumed by the playground proxy + component, and removes endpoint
+   * pages that no longer exist in the spec. Safe to call when there are no specs
+   * - it still emits an empty allowlist and prunes any previously generated
+   * pages (e.g. after the `openapi` config is removed).
+   */
+  private async writeApiPages(): Promise<void> {
+    const nextSlugs = new Set<string>();
+
+    for (const op of this.apiRegistry.all) {
+      const methodUpper = op.method.toUpperCase();
+      const mdxFile: MDXFile = {
+        path: `@openapi/${op.specName}/${op.method}${op.path}`,
+        content: buildEndpointDoc(op),
+        frontmatter: {
+          title: op.summary ?? `${methodUpper} ${op.path}`,
+          description: op.summary ?? "",
+        },
+        slug: op.slug,
+      };
+      try {
+        await this.generatePageFromMDX(mdxFile, { apiOperation: op });
+        nextSlugs.add(op.slug);
+      } catch (error) {
+        console.error(
+          chalk.red(`❌ Error generating API page ${op.slug}:`),
+          error,
+        );
+      }
+    }
+
+    await this.writeApiAllowlist();
+    await this.cleanupStaleApiPages(nextSlugs);
+
+    if (nextSlugs.size > 0) {
+      console.log(
+        chalk.green(`🧩 Generated ${nextSlugs.size} API reference page(s)`),
+      );
+    }
+  }
+
+  /** Writes the request-execution allowlist (overwrites the shipped stub). */
+  private async writeApiAllowlist(): Promise<void> {
+    const target = path.join(
+      this.outputDir,
+      "services",
+      "openapi",
+      "playground-allowlist.json",
+    );
+    await fs.ensureDir(path.dirname(target));
+    await fs.writeFile(
+      target,
+      `${JSON.stringify(this.apiRegistry.allowlist(), null, 2)}\n`,
+      "utf8",
+    );
+  }
+
+  private apiManifestPath(): string {
+    return path.join(this.outputDir, ".doccupine-api-manifest.json");
+  }
+
+  private async readApiManifest(): Promise<Set<string>> {
+    try {
+      const manifestPath = this.apiManifestPath();
+      if (await fs.pathExists(manifestPath)) {
+        const raw = await fs.readFile(manifestPath, "utf8");
+        const parsed = JSON.parse(raw) as { pageSlugs?: unknown };
+        if (Array.isArray(parsed.pageSlugs)) {
+          return new Set(
+            parsed.pageSlugs.filter(
+              (entry): entry is string => typeof entry === "string",
+            ),
+          );
+        }
+      }
+    } catch {
+      // ignore corrupted manifest
+    }
+    return new Set();
+  }
+
+  private async writeApiManifest(slugs: Set<string>): Promise<void> {
+    const payload = { pageSlugs: Array.from(slugs).sort() };
+    await fs.writeFile(
+      this.apiManifestPath(),
+      `${JSON.stringify(payload, null, 2)}\n`,
+      "utf8",
+    );
+  }
+
+  /** Removes endpoint page directories that are no longer in the spec. */
+  private async cleanupStaleApiPages(nextSlugs: Set<string>): Promise<void> {
+    const previous = new Set<string>([
+      ...this.generatedApiPageSlugs,
+      ...(await this.readApiManifest()),
+    ]);
+
+    for (const stale of previous) {
+      if (nextSlugs.has(stale)) continue;
+      try {
+        const dir = path.join(this.outputDir, "app", "(site)", stale);
+        if (await fs.pathExists(dir)) {
+          await fs.remove(dir);
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    this.generatedApiPageSlugs = nextSlugs;
+    await this.writeApiManifest(nextSlugs);
+  }
+
+  /** Reparses the spec(s) and regenerates the API reference on a watch event. */
+  async handleOpenApiChange() {
+    console.log(
+      chalk.cyan("📘 OpenAPI spec changed - regenerating API reference"),
+    );
+    try {
+      await this.apiRegistry.load(
+        this.openApiSpecs,
+        this.rootDir,
+        this.apiBaseSlug,
+      );
+      await this.writeApiPages();
+      await this.refreshSiteAggregates();
+      console.log(chalk.green("✅ API reference updated"));
+    } catch (error) {
+      console.error(chalk.red("❌ Error updating API reference:"), error);
+    }
+  }
+
   async updatePagesIndex() {
     const files = await this.getAllMDXFiles();
     let indexMDX: {
@@ -1219,6 +1527,7 @@ export default function Page() {
       name?: string;
       date?: string;
       updated?: string;
+      openapi?: string;
     } | null = null;
 
     for (const file of files) {
@@ -1239,6 +1548,10 @@ export default function Page() {
           updated:
             typeof frontmatter.updated === "string"
               ? frontmatter.updated
+              : undefined,
+          openapi:
+            typeof frontmatter.openapi === "string"
+              ? frontmatter.openapi
               : undefined,
         };
         break;
@@ -1268,12 +1581,39 @@ export default function Page() {
       image: indexMDX?.image,
     });
 
+    // The homepage supports the same `openapi: <METHOD> <path>` frontmatter as
+    // any other page: look the operation up and embed its playground inline.
+    let apiOperation: OperationDescriptor | undefined;
+    if (indexMDX?.openapi) {
+      apiOperation = this.apiRegistry.lookup(indexMDX.openapi);
+      if (!apiOperation) {
+        console.error(
+          chalk.red(
+            `❌ openapi frontmatter "${indexMDX.openapi}" in index.mdx not found in any spec`,
+          ),
+        );
+      }
+    }
+    const apiImport = apiOperation
+      ? `\nimport { ApiPlayground } from "@/components/layout/ApiPlayground";`
+      : "";
+    const apiConst = apiOperation
+      ? `\nconst operation = JSON.parse(${JSON.stringify(
+          JSON.stringify(apiOperation),
+        )});\n`
+      : "";
+    const docsElement = apiOperation
+      ? `<Docs content={content} sourcePath="index.mdx">
+        <ApiPlayground operation={operation} />
+      </Docs>`
+      : `<Docs content={content} sourcePath="index.mdx" />`;
+
     const indexContent = `import { Metadata } from "next";
 import { Docs } from "@/components/Docs";
-import { config } from "@/utils/config";
+import { config } from "@/utils/config";${apiImport}
 
 ${indexMDX ? `const content = \`${escapeTemplateContent(indexMDX.content)}\`;` : `const content = null;`}
-
+${apiConst}
 ${metadataBlock}
 
 export const dynamic = "force-static";
@@ -1285,7 +1625,7 @@ export default function Home() {
   return (
     <>
       ${homeJsonLd.element}
-      <Docs content={content} sourcePath="index.mdx" />
+      ${docsElement}
     </>
   );
 }
@@ -1521,6 +1861,11 @@ export default function Page() {
   }
 
   private async readPageWithBody(page: PageMeta): Promise<PageWithBody> {
+    // Synthetic OpenAPI pages have no backing .mdx file; their markdown body
+    // comes from the registry instead of disk.
+    if (!page.path.endsWith(".mdx")) {
+      return { ...page, body: this.apiRegistry.bodyForSlug(page.slug) ?? "" };
+    }
     const fullPath = path.join(this.watchDir, page.path);
     const raw = await fs.readFile(fullPath, "utf8");
     const { content: body } = matter(raw);
@@ -1649,6 +1994,10 @@ export default function Page() {
         chalk.yellow("👋 Stopped watching for analytics config changes"),
       );
     }
+    if (this.openApiWatcher) {
+      await this.openApiWatcher.close();
+      console.log(chalk.yellow("👋 Stopped watching for OpenAPI spec changes"));
+    }
     if (this.publicWatcher) {
       await this.publicWatcher.close();
       console.log(
@@ -1688,6 +2037,7 @@ program
     const generator = new MDXToNextJSGenerator(
       config.watchDir,
       config.outputDir,
+      normalizeOpenApiConfig(config.openapi),
     );
 
     // Config paths are project-relative; child processes get an absolute cwd.
@@ -1820,6 +2170,7 @@ program
     const generator = new MDXToNextJSGenerator(
       config.watchDir,
       config.outputDir,
+      normalizeOpenApiConfig(config.openapi),
     );
     await generator.init();
     console.log(chalk.green("🎉 Build complete!"));

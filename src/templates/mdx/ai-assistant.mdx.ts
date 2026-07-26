@@ -2,9 +2,10 @@ export const aiAssistantMdxTemplate = `---
 title: "AI Assistant"
 description: "Integrate AI capabilities into your Doccupine documentation using OpenAI, Anthropic, or Google Gemini."
 date: "2026-02-19"
-category: "Configuration"
+category: "AI & Integrations"
 categoryOrder: 3
-order: 8
+categoryIcon: "sparkles"
+order: 1
 ---
 # AI Assistant
 

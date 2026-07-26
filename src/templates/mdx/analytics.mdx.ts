@@ -2,9 +2,9 @@ export const analyticsMdxTemplate = `---
 title: "Analytics"
 description: "Add PostHog analytics to your documentation site with an analytics.json file for both client-side and server-side tracking."
 date: "2026-02-24"
-category: "Configuration"
+category: "AI & Integrations"
 categoryOrder: 3
-order: 10
+order: 3
 ---
 # Analytics
 

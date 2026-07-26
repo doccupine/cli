@@ -4,7 +4,7 @@ description: "Use the Tabs component to display different content sections in a 
 date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
-order: 5
+order: 6
 ---
 # Tabs
 

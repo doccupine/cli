@@ -3,7 +3,7 @@ title: "Team Members"
 description: "Invite collaborators and manage roles for your documentation project."
 date: "2026-02-19"
 category: "Account"
-categoryOrder: 4
+categoryOrder: 5
 order: 0
 section: "Platform"
 ---

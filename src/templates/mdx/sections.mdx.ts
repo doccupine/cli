@@ -3,7 +3,7 @@ title: "Sections"
 description: "Split your documentation into top-level sections with independent sidebars."
 date: "2026-02-19"
 category: "Configuration"
-categoryOrder: 3
+categoryOrder: 2
 order: 3
 ---
 # Sections

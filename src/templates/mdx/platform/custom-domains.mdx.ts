@@ -3,7 +3,7 @@ title: "Custom Domains"
 description: "Connect your own domain to your documentation site with automatic HTTPS."
 date: "2026-02-19"
 category: "Infrastructure"
-categoryOrder: 3
+categoryOrder: 4
 order: 0
 section: "Platform"
 ---
