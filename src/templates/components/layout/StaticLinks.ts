@@ -6,6 +6,7 @@ import { useContext } from "react";
 import { ChatContext } from "@/components/Chat";
 import { mq, Theme } from "@/app/theme";
 import {
+  focusModeColumn,
   interactiveStyles,
   sidePanelOffset,
 } from "@/components/layout/SharedStyled";
@@ -39,6 +40,7 @@ const StyledStaticLinks = styled.div<{ theme: Theme; $isChatOpen: boolean }>\`
   }
 
   \${sidePanelOffset};
+  \${({ $isChatOpen }) => !$isChatOpen && focusModeColumn};
 \`;
 
 const StyledStaticLinksContent = styled.div\`

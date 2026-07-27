@@ -4,6 +4,7 @@ export const sidePanelTemplate = `"use client";
 import React from "react";
 import styled from "styled-components";
 import { mq, Theme } from "@/app/theme";
+import { focusModeHide } from "@/components/layout/SharedStyled";
 
 // Below "lg" the panel stays in the document flow, rendering inline exactly
 // where it sits in the MDX source. From "lg" up it is lifted out of the flow
@@ -45,6 +46,8 @@ const StyledSidePanel = styled.aside<{ theme: Theme }>\`
   \${mq("xl")} {
     width: ${CHAT_WIDTH}px;
   }
+
+  \${focusModeHide("right")};
 \`;
 
 interface SidePanelProps {

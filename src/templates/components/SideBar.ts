@@ -21,6 +21,7 @@ import {
   StyleMobileBar,
   StyledMobileBurger,
 } from "@/components/layout/DocsComponents";
+import { FocusModeToggle } from "@/components/layout/FocusModeToggle";
 import { Icon } from "@/components/layout/Icon";
 import { useLockBodyScroll } from "@/components/LockBodyScroll";
 
@@ -270,6 +271,10 @@ function SideBar({ result }: SideBarProps) {
           </Flex>
         </StyledSidebarFooter>
       </StyledSidebar>
+
+      {/* Outside StyledSidebar on purpose: focus mode slides that whole
+          column away, and the toggle has to survive it. */}
+      <FocusModeToggle />
     </DocsSidebar>
   );
 }

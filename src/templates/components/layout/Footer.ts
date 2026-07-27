@@ -7,7 +7,10 @@ import { Space, styledSmall } from "cherry-styled-components";
 import { ChatContext } from "@/components/Chat";
 import { mq, Theme } from "@/app/theme";
 import { GitHubLogo } from "@/components/layout/Pictograms";
-import { sidePanelOffset } from "@/components/layout/SharedStyled";
+import {
+  focusModeColumn,
+  sidePanelOffset,
+} from "@/components/layout/SharedStyled";
 import linksData from "@/links.json";
 
 interface LinkProps {
@@ -44,6 +47,7 @@ const StyledFooter = styled.footer<{
   }
 
   \${sidePanelOffset};
+  \${({ $isChatOpen }) => !$isChatOpen && focusModeColumn};
 \`;
 
 const StyledFooterInner = styled.div<{ theme: Theme }>\`

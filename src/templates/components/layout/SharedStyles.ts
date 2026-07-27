@@ -19,6 +19,38 @@ export const sidePanelOffset = css\`
   }
 \`;
 
+/** Focus mode: FocusModeToggle sets data-focus-mode on <html> and the rails
+    slide out of view, left rail leftwards and right rail rightwards. Keyed
+    off the root element because the sidebar, the rails and the content
+    columns live in separate subtrees. Desktop only - below "lg" the rails are
+    already collapsed or inline. */
+export const focusModeHide = (edge: "left" | "right") => css\`
+  \${mq("lg")} {
+    transition:
+      transform 0.3s ease,
+      opacity 0.3s ease;
+
+    html[data-focus-mode] & {
+      transform: translateX(\${edge === "left" ? "-100%" : "100%"});
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+\`;
+
+/** The other half of focus mode: a content column drops the padding it was
+    reserving for the rails and centers on the full viewport. Interpolate it
+    last so it wins over the equally specific sidePanelOffset rule, and skip
+    it while the chat is open - that panel is still there to make room for. */
+export const focusModeColumn = css\`
+  \${mq("lg")} {
+    html[data-focus-mode] & {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+  }
+\`;
+
 /** Slim, theme-aware scrollbar for internal scroll areas (code blocks,
     modals, tables) so the chunky native bar doesn't stand out, especially
     in dark mode. */

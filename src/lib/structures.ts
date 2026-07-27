@@ -48,6 +48,7 @@ import { demoThemeTemplate } from "../templates/components/layout/DemoTheme.js";
 import { docsComponentsTemplate } from "../templates/components/layout/DocsComponents.js";
 import { docsNavigationTemplate } from "../templates/components/layout/DocsNavigation.js";
 import { fieldTemplate } from "../templates/components/layout/Field.js";
+import { focusModeToggleTemplate } from "../templates/components/layout/FocusModeToggle.js";
 import { footerTemplate } from "../templates/components/layout/Footer.js";
 import { frameTemplate } from "../templates/components/layout/Frame.js";
 import { globalStylesTemplate } from "../templates/components/layout/GlobalStyles.js";
@@ -247,6 +248,7 @@ export const appStructure: Record<string, string> = {
   "components/layout/DocsNavigation.tsx": docsNavigationTemplate,
   "components/layout/SectionBar.tsx": sectionBarTemplate,
   "components/layout/Field.tsx": fieldTemplate,
+  "components/layout/FocusModeToggle.tsx": focusModeToggleTemplate,
   "components/layout/Footer.tsx": footerTemplate,
   "components/layout/Frame.tsx": frameTemplate,
   "components/layout/GlobalStyles.ts": globalStylesTemplate,

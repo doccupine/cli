@@ -12,6 +12,8 @@ import {
 import Link from "next/link";
 import { mq, Theme } from "@/app/theme";
 import {
+  focusModeColumn,
+  focusModeHide,
   sidePanelOffset,
   styledAnchor,
   styledTable,
@@ -66,6 +68,7 @@ const StyledDocsContainer = styled.div<{ theme: Theme; $isChatOpen?: boolean }>\
   }
 
   \${sidePanelOffset};
+  \${({ $isChatOpen }) => !$isChatOpen && focusModeColumn};
 
   & p {
     color: \${({ theme }) => theme.colors.grayDark};
@@ -171,6 +174,8 @@ export const StyledSidebar = styled.nav<Props>\`
       opacity: 1;
       pointer-events: all;
     \`}
+
+  \${focusModeHide("left")};
 \`;
 
 export const StyledSidebarFooter = styled.div\`
@@ -216,6 +221,8 @@ export const StyledIndexSidebar = styled.ul<{ theme: Theme }>\`
   & li {
     padding: 5px 0;
   }
+
+  \${focusModeHide("right")};
 \`;
 
 export const StyledIndexSidebarLabel = styled.span<{ theme: Theme }>\`

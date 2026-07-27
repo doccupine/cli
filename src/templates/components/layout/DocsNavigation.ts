@@ -8,6 +8,7 @@ import styled, { css } from "styled-components";
 import { Icon } from "@/components/layout/Icon";
 import { mq, Theme } from "@/app/theme";
 import {
+  focusModeColumn,
   interactiveStyles,
   sidePanelOffset,
 } from "@/components/layout/SharedStyled";
@@ -28,6 +29,7 @@ const StyledNavigationWrapper = styled.div<{
   }
 
   \${sidePanelOffset};
+  \${({ $isChatOpen }) => !$isChatOpen && focusModeColumn};
 \`;
 
 const StyledNavigationInner = styled.div\`
