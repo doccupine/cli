@@ -2,6 +2,7 @@ export const sideBarTemplate = `"use client";
 import { useContext, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Flex, Space, ThemeToggle } from "cherry-styled-components";
+import { httpMethodBadgeColor } from "@/components/layout/Badge";
 import {
   DocsSidebar,
   SectionBarContext,
@@ -89,8 +90,10 @@ function SidebarNavLink({
         >
           {link.httpMethod && (
             <StyledSidebarMethodTag
-              $method={link.httpMethod}
-              $isActive={isActive}
+              mono
+              solid={isActive}
+              size="xs"
+              color={httpMethodBadgeColor(link.httpMethod)}
             >
               {link.httpMethod}
             </StyledSidebarMethodTag>

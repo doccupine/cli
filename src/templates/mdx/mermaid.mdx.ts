@@ -4,7 +4,7 @@ description: "Create flowcharts, sequence diagrams, and other visualizations usi
 date: "2026-07-16"
 category: "Components"
 categoryOrder: 1
-order: 18
+order: 22
 ---
 # Mermaid
 

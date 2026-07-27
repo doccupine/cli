@@ -4,6 +4,7 @@ import Link from "next/link";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type MDXComponents = Record<string, React.ComponentType<any>>;
 import { Space } from "cherry-styled-components";
+import { Badge } from "@/components/layout/Badge";
 import { Code as CodeBlock, CodeTabs } from "@/components/layout/Code";
 import { Card } from "@/components/layout/Card";
 import { Accordion } from "@/components/layout/Accordion";
@@ -13,11 +14,19 @@ import { Icon } from "@/components/layout/Icon";
 import { Columns } from "@/components/layout/Columns";
 import { Field } from "@/components/layout/Field";
 import { Frame } from "@/components/layout/Frame";
+import { Prompt } from "@/components/layout/Prompt";
 import { Update } from "@/components/layout/Update";
 import { Steps, Step } from "@/components/layout/Steps";
 import { Button } from "@/components/layout/Button";
 import { ColorSwatch, ColorSwatchGroup } from "@/components/layout/ColorSwatch";
 import { DemoTheme } from "@/components/layout/DemoTheme";
+import { Tooltip } from "@/components/layout/Tooltip";
+import { Tree as TreeRoot } from "@/components/layout/Tree";
+import {
+  parseTreeChildren,
+  TreeFolder,
+  TreeFile,
+} from "@/components/layout/TreeData";
 import { createSlugger } from "@/components/layout/Slug";
 
 interface HeadingProps extends React.HTMLAttributes<HTMLHeadingElement> {
@@ -27,6 +36,21 @@ interface HeadingProps extends React.HTMLAttributes<HTMLHeadingElement> {
 interface PreProps extends React.HTMLAttributes<HTMLPreElement> {
   children?: React.ReactNode;
 }
+
+// The Tree compound is assembled here in shared code: statics attached to
+// the client component would not survive the client-reference boundary, and
+// the Tree.Folder / Tree.File elements MDX creates must be parsed in the
+// same runtime that created them, where marker identity is guaranteed. Only
+// the resulting plain TreeNode data crosses to the client component.
+const Tree = Object.assign(
+  function Tree({ children }: { children?: React.ReactNode }) {
+    return <TreeRoot nodes={parseTreeChildren(children, "node")} />;
+  },
+  { Folder: TreeFolder, File: TreeFile },
+);
+
+// <Tree> and <FileTree> are aliases; either tag supports either syntax.
+const FileTree = Tree;
 
 export function extractAllTextFromChildren(children: React.ReactNode): string {
   if (children == null) return "";
@@ -154,6 +178,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     pre: Pre,
 
     // Expose your custom components for MDX usage
+    Badge,
     Code: CodeBlock,
     CodeTabs,
     Card,
@@ -165,6 +190,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     Columns,
     Field,
     Frame,
+    Prompt,
     // Share the heading slugger so an <Update> label anchor stays unique and
     // in document order alongside the surrounding headings. Only consume a
     // slug when a label is present so a label-less <Update> does not crash the
@@ -178,6 +204,9 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     ColorSwatch,
     ColorSwatchGroup,
     DemoTheme,
+    Tooltip,
+    Tree,
+    FileTree,
     Space,
     ...components,
   };
