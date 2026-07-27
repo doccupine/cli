@@ -58,7 +58,7 @@ Doccupine includes a rich set of built-in components you can use directly in you
     Interactive API reference where readers send real requests and see live responses.
   </Card>
   <Card title="Update" icon="bell" href="/update">
-    Changelog and update announcement blocks.
+    Changelog blocks with a subscribable RSS feed.
   </Card>
   <Card title="Color Swatches" icon="palette" href="/color-swatches">
     Visual color palette swatches to document your theme colors.

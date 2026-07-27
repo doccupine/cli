@@ -77,6 +77,7 @@ import { llmTypesTemplate } from "../templates/services/llm/types.js";
 import { buildDocsIndexScriptTemplate } from "../templates/scripts/build-docs-index.js";
 
 import { posthogServerTemplate } from "../templates/lib/posthog.js";
+import { rssLibTemplate } from "../templates/lib/rss.js";
 import { siteGateTemplate } from "../templates/lib/siteGate.js";
 
 import { styledDTemplate } from "../templates/types/styled.js";
@@ -189,6 +190,7 @@ export const appStructure: Record<string, string> = {
   "types/openapi.ts": openapiTypesTemplate,
 
   "lib/posthog.ts": posthogServerTemplate,
+  "lib/rss.ts": rssLibTemplate,
   "lib/siteGate.ts": siteGateTemplate,
 
   "utils/branding.ts": brandingTemplate,

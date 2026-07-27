@@ -14,6 +14,9 @@ import { StyledSmallButton } from "@/components/layout/SharedStyled";
 interface ActionBarProps {
   children: React.ReactNode;
   content: string;
+  // When set, an RSS button linking to this page's feed renders next to the
+  // copy pill.
+  rssHref?: string;
 }
 
 const StyledActionBar = styled.div<{
@@ -52,6 +55,26 @@ const StyledCopyButton = styled(StyledSmallButton)<{
   & svg.lucide {
     color: \${({ theme, $copied }) =>
       $copied ? theme.colors.success : theme.colors.primary};
+  }
+\`;
+
+// StyledSmallButton carries a -6px right margin for edge alignment; inside
+// the pill group that would eat into the gap, so it is neutralized here.
+const StyledActionBarGroup = styled.div\`
+  display: flex;
+  gap: 12px;
+
+  & > * {
+    margin-right: 0;
+  }
+\`;
+
+const StyledRssLink = styled(StyledSmallButton)<{ theme: Theme }>\`
+  text-decoration: none;
+  color: \${({ theme }) => theme.colors.primary};
+
+  & svg.lucide {
+    color: \${({ theme }) => theme.colors.primary};
   }
 \`;
 
@@ -142,7 +165,7 @@ const StyledContent = styled.div<{
     \`}
 \`;
 
-function ActionBar({ children, content }: ActionBarProps) {
+function ActionBar({ children, content, rssHref }: ActionBarProps) {
   const [isView, setIsView] = useState(true);
   const [copied, setCopied] = useState(false);
   const hasSectionBar = useContext(SectionBarContext);
@@ -160,19 +183,27 @@ function ActionBar({ children, content }: ActionBarProps) {
   return (
     <>
       <StyledActionBar>
-        <StyledCopyButton onClick={handleCopyContent} $copied={copied}>
-          {copied ? (
-            <>
-              <Icon name="check" size={16} />
-              Copied!
-            </>
-          ) : (
-            <>
-              <Icon name="copy" size={16} />
-              Copy content
-            </>
+        <StyledActionBarGroup>
+          <StyledCopyButton onClick={handleCopyContent} $copied={copied}>
+            {copied ? (
+              <>
+                <Icon name="check" size={16} />
+                Copied!
+              </>
+            ) : (
+              <>
+                <Icon name="copy" size={16} />
+                Copy content
+              </>
+            )}
+          </StyledCopyButton>
+          {rssHref && (
+            <StyledRssLink as="a" href={rssHref} aria-label="RSS feed">
+              <Icon name="rss" size={16} />
+              RSS
+            </StyledRssLink>
           )}
-        </StyledCopyButton>
+        </StyledActionBarGroup>
         <StyledActionBarContent>
           <StyledToggle
             onClick={() => setIsView(!isView)}

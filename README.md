@@ -10,6 +10,7 @@
 - **Auto-generated navigation** - sidebar built from frontmatter (`category`, `order`)
 - **Sections** - organize docs into tabbed sections via frontmatter or `sections.json`
 - **API reference** - point at an OpenAPI spec to generate interactive endpoint pages with a live playground
+- **Subscribable changelogs** - pages using the `Update` component publish an RSS feed at `{page-url}/rss.xml`
 - **Theming** - dark/light mode with customizable theme via `theme.json`
 - **AI chat assistant** - built-in RAG-powered chat (OpenAI, Anthropic, or Google)
 - **MCP server** - exposes `search_docs`, `get_doc`, and `list_docs` tools for AI agents

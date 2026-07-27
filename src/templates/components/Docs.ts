@@ -18,6 +18,9 @@ import { rehypeCodeMeta } from "@/utils/rehypeCodeMeta";
 interface DocsProps {
   content: string;
   sourcePath?: string;
+  // Path of this page's RSS feed; when set, the action bar shows an RSS
+  // button linking to it.
+  rssHref?: string;
   // Extra content rendered inside the markdown column, after the MDX body.
   // Used to place generated widgets (e.g. the API playground) inside the docs
   // content area rather than outside its layout.
@@ -85,7 +88,7 @@ function MissingComponent({
   );
 }
 
-function Docs({ content, sourcePath, children }: DocsProps) {
+function Docs({ content, sourcePath, rssHref, children }: DocsProps) {
   const headings = extractHeadings(content);
   const components = useMDXComponents({
     pre: createMermaidPre(sourcePath),
@@ -109,7 +112,7 @@ function Docs({ content, sourcePath, children }: DocsProps) {
   return (
     <>
       <DocsContainer>
-        <ActionBar content={content}>
+        <ActionBar content={content} rssHref={rssHref}>
           <Flex $gap={20}>
             <StyledMarkdownContainer>
               {children}

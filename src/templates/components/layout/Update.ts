@@ -64,6 +64,9 @@ interface UpdateProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   label: string;
   description?: string;
+  // Alternative pure-Markdown text for this entry in the page's RSS feed.
+  // Consumed at generation time; never rendered on the page.
+  rss?: string;
 }
 
 function Update({ children, label = "Label", description, id }: UpdateProps) {
