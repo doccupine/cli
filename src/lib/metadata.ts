@@ -131,6 +131,11 @@ export interface MetadataOptions {
    * Resolves against `metadataBase` defined in the root layout.
    */
   canonicalPath?: string;
+  /**
+   * Path of this page's RSS feed, e.g. "/update/rss.xml". Emitted as an
+   * `alternates.types` entry so feed readers can autodiscover the feed.
+   */
+  rssPath?: string;
 }
 
 function buildFieldExpression(
@@ -159,12 +164,26 @@ function buildTitleExpression(opts: MetadataOptions): string {
   return `${prefix} ${title}`;
 }
 
-function buildCanonicalLine(canonicalPath: string | undefined): string {
+function buildAlternatesBlock(
+  canonicalPath: string | undefined,
+  rssPath: string | undefined,
+): string {
   if (canonicalPath === undefined) return "";
   const safePath = canonicalPath.replace(/^\/+/, "");
-  // Relative path resolves against `metadataBase` set in the root layout.
+  // Relative paths resolve against `metadataBase` set in the root layout.
   // Empty string means the homepage canonical equals the base URL itself.
-  return `\n  alternates: { canonical: ${JSON.stringify("/" + safePath)} },`;
+  const canonical = JSON.stringify("/" + safePath);
+  if (!rssPath) return `\n  alternates: { canonical: ${canonical} },`;
+  const rss = JSON.stringify(rssPath);
+  // Prettier preserves an object literal that already breaks after "{", so
+  // the expanded form is stable; only the inner `types` line can overflow
+  // the 80-col print width (long slugs) and needs the pre-wrap check.
+  const typesInline = `    types: { "application/rss+xml": ${rss} },`;
+  const typesLines =
+    typesInline.length <= 80
+      ? typesInline
+      : `    types: {\n      "application/rss+xml": ${rss},\n    },`;
+  return `\n  alternates: {\n    canonical: ${canonical},\n${typesLines}\n  },`;
 }
 
 export function generateMetadataBlock(opts: MetadataOptions): string {
@@ -176,7 +195,7 @@ export function generateMetadataBlock(opts: MetadataOptions): string {
   );
   const icon = buildFieldExpression(opts.icon, "icon", DEFAULT_FAVICON);
   const image = buildFieldExpression(opts.image, "image", DEFAULT_OG_IMAGE);
-  const canonical = buildCanonicalLine(opts.canonicalPath);
+  const canonical = buildAlternatesBlock(opts.canonicalPath, opts.rssPath);
 
   return `export const metadata: Metadata = {
   title: \`${title}\`,

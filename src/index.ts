@@ -34,10 +34,12 @@ import {
   generateRuntimeOnlyMetadataBlock,
   generateJsonLdScript,
 } from "./lib/metadata.js";
+import { parseUpdateBlocks } from "./lib/rss.js";
 import { nextConfigTemplate } from "./templates/next.config.js";
 import { pnpmWorkspaceTemplate } from "./templates/pnpmWorkspace.js";
 import { proxyTemplate } from "./templates/proxy.js";
 import { robotsTemplate } from "./templates/app/robots.js";
+import { rssRouteTemplate } from "./templates/app/rssRoute.js";
 import { sitemapTemplate, type SitemapEntry } from "./templates/app/sitemap.js";
 import { llmsIndexTemplate } from "./templates/llms/llmsIndex.js";
 import {
@@ -1268,6 +1270,14 @@ export default function SectionIndex() {
     const fm = mdxFile.frontmatter;
     const apiOperation = options?.apiOperation;
 
+    // Pages containing <Update> blocks publish a subscribable changelog: an
+    // RSS feed at {page-url}/rss.xml. Synthetic OpenAPI pages never contain
+    // Update blocks, so skip the parse for them.
+    const isSynthetic = mdxFile.path.startsWith("@openapi/");
+    const updates = isSynthetic ? [] : parseUpdateBlocks(mdxFile.content);
+    const hasFeed = updates.length > 0;
+    const feedPath = `/${mdxFile.slug}/rss.xml`;
+
     const metadataBlock = generateMetadataBlock({
       title: fm.title,
       titleFallback: "Generated with Doccupine",
@@ -1277,6 +1287,7 @@ export default function SectionIndex() {
       icon: fm.icon,
       image: fm.image,
       canonicalPath: mdxFile.slug,
+      rssPath: hasFeed ? feedPath : undefined,
     });
 
     const jsonLd = generateJsonLdScript({
@@ -1323,11 +1334,26 @@ export default function SectionIndex() {
     // diagrams (which endpoint docs never contain), and its long `@openapi/...`
     // value would push the opening tag past 80 cols and make Prettier rewrap it.
     const sourcePathLiteral = JSON.stringify(mdxFile.path);
+    // `rss: true` frontmatter opts the page into an RSS button in the action
+    // bar (only when a feed actually exists). The playground branch keeps its
+    // fixed JSX shape - a feed on an inline-playground page stays reachable
+    // via autodiscovery. The buttoned form usually exceeds the 80-col print
+    // width, so pre-wrap it in the shape Prettier produces (attributes on
+    // their own lines) relative to its 6-space insertion indent.
+    const showRssButton = hasFeed && fm.rss === true && !apiOperation;
+    const docsAttrs = [
+      `content={content}`,
+      `sourcePath={${sourcePathLiteral}}`,
+      ...(showRssButton ? [`rssHref={${JSON.stringify(feedPath)}}`] : []),
+    ];
+    const inlineDocs = `<Docs ${docsAttrs.join(" ")} />`;
     const docsElement = apiOperation
       ? `<Docs content={content}>
         <ApiPlayground operation={operation} />
       </Docs>`
-      : `<Docs content={content} sourcePath={${sourcePathLiteral}} />`;
+      : inlineDocs.length + 6 <= 80
+        ? inlineDocs
+        : `<Docs\n${docsAttrs.map((attr) => `        ${attr}`).join("\n")}\n      />`;
 
     const pageContent = `import { Metadata } from "next";
 import { Docs } from "@/components/Docs";
@@ -1364,6 +1390,35 @@ export default function Page() {
     );
     await fs.ensureDir(path.dirname(pagePath));
     await fs.writeFile(pagePath, pageContent, "utf8");
+
+    // The feed route lives inside the page's directory, so a deleted page
+    // takes its feed along (handleFileDelete removes the whole dir) and the
+    // else-branch prunes the route when a regenerated page no longer has
+    // Update blocks. Cross-run staleness is covered by the app/ wipe in
+    // createNextJSStructure.
+    if (!isSynthetic) {
+      const rssDir = path.join(path.dirname(pagePath), "rss.xml");
+      if (hasFeed) {
+        await fs.ensureDir(rssDir);
+        await fs.writeFile(
+          path.join(rssDir, "route.ts"),
+          rssRouteTemplate({
+            pagePath: mdxFile.slug,
+            title: typeof fm.title === "string" ? fm.title : null,
+            description:
+              typeof fm.description === "string" ? fm.description : null,
+            items: updates.map((update) => ({
+              title: update.label,
+              anchor: update.anchor,
+              description: update.description,
+            })),
+          }),
+          "utf8",
+        );
+      } else {
+        await fs.remove(rssDir);
+      }
+    }
   }
 
   /** Parses the configured OpenAPI spec(s) into the shared registry. */

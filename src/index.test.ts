@@ -308,6 +308,14 @@ describe.skipIf(!fs.pathExistsSync(distEntry))(
             ),
           ),
         ).toBe(true);
+        // The starting docs ship an <Update> page with `rss: true`, so the
+        // format check also covers the generated feed route and the RSS-button
+        // page shape.
+        expect(
+          await fs.pathExists(
+            path.join(outDir, "app", "(site)", "update", "rss.xml", "route.ts"),
+          ),
+        ).toBe(true);
 
         // Mirror `prettier --write .` with a non-mutating `--check`, honoring
         // the generated .prettierrc + .prettierignore in the app directory.
