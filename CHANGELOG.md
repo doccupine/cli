@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.135
+
+- Add four components to the generated docs, each with its own documentation page: `Badge` for inline labels (15 colors, four sizes, stroke, solid, and mono variations), `Prompt` for copyable AI prompts with a Cursor deeplink, `Tooltip` for contextual definitions with viewport-aware placement, and `Tree` (alias `FileTree`) for keyboard-navigable file trees authored as `<Tree.Folder>`/`<Tree.File>` markers or plain markdown lists. The sidebar and API playground HTTP-method chips now render through `Badge`, so every surface colors verbs identically
+- Publish a subscribable RSS 2.0 feed at `{page-url}/rss.xml` for any docs page containing `<Update>` entries: feed items deep-link to each entry's anchor on the page, `rss: true` frontmatter adds an RSS button to the action bar, an optional `rss` prop supplies feed-only text for entries made mostly of components, and pages advertise their feed via autodiscovery metadata. Password-protected sites expose no feeds
+- Apply `doccupine.json` edits without a restart: changing the `openapi` spec set mid-session now regenerates the API reference pages, request allowlist, navigation, and section redirects (removing those whose spec was dropped), invalid or half-written JSON keeps the current configuration, and `watchDir`/`outputDir` changes log a restart hint
+- Rename the "Images and Embeds" page slug from `image-and-embeds` to `images-and-embeds` so it matches the page title
+- Update CLI dependency chalk to ^6.0.0 and generated app dependency globals to ^17.8.0
+
 ## 0.0.134
 
 - Generate an interactive API reference from your OpenAPI specs: point the new `openapi` key in `doccupine.json` at one spec (a single path), several (`string[]`), or named `{ name, file }` objects, and Doccupine dereferences each with `@readme/openapi-parser` at build time and emits one page per operation into an auto-created top-level "API Reference" section. Operations are grouped into sidebar categories by their first tag (honoring the spec's own `tags` order) and carry a color-coded HTTP-method badge. All three config forms normalize to a uniform spec list with de-duplicated route namespaces (each spec namespaced under its name when more than one is configured), and spec paths are rewritten project-relative so `doccupine.json` stays portable across machines and CI. The specs are watched live - editing one reparses it and regenerates the reference pages, request allowlist, navigation, sitemap, and llms output - and the interactive setup prompt gains an optional OpenAPI-spec question
