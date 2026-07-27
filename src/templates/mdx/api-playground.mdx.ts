@@ -4,7 +4,7 @@ description: "Turn an OpenAPI document into an interactive API reference where r
 date: "2026-07-25"
 category: "Components"
 categoryOrder: 1
-order: 19
+order: 20
 ---
 # API Playground
 

@@ -12,6 +12,7 @@ import {
 import Link from "next/link";
 import { mq, Theme } from "@/app/theme";
 import {
+  sidePanelOffset,
   styledAnchor,
   styledTable,
   stylesLists,
@@ -63,6 +64,8 @@ const StyledDocsContainer = styled.div<{ theme: Theme; $isChatOpen?: boolean }>\
         padding: 0 ${CHAT_WIDTH + 20}px 80px ${SIDEBAR_WIDTH + 20}px;
       \`}
   }
+
+  \${sidePanelOffset};
 
   & p {
     color: \${({ theme }) => theme.colors.grayDark};

@@ -5,7 +5,10 @@ import styled, { css } from "styled-components";
 import { useContext } from "react";
 import { ChatContext } from "@/components/Chat";
 import { mq, Theme } from "@/app/theme";
-import { interactiveStyles } from "@/components/layout/SharedStyled";
+import {
+  interactiveStyles,
+  sidePanelOffset,
+} from "@/components/layout/SharedStyled";
 import { Icon } from "@/components/layout/Icon";
 import linksData from "@/links.json";
 
@@ -34,6 +37,8 @@ const StyledStaticLinks = styled.div<{ theme: Theme; $isChatOpen: boolean }>\`
         padding: 0 ${CHAT_WIDTH + 20}px 20px ${SIDEBAR_WIDTH + 20}px;
       \`}
   }
+
+  \${sidePanelOffset};
 \`;
 
 const StyledStaticLinksContent = styled.div\`

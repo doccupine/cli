@@ -89,7 +89,6 @@ function MissingComponent({
 }
 
 function Docs({ content, sourcePath, rssHref, children }: DocsProps) {
-  const headings = extractHeadings(content);
   const components = useMDXComponents({
     pre: createMermaidPre(sourcePath),
     ApiPlaygroundDemo,
@@ -98,6 +97,12 @@ function Docs({ content, sourcePath, rssHref, children }: DocsProps) {
   const knownNames = Object.keys(components);
   const usedNames = extractComponentNames(content);
   const missingNames = usedNames.filter((name) => !knownNames.includes(name));
+
+  // A <SidePanel> takes over the right rail, so the table of contents that
+  // normally lives there is dropped for that page. extractComponentNames
+  // ignores code blocks, so a panel shown only as a code sample never counts.
+  const hasSidePanel = usedNames.includes("SidePanel");
+  const headings = hasSidePanel ? [] : extractHeadings(content);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const stubs: Record<string, React.ComponentType<any>> = {};
@@ -133,7 +138,7 @@ function Docs({ content, sourcePath, rssHref, children }: DocsProps) {
           </Flex>
         </ActionBar>
       </DocsContainer>
-      <DocsSideBar headings={headings} />
+      {!hasSidePanel && <DocsSideBar headings={headings} />}
     </>
   );
 }

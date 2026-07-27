@@ -56,6 +56,7 @@ import { iconTemplate } from "../templates/components/layout/Icon.js";
 import { pictogramsTemplate } from "../templates/components/layout/Pictograms.js";
 import { promptTemplate } from "../templates/components/layout/Prompt.js";
 import { sharedStyledTemplate } from "../templates/components/layout/SharedStyles.js";
+import { sidePanelTemplate } from "../templates/components/layout/SidePanel.js";
 import { notFoundComponentTemplate } from "../templates/components/layout/NotFound.js";
 import { siteGateComponentTemplate } from "../templates/components/layout/SiteGate.js";
 import { slugTemplate } from "../templates/components/layout/Slug.js";
@@ -132,6 +133,7 @@ import { mcpMdxTemplate } from "../templates/mdx/model-context-protocol.mdx.js";
 import { navigationMdxTemplate } from "../templates/mdx/navigation.mdx.js";
 import { promptMdxTemplate } from "../templates/mdx/prompt.mdx.js";
 import { sectionsMdxTemplate } from "../templates/mdx/sections.mdx.js";
+import { sidePanelMdxTemplate } from "../templates/mdx/side-panel.mdx.js";
 import { stepsMdxTemplate } from "../templates/mdx/steps.mdx.js";
 import { tabsMdxTemplate } from "../templates/mdx/tabs.mdx.js";
 import { themeMdxTemplate } from "../templates/mdx/theme.mdx.js";
@@ -254,6 +256,7 @@ export const appStructure: Record<string, string> = {
   "components/layout/Pictograms.tsx": pictogramsTemplate,
   "components/layout/Prompt.tsx": promptTemplate,
   "components/layout/SharedStyled.ts": sharedStyledTemplate,
+  "components/layout/SidePanel.tsx": sidePanelTemplate,
   "components/layout/NotFound.tsx": notFoundComponentTemplate,
   "components/layout/SiteGate.tsx": siteGateComponentTemplate,
   "components/layout/Slug.ts": slugTemplate,
@@ -309,6 +312,7 @@ export const startingDocsStructure: Record<string, string> = {
   "navigation.mdx": navigationMdxTemplate,
   "prompt.mdx": promptMdxTemplate,
   "sections.mdx": sectionsMdxTemplate,
+  "side-panel.mdx": sidePanelMdxTemplate,
   "steps.mdx": stepsMdxTemplate,
   "tabs.mdx": tabsMdxTemplate,
   "theme.mdx": themeMdxTemplate,

@@ -7,7 +7,10 @@ import Link from "next/link";
 import styled, { css } from "styled-components";
 import { Icon } from "@/components/layout/Icon";
 import { mq, Theme } from "@/app/theme";
-import { interactiveStyles } from "@/components/layout/SharedStyled";
+import {
+  interactiveStyles,
+  sidePanelOffset,
+} from "@/components/layout/SharedStyled";
 import { ChatContext } from "@/components/Chat";
 
 const StyledNavigationWrapper = styled.div<{
@@ -23,6 +26,8 @@ const StyledNavigationWrapper = styled.div<{
         padding: 0 ${CHAT_WIDTH + 20}px 80px ${SIDEBAR_WIDTH + 20}px;
       \`}
   }
+
+  \${sidePanelOffset};
 \`;
 
 const StyledNavigationInner = styled.div\`

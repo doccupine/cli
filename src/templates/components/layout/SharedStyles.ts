@@ -1,7 +1,23 @@
+import { CHAT_WIDTH } from "../../app/theme.js";
+
 export const sharedStyledTemplate = `"use client";
 import { styledSmall, styledText } from "cherry-styled-components";
 import { mq, Theme } from "@/app/theme";
 import styled, { css } from "styled-components";
+
+/** From "xl" a <SidePanel> widens from the navigation rail's width to the
+    chat panel's, so every column that already shifts for an open chat shifts
+    by the same amount when a panel is on the page. Below "xl" the panel fits
+    the space the table of contents already reserved, so no offset applies and
+    the content column keeps its width. :has() reads the server-rendered
+    panel, so the layout is right on first paint with no client state. */
+export const sidePanelOffset = css\`
+  \${mq("xl")} {
+    body:has([data-side-panel]) & {
+      padding-right: ${CHAT_WIDTH + 20}px;
+    }
+  }
+\`;
 
 /** Slim, theme-aware scrollbar for internal scroll areas (code blocks,
     modals, tables) so the chunky native bar doesn't stand out, especially

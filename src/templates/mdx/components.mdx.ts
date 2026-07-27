@@ -63,6 +63,9 @@ Doccupine includes a rich set of built-in components you can use directly in you
   <Card title="Columns" icon="columns-3" href="/columns">
     Grid layouts for arranging cards and content side by side.
   </Card>
+  <Card title="Side Panel" icon="panel-right" href="/side-panel">
+    Pinned right-rail content that replaces a page's table of contents.
+  </Card>
   <Card title="Fields" icon="text-cursor-input" href="/fields">
     Property and parameter documentation blocks.
   </Card>
