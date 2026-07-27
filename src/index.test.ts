@@ -340,3 +340,144 @@ describe.skipIf(!fs.pathExistsSync(distEntry))(
     }, 120_000);
   },
 );
+
+// The homepage is emitted by updatePagesIndex(), not generatePageFromMDX, so
+// its RSS support is a separate code path: `rss: true` + <Update> blocks on
+// index.mdx must publish the site-root feed and render the RSS button.
+describe.skipIf(!fs.pathExistsSync(distEntry))("homepage RSS feed", () => {
+  it("emits the root feed route and RSS button for index.mdx", async () => {
+    const projectDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), "doccupine-rss-"),
+    );
+    try {
+      await fs.writeJson(path.join(projectDir, "doccupine.json"), {
+        watchDir: "docs",
+        outputDir: "out",
+        port: "3000",
+      });
+      await fs.outputFile(
+        path.join(projectDir, "docs", "index.mdx"),
+        [
+          "---",
+          'title: "Home"',
+          'description: "Site changelog"',
+          "rss: true",
+          "---",
+          "",
+          "# Welcome",
+          "",
+          '<Update label="v1.0.0" description="First release">',
+          "  Initial release.",
+          "</Update>",
+          "",
+        ].join("\n"),
+      );
+
+      await execFileAsync(process.execPath, [distEntry, "build"], {
+        cwd: projectDir,
+        maxBuffer: 20 * 1024 * 1024,
+      });
+
+      const outDir = path.join(projectDir, "out");
+      const homePage = await fs.readFile(
+        path.join(outDir, "app", "(site)", "page.tsx"),
+        "utf8",
+      );
+      // The button prop and the autodiscovery alternate both point at the
+      // site-root feed.
+      expect(homePage).toContain('rssHref={"/rss.xml"}');
+      expect(homePage).toContain('"application/rss+xml": "/rss.xml"');
+
+      const route = await fs.readFile(
+        path.join(outDir, "app", "(site)", "rss.xml", "route.ts"),
+        "utf8",
+      );
+      expect(route).toContain('"pagePath":""');
+      expect(route).toContain("v1.0.0");
+    } finally {
+      await fs.remove(projectDir);
+    }
+  }, 120_000);
+
+  // Section index files (e.g. changelog/index.mdx with `section:` frontmatter)
+  // are written twice: generatePageFromMDX first, then updateSectionIndex
+  // overwrites the page with name-first metadata. The overwrite must re-apply
+  // the RSS button or it silently disappears while the feed route survives.
+  it("keeps the RSS button on a section index page", async () => {
+    const projectDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), "doccupine-rss-section-"),
+    );
+    try {
+      await fs.writeJson(path.join(projectDir, "doccupine.json"), {
+        watchDir: "docs",
+        outputDir: "out",
+        port: "3000",
+      });
+      await fs.outputFile(
+        path.join(projectDir, "docs", "index.mdx"),
+        '---\ntitle: "Home"\n---\n\n# Welcome\n',
+      );
+      await fs.outputFile(
+        path.join(projectDir, "docs", "changelog", "index.mdx"),
+        [
+          "---",
+          'title: "Product updates"',
+          'description: "Release notes"',
+          'section: "Changelog"',
+          "rss: true",
+          "---",
+          "",
+          "# Product updates",
+          "",
+          '<Update label="v1.0.0">',
+          "  - Added things.",
+          "</Update>",
+          "",
+        ].join("\n"),
+      );
+
+      await execFileAsync(process.execPath, [distEntry, "build"], {
+        cwd: projectDir,
+        maxBuffer: 20 * 1024 * 1024,
+      });
+
+      const pagePath = path.join(
+        projectDir,
+        "out",
+        "app",
+        "(site)",
+        "changelog",
+        "page.tsx",
+      );
+      const sectionPage = await fs.readFile(pagePath, "utf8");
+      expect(sectionPage).toContain('rssHref={"/changelog/rss.xml"}');
+      expect(sectionPage).toContain(
+        '"application/rss+xml": "/changelog/rss.xml"',
+      );
+      expect(
+        await fs.pathExists(
+          path.join(
+            projectDir,
+            "out",
+            "app",
+            "(site)",
+            "changelog",
+            "rss.xml",
+            "route.ts",
+          ),
+        ),
+      ).toBe(true);
+
+      // The buttoned form overflows the 80-col print width and is emitted
+      // pre-wrapped; assert it really is Prettier-stable.
+      const { stdout } = await execFileAsync(
+        process.execPath,
+        [prettierCli, "--check", pagePath],
+        { maxBuffer: 20 * 1024 * 1024 },
+      );
+      expect(stdout).toContain("All matched files use Prettier code style!");
+    } finally {
+      await fs.remove(projectDir);
+    }
+  }, 120_000);
+});

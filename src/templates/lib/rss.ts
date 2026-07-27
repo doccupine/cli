@@ -8,6 +8,7 @@ export interface RssItem {
 
 export interface RssFeedData {
   // Page path relative to the site root, e.g. "update" or "guides/setup".
+  // Empty string means the homepage feed (served from /rss.xml).
   pagePath: string;
   // Channel title; null falls back to the site name from config.json.
   title: string | null;
@@ -40,9 +41,13 @@ function escapeXml(text: string): string {
 // sections are needed. Entries carry no pubDate: the guid is the entry's
 // permalink, so feed readers surface new entries when new guids appear.
 export function buildRssFeed(feed: RssFeedData): string {
-  const base = resolveBaseUrl();
-  const pageUrl = base ? \`\${base}/\${feed.pagePath}\` : \`/\${feed.pagePath}\`;
-  const feedUrl = \`\${pageUrl}/rss.xml\`;
+  const base = resolveBaseUrl() ?? "";
+  // The homepage feed has an empty pagePath; joining through this prefix
+  // keeps its URLs free of double slashes ("//rss.xml" would be read as a
+  // protocol-relative URL).
+  const pagePrefix = feed.pagePath ? \`/\${feed.pagePath}\` : "";
+  const pageUrl = \`\${base}\${pagePrefix}\` || "/";
+  const feedUrl = \`\${base}\${pagePrefix}/rss.xml\`;
   const siteName = config.name || "Documentation";
   const title = feed.title ?? siteName;
   const description = feed.description ?? config.description ?? title;

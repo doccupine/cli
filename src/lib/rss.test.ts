@@ -10,6 +10,7 @@ import { slugTemplate } from "../templates/components/layout/Slug.js";
 import { docsTemplate } from "../templates/components/Docs.js";
 import { updateMdxTemplate } from "../templates/mdx/update.mdx.js";
 import { rssRouteTemplate } from "../templates/app/rssRoute.js";
+import { rssLibTemplate } from "../templates/lib/rss.js";
 
 describe("slugify", () => {
   it("lowercases and hyphenates whitespace", () => {
@@ -218,5 +219,17 @@ describe("rssRouteTemplate", () => {
     const full = rssRouteTemplate(feed);
     expect(full).toContain("JSON.parse(\n  '");
     expect(full).toContain("',\n);");
+  });
+});
+
+describe("rssLibTemplate", () => {
+  it("guards the homepage feed's empty pagePath against double slashes", () => {
+    // The homepage feed (updatePagesIndex) passes pagePath: "" - naive
+    // `/${pagePath}` joins would emit "//rss.xml", a protocol-relative URL.
+    expect(rssLibTemplate).toContain(
+      'const pagePrefix = feed.pagePath ? `/${feed.pagePath}` : "";',
+    );
+    expect(rssLibTemplate).toContain('`${base}${pagePrefix}` || "/"');
+    expect(rssLibTemplate).toContain("`${base}${pagePrefix}/rss.xml`");
   });
 });

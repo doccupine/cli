@@ -1750,6 +1750,7 @@ export default function Page() {
       date?: string;
       updated?: string;
       openapi?: string;
+      rss?: boolean;
     } | null = null;
 
     for (const file of files) {
@@ -1775,10 +1776,18 @@ export default function Page() {
             typeof frontmatter.openapi === "string"
               ? frontmatter.openapi
               : undefined,
+          rss: frontmatter.rss === true,
         };
         break;
       }
     }
+
+    // The homepage publishes the same subscribable changelog as any other
+    // page (see generatePageFromMDX): <Update> blocks feed the site-root
+    // /rss.xml, and `rss: true` frontmatter opts into the RSS button.
+    const updates = indexMDX ? parseUpdateBlocks(indexMDX.content) : [];
+    const hasFeed = updates.length > 0;
+    const feedPath = "/rss.xml";
 
     const metadataBlock = indexMDX
       ? generateMetadataBlock({
@@ -1790,6 +1799,7 @@ export default function Page() {
           icon: indexMDX.icon,
           image: indexMDX.image,
           canonicalPath: "",
+          rssPath: hasFeed ? feedPath : undefined,
         })
       : generateRuntimeOnlyMetadataBlock();
 
@@ -1824,11 +1834,18 @@ export default function Page() {
           JSON.stringify(apiOperation),
         )});\n`
       : "";
+    // Same gating as generatePageFromMDX: the playground branch keeps its
+    // fixed JSX shape, so a feed on a playground homepage stays reachable via
+    // autodiscovery. The buttoned inline form stays within the 80-col print
+    // width at its 6-space insertion indent, so it is Prettier-stable as is.
+    const showRssButton = hasFeed && indexMDX?.rss === true && !apiOperation;
     const docsElement = apiOperation
       ? `<Docs content={content} sourcePath="index.mdx">
         <ApiPlayground operation={operation} />
       </Docs>`
-      : `<Docs content={content} sourcePath="index.mdx" />`;
+      : showRssButton
+        ? `<Docs content={content} sourcePath="index.mdx" rssHref={"/rss.xml"} />`
+        : `<Docs content={content} sourcePath="index.mdx" />`;
 
     const indexContent = `import { Metadata } from "next";
 import { Docs } from "@/components/Docs";
@@ -1856,6 +1873,31 @@ export default function Home() {
     const homePath = path.join(this.outputDir, "app", "(site)", "page.tsx");
     await fs.ensureDir(path.dirname(homePath));
     await fs.writeFile(homePath, indexContent, "utf8");
+
+    // Same lifecycle as the per-page feeds in generatePageFromMDX: write the
+    // root feed route while the homepage has Update blocks, prune it when
+    // they go away or index.mdx is deleted (this runs on every aggregate
+    // refresh, including the delete path).
+    const rssDir = path.join(this.outputDir, "app", "(site)", "rss.xml");
+    if (hasFeed && indexMDX) {
+      await fs.ensureDir(rssDir);
+      await fs.writeFile(
+        path.join(rssDir, "route.ts"),
+        rssRouteTemplate({
+          pagePath: "",
+          title: indexMDX.title,
+          description: indexMDX.description || null,
+          items: updates.map((update) => ({
+            title: update.label,
+            anchor: update.anchor,
+            description: update.description,
+          })),
+        }),
+        "utf8",
+      );
+    } else {
+      await fs.remove(rssDir);
+    }
   }
 
   async updateSectionIndex(
@@ -1864,6 +1906,16 @@ export default function Home() {
     mdxContent: string,
     sourcePath?: string,
   ) {
+    // This overwrites the page generatePageFromMDX just wrote for the same
+    // slug (section landings compose their metadata name-first), so the RSS
+    // state must be re-derived here or the overwrite silently drops the
+    // button and autodiscovery - the feed route survives either way since it
+    // lives in a sibling rss.xml/ dir.
+    const updates = parseUpdateBlocks(mdxContent);
+    const hasFeed = updates.length > 0;
+    const feedPath = `/${sectionSlug}/rss.xml`;
+    const showRssButton = hasFeed && frontmatter.rss === true;
+
     const metadataBlock = generateMetadataBlock({
       title: frontmatter.title,
       titleFallback: "Section",
@@ -1873,6 +1925,7 @@ export default function Home() {
       icon: frontmatter.icon,
       image: frontmatter.image,
       canonicalPath: sectionSlug,
+      rssPath: hasFeed ? feedPath : undefined,
     });
 
     const sectionJsonLd = generateJsonLdScript({
@@ -1889,6 +1942,20 @@ export default function Home() {
             : undefined,
       image: frontmatter.image,
     });
+
+    // Same Prettier pre-wrap contract as generatePageFromMDX: the buttoned
+    // form usually pushes the line past the 80-col print width, so emit it
+    // with attributes on their own lines relative to the 6-space indent.
+    const docsAttrs = [
+      `content={content}`,
+      `sourcePath={${JSON.stringify(sourcePath ?? `${sectionSlug}/index.mdx`)}}`,
+      ...(showRssButton ? [`rssHref={${JSON.stringify(feedPath)}}`] : []),
+    ];
+    const inlineDocs = `<Docs ${docsAttrs.join(" ")} />`;
+    const docsElement =
+      inlineDocs.length + 6 <= 80
+        ? inlineDocs
+        : `<Docs\n${docsAttrs.map((attr) => `        ${attr}`).join("\n")}\n      />`;
 
     const indexContent = `import { Metadata } from "next";
 import { Docs } from "@/components/Docs";
@@ -1907,7 +1974,7 @@ export default function Page() {
   return (
     <>
       ${sectionJsonLd.element}
-      <Docs content={content} sourcePath={${JSON.stringify(sourcePath ?? `${sectionSlug}/index.mdx`)}} />
+      ${docsElement}
     </>
   );
 }
