@@ -4,7 +4,7 @@ description: "A flexible action component supporting variants, sizes, icons, and
 date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
-order: 9
+order: 11
 ---
 # Buttons
 

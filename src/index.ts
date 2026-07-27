@@ -48,6 +48,7 @@ import {
 } from "./templates/llms/llmsFull.js";
 import { llmsPageTemplate } from "./templates/llms/llmsPage.js";
 import type {
+  DoccupineConfig,
   MDXFile,
   PageMeta,
   SectionConfig,
@@ -82,6 +83,8 @@ class MDXToNextJSGenerator {
   private rootDirWatcher: FSWatcher | null = null;
   private analyticsWatcher: FSWatcher | null = null;
   private openApiWatcher: FSWatcher | null = null;
+  private doccupineConfigWatcher: FSWatcher | null = null;
+  private doccupineConfigFile = "doccupine.json";
   private configFiles = [
     "theme.json",
     "navigation.json",
@@ -103,6 +106,8 @@ class MDXToNextJSGenerator {
   private apiRegistry = new OpenApiRegistry();
   /** Route slugs of the endpoint pages written last pass, for stale cleanup. */
   private generatedApiPageSlugs = new Set<string>();
+  /** Section slugs whose index redirect we wrote this session, for cleanup. */
+  private generatedSectionIndexSlugs = new Set<string>();
 
   constructor(
     watchDir: string,
@@ -861,24 +866,24 @@ class MDXToNextJSGenerator {
         console.error(chalk.red("❌ Analytics watcher error:"), error);
       });
 
-    if (this.openApiSpecs.length > 0) {
-      const specPaths = this.openApiSpecs.map((spec) =>
-        path.resolve(this.rootDir, spec.file),
-      );
+    await this.syncOpenApiSpecWatcher();
 
-      this.openApiWatcher = chokidar.watch(specPaths, {
-        persistent: true,
-        ignoreInitial: true,
+    const doccupineConfigPath = path.join(
+      this.rootDir,
+      this.doccupineConfigFile,
+    );
+
+    this.doccupineConfigWatcher = chokidar.watch(doccupineConfigPath, {
+      persistent: true,
+      ignoreInitial: true,
+    });
+
+    this.doccupineConfigWatcher
+      .on("add", () => this.handleDoccupineConfigChange())
+      .on("change", () => this.handleDoccupineConfigChange())
+      .on("error", (error: unknown) => {
+        console.error(chalk.red("❌ doccupine.json watcher error:"), error);
       });
-
-      this.openApiWatcher
-        .on("add", () => this.handleOpenApiChange())
-        .on("change", () => this.handleOpenApiChange())
-        .on("unlink", () => this.handleOpenApiChange())
-        .on("error", (error: unknown) => {
-          console.error(chalk.red("❌ OpenAPI watcher error:"), error);
-        });
-    }
 
     const publicDir = path.join(this.rootDir, "public");
 
@@ -1216,50 +1221,113 @@ class MDXToNextJSGenerator {
   }
 
   async generateSectionIndexPages(pages?: PageMeta[]) {
-    if (!this.sectionsConfig || this.sectionsConfig.length === 0) return;
+    const nextSlugs = new Set<string>();
 
-    const resolvedPages = pages ?? (await this.buildAllPagesMeta());
+    if (this.sectionsConfig && this.sectionsConfig.length > 0) {
+      const resolvedPages = pages ?? (await this.buildAllPagesMeta());
 
-    for (const section of this.sectionsConfig) {
-      if (section.slug === "") continue;
+      for (const section of this.sectionsConfig) {
+        if (section.slug === "") continue;
 
-      // Check if a page already exists at the section root
-      const hasIndex = resolvedPages.some((p) => p.slug === section.slug);
-      if (hasIndex) continue;
+        // Check if a page already exists at the section root
+        const hasIndex = resolvedPages.some((p) => p.slug === section.slug);
+        if (hasIndex) continue;
 
-      // Find the first page in this section
-      const sectionPages = resolvedPages
-        .filter((p) => p.section === section.slug)
-        .sort((a, b) => {
-          if (a.categoryOrder !== b.categoryOrder)
-            return a.categoryOrder - b.categoryOrder;
-          return a.order - b.order;
-        });
+        // Find the first page in this section
+        const sectionPages = resolvedPages
+          .filter((p) => p.section === section.slug)
+          .sort((a, b) => {
+            if (a.categoryOrder !== b.categoryOrder)
+              return a.categoryOrder - b.categoryOrder;
+            return a.order - b.order;
+          });
 
-      if (sectionPages.length === 0) continue;
+        if (sectionPages.length === 0) continue;
 
-      const firstPage = sectionPages[0];
-      const redirectContent = `import { redirect } from "next/navigation";
+        const firstPage = sectionPages[0];
+        const redirectContent = `import { redirect } from "next/navigation";
 
 export default function SectionIndex() {
   redirect("/${firstPage.slug}");
 }
 `;
 
+        const pagePath = path.join(
+          this.outputDir,
+          "app",
+          "(site)",
+          section.slug,
+          "page.tsx",
+        );
+        await fs.ensureDir(path.dirname(pagePath));
+        await fs.writeFile(pagePath, redirectContent, "utf8");
+        nextSlugs.add(section.slug);
+        console.log(
+          chalk.blue(
+            `🔀 Generated section index redirect: /${section.slug} -> /${firstPage.slug}`,
+          ),
+        );
+      }
+    }
+
+    await this.cleanupStaleSectionIndexPages(nextSlugs);
+  }
+
+  /**
+   * Removes section index redirects written earlier in this session whose
+   * section has since disappeared (e.g. the API Reference section after the
+   * `openapi` config is removed mid-watch). Only files that still contain the
+   * generated redirect are deleted, so a hand-written page that has taken
+   * over the slug is never touched. Fresh processes start clean anyway -
+   * init() wipes app/ - so in-session tracking is enough.
+   */
+  private async cleanupStaleSectionIndexPages(
+    nextSlugs: Set<string>,
+  ): Promise<void> {
+    for (const stale of this.generatedSectionIndexSlugs) {
+      if (nextSlugs.has(stale)) continue;
       const pagePath = path.join(
         this.outputDir,
         "app",
         "(site)",
-        section.slug,
+        stale,
         "page.tsx",
       );
-      await fs.ensureDir(path.dirname(pagePath));
-      await fs.writeFile(pagePath, redirectContent, "utf8");
-      console.log(
-        chalk.blue(
-          `🔀 Generated section index redirect: /${section.slug} -> /${firstPage.slug}`,
-        ),
-      );
+      try {
+        if (!(await fs.pathExists(pagePath))) continue;
+        const content = await fs.readFile(pagePath, "utf8");
+        if (!content.includes("function SectionIndex()")) continue;
+        await fs.remove(pagePath);
+        await this.removeEmptyDirsUpTo(
+          path.dirname(pagePath),
+          path.join(this.outputDir, "app", "(site)"),
+        );
+        console.log(
+          chalk.blue(`🧹 Removed stale section index redirect: /${stale}`),
+        );
+      } catch {
+        // ignore
+      }
+    }
+    this.generatedSectionIndexSlugs = nextSlugs;
+  }
+
+  /** Best-effort removal of now-empty directories up to (not incl.) stopDir. */
+  private async removeEmptyDirsUpTo(
+    dir: string,
+    stopDir: string,
+  ): Promise<void> {
+    const stop = path.resolve(stopDir);
+    let current = path.resolve(dir);
+    while (current !== stop && current.startsWith(stop + path.sep)) {
+      try {
+        const entries = await fs.readdir(current);
+        if (entries.length > 0) return;
+        await fs.remove(current);
+      } catch {
+        return;
+      }
+      current = path.dirname(current);
     }
   }
 
@@ -1542,6 +1610,10 @@ export default function Page() {
         const dir = path.join(this.outputDir, "app", "(site)", stale);
         if (await fs.pathExists(dir)) {
           await fs.remove(dir);
+          await this.removeEmptyDirsUpTo(
+            path.dirname(dir),
+            path.join(this.outputDir, "app", "(site)"),
+          );
         }
       } catch {
         // ignore
@@ -1552,19 +1624,114 @@ export default function Page() {
     await this.writeApiManifest(nextSlugs);
   }
 
+  /**
+   * (Re)points the spec-file watcher at the currently configured spec paths.
+   * Called at startup and whenever doccupine.json changes the `openapi` set,
+   * so specs added mid-session are watched without a restart.
+   */
+  private async syncOpenApiSpecWatcher(): Promise<void> {
+    if (this.openApiWatcher) {
+      await this.openApiWatcher.close();
+      this.openApiWatcher = null;
+    }
+    if (this.openApiSpecs.length === 0) return;
+
+    const specPaths = this.openApiSpecs.map((spec) =>
+      path.resolve(this.rootDir, spec.file),
+    );
+
+    this.openApiWatcher = chokidar.watch(specPaths, {
+      persistent: true,
+      ignoreInitial: true,
+    });
+
+    this.openApiWatcher
+      .on("add", () => this.handleOpenApiChange())
+      .on("change", () => this.handleOpenApiChange())
+      .on("unlink", () => this.handleOpenApiChange())
+      .on("error", (error: unknown) => {
+        console.error(chalk.red("❌ OpenAPI watcher error:"), error);
+      });
+  }
+
+  /**
+   * Reparses the spec(s) and rewrites everything derived from them: the
+   * endpoint pages and allowlist, the sections (the "API Reference" section
+   * appears and disappears with the registry), and the site aggregates.
+   */
+  private async rebuildApiReference(): Promise<void> {
+    await this.apiRegistry.load(
+      this.openApiSpecs,
+      this.rootDir,
+      this.apiBaseSlug,
+    );
+    this.sectionsConfig = await this.resolveSections();
+    await this.writeApiPages();
+    await this.refreshSiteAggregates();
+  }
+
   /** Reparses the spec(s) and regenerates the API reference on a watch event. */
   async handleOpenApiChange() {
     console.log(
       chalk.cyan("📘 OpenAPI spec changed - regenerating API reference"),
     );
     try {
-      await this.apiRegistry.load(
-        this.openApiSpecs,
-        this.rootDir,
-        this.apiBaseSlug,
+      await this.rebuildApiReference();
+      console.log(chalk.green("✅ API reference updated"));
+    } catch (error) {
+      console.error(chalk.red("❌ Error updating API reference:"), error);
+    }
+  }
+
+  /**
+   * Applies `openapi` edits in doccupine.json without a restart: reloads the
+   * registry, regenerates or prunes the endpoint pages and allowlist,
+   * refreshes nav/sitemap/llms, and re-points the spec-file watcher. Other
+   * fields (watchDir, outputDir, port) cannot be hot-applied, so a change
+   * there only logs a restart hint. Invalid or missing JSON (e.g. a
+   * half-written editor save) keeps the current configuration.
+   */
+  async handleDoccupineConfigChange() {
+    const configPath = path.join(this.rootDir, this.doccupineConfigFile);
+    let config: DoccupineConfig;
+    try {
+      config = JSON.parse(
+        await fs.readFile(configPath, "utf8"),
+      ) as DoccupineConfig;
+    } catch {
+      console.warn(
+        chalk.yellow(
+          "⚠️ doccupine.json is missing or invalid - keeping the current configuration",
+        ),
       );
-      await this.writeApiPages();
-      await this.refreshSiteAggregates();
+      return;
+    }
+
+    if (
+      (config.watchDir &&
+        path.resolve(this.rootDir, config.watchDir) !== this.watchDir) ||
+      (config.outputDir &&
+        path.resolve(this.rootDir, config.outputDir) !== this.outputDir)
+    ) {
+      console.log(
+        chalk.yellow(
+          "⚠️ watchDir/outputDir changes in doccupine.json need a restart to apply",
+        ),
+      );
+    }
+
+    const nextSpecs = normalizeOpenApiConfig(config.openapi);
+    if (JSON.stringify(nextSpecs) === JSON.stringify(this.openApiSpecs)) {
+      return;
+    }
+
+    console.log(
+      chalk.cyan("📘 OpenAPI configuration changed - updating API reference"),
+    );
+    this.openApiSpecs = nextSpecs;
+    try {
+      await this.syncOpenApiSpecWatcher();
+      await this.rebuildApiReference();
       console.log(chalk.green("✅ API reference updated"));
     } catch (error) {
       console.error(chalk.red("❌ Error updating API reference:"), error);
@@ -2052,6 +2219,12 @@ export default function Page() {
     if (this.openApiWatcher) {
       await this.openApiWatcher.close();
       console.log(chalk.yellow("👋 Stopped watching for OpenAPI spec changes"));
+    }
+    if (this.doccupineConfigWatcher) {
+      await this.doccupineConfigWatcher.close();
+      console.log(
+        chalk.yellow("👋 Stopped watching for doccupine.json changes"),
+      );
     }
     if (this.publicWatcher) {
       await this.publicWatcher.close();

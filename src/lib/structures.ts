@@ -36,6 +36,7 @@ import { spinnerTemplate } from "../templates/components/Spinner.js";
 import { sectionBarTemplate } from "../templates/components/layout/SectionBar.js";
 import { accordionTemplate } from "../templates/components/layout/Accordion.js";
 import { actionBarTemplate } from "../templates/components/layout/ActionBar.js";
+import { badgeTemplate } from "../templates/components/layout/Badge.js";
 import { buttonTemplate } from "../templates/components/layout/Button.js";
 import { calloutTemplate } from "../templates/components/layout/Callout.js";
 import { cardTemplate } from "../templates/components/layout/Card.js";
@@ -53,6 +54,7 @@ import { globalStylesTemplate } from "../templates/components/layout/GlobalStyle
 import { headerTemplate } from "../templates/components/layout/Header.js";
 import { iconTemplate } from "../templates/components/layout/Icon.js";
 import { pictogramsTemplate } from "../templates/components/layout/Pictograms.js";
+import { promptTemplate } from "../templates/components/layout/Prompt.js";
 import { sharedStyledTemplate } from "../templates/components/layout/SharedStyles.js";
 import { notFoundComponentTemplate } from "../templates/components/layout/NotFound.js";
 import { siteGateComponentTemplate } from "../templates/components/layout/SiteGate.js";
@@ -60,6 +62,9 @@ import { slugTemplate } from "../templates/components/layout/Slug.js";
 import { staticLinksTemplate } from "../templates/components/layout/StaticLinks.js";
 import { stepsTemplate } from "../templates/components/layout/Steps.js";
 import { tabsTemplate } from "../templates/components/layout/Tabs.js";
+import { tooltipTemplate } from "../templates/components/layout/Tooltip.js";
+import { treeTemplate } from "../templates/components/layout/Tree.js";
+import { treeDataTemplate } from "../templates/components/layout/TreeData.js";
 import { typographyTemplate } from "../templates/components/layout/Typography.js";
 import { updateTemplate } from "../templates/components/layout/Update.js";
 
@@ -101,6 +106,7 @@ import { aiAssistantMdxTemplate } from "../templates/mdx/ai-assistant.mdx.js";
 import { analyticsMdxTemplate } from "../templates/mdx/analytics.mdx.js";
 import { apiPlaygroundMdxTemplate } from "../templates/mdx/api-playground.mdx.js";
 import { authenticationMdxTemplate } from "../templates/mdx/authentication.mdx.js";
+import { badgesMdxTemplate } from "../templates/mdx/badges.mdx.js";
 import { buttonsMdxTemplate } from "../templates/mdx/buttons.mdx.js";
 import { calloutsMdxTemplate } from "../templates/mdx/callouts.mdx.js";
 import { cardsMdxTemplate } from "../templates/mdx/cards.mdx.js";
@@ -115,7 +121,7 @@ import { fontsMdxTemplate } from "../templates/mdx/fonts.mdx.js";
 import { globalsMdxTemplate } from "../templates/mdx/globals.mdx.js";
 import { headersAndTextMdxTemplate } from "../templates/mdx/headers-and-text.mdx.js";
 import { iconsMdxTemplate } from "../templates/mdx/icons.mdx.js";
-import { imageAndEmbedsMdxTemplate } from "../templates/mdx/image-and-embeds.mdx.js";
+import { imagesAndEmbedsMdxTemplate } from "../templates/mdx/images-and-embeds.mdx.js";
 import { indexMdxTemplate } from "../templates/mdx/index.mdx.js";
 import { footerLinksMdxTemplate } from "../templates/mdx/footer-links.mdx.js";
 import { framesMdxTemplate } from "../templates/mdx/frames.mdx.js";
@@ -124,10 +130,13 @@ import { mediaAndAssetsMdxTemplate } from "../templates/mdx/media-and-assets.mdx
 import { mermaidMdxTemplate } from "../templates/mdx/mermaid.mdx.js";
 import { mcpMdxTemplate } from "../templates/mdx/model-context-protocol.mdx.js";
 import { navigationMdxTemplate } from "../templates/mdx/navigation.mdx.js";
+import { promptMdxTemplate } from "../templates/mdx/prompt.mdx.js";
 import { sectionsMdxTemplate } from "../templates/mdx/sections.mdx.js";
 import { stepsMdxTemplate } from "../templates/mdx/steps.mdx.js";
 import { tabsMdxTemplate } from "../templates/mdx/tabs.mdx.js";
 import { themeMdxTemplate } from "../templates/mdx/theme.mdx.js";
+import { tooltipsMdxTemplate } from "../templates/mdx/tooltips.mdx.js";
+import { treeMdxTemplate } from "../templates/mdx/tree.mdx.js";
 import { updateMdxTemplate } from "../templates/mdx/update.mdx.js";
 import { whatIsDoccupineMdxTemplate } from "../templates/mdx/what-is-doccupine.mdx.js";
 
@@ -222,6 +231,7 @@ export const appStructure: Record<string, string> = {
   "components/layout/ActionBar.tsx": actionBarTemplate,
   "components/layout/ApiPlayground.tsx": apiPlaygroundTemplate,
   "components/layout/ApiPlaygroundDemo.tsx": apiPlaygroundDemoTemplate,
+  "components/layout/Badge.tsx": badgeTemplate,
   "components/layout/Button.tsx": buttonTemplate,
   "components/layout/Callout.tsx": calloutTemplate,
   "components/layout/Card.tsx": cardTemplate,
@@ -242,6 +252,7 @@ export const appStructure: Record<string, string> = {
   "components/layout/Icon.tsx": iconTemplate,
   "components/layout/Mermaid.tsx": mermaidViewTemplate,
   "components/layout/Pictograms.tsx": pictogramsTemplate,
+  "components/layout/Prompt.tsx": promptTemplate,
   "components/layout/SharedStyled.ts": sharedStyledTemplate,
   "components/layout/NotFound.tsx": notFoundComponentTemplate,
   "components/layout/SiteGate.tsx": siteGateComponentTemplate,
@@ -249,6 +260,9 @@ export const appStructure: Record<string, string> = {
   "components/layout/StaticLinks.tsx": staticLinksTemplate,
   "components/layout/Steps.tsx": stepsTemplate,
   "components/layout/Tabs.tsx": tabsTemplate,
+  "components/layout/Tooltip.tsx": tooltipTemplate,
+  "components/layout/Tree.tsx": treeTemplate,
+  "components/layout/TreeData.ts": treeDataTemplate,
   "components/layout/Typography.ts": typographyTemplate,
   "components/layout/Update.tsx": updateTemplate,
 };
@@ -269,6 +283,7 @@ export const startingDocsStructure: Record<string, string> = {
   "analytics.mdx": analyticsMdxTemplate,
   "api-playground.mdx": apiPlaygroundMdxTemplate,
   "authentication.mdx": authenticationMdxTemplate,
+  "badges.mdx": badgesMdxTemplate,
   "buttons.mdx": buttonsMdxTemplate,
   "callouts.mdx": calloutsMdxTemplate,
   "cards.mdx": cardsMdxTemplate,
@@ -283,7 +298,7 @@ export const startingDocsStructure: Record<string, string> = {
   "globals.mdx": globalsMdxTemplate,
   "headers-and-text.mdx": headersAndTextMdxTemplate,
   "icons.mdx": iconsMdxTemplate,
-  "image-and-embeds.mdx": imageAndEmbedsMdxTemplate,
+  "images-and-embeds.mdx": imagesAndEmbedsMdxTemplate,
   "index.mdx": indexMdxTemplate,
   "footer-links.mdx": footerLinksMdxTemplate,
   "frames.mdx": framesMdxTemplate,
@@ -292,10 +307,13 @@ export const startingDocsStructure: Record<string, string> = {
   "mermaid.mdx": mermaidMdxTemplate,
   "model-context-protocol.mdx": mcpMdxTemplate,
   "navigation.mdx": navigationMdxTemplate,
+  "prompt.mdx": promptMdxTemplate,
   "sections.mdx": sectionsMdxTemplate,
   "steps.mdx": stepsMdxTemplate,
   "tabs.mdx": tabsMdxTemplate,
   "theme.mdx": themeMdxTemplate,
+  "tooltips.mdx": tooltipsMdxTemplate,
+  "tree.mdx": treeMdxTemplate,
   "update.mdx": updateMdxTemplate,
   "what-is-doccupine.mdx": whatIsDoccupineMdxTemplate,
   "platform/index.mdx": platformIndexMdxTemplate,

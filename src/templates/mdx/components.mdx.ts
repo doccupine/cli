@@ -21,6 +21,9 @@ Doccupine includes a rich set of built-in components you can use directly in you
   <Card title="Code" icon="code" href="/code">
     Inline code, fenced code blocks, and syntax highlighting.
   </Card>
+  <Card title="Prompt" icon="sparkles" href="/prompt">
+    Pre-built AI prompts readers can copy or open in Cursor.
+  </Card>
   <Card title="Callouts" icon="megaphone" href="/callouts">
     Highlighted blocks for tips, warnings, and important notes.
   </Card>
@@ -33,13 +36,22 @@ Doccupine includes a rich set of built-in components you can use directly in you
   <Card title="Steps" icon="footprints" href="/steps">
     Numbered step-by-step guides and walkthroughs.
   </Card>
+  <Card title="Tree" icon="folder-tree" href="/tree">
+    File and folder structures with collapsible nodes and keyboard navigation.
+  </Card>
   <Card title="Cards" icon="square" href="/cards">
     Visual containers for content, icons, and links.
   </Card>
   <Card title="Buttons" icon="mouse-pointer-click" href="/buttons">
     Action components with variants, sizes, and icons.
   </Card>
-  <Card title="Images and Embeds" icon="image" href="/image-and-embeds">
+  <Card title="Badges" icon="tag" href="/badges">
+    Colored labels for statuses, versions, and metadata.
+  </Card>
+  <Card title="Tooltips" icon="message-square" href="/tooltips">
+    Contextual definitions and explanations shown on hover.
+  </Card>
+  <Card title="Images and Embeds" icon="image" href="/images-and-embeds">
     Images, videos, and embedded content.
   </Card>
   <Card title="Frames" icon="frame" href="/frames">

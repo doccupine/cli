@@ -4,7 +4,7 @@ description: "Interactive panels for toggling visibility of content."
 date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
-order: 5
+order: 6
 ---
 # Accordion
 

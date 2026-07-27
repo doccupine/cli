@@ -16,6 +16,7 @@ import {
   styledTable,
   stylesLists,
 } from "@/components/layout/SharedStyled";
+import { Badge } from "@/components/layout/Badge";
 import { ChatContext } from "@/components/Chat";
 
 const SectionBarContext = createContext(false);
@@ -344,40 +345,14 @@ export const StyledSidebarListItemLink = styled(Link)<Props>\`
 // Compact HTTP-method label shown before a generated API endpoint link, colored
 // by verb so endpoints are scannable in the sidebar. Only rendered when a link
 // carries an \`httpMethod\` (endpoint pages do; hand-written pages do not).
-const METHOD_TAG_COLORS: Record<string, keyof Theme["colors"]> = {
-  get: "info",
-  post: "success",
-  put: "warning",
-  patch: "warning",
-  delete: "error",
-  head: "gray",
-  options: "gray",
-  trace: "gray",
-};
-
-function methodTagColor(theme: Theme, method: string): string {
-  return theme.colors[METHOD_TAG_COLORS[method.toLowerCase()] ?? "gray"];
-}
-
-export const StyledSidebarMethodTag = styled.span<{
-  theme: Theme;
-  $method: string;
-  $isActive?: boolean;
-}>\`
+// The look is Badge's mono variation (tinted, solid when active); only
+// sidebar metrics are adjusted here.
+export const StyledSidebarMethodTag = styled(Badge)\`
   flex-shrink: 0;
-  font-family: \${({ theme }) => theme.fonts.mono};
   font-size: 9px;
-  font-weight: 700;
   letter-spacing: 0.02em;
-  text-transform: uppercase;
   padding: 1px 4px;
-  border-radius: \${({ theme }) => theme.spacing.radius.xs};
-  color: \${({ theme, $method, $isActive }) =>
-    $isActive ? theme.colors.surface : methodTagColor(theme, $method)};
-  background: \${({ theme, $method, $isActive }) =>
-    $isActive
-      ? methodTagColor(theme, $method)
-      : \`color-mix(in srgb, \${methodTagColor(theme, $method)} 15%, transparent)\`};
+  border: none;
 \`;
 
 // Nested navigation group. The header shares the link appearance/hover; a

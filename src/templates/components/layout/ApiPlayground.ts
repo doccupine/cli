@@ -12,6 +12,7 @@ import { mq, Theme } from "@/app/theme";
 import { Code, CodeTabs } from "@/components/layout/Code";
 import { Icon } from "@/components/layout/Icon";
 import { Accordion } from "@/components/layout/Accordion";
+import { Badge, httpMethodBadgeColor } from "@/components/layout/Badge";
 import { CopyButton } from "@/components/layout/CopyButton";
 import { Spinner } from "@/components/Spinner";
 import { matchAllowlist, matchAllowlistIn } from "@/utils/playgroundAllowlist";
@@ -52,22 +53,6 @@ export interface ApiPlaygroundProps {
   // (used by the docs demo to run in direct mode without a configured spec).
   allowlist?: AllowlistEntry[];
   snippetLanguages?: SnippetLanguage[];
-}
-
-const METHOD_TOKENS: Record<string, keyof Theme["colors"]> = {
-  get: "info",
-  post: "success",
-  put: "warning",
-  patch: "warning",
-  delete: "error",
-  head: "gray",
-  options: "gray",
-  trace: "gray",
-};
-
-function methodColor(theme: Theme, method: string): string {
-  const token = METHOD_TOKENS[method.toLowerCase()] ?? "gray";
-  return theme.colors[token];
 }
 
 function schemaTypeLabel(schema: unknown): string {
@@ -219,17 +204,12 @@ const CompactBar = styled.div\`
   background: \${({ theme }: { theme: Theme }) => theme.colors.light};
 \`;
 
-const MethodBadge = styled.span<{ theme: Theme; $method: string }>\`
-  font-family: \${({ theme }) => theme.fonts.mono};
-  font-weight: 700;
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: \${({ theme }) => theme.colors.surface};
-  background: \${({ theme, $method }) => methodColor(theme, $method)};
-  padding: 0 4px;
-  border-radius: \${({ theme }) => theme.spacing.radius.xs};
+// The method chip is Badge's mono+solid variation; only bar-layout metrics
+// are adjusted here.
+const MethodBadge = styled(Badge)\`
   flex-shrink: 0;
+  padding: 0 4px;
+  border: none;
 \`;
 
 const PathText = styled.span\`
@@ -812,7 +792,14 @@ export function ApiPlayground({
   return (
     <>
       <CompactBar>
-        <MethodBadge $method={operation.method}>{operation.method}</MethodBadge>
+        <MethodBadge
+          mono
+          solid
+          size="sm"
+          color={httpMethodBadgeColor(operation.method)}
+        >
+          {operation.method}
+        </MethodBadge>
         <PathText>{renderPath(operation.path)}</PathText>
         <CopyButton
           text={operation.method.toUpperCase() + " " + operation.path}
@@ -836,7 +823,12 @@ export function ApiPlayground({
       >
         <DialogHeader>
           <PathBar>
-            <MethodBadge $method={operation.method}>
+            <MethodBadge
+              mono
+              solid
+              size="sm"
+              color={httpMethodBadgeColor(operation.method)}
+            >
               {operation.method}
             </MethodBadge>
             <PathText>{renderPath(operation.path)}</PathText>

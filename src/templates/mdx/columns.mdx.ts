@@ -4,7 +4,7 @@ description: "Columns are used to organize content in a grid-like structure."
 date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
-order: 13
+order: 17
 ---
 # Columns
 

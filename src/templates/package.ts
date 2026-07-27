@@ -52,7 +52,7 @@ export const packageJsonTemplate =
         "eslint-plugin-jsx-a11y": "^6.10.2",
         "eslint-plugin-react": "^7.37.5",
         "eslint-plugin-react-hooks": "^7.1.1",
-        globals: "^17.7.0",
+        globals: "^17.8.0",
         prettier: "^3.9.6",
         tsx: "^4.23.1",
         typescript: "npm:@typescript/typescript6@^6.0.2",
