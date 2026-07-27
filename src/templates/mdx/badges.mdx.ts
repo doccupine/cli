@@ -50,6 +50,8 @@ The \`color\` property selects one of eleven variants to convey different meanin
 <Badge color="white-destructive">Badge</Badge>
 <Badge color="surface-destructive">Badge</Badge>
 
+The \`white\` and \`white-destructive\` badges stay literally white in both light and dark mode, which keeps them legible on top of images, colored frames, and hero areas. Their \`surface\` counterparts follow the active theme instead - white on light pages, dark on dark ones - so reach for those when the badge sits in regular page content.
+
 ## Sizes
 
 Four sizes match different content hierarchies:

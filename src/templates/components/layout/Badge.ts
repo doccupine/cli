@@ -130,13 +130,18 @@ function badgePalette(
     };
   }
 
+  // The "surface" variants sit on the page surface of the active theme: white
+  // on light, black on dark. They read theme.colors.light (the html/body
+  // background) rather than theme.colors.surface — that token is a foreground
+  // color that stays white in both modes, so using it here left the chip white
+  // on dark pages. The "white" variants below stay literally white by contract.
   const surface = {
-    background: theme.colors.surface,
+    background: theme.colors.light,
     text: theme.colors.grayDark,
     border: theme.colors.grayLight,
-    darkBackground: theme.colors.surface,
+    darkBackground: theme.colors.light,
     darkText: theme.colors.grayDark,
-    darkBorder: theme.colors.grayLight,
+    darkBorder: theme.colors.gray,
   };
 
   if (stroke && !solid) {
@@ -205,7 +210,11 @@ function badgePalette(
         darkText: "#fafafa",
         darkBorder: "#3f3f46",
       },
-      surface: { ...surface, background: "transparent" },
+      surface: {
+        ...surface,
+        background: "transparent",
+        darkBackground: "transparent",
+      },
       "white-destructive": {
         background: "transparent",
         text: "#b91c1c",
@@ -283,6 +292,8 @@ function badgePalette(
       darkText: "#d8b4fe",
       darkBorder: "transparent",
     },
+    // Literally white in both modes, so it stays legible on images, colored
+    // frames, and hero areas. Use the surface variants for theme-aware chips.
     white: {
       background: "#ffffff",
       text: "#18181b",
@@ -305,7 +316,7 @@ function badgePalette(
       text: "#b91c1c",
       border: "#fecaca",
       darkText: "#fca5a5",
-      darkBorder: "#ef44444d",
+      darkBorder: "#ef444466",
     },
   };
   return filled[color];
