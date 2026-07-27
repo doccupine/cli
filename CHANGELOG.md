@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.136
+
+- Publish an RSS feed for a homepage built from `<Update>` entries: the feed support added in 0.0.135 ran only in the per-file page generator, and the homepage is produced by its own pass, so an `index.mdx` holding the changelog published no feed at all. The homepage pass now parses its `<Update>` entries, shows the action-bar RSS button behind the same `rss: true` frontmatter, advertises the feed via autodiscovery metadata, and serves it from the site root at `/rss.xml`, removing the route again when the entries or `index.mdx` itself go away. The shared feed builder now joins URLs through a page prefix that is empty for the homepage, so its feed and item links can no longer start with `//`, which a feed reader would resolve as a protocol-relative URL pointing at the wrong host
+- Stop section index pages losing their RSS button on every build: a section landing page is generated twice, and the second pass (which applies the section navigation) overwrote the page the first pass had just written without the RSS button or the feed autodiscovery link, so the feed route existed with nothing on the page linking to it. The section pass now re-derives the page's RSS state and emits the same buttoned markup, pre-wrapped so the generated file stays Prettier-clean
+
 ## 0.0.135
 
 - Add four components to the generated docs, each with its own documentation page: `Badge` for inline labels (15 colors, four sizes, stroke, solid, and mono variations), `Prompt` for copyable AI prompts with a Cursor deeplink, `Tooltip` for contextual definitions with viewport-aware placement, and `Tree` (alias `FileTree`) for keyboard-navigable file trees authored as `<Tree.Folder>`/`<Tree.File>` markers or plain markdown lists. The sidebar and API playground HTTP-method chips now render through `Badge`, so every surface colors verbs identically

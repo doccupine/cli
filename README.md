@@ -89,6 +89,7 @@ updated: "2025-02-01" # Last-modified date (JSON-LD dateModified)
 section: "API Reference" # Section this page belongs to
 sectionOrder: 1 # Sort order for the section in the tab bar
 openapi: "GET /users/{id}" # Embed an API playground for this endpoint (see API Reference)
+rss: true # Show an RSS button linking to the page's feed (pages with Update components)
 ---
 ```
 
