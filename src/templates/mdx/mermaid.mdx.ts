@@ -88,7 +88,7 @@ By default the controls appear once a diagram is taller than 120px, since a diag
 </Field>
 
 <Field value="actions" type="boolean">
-  Show or hide the controls. When set, this overrides the default behavior of showing them only on diagrams taller than 120px.
+  Show or hide the controls. When set, this overrides the default behavior of showing them only on larger diagrams.
 </Field>
 
 Set properties on the opening fence, after the language:

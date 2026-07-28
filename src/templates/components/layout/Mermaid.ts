@@ -15,7 +15,10 @@ const MIN_SCALE = 0.5;
 const MAX_SCALE = 4;
 const SCALE_STEP = 0.25;
 const PAN_STEP = 48;
-const AUTO_ACTIONS_MIN_HEIGHT = 120;
+const MIN_DIAGRAM_HEIGHT = 320;
+// Must exceed MIN_DIAGRAM_HEIGHT plus the viewport padding (2 x 16px), so
+// diagrams sitting on the min-height floor don't auto-show the controls.
+const AUTO_ACTIONS_MIN_HEIGHT = 420;
 
 // Whether the Fullscreen API is available. Read via useSyncExternalStore so it
 // resolves during render (SSR-safe: false on the server) instead of via a
@@ -69,6 +72,7 @@ const Stage = styled.div<{
     display: block;
     width: 100%;
     height: auto;
+    min-height: \${MIN_DIAGRAM_HEIGHT}px;
     margin: 0 auto;
   }
 \`;
