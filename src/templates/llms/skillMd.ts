@@ -11,12 +11,20 @@ export interface SkillMdArgs {
 
 const KEY_PAGE_LIMIT = 8;
 
-export function slugifySiteName(siteName: string): string {
+function slugifySiteName(siteName: string): string {
   const slug = siteName
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
   return slug === "" ? "docs" : slug;
+}
+
+// Identifier for the skill name and the MCP discovery manifest. Skips the
+// -docs suffix when the site name already ends in "docs" ("Acme Docs" ->
+// acme-docs, not acme-docs-docs).
+export function siteDocsSlug(siteName: string): string {
+  const slug = slugifySiteName(siteName);
+  return slug === "docs" || slug.endsWith("-docs") ? slug : `${slug}-docs`;
 }
 
 // Agent skill definition served at /skill.md: tells agents how to read the
@@ -35,7 +43,7 @@ export function skillMdTemplate(args: SkillMdArgs): string {
 
   const lines: string[] = [];
   lines.push("---");
-  lines.push(`name: ${slugifySiteName(siteName)}-docs`);
+  lines.push(`name: ${siteDocsSlug(siteName)}`);
   lines.push(`description: ${JSON.stringify(description)}`);
   lines.push("---");
   lines.push("");

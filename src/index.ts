@@ -47,7 +47,7 @@ import {
   type PageWithBody,
 } from "./templates/llms/llmsFull.js";
 import { llmsPageTemplate } from "./templates/llms/llmsPage.js";
-import { skillMdTemplate, slugifySiteName } from "./templates/llms/skillMd.js";
+import { siteDocsSlug, skillMdTemplate } from "./templates/llms/skillMd.js";
 import type {
   DoccupineConfig,
   MDXFile,
@@ -2242,7 +2242,7 @@ export default function Page() {
         JSON.stringify(
           {
             mcpServers: {
-              [`${slugifySiteName(name)}-docs`]: {
+              [siteDocsSlug(name)]: {
                 url: `${baseUrl}/api/mcp`,
                 transport: "streamable-http",
               },
