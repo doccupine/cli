@@ -72,6 +72,7 @@ const StyledActionBarGroup = styled.div\`
 const StyledRssLink = styled(StyledSmallButton)<{ theme: Theme }>\`
   text-decoration: none;
   color: \${({ theme }) => theme.colors.primary};
+  padding: 2px 8px;
 
   & svg.lucide {
     color: \${({ theme }) => theme.colors.primary};
