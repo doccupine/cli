@@ -7,6 +7,9 @@ import { Icon, IconProps } from "@/components/layout/Icon";
 import { interactiveStyles } from "@/components/layout/SharedStyled";
 
 const cardStyles = css<{ theme: Theme }>\`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   background: \${({ theme }) => theme.colors.light};
   border: solid 1px \${({ theme }) => theme.colors.grayLight};
   border-radius: \${({ theme }) => theme.spacing.radius.lg};
