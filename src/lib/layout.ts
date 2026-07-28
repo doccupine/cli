@@ -242,7 +242,7 @@ ${
     : `import { Footer } from "@/components/layout/Footer";
 `
 }import { Header } from "@/components/layout/Header";
-import { DocsWrapper } from "@/components/layout/DocsComponents";
+import { DocsWrapper, LlmsDirective } from "@/components/layout/DocsComponents";
 ${
   hasSections
     ? ""
@@ -288,6 +288,7 @@ ${
   return (
     ${chtOpen}
       <SearchProvider pages={pages} sections={doccupineSections}>
+        <LlmsDirective />
         <Header>
           <SectionBar sections={doccupineSections} />
         </Header>
@@ -330,6 +331,7 @@ ${
   return (
     ${chtOpen}
       <SearchProvider pages={pages}>
+        <LlmsDirective />
         <Header />
         {process.env.LLM_PROVIDER && <Chat />}
         <SectionBarProvider hasSectionBar={false}>

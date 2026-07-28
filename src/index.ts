@@ -47,6 +47,7 @@ import {
   type PageWithBody,
 } from "./templates/llms/llmsFull.js";
 import { llmsPageTemplate } from "./templates/llms/llmsPage.js";
+import { skillMdTemplate, slugifySiteName } from "./templates/llms/skillMd.js";
 import type {
   DoccupineConfig,
   MDXFile,
@@ -2223,6 +2224,38 @@ export default function Page() {
       fullContent,
       "utf8",
     );
+
+    const skillContent = skillMdTemplate({
+      siteName: name,
+      siteDescription: description,
+      baseUrl,
+      pages: resolvedPages,
+      sectionsConfig: this.sectionsConfig,
+    });
+    await fs.writeFile(path.join(publicDir, "skill.md"), skillContent, "utf8");
+
+    // MCP discovery manifest. Needs an absolute URL, so it only exists when
+    // config.json declares the site url; it is pruned if the url is removed.
+    const mcpJsonPath = path.join(publicDir, ".well-known", "mcp.json");
+    if (baseUrl) {
+      const mcpJson =
+        JSON.stringify(
+          {
+            mcpServers: {
+              [`${slugifySiteName(name)}-docs`]: {
+                url: `${baseUrl}/api/mcp`,
+                transport: "streamable-http",
+              },
+            },
+          },
+          null,
+          2,
+        ) + "\n";
+      await fs.ensureDir(path.dirname(mcpJsonPath));
+      await fs.writeFile(mcpJsonPath, mcpJson, "utf8");
+    } else if (await fs.pathExists(mcpJsonPath)) {
+      await fs.remove(mcpJsonPath);
+    }
 
     const nextRelativePaths = new Set<string>();
     await Promise.all(

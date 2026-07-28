@@ -20,6 +20,10 @@ export function llmsPageTemplate(
   }
   lines.push(`Source: ${pageUrl(page.slug, baseUrl)}`);
   lines.push("");
+  lines.push(
+    `> For the complete documentation index, see [llms.txt](${baseUrl ?? ""}/llms.txt).`,
+  );
+  lines.push("");
   lines.push(page.body.trim());
   lines.push("");
   return lines.join("\n");

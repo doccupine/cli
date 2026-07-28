@@ -1,5 +1,6 @@
 export const actionBarTemplate = `"use client";
 import { useContext, useState } from "react";
+import { usePathname } from "next/navigation";
 import styled, { css } from "styled-components";
 import { Icon } from "@/components/layout/Icon";
 import { mq, Theme } from "@/app/theme";
@@ -39,6 +40,8 @@ const StyledActionBar = styled.div<{
 \`;
 
 const StyledActionBarContent = styled.div\`
+  display: flex;
+  gap: 12px;
   margin: auto 0;
 \`;
 
@@ -79,26 +82,57 @@ const StyledRssLink = styled(StyledSmallButton)<{ theme: Theme }>\`
   }
 \`;
 
-// Mirrors the geometry and interaction of Cherry's ThemeToggle so the two
-// pills look identical side by side: interactiveStyles supplies the border
-// highlight + focus/active rings (no scale effect), and the space-between
-// layout with 6px padding puts each 16px icon's center exactly where the
-// 24px knob's center sits in its resting (left: 2px) and active
-// (translateX(26px)) positions.
-const StyledToggle = styled.button<{ theme: Theme; $isActive?: boolean }>\`
-  \${resetButton}
-  \${interactiveStyles}
-  width: 56px;
+// Mirrors the geometry and interaction of Cherry's ThemeToggle so every pill
+// on this side of the bar looks identical: interactiveStyles supplies the
+// border highlight + focus/active rings (no scale effect), and the 30px
+// height with a fully rounded radius matches the toggle's knob track.
+const actionPillStyles = (theme: Theme) => css\`
   height: 30px;
   border-radius: 30px;
   display: flex;
   align-items: center;
+  margin: auto 0;
+  background: \${theme.colors.light};
+  border-color: \${theme.colors.grayLight};
+
+  & svg {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 2;
+  }
+
+  & svg[stroke] {
+    stroke: \${theme.colors.primary};
+  }
+
+  &:hover svg[stroke] {
+    stroke: \${theme.colors.accent};
+  }
+\`;
+
+const StyledMarkdownLink = styled.a<{ theme: Theme }>\`
+  \${resetButton}
+  \${interactiveStyles}
+  \${({ theme }) => actionPillStyles(theme)}
+  width: 30px;
+  justify-content: center;
+  text-decoration: none;
+\`;
+
+// The space-between layout with 6px padding puts each 16px icon's center
+// exactly where the 24px knob's center sits in its resting (left: 2px) and
+// active (translateX(26px)) positions.
+const StyledToggle = styled.button<{ theme: Theme; $isActive?: boolean }>\`
+  \${resetButton}
+  \${interactiveStyles}
+  \${({ theme }) => actionPillStyles(theme)}
+  width: 56px;
   justify-content: space-between;
   padding: 0 6px;
   position: relative;
-  margin: auto 0;
-  background: \${({ theme }) => theme.colors.light};
-  border-color: \${({ theme }) => theme.colors.grayLight};
 
   &::after {
     content: "";
@@ -117,23 +151,6 @@ const StyledToggle = styled.button<{ theme: Theme; $isActive?: boolean }>\`
       css\`
         transform: translateX(26px);
       \`}
-  }
-
-  & svg {
-    width: 16px;
-    height: 16px;
-    object-fit: contain;
-    transition: all 0.3s ease;
-    position: relative;
-    z-index: 2;
-  }
-
-  & svg[stroke] {
-    stroke: \${({ theme }) => theme.colors.primary};
-  }
-
-  &:hover svg[stroke] {
-    stroke: \${({ theme }) => theme.colors.accent};
   }
 \`;
 
@@ -166,10 +183,18 @@ const StyledContent = styled.div<{
     \`}
 \`;
 
+// Every page ships a static markdown mirror under public/: "/" serves
+// "/index.md" and "/{slug}" serves "/{slug}.md".
+function toMarkdownHref(pathname: string) {
+  const base = pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+  return \`\${base === "" ? "/index" : base}.md\`;
+}
+
 function ActionBar({ children, content, rssHref }: ActionBarProps) {
   const [isView, setIsView] = useState(true);
   const [copied, setCopied] = useState(false);
   const hasSectionBar = useContext(SectionBarContext);
+  const pathname = usePathname();
 
   const handleCopyContent = async () => {
     try {
@@ -183,7 +208,7 @@ function ActionBar({ children, content, rssHref }: ActionBarProps) {
 
   return (
     <>
-      <StyledActionBar>
+      <StyledActionBar data-markdown-ignore>
         <StyledActionBarGroup>
           <StyledCopyButton onClick={handleCopyContent} $copied={copied}>
             {copied ? (
@@ -206,6 +231,13 @@ function ActionBar({ children, content, rssHref }: ActionBarProps) {
           )}
         </StyledActionBarGroup>
         <StyledActionBarContent>
+          <StyledMarkdownLink
+            href={toMarkdownHref(pathname)}
+            aria-label="View as Markdown"
+            title="View as Markdown"
+          >
+            <Icon name="FileText" />
+          </StyledMarkdownLink>
           <StyledToggle
             onClick={() => setIsView(!isView)}
             aria-label="Toggle View"

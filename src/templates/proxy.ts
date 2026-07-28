@@ -269,8 +269,10 @@ ${fnSignature} {
 ${trackingInit}  const pathname = req.nextUrl.pathname;
   const sitePassword = process.env.SITE_PASSWORD;
 
-  // API key auth for /api/mcp when DOCS_API_KEY is configured
-  if (pathname.startsWith("/api/mcp")) {
+  // API key auth for the MCP endpoint when DOCS_API_KEY is configured. Also
+  // matches /mcp, the discovery alias that next.config rewrites to /api/mcp
+  // after the middleware has run.
+  if (pathname.startsWith("/api/mcp") || pathname === "/mcp") {
     const apiKey = process.env.DOCS_API_KEY;
     if (apiKey) {
       const authHeader = req.headers.get("authorization");
@@ -320,6 +322,32 @@ ${trackingInit}  const pathname = req.nextUrl.pathname;
         tracking,
       );
     }
+  }
+
+  // Content negotiation: agents that request markdown (Accept: text/markdown)
+  // are served the page's static .md mirror from public/. Runs after the
+  // SITE_PASSWORD gate so protected sites never expose markdown around the
+  // login screen. Only extensionless GET paths are rewritten, so assets, API
+  // routes, and the MCP alias stay untouched. The rewrite target is part of
+  // the CDN cache key, so HTML responses stay cacheable without a Vary header.
+  const accept = req.headers.get("accept") ?? "";
+  if (
+    req.method === "GET" &&
+    accept.includes("text/markdown") &&
+    !pathname.startsWith("/api") &&
+    !pathname.startsWith("/_next") &&
+    pathname !== "/gate" &&
+    pathname !== "/mcp" &&
+    !/\\.[a-z0-9]+$/i.test(pathname)
+  ) {
+    const url = req.nextUrl.clone();
+    url.pathname =
+      pathname === "/" ? "/index.md" : pathname.replace(/\\/$/, "") + ".md";
+    const mdRes = NextResponse.rewrite(url);
+    if (sitePassword) {
+      mdRes.headers.set("X-Robots-Tag", "noindex, nofollow");
+    }
+    return applyTracking(mdRes, tracking);
   }
 
   const res = NextResponse.next();

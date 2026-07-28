@@ -815,7 +815,7 @@ function Chat() {
 
   return (
     <>
-      <StyledChat $isVisible={isOpen}>
+      <StyledChat $isVisible={isOpen} data-markdown-ignore>
         <StyledChatTitle>
           <StyledChatTitleIconWrapper>
             <Sparkles />
@@ -895,7 +895,7 @@ function Chat() {
         <div ref={endRef} />
       </StyledChat>
 
-      <StyledChatForm onSubmit={ask} $isVisible={isOpen}>
+      <StyledChatForm onSubmit={ask} $isVisible={isOpen} data-markdown-ignore>
         <RainbowInput
           id="chat-bottom-input"
           inputRef={chatInputRef}

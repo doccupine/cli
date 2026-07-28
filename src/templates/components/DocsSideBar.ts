@@ -143,7 +143,7 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
   };
 
   return (
-    <StyledIndexSidebar data-sidebar>
+    <StyledIndexSidebar data-sidebar data-markdown-ignore>
       {headings?.length > 0 && (
         <li aria-hidden="true">
           <StyledIndexSidebarLabel>On this page</StyledIndexSidebarLabel>
