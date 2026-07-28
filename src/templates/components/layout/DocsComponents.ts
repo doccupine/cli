@@ -42,7 +42,7 @@ interface DocsProps {
   children: React.ReactNode;
 }
 
-const StyledDocsWrapper = styled.main<{ theme: Theme }>\`
+const StyledDocsWrapper = styled.div<{ theme: Theme }>\`
   position: relative;
 \`;
 
@@ -50,7 +50,13 @@ const StyledDocsSidebar = styled.div<{ theme: Theme }>\`
   clear: both;
 \`;
 
-const StyledDocsContainer = styled.div<{ theme: Theme; $isChatOpen?: boolean }>\`
+// The <main> landmark wraps only the article content: the sidebar, footer,
+// and nav render outside it so content extractors and assistive tech start at
+// the article.
+const StyledDocsContainer = styled.main<{
+  theme: Theme;
+  $isChatOpen?: boolean;
+}>\`
   position: relative;
   padding: 0 20px 100px 20px;
   width: 100%;
@@ -536,6 +542,30 @@ export const StyledMissingComponent = styled.div\`
   align-items: center;
 \`;
 
+// Visually hidden but present for crawlers and agents: points at llms.txt and
+// the .md mirrors. Rendered as the first element of the site layout.
+const StyledLlmsDirective = styled.div\`
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+\`;
+
+function LlmsDirective() {
+  return (
+    <StyledLlmsDirective data-markdown-ignore>
+      <a href="/llms.txt">Documentation index for AI agents (llms.txt)</a>.
+      Markdown versions of every page are available by appending .md to the page
+      URL. The full corpus is at <a href="/llms-full.txt">/llms-full.txt</a>.
+    </StyledLlmsDirective>
+  );
+}
+
 interface DocsWrapperProps {
   children: React.ReactNode;
 }
@@ -560,6 +590,7 @@ export {
   DocsWrapper,
   DocsSidebar,
   DocsContainer,
+  LlmsDirective,
   SectionBarContext,
   SectionBarProvider,
 };

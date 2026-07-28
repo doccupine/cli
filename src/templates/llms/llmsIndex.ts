@@ -8,24 +8,25 @@ export interface LlmsIndexArgs {
   sectionsConfig: SectionConfig[] | null;
 }
 
-interface CategoryGroup {
+export interface CategoryGroup {
   category: string;
   minCategoryOrder: number;
   pages: PageMeta[];
 }
 
-interface SectionGroup {
+export interface SectionGroup {
   sectionSlug: string;
   sectionLabel: string;
   sectionOrder: number;
   categories: CategoryGroup[];
 }
 
-function pageUrl(slug: string, baseUrl: string | null): string {
-  if (baseUrl) {
-    return slug === "" ? `${baseUrl}/` : `${baseUrl}/${slug}`;
-  }
-  return slug === "" ? "/" : `/${slug}`;
+// Index links point at the static markdown mirrors (public/{slug}.md) so
+// agents get clean markdown directly; the HTML page is the same URL without
+// the .md suffix.
+export function pageUrl(slug: string, baseUrl: string | null): string {
+  const prefix = baseUrl ?? "";
+  return slug === "" ? `${prefix}/index.md` : `${prefix}/${slug}.md`;
 }
 
 function comparePages(a: PageMeta, b: PageMeta): number {
@@ -33,7 +34,7 @@ function comparePages(a: PageMeta, b: PageMeta): number {
   return a.title.localeCompare(b.title);
 }
 
-function buildSectionGroups(
+export function buildSectionGroups(
   pages: PageMeta[],
   sectionsConfig: SectionConfig[] | null,
 ): SectionGroup[] {
@@ -111,12 +112,25 @@ export function llmsIndexTemplate(args: LlmsIndexArgs): string {
   const { siteName, siteDescription, baseUrl, pages, sectionsConfig } = args;
   const lines: string[] = [];
 
+  const prefix = baseUrl ?? "";
+
   lines.push(`# ${siteName}`);
   lines.push("");
-  if (siteDescription && siteDescription.trim() !== "") {
-    lines.push(`> ${siteDescription.trim()}`);
-    lines.push("");
-  }
+  const summary =
+    siteDescription && siteDescription.trim() !== ""
+      ? siteDescription.trim()
+      : `Documentation for ${siteName}.`;
+  lines.push(`> ${summary}`);
+  lines.push("");
+  lines.push(
+    "Every page link below points to a markdown mirror; drop the .md suffix for the HTML version.",
+  );
+  lines.push(`Full corpus in one file: ${prefix}/llms-full.txt`);
+  lines.push(`Agent skill: ${prefix}/skill.md`);
+  lines.push(
+    `MCP server (streamable HTTP; tools: search_docs, get_doc, list_docs): ${prefix}/api/mcp`,
+  );
+  lines.push("");
 
   if (pages.length === 0) {
     return lines.join("\n") + "\n";

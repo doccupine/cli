@@ -19,6 +19,16 @@ const nextConfig: NextConfig = {
     "/api/rag": ["./services/mcp/docs-index.json"],
     "/api/mcp": ["./services/mcp/docs-index.json"],
   },
+  // Discovery alias: agents probe /mcp for an MCP server. Auth for the alias
+  // is handled in the middleware, which runs before this rewrite.
+  async rewrites() {
+    return [
+      {
+        source: "/mcp",
+        destination: "/api/mcp",
+      },
+    ];
+  },
 };
 
 export default nextConfig;
@@ -44,8 +54,15 @@ const nextConfig: NextConfig = {
     "/api/rag": ["./services/mcp/docs-index.json"],
     "/api/mcp": ["./services/mcp/docs-index.json"],
   },
+  // The /mcp entry is a discovery alias: agents probe /mcp for an MCP server.
+  // Auth for the alias is handled in the middleware, which runs before this
+  // rewrite.
   async rewrites() {
     return [
+      {
+        source: "/mcp",
+        destination: "/api/mcp",
+      },
       {
         source: "/ingest/static/:path*",
         destination: "${assetsHost}/static/:path*",
