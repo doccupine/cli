@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.139
+
+- Enforce a minimum height on rendered Mermaid diagrams so a wide diagram scaled down to fit the content column no longer collapses into a short, hard-to-read strip: the diagram SVG now carries a 320px floor, and since it keeps its `viewBox` the drawing stays in proportion and centers vertically in the roomier box. The threshold for auto-showing the pan/zoom controls rises with it (120px to 420px) so a small diagram sitting on the floor does not pick up controls it has no use for, while an explicit `actions` property on the fence still overrides the default in either direction; the Mermaid docs page now describes the default as showing controls on larger diagrams rather than naming the old 120px cutoff
+- Lay out `Card` content as a flex column with a 12px gap so a card's icon, title, and body are evenly spaced in both the plain and linked (`href`) variants, completing the 0.0.133 cleanup that removed the title's stray margins: spacing inside a card now comes from its padding and the column gap alone
+
 ## 0.0.138
 
 - Make every generated docs site agent-ready, so an AI agent that lands on it can discover what exists and fetch it in the shape it wants: `llms.txt` now always opens with an H1 and a blockquote summary (falling back to `Documentation for {name}.` when `config.json` carries no description), points its page links at the per-page markdown mirrors rather than the HTML pages - the homepage at `/index.md` - and advertises `llms-full.txt`, the new agent skill, and the MCP server up front, while each `{slug}.md` mirror carries a blockquote near its top pointing back at `llms.txt`, so the index is reachable from any page an agent enters through
