@@ -26,7 +26,7 @@ export const packageJsonTemplate =
         minisearch: "^7.2.0",
         next: "16.2.12",
         "next-mdx-remote": "^6.0.0",
-        "posthog-js": "^1.407.8",
+        "posthog-js": "^1.408.0",
         "posthog-node": "^5.46.1",
         react: "19.2.8",
         "react-dom": "19.2.8",
