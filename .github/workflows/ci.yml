@@ -15,7 +15,7 @@ jobs:
 
       - uses: pnpm/action-setup@v6
         with:
-          version: 10
+          version: 11.17.0
 
       - uses: actions/setup-node@v7
         with:
@@ -24,4 +24,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      - run: pnpm format:check
       - run: pnpm test
+      - run: pnpm test:package
+      - run: pnpm smoke:generated

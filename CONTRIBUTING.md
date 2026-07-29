@@ -14,6 +14,9 @@ pnpm install
 pnpm dev            # Watch mode (recompiles on changes)
 pnpm build          # One-time compile
 pnpm test           # Run tests
+pnpm format:check   # Verify formatting
+pnpm test:package   # Verify the npm package contents
+pnpm smoke:generated # Generate, lint, type-check, and build a fixture site
 ```
 
 To test your changes locally:
@@ -26,13 +29,13 @@ node /path/to/cli/dist/index.js watch
 
 ## Project Structure
 
-All CLI logic lives in `src/index.ts`. Template files under `src/templates/` are string constants that get written into the generated Next.js app.
+The CLI entry point and generator orchestration live in `src/index.ts`. Reusable generator logic is under `src/lib/`, while template files under `src/templates/` are string constants written into the generated Next.js app. The output layout is registered centrally in `src/lib/structures.ts`.
 
 When adding a new template:
 
 1. Create the template file in the appropriate `src/templates/` subdirectory
 2. Export a named constant with the `Template` suffix (e.g., `export const myComponentTemplate = ...`)
-3. Import it in `src/index.ts` and add it to the `structure` object in `createNextJSStructure()`
+3. Import it in `src/lib/structures.ts` and add it to the `structure` object
 
 ## Code Conventions
 
@@ -43,7 +46,7 @@ When adding a new template:
 ## Pull Requests
 
 1. Fork the repo and create a branch from `main`
-2. Make your changes and ensure `pnpm build && pnpm test` passes
+2. Make your changes and ensure `pnpm build && pnpm test && pnpm format:check && pnpm test:package` passes
 3. Write a clear PR description explaining the change and why
 4. Keep PRs focused - one feature or fix per PR
 
