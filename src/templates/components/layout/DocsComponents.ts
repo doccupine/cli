@@ -98,6 +98,7 @@ const StyledDocsContainer = styled.main<{
 
   & code:not([class]),
   & kbd {
+    max-width: max-content;
     background: \${({ theme }) =>
       \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
     color: \${({ theme }) => theme.colors.dark};
