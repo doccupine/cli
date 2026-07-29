@@ -14,6 +14,44 @@ export interface ResolvedPackageManager {
   bin: string;
 }
 
+let atomicWriteCounter = 0;
+
+/**
+ * Writes a generated file without exposing a partially-written version to the
+ * Next.js dev server or another watcher pass.
+ */
+export async function writeFileAtomic(
+  filePath: string,
+  content: string,
+): Promise<void> {
+  await fs.ensureDir(path.dirname(filePath));
+  const tempPath = `${filePath}.${process.pid}.${atomicWriteCounter++}.tmp`;
+  try {
+    await fs.writeFile(tempPath, content, "utf8");
+    try {
+      // Atomic replacement on POSIX: the destination is never absent or
+      // partially written, so dev-server watchers see one coherent change.
+      await fs.rename(tempPath, filePath);
+      return;
+    } catch (error) {
+      const code =
+        error && typeof error === "object" && "code" in error
+          ? String(error.code)
+          : "";
+      const windowsReplaceFailure =
+        process.platform === "win32" && (code === "EPERM" || code === "EEXIST");
+      if (!windowsReplaceFailure) throw error;
+      // Windows cannot always rename over an existing destination. fs-extra's
+      // overwrite move is the compatibility fallback for that platform only.
+      await fs.move(tempPath, filePath, { overwrite: true });
+      return;
+    }
+  } catch (error) {
+    await fs.remove(tempPath);
+    throw error;
+  }
+}
+
 /**
  * Locates a usable pnpm binary without relying solely on the caller's PATH.
  * Standalone pnpm installs (e.g. ~/Library/pnpm) expose PNPM_HOME but only add

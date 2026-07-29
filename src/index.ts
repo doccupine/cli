@@ -5,6 +5,7 @@ import chokidar, { FSWatcher } from "chokidar";
 import fs from "fs-extra";
 import path from "path";
 import { fileURLToPath } from "url";
+import { createHash } from "crypto";
 
 import chalk from "chalk";
 
@@ -15,10 +16,12 @@ import {
 } from "./lib/structures.js";
 import { rootLayoutTemplate, siteLayoutTemplate } from "./lib/layout.js";
 import { ConfigManager, normalizeOpenApiConfig } from "./lib/config-manager.js";
+import { claimOutputDirectory, resolveWithin } from "./lib/output-safety.js";
 import {
   OpenApiRegistry,
   DEFAULT_API_BASE_SLUG,
   buildEndpointDoc,
+  slugifySegment,
 } from "./lib/openapi.js";
 import {
   findAvailablePort,
@@ -28,6 +31,7 @@ import {
   toJsStringLiteral,
   resolvePackageManager,
   safeMatter,
+  writeFileAtomic,
 } from "./lib/utils.js";
 import {
   generateMetadataBlock,
@@ -109,6 +113,8 @@ class MDXToNextJSGenerator {
   private generatedApiPageSlugs = new Set<string>();
   /** Section slugs whose index redirect we wrote this session, for cleanup. */
   private generatedSectionIndexSlugs = new Set<string>();
+  /** Serializes watcher mutations so aggregate files never race one another. */
+  private mutationQueue: Promise<void> = Promise.resolve();
 
   constructor(
     watchDir: string,
@@ -121,11 +127,17 @@ class MDXToNextJSGenerator {
     this.openApiSpecs = openApiSpecs;
   }
 
+  private enqueueMutation(label: string, task: () => Promise<void>): void {
+    this.mutationQueue = this.mutationQueue.then(task).catch((error) => {
+      console.error(chalk.red(`❌ ${label}:`), error);
+    });
+  }
+
   async init() {
     console.log(chalk.blue("🚀 Initializing MDX to Next.js generator..."));
 
     await fs.ensureDir(this.watchDir);
-    await fs.ensureDir(this.outputDir);
+    await claimOutputDirectory(this.outputDir);
 
     this.sectionsConfig = await this.resolveSections();
     this.analyticsConfig = await this.loadAnalyticsConfig();
@@ -173,7 +185,9 @@ class MDXToNextJSGenerator {
     console.log(
       chalk.white(`   cd ${path.relative(process.cwd(), this.outputDir)}`),
     );
-    console.log(chalk.white("   npm install && npm run dev"));
+    console.log(
+      chalk.white("   install dependencies, then run the dev script"),
+    );
   }
 
   async createNextJSStructure() {
@@ -191,8 +205,6 @@ class MDXToNextJSGenerator {
       obsoleteFiles.map((file) => fs.remove(path.join(this.outputDir, file))),
     );
 
-    const siteUrl = await this.loadSiteUrl();
-
     const structure: Record<string, string | Promise<string>> = {
       ...appStructure,
       "next.config.ts": nextConfigTemplate(this.analyticsConfig),
@@ -204,7 +216,7 @@ class MDXToNextJSGenerator {
       "navigation.json": `[]\n`,
       "sections.json": `[]\n`,
       "theme.json": `{}\n`,
-      "app/robots.ts": robotsTemplate(siteUrl !== null),
+      "app/robots.ts": robotsTemplate,
       "app/layout.tsx": this.generateRootLayout(),
       "app/(site)/layout.tsx": this.generateSiteLayout(),
     };
@@ -212,7 +224,7 @@ class MDXToNextJSGenerator {
     for (const [filePath, content] of Object.entries(structure)) {
       const fullPath = path.join(this.outputDir, filePath);
       await fs.ensureDir(path.dirname(fullPath));
-      await fs.writeFile(fullPath, String(await content), "utf8");
+      await writeFileAtomic(fullPath, String(await content));
     }
 
     await this.updateSitemap();
@@ -230,15 +242,13 @@ class MDXToNextJSGenerator {
       for (const [filePath, content] of Object.entries(structure)) {
         const fullPath = path.join(this.watchDir, filePath);
         await fs.ensureDir(path.dirname(fullPath));
-        await fs.writeFile(fullPath, String(content), "utf8");
+        await writeFileAtomic(fullPath, String(content));
       }
     }
   }
 
   async copyCustomConfigFiles() {
-    console.log(
-      chalk.blue(`🔍 Checking for config files in: ${this.watchDir}`),
-    );
+    console.log(chalk.blue(`🔍 Checking for config files in: ${this.rootDir}`));
 
     for (const configFile of this.configFiles) {
       const sourcePath = path.join(this.rootDir, configFile);
@@ -334,9 +344,73 @@ class MDXToNextJSGenerator {
     try {
       if (await fs.pathExists(sectionsPath)) {
         const content = await fs.readFile(sectionsPath, "utf8");
-        const parsed = JSON.parse(content) as SectionConfig[];
+        const parsed = JSON.parse(content) as unknown;
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+          const seenLabels = new Set<string>();
+          const seenSlugs = new Set<string>();
+          return parsed.map((entry, index) => {
+            if (!entry || typeof entry !== "object") {
+              throw new Error(
+                `sections.json entry ${index + 1} must be an object`,
+              );
+            }
+            const candidate = entry as Record<string, unknown>;
+            const label =
+              typeof candidate.label === "string" ? candidate.label.trim() : "";
+            const slug =
+              typeof candidate.slug === "string" ? candidate.slug.trim() : "";
+            if (!label) {
+              throw new Error(
+                `sections.json entry ${index + 1} needs a non-empty label`,
+              );
+            }
+            if (
+              slug !== "" &&
+              (slug !== slugifySegment(slug) ||
+                slug.includes("/") ||
+                slug === "." ||
+                slug === "..")
+            ) {
+              throw new Error(
+                `Unsafe section slug "${slug}"; use a lowercase URL segment such as "${slugifySegment(slug)}"`,
+              );
+            }
+            if (seenLabels.has(label) || seenSlugs.has(slug)) {
+              throw new Error(
+                `Duplicate section label or slug at entry ${index + 1}`,
+              );
+            }
+            seenLabels.add(label);
+            seenSlugs.add(slug);
+
+            let directory: string | undefined;
+            if (candidate.directory !== undefined) {
+              if (typeof candidate.directory !== "string") {
+                throw new Error(
+                  `sections.json directory at entry ${index + 1} must be a string`,
+                );
+              }
+              directory = candidate.directory
+                .replace(/\\/g, "/")
+                .replace(/^\/+|\/+$/g, "");
+              const parts = directory.split("/");
+              if (
+                !directory ||
+                parts.some(
+                  (part) =>
+                    part === "." ||
+                    part === ".." ||
+                    part !== slugifySegment(part),
+                )
+              ) {
+                throw new Error(
+                  `Unsafe section directory "${candidate.directory}"`,
+                );
+              }
+            }
+
+            return { label, slug, ...(directory ? { directory } : {}) };
+          });
         }
       }
     } catch (error) {
@@ -357,9 +431,15 @@ class MDXToNextJSGenerator {
       const content = await fs.readFile(fullPath, "utf8");
       const { data: frontmatter } = safeMatter(content, file);
 
-      if (frontmatter.section) {
-        const label = frontmatter.section as string;
-        const order = (frontmatter.sectionOrder as number) || 0;
+      if (
+        typeof frontmatter.section === "string" &&
+        frontmatter.section.trim()
+      ) {
+        const label = frontmatter.section.trim();
+        const order =
+          typeof frontmatter.sectionOrder === "number"
+            ? frontmatter.sectionOrder
+            : 0;
         const existing = sectionMap.get(label);
         if (!existing || order < existing.order) {
           sectionMap.set(label, { label, order });
@@ -370,9 +450,10 @@ class MDXToNextJSGenerator {
 
       if (
         (file === "index.mdx" || file === "./index.mdx") &&
-        frontmatter.sectionLabel
+        typeof frontmatter.sectionLabel === "string" &&
+        frontmatter.sectionLabel.trim()
       ) {
-        defaultSectionLabel = frontmatter.sectionLabel as string;
+        defaultSectionLabel = frontmatter.sectionLabel.trim();
       }
     }
 
@@ -387,10 +468,18 @@ class MDXToNextJSGenerator {
       sections.push({ label: defaultSectionLabel, slug: "" });
     }
 
+    const usedSlugs = new Set<string>(sections.map((section) => section.slug));
     for (const s of sorted) {
+      const slug = slugifySegment(s.label);
+      if (usedSlugs.has(slug)) {
+        throw new Error(
+          `Section labels resolve to the same slug "${slug}". Rename one section or define sections.json explicitly.`,
+        );
+      }
+      usedSlugs.add(slug);
       sections.push({
         label: s.label,
-        slug: s.label.toLowerCase().replace(/\s+/g, "-"),
+        slug,
       });
     }
 
@@ -635,15 +724,13 @@ class MDXToNextJSGenerator {
       this.analyticsConfig = await this.loadAnalyticsConfig();
 
       // Regenerate dynamic templates that depend on analytics config
-      await fs.writeFile(
+      await writeFileAtomic(
         path.join(this.outputDir, "next.config.ts"),
         nextConfigTemplate(this.analyticsConfig),
-        "utf8",
       );
-      await fs.writeFile(
+      await writeFileAtomic(
         path.join(this.outputDir, "proxy.ts"),
         proxyTemplate(this.analyticsConfig),
-        "utf8",
       );
       await this.updateRootLayout();
 
@@ -671,20 +758,18 @@ class MDXToNextJSGenerator {
 
     try {
       // Write empty analytics.json so runtime imports don't break
-      await fs.writeFile(destPath, `{}\n`, "utf8");
+      await writeFileAtomic(destPath, `{}\n`);
 
       this.analyticsConfig = null;
 
       // Regenerate dynamic templates without analytics
-      await fs.writeFile(
+      await writeFileAtomic(
         path.join(this.outputDir, "next.config.ts"),
         nextConfigTemplate(null),
-        "utf8",
       );
-      await fs.writeFile(
+      await writeFileAtomic(
         path.join(this.outputDir, "proxy.ts"),
         proxyTemplate(null),
-        "utf8",
       );
       await this.updateRootLayout();
 
@@ -774,15 +859,21 @@ class MDXToNextJSGenerator {
     this.watcher
       .on("add", (filePath: string) => {
         const relativePath = path.relative(this.watchDir, filePath);
-        this.handleFileChange("added", relativePath);
+        this.enqueueMutation("Error processing added MDX file", () =>
+          this.handleFileChange("added", relativePath),
+        );
       })
       .on("change", (filePath: string) => {
         const relativePath = path.relative(this.watchDir, filePath);
-        this.handleFileChange("changed", relativePath);
+        this.enqueueMutation("Error processing changed MDX file", () =>
+          this.handleFileChange("changed", relativePath),
+        );
       })
       .on("unlink", (filePath: string) => {
         const relativePath = path.relative(this.watchDir, filePath);
-        this.handleFileDelete(relativePath);
+        this.enqueueMutation("Error processing deleted MDX file", () =>
+          this.handleFileDelete(relativePath),
+        );
       })
       .on("ready", () => {
         console.log(
@@ -805,19 +896,25 @@ class MDXToNextJSGenerator {
         console.log(
           chalk.cyan(`📝 Config file added: ${path.basename(filePath)}`),
         );
-        this.handleConfigFileChange(filePath);
+        this.enqueueMutation("Error applying config file", () =>
+          this.handleConfigFileChange(filePath),
+        );
       })
       .on("change", (filePath: string) => {
         console.log(
           chalk.cyan(`📝 Config file changed: ${path.basename(filePath)}`),
         );
-        this.handleConfigFileChange(filePath);
+        this.enqueueMutation("Error applying config file", () =>
+          this.handleConfigFileChange(filePath),
+        );
       })
       .on("unlink", (filePath: string) => {
         console.log(
           chalk.red(`🗑️ Config file deleted: ${path.basename(filePath)}`),
         );
-        this.handleConfigFileDelete(filePath);
+        this.enqueueMutation("Error deleting config file", () =>
+          this.handleConfigFileDelete(filePath),
+        );
       })
       .on("error", (error: unknown) => {
         console.error(chalk.red("❌ Config watcher error:"), error);
@@ -833,13 +930,19 @@ class MDXToNextJSGenerator {
     this.fontWatcher
       .on("add", () => {
         console.log(chalk.cyan(`🔤 Font configuration added`));
-        this.handleFontConfigChange();
+        this.enqueueMutation("Error applying font configuration", () =>
+          this.handleFontConfigChange(),
+        );
       })
       .on("change", () => {
-        this.handleFontConfigChange();
+        this.enqueueMutation("Error applying font configuration", () =>
+          this.handleFontConfigChange(),
+        );
       })
       .on("unlink", () => {
-        this.handleFontConfigDelete();
+        this.enqueueMutation("Error deleting font configuration", () =>
+          this.handleFontConfigDelete(),
+        );
       })
       .on("error", (error: unknown) => {
         console.error(chalk.red("❌ Font watcher error:"), error);
@@ -855,13 +958,19 @@ class MDXToNextJSGenerator {
     this.analyticsWatcher
       .on("add", () => {
         console.log(chalk.cyan(`📊 Analytics configuration added`));
-        this.handleAnalyticsConfigChange();
+        this.enqueueMutation("Error applying analytics configuration", () =>
+          this.handleAnalyticsConfigChange(),
+        );
       })
       .on("change", () => {
-        this.handleAnalyticsConfigChange();
+        this.enqueueMutation("Error applying analytics configuration", () =>
+          this.handleAnalyticsConfigChange(),
+        );
       })
       .on("unlink", () => {
-        this.handleAnalyticsConfigDelete();
+        this.enqueueMutation("Error deleting analytics configuration", () =>
+          this.handleAnalyticsConfigDelete(),
+        );
       })
       .on("error", (error: unknown) => {
         console.error(chalk.red("❌ Analytics watcher error:"), error);
@@ -880,8 +989,16 @@ class MDXToNextJSGenerator {
     });
 
     this.doccupineConfigWatcher
-      .on("add", () => this.handleDoccupineConfigChange())
-      .on("change", () => this.handleDoccupineConfigChange())
+      .on("add", () =>
+        this.enqueueMutation("Error applying doccupine.json", () =>
+          this.handleDoccupineConfigChange(),
+        ),
+      )
+      .on("change", () =>
+        this.enqueueMutation("Error applying doccupine.json", () =>
+          this.handleDoccupineConfigChange(),
+        ),
+      )
       .on("error", (error: unknown) => {
         console.error(chalk.red("❌ doccupine.json watcher error:"), error);
       });
@@ -900,15 +1017,20 @@ class MDXToNextJSGenerator {
     });
 
     this.rootDirWatcher
-      .on("addDir", async (dirPath: string) => {
+      .on("addDir", (dirPath: string) => {
         if (
           path.basename(dirPath) === "public" &&
           path.dirname(dirPath) === this.rootDir &&
           !this.publicWatcher
         ) {
-          console.log(chalk.cyan("📁 Public directory created"));
-          await this.copyPublicFiles();
-          this.setupPublicWatcher();
+          this.enqueueMutation(
+            "Error initializing public directory",
+            async () => {
+              console.log(chalk.cyan("📁 Public directory created"));
+              await this.copyPublicFiles();
+              this.setupPublicWatcher();
+            },
+          );
         }
       })
       .on("error", (error: unknown) => {
@@ -935,7 +1057,9 @@ class MDXToNextJSGenerator {
             `📁 Public file added: ${path.relative(publicDir, filePath)}`,
           ),
         );
-        this.handlePublicFileChange(filePath);
+        this.enqueueMutation("Error copying public file", () =>
+          this.handlePublicFileChange(filePath),
+        );
       })
       .on("change", (filePath: string) => {
         console.log(
@@ -943,7 +1067,9 @@ class MDXToNextJSGenerator {
             `📁 Public file changed: ${path.relative(publicDir, filePath)}`,
           ),
         );
-        this.handlePublicFileChange(filePath);
+        this.enqueueMutation("Error copying public file", () =>
+          this.handlePublicFileChange(filePath),
+        );
       })
       .on("unlink", (filePath: string) => {
         console.log(
@@ -951,7 +1077,9 @@ class MDXToNextJSGenerator {
             `🗑️ Public file deleted: ${path.relative(publicDir, filePath)}`,
           ),
         );
-        this.handlePublicFileDelete(filePath);
+        this.enqueueMutation("Error deleting public file", () =>
+          this.handlePublicFileDelete(filePath),
+        );
       })
       .on("error", (error: unknown) => {
         console.error(chalk.red("❌ Public watcher error:"), error);
@@ -970,8 +1098,9 @@ class MDXToNextJSGenerator {
     const fullSlug = getFullSlug(pageSlug, sectionSlug);
 
     let lastModified: string | undefined;
-    if (frontmatter.date) {
-      const parsed = new Date(frontmatter.date);
+    const authoredLastModified = frontmatter.updated ?? frontmatter.date;
+    if (authoredLastModified) {
+      const parsed = new Date(authoredLastModified);
       if (!Number.isNaN(parsed.getTime())) {
         lastModified = parsed.toISOString();
       }
@@ -1020,6 +1149,16 @@ class MDXToNextJSGenerator {
     const real = await Promise.all(
       files.map((file) => this.parseMDXFile(file)),
     );
+    const bySlug = new Map<string, string>();
+    for (const page of real) {
+      const existing = bySlug.get(page.slug);
+      if (existing) {
+        throw new Error(
+          `Route collision at "/${page.slug}": both "${existing}" and "${page.path}" generate the same page.`,
+        );
+      }
+      bySlug.set(page.slug, page.path);
+    }
     if (this.apiRegistry.isEmpty) return real;
 
     // Inject synthetic OpenAPI endpoint pages here - the single funnel every
@@ -1114,8 +1253,10 @@ class MDXToNextJSGenerator {
    * exactly once and threads the result through each generator, so one refresh
    * is a single scan rather than one scan per generator.
    */
-  private async refreshSiteAggregates(): Promise<void> {
-    const pages = await this.buildAllPagesMeta();
+  private async refreshSiteAggregates(
+    resolvedPages?: PageMeta[],
+  ): Promise<void> {
+    const pages = resolvedPages ?? (await this.buildAllPagesMeta());
     await this.updatePagesIndex();
     await this.updateRootLayout(pages);
     await this.updateSitemap(pages);
@@ -1127,8 +1268,11 @@ class MDXToNextJSGenerator {
     console.log(chalk.cyan(`📝 File ${action}: ${filePath}`));
 
     try {
+      // Validate the complete route set before writing this page so a collision
+      // cannot transiently overwrite another route during watch mode.
+      const pages = await this.buildAllPagesMeta();
       await this.writePageForFile(filePath);
-      await this.refreshSiteAggregates();
+      await this.refreshSiteAggregates(pages);
 
       console.log(chalk.green(`✅ Generated page for: ${filePath}`));
 
@@ -1151,7 +1295,10 @@ class MDXToNextJSGenerator {
           {},
         );
         const fullSlug = getFullSlug(pageSlug, sectionSlug);
-        const pagePath = path.join(this.outputDir, "app", "(site)", fullSlug);
+        const pagePath = resolveWithin(
+          path.join(this.outputDir, "app", "(site)"),
+          fullSlug,
+        );
         await fs.remove(pagePath);
       }
 
@@ -1173,6 +1320,8 @@ class MDXToNextJSGenerator {
 
   async processAllMDXFiles() {
     const files = await this.getAllMDXFiles();
+    // Fail before writing any page when two source files resolve to one route.
+    const pages = await this.buildAllPagesMeta();
 
     // Write each page first (the only genuinely per-file work), then run the
     // site-wide aggregations a single time. Doing the aggregations per file
@@ -1188,7 +1337,7 @@ class MDXToNextJSGenerator {
       }
     }
 
-    await this.refreshSiteAggregates();
+    await this.refreshSiteAggregates(pages);
   }
 
   async getAllMDXFiles(): Promise<string[]> {
@@ -1256,15 +1405,13 @@ export default function SectionIndex() {
 }
 `;
 
-        const pagePath = path.join(
-          this.outputDir,
-          "app",
-          "(site)",
+        const pagePath = resolveWithin(
+          path.join(this.outputDir, "app", "(site)"),
           section.slug,
           "page.tsx",
         );
         await fs.ensureDir(path.dirname(pagePath));
-        await fs.writeFile(pagePath, redirectContent, "utf8");
+        await writeFileAtomic(pagePath, redirectContent);
         nextSlugs.add(section.slug);
         console.log(
           chalk.blue(
@@ -1290,10 +1437,8 @@ export default function SectionIndex() {
   ): Promise<void> {
     for (const stale of this.generatedSectionIndexSlugs) {
       if (nextSlugs.has(stale)) continue;
-      const pagePath = path.join(
-        this.outputDir,
-        "app",
-        "(site)",
+      const pagePath = resolveWithin(
+        path.join(this.outputDir, "app", "(site)"),
         stale,
         "page.tsx",
       );
@@ -1453,15 +1598,13 @@ export default function Page() {
 }
 `;
 
-    const pagePath = path.join(
-      this.outputDir,
-      "app",
-      "(site)",
+    const pagePath = resolveWithin(
+      path.join(this.outputDir, "app", "(site)"),
       mdxFile.slug,
       "page.tsx",
     );
     await fs.ensureDir(path.dirname(pagePath));
-    await fs.writeFile(pagePath, pageContent, "utf8");
+    await writeFileAtomic(pagePath, pageContent);
 
     // The feed route lives inside the page's directory, so a deleted page
     // takes its feed along (handleFileDelete removes the whole dir) and the
@@ -1472,7 +1615,7 @@ export default function Page() {
       const rssDir = path.join(path.dirname(pagePath), "rss.xml");
       if (hasFeed) {
         await fs.ensureDir(rssDir);
-        await fs.writeFile(
+        await writeFileAtomic(
           path.join(rssDir, "route.ts"),
           rssRouteTemplate({
             pagePath: mdxFile.slug,
@@ -1485,7 +1628,6 @@ export default function Page() {
               description: update.description,
             })),
           }),
-          "utf8",
         );
       } else {
         await fs.remove(rssDir);
@@ -1520,6 +1662,29 @@ export default function Page() {
   private async writeApiPages(): Promise<void> {
     const nextSlugs = new Set<string>();
 
+    const indexPage = this.apiRegistry
+      .syntheticPages()
+      .find((page) => page.slug === this.apiBaseSlug);
+    if (indexPage) {
+      try {
+        await this.generatePageFromMDX({
+          path: indexPage.path,
+          content: this.apiRegistry.bodyForSlug(indexPage.slug) ?? "",
+          frontmatter: {
+            title: indexPage.title,
+            description: indexPage.description,
+          },
+          slug: indexPage.slug,
+        });
+        nextSlugs.add(indexPage.slug);
+      } catch (error) {
+        console.error(
+          chalk.red(`❌ Error generating API index ${indexPage.slug}:`),
+          error,
+        );
+      }
+    }
+
     for (const op of this.apiRegistry.all) {
       const methodUpper = op.method.toUpperCase();
       const mdxFile: MDXFile = {
@@ -1545,7 +1710,7 @@ export default function Page() {
     await this.writeApiAllowlist();
     await this.cleanupStaleApiPages(nextSlugs);
 
-    if (nextSlugs.size > 0) {
+    if (this.apiRegistry.all.length > 0) {
       console.log(
         chalk.green(`🧩 Generated ${nextSlugs.size} API reference page(s)`),
       );
@@ -1561,10 +1726,9 @@ export default function Page() {
       "playground-allowlist.json",
     );
     await fs.ensureDir(path.dirname(target));
-    await fs.writeFile(
+    await writeFileAtomic(
       target,
       `${JSON.stringify(this.apiRegistry.allowlist(), null, 2)}\n`,
-      "utf8",
     );
   }
 
@@ -1594,10 +1758,9 @@ export default function Page() {
 
   private async writeApiManifest(slugs: Set<string>): Promise<void> {
     const payload = { pageSlugs: Array.from(slugs).sort() };
-    await fs.writeFile(
+    await writeFileAtomic(
       this.apiManifestPath(),
       `${JSON.stringify(payload, null, 2)}\n`,
-      "utf8",
     );
   }
 
@@ -1611,7 +1774,10 @@ export default function Page() {
     for (const stale of previous) {
       if (nextSlugs.has(stale)) continue;
       try {
-        const dir = path.join(this.outputDir, "app", "(site)", stale);
+        const dir = resolveWithin(
+          path.join(this.outputDir, "app", "(site)"),
+          stale,
+        );
         if (await fs.pathExists(dir)) {
           await fs.remove(dir);
           await this.removeEmptyDirsUpTo(
@@ -1650,9 +1816,21 @@ export default function Page() {
     });
 
     this.openApiWatcher
-      .on("add", () => this.handleOpenApiChange())
-      .on("change", () => this.handleOpenApiChange())
-      .on("unlink", () => this.handleOpenApiChange())
+      .on("add", () =>
+        this.enqueueMutation("Error rebuilding API reference", () =>
+          this.handleOpenApiChange(),
+        ),
+      )
+      .on("change", () =>
+        this.enqueueMutation("Error rebuilding API reference", () =>
+          this.handleOpenApiChange(),
+        ),
+      )
+      .on("unlink", () =>
+        this.enqueueMutation("Error rebuilding API reference", () =>
+          this.handleOpenApiChange(),
+        ),
+      )
       .on("error", (error: unknown) => {
         console.error(chalk.red("❌ OpenAPI watcher error:"), error);
       });
@@ -1879,7 +2057,7 @@ export default function Home() {
 
     const homePath = path.join(this.outputDir, "app", "(site)", "page.tsx");
     await fs.ensureDir(path.dirname(homePath));
-    await fs.writeFile(homePath, indexContent, "utf8");
+    await writeFileAtomic(homePath, indexContent);
 
     // Same lifecycle as the per-page feeds in generatePageFromMDX: write the
     // root feed route while the homepage has Update blocks, prune it when
@@ -1888,7 +2066,7 @@ export default function Home() {
     const rssDir = path.join(this.outputDir, "app", "(site)", "rss.xml");
     if (hasFeed && indexMDX) {
       await fs.ensureDir(rssDir);
-      await fs.writeFile(
+      await writeFileAtomic(
         path.join(rssDir, "route.ts"),
         rssRouteTemplate({
           pagePath: "",
@@ -1900,7 +2078,6 @@ export default function Home() {
             description: update.description,
           })),
         }),
-        "utf8",
       );
     } else {
       await fs.remove(rssDir);
@@ -1987,22 +2164,19 @@ export default function Page() {
 }
 `;
 
-    const pagePath = path.join(
-      this.outputDir,
-      "app",
-      "(site)",
+    const pagePath = resolveWithin(
+      path.join(this.outputDir, "app", "(site)"),
       sectionSlug,
       "page.tsx",
     );
     await fs.ensureDir(path.dirname(pagePath));
-    await fs.writeFile(pagePath, indexContent, "utf8");
+    await writeFileAtomic(pagePath, indexContent);
   }
 
   async updateRootLayout(pages?: PageMeta[]) {
-    await fs.writeFile(
+    await writeFileAtomic(
       path.join(this.outputDir, "app", "layout.tsx"),
       await this.generateRootLayout(),
-      "utf8",
     );
     const siteLayoutPath = path.join(
       this.outputDir,
@@ -2011,14 +2185,13 @@ export default function Page() {
       "layout.tsx",
     );
     await fs.ensureDir(path.dirname(siteLayoutPath));
-    await fs.writeFile(
-      siteLayoutPath,
-      await this.generateSiteLayout(pages),
-      "utf8",
-    );
+    await writeFileAtomic(siteLayoutPath, await this.generateSiteLayout(pages));
   }
 
   async loadSiteUrl(): Promise<string | null> {
+    const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+    if (fromEnv) return fromEnv.replace(/\/$/, "");
+
     const configPath = path.join(this.rootDir, "config.json");
 
     try {
@@ -2073,32 +2246,23 @@ export default function Page() {
     const sitemapPath = path.join(this.outputDir, "app", "sitemap.ts");
     const siteUrl = await this.loadSiteUrl();
 
-    if (!siteUrl) {
-      if (await fs.pathExists(sitemapPath)) {
-        await fs.remove(sitemapPath);
-        console.log(
-          chalk.yellow("🗑️ Removed sitemap.ts (no site URL configured)"),
-        );
-      }
-      return;
-    }
-
     const resolvedPages = pages ?? (await this.buildAllPagesMeta());
     const entries = this.buildSitemapEntries(resolvedPages);
-    await fs.writeFile(sitemapPath, sitemapTemplate(entries), "utf8");
+    await writeFileAtomic(sitemapPath, sitemapTemplate(entries));
     console.log(
       chalk.green(
-        `🗺️ Generated sitemap.ts with ${entries.length} page(s) using ${siteUrl}`,
+        `🗺️ Generated sitemap.ts with ${entries.length} page(s)${
+          siteUrl ? ` using ${siteUrl}` : " (waiting for a deployment URL)"
+        }`,
       ),
     );
   }
 
   async updateRobots() {
     const siteUrl = await this.loadSiteUrl();
-    await fs.writeFile(
+    await writeFileAtomic(
       path.join(this.outputDir, "app", "robots.ts"),
-      robotsTemplate(siteUrl !== null),
-      "utf8",
+      robotsTemplate,
     );
     console.log(
       chalk.green(
@@ -2120,6 +2284,8 @@ export default function Page() {
     let description = "";
 
     try {
+      const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+      if (fromEnv) url = fromEnv.replace(/\/$/, "");
       if (await fs.pathExists(configPath)) {
         const content = await fs.readFile(configPath, "utf8");
         const parsed = JSON.parse(content) as {
@@ -2128,7 +2294,11 @@ export default function Page() {
           title?: unknown;
           description?: unknown;
         };
-        if (typeof parsed.url === "string" && parsed.url.trim() !== "") {
+        if (
+          !url &&
+          typeof parsed.url === "string" &&
+          parsed.url.trim() !== ""
+        ) {
           url = parsed.url.trim().replace(/\/$/, "");
         }
         if (typeof parsed.name === "string" && parsed.name.trim() !== "") {
@@ -2196,7 +2366,7 @@ export default function Page() {
     const manifestPath = this.llmsManifestPath();
     const payload = { pageFiles: Array.from(pageFiles).sort() };
     const json = JSON.stringify(payload, null, 2) + "\n";
-    await fs.writeFile(manifestPath, json, "utf8");
+    await writeFileAtomic(manifestPath, json);
   }
 
   async updateLlmsFiles(pages?: PageMeta[]) {
@@ -2207,6 +2377,22 @@ export default function Page() {
     const resolvedPages = pages ?? (await this.buildAllPagesMeta());
     const pagesWithBodies = await Promise.all(
       resolvedPages.map((page) => this.readPageWithBody(page)),
+    );
+    const docsContent = pagesWithBodies.map((page) => {
+      const route = page.slug.replace(/^\/+|\/+$/g, "");
+      const pagePath = route
+        ? `app/(site)/${route}/page.tsx`
+        : "app/(site)/page.tsx";
+      return {
+        uri: `docs://${route || "/"}`,
+        name: page.title,
+        path: pagePath,
+        content: page.body,
+      };
+    });
+    await writeFileAtomic(
+      path.join(this.outputDir, "services", "mcp", "docs-content.json"),
+      JSON.stringify(docsContent, null, 2) + "\n",
     );
 
     const indexContent = llmsIndexTemplate({
@@ -2224,12 +2410,8 @@ export default function Page() {
       sectionsConfig: this.sectionsConfig,
     });
 
-    await fs.writeFile(path.join(publicDir, "llms.txt"), indexContent, "utf8");
-    await fs.writeFile(
-      path.join(publicDir, "llms-full.txt"),
-      fullContent,
-      "utf8",
-    );
+    await writeFileAtomic(path.join(publicDir, "llms.txt"), indexContent);
+    await writeFileAtomic(path.join(publicDir, "llms-full.txt"), fullContent);
 
     const skillContent = skillMdTemplate({
       siteName: name,
@@ -2238,7 +2420,7 @@ export default function Page() {
       pages: resolvedPages,
       sectionsConfig: this.sectionsConfig,
     });
-    await fs.writeFile(path.join(publicDir, "skill.md"), skillContent, "utf8");
+    await writeFileAtomic(path.join(publicDir, "skill.md"), skillContent);
 
     // MCP discovery manifest. Needs an absolute URL, so it only exists when
     // config.json declares the site url; it is pruned if the url is removed.
@@ -2258,7 +2440,7 @@ export default function Page() {
           2,
         ) + "\n";
       await fs.ensureDir(path.dirname(mcpJsonPath));
-      await fs.writeFile(mcpJsonPath, mcpJson, "utf8");
+      await writeFileAtomic(mcpJsonPath, mcpJson);
     } else if (await fs.pathExists(mcpJsonPath)) {
       await fs.remove(mcpJsonPath);
     }
@@ -2267,9 +2449,9 @@ export default function Page() {
     await Promise.all(
       pagesWithBodies.map(async (page) => {
         const relPath = page.slug === "" ? "index.md" : `${page.slug}.md`;
-        const targetPath = path.join(publicDir, relPath);
+        const targetPath = resolveWithin(publicDir, relPath);
         await fs.ensureDir(path.dirname(targetPath));
-        await fs.writeFile(targetPath, llmsPageTemplate(page, baseUrl), "utf8");
+        await writeFileAtomic(targetPath, llmsPageTemplate(page, baseUrl));
         nextRelativePaths.add(relPath);
       }),
     );
@@ -2341,7 +2523,48 @@ export default function Page() {
     if (this.rootDirWatcher) {
       await this.rootDirWatcher.close();
     }
+    await this.mutationQueue;
   }
+}
+
+async function dependencyFingerprint(
+  outputDir: string,
+  packageManager: string,
+): Promise<string> {
+  const packageJson = await fs.readFile(
+    path.join(outputDir, "package.json"),
+    "utf8",
+  );
+  return createHash("sha256")
+    .update(packageManager)
+    .update("\0")
+    .update(packageJson)
+    .digest("hex");
+}
+
+async function needsDependencyInstall(
+  outputDir: string,
+  packageManager: string,
+): Promise<boolean> {
+  if (!(await fs.pathExists(path.join(outputDir, "node_modules")))) return true;
+  const stampPath = path.join(outputDir, ".doccupine-install");
+  try {
+    const expected = await dependencyFingerprint(outputDir, packageManager);
+    return (await fs.readFile(stampPath, "utf8")).trim() !== expected;
+  } catch {
+    return true;
+  }
+}
+
+async function recordDependencyInstall(
+  outputDir: string,
+  packageManager: string,
+): Promise<void> {
+  const fingerprint = await dependencyFingerprint(outputDir, packageManager);
+  await writeFileAtomic(
+    path.join(outputDir, ".doccupine-install"),
+    `${fingerprint}\n`,
+  );
 }
 
 program
@@ -2354,9 +2577,10 @@ program
 program
   .command("watch", { isDefault: true })
   .description("Watch a directory for MDX changes and generate Next.js app")
-  .option("--port <port>", "Port for Next.js dev server", "3000")
+  .option("--port <port>", "Port for Next.js dev server")
   .option("--verbose", "Show verbose output")
   .option("--reset", "Reset configuration and prompt for new directories")
+  .option("--skip-install", "Skip dependency installation")
   .option(
     "--package-manager <name>",
     "Package manager for the generated app: pnpm or npm (default: auto-detect)",
@@ -2381,7 +2605,6 @@ program
 
     let devServer: ReturnType<typeof spawn> | null = null;
 
-    console.log(chalk.blue("📦 Installing dependencies..."));
     const { spawn } = await import("child_process");
 
     // Prefer pnpm (the generated app ships a pnpm workspace) and fall back to
@@ -2393,29 +2616,38 @@ program
 
     console.log(chalk.blue(`📦 Using ${packageManager.name}...`));
 
-    const install = spawn(packageManager.bin, ["install"], {
-      cwd: outputDir,
-      stdio: "inherit",
-    });
-
-    await new Promise((resolve, reject) => {
-      install.on("close", (code) => {
-        if (code === 0) {
-          console.log(chalk.green("✅ Dependencies installed"));
-          resolve(void 0);
-        } else {
-          reject(
-            new Error(
-              `${packageManager.name} install failed with code ${code}`,
-            ),
-          );
-        }
+    if (options.skipInstall) {
+      console.log(chalk.yellow("⏭️ Skipping dependency installation"));
+    } else if (await needsDependencyInstall(outputDir, packageManager.name)) {
+      console.log(chalk.blue("📦 Installing dependencies..."));
+      const install = spawn(packageManager.bin, ["install"], {
+        cwd: outputDir,
+        stdio: "inherit",
       });
-      install.on("error", reject);
-    });
 
-    const port = await findAvailablePort(parseInt(config.port, 10));
-    if (port !== parseInt(config.port, 10)) {
+      await new Promise((resolve, reject) => {
+        install.on("close", (code) => {
+          if (code === 0) {
+            resolve(void 0);
+          } else {
+            reject(
+              new Error(
+                `${packageManager.name} install failed with code ${code}`,
+              ),
+            );
+          }
+        });
+        install.on("error", reject);
+      });
+      await recordDependencyInstall(outputDir, packageManager.name);
+      console.log(chalk.green("✅ Dependencies installed"));
+    } else {
+      console.log(chalk.green("✅ Dependencies are already up to date"));
+    }
+
+    const requestedPort = Number(config.port);
+    const port = await findAvailablePort(requestedPort);
+    if (port !== requestedPort) {
       console.log(
         chalk.yellow(
           `⚠️ Port ${config.port} is in use, using port ${port} instead`,
@@ -2493,7 +2725,8 @@ program
 
 program
   .command("build")
-  .description("One-time build of Next.js app from MDX files")
+  .alias("generate")
+  .description("Generate the Next.js app once without running its build")
   .option("--reset", "Reset configuration and prompt for new directories")
   .action(async (options) => {
     const configManager = new ConfigManager();
@@ -2507,7 +2740,7 @@ program
       normalizeOpenApiConfig(config.openapi),
     );
     await generator.init();
-    console.log(chalk.green("🎉 Build complete!"));
+    console.log(chalk.green("🎉 Generation complete!"));
   });
 
 program

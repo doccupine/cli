@@ -4,6 +4,80 @@ import chalk from "chalk";
 import prompts from "prompts";
 
 import type { DoccupineConfig, NormalizedOpenApiSpec } from "./types.js";
+import { isPathInside } from "./output-safety.js";
+
+function pathsOverlap(a: string, b: string): boolean {
+  return isPathInside(a, b) || isPathInside(b, a);
+}
+
+function isValidOpenApiConfig(value: unknown): boolean {
+  if (value === undefined || typeof value === "string") return true;
+  if (!Array.isArray(value)) return false;
+  return value.every(
+    (entry) =>
+      typeof entry === "string" ||
+      (entry !== null &&
+        typeof entry === "object" &&
+        typeof (entry as { file?: unknown }).file === "string" &&
+        ((entry as { name?: unknown }).name === undefined ||
+          typeof (entry as { name?: unknown }).name === "string")),
+  );
+}
+
+export function validateConfig(
+  value: unknown,
+  rootDir: string = process.cwd(),
+): DoccupineConfig {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("doccupine.json must contain a JSON object.");
+  }
+
+  const config = value as Partial<DoccupineConfig>;
+  if (typeof config.watchDir !== "string" || !config.watchDir.trim()) {
+    throw new Error("doccupine.json watchDir must be a non-empty string.");
+  }
+  if (typeof config.outputDir !== "string" || !config.outputDir.trim()) {
+    throw new Error("doccupine.json outputDir must be a non-empty string.");
+  }
+
+  const watchDir = path.resolve(rootDir, config.watchDir);
+  const outputDir = path.resolve(rootDir, config.outputDir);
+  if (outputDir === path.resolve(rootDir)) {
+    throw new Error("outputDir cannot be the project root.");
+  }
+  if (pathsOverlap(watchDir, outputDir)) {
+    throw new Error("watchDir and outputDir must not overlap.");
+  }
+
+  const port = config.port ?? "3000";
+  if (
+    typeof port !== "string" ||
+    !/^\d+$/.test(port) ||
+    Number(port) < 1 ||
+    Number(port) > 65535
+  ) {
+    throw new Error("doccupine.json port must be an integer from 1 to 65535.");
+  }
+  if (
+    config.packageManager !== undefined &&
+    config.packageManager !== "npm" &&
+    config.packageManager !== "pnpm"
+  ) {
+    throw new Error('packageManager must be either "npm" or "pnpm".');
+  }
+  if (!isValidOpenApiConfig(config.openapi)) {
+    throw new Error(
+      "openapi must be a path or an array of paths/{ name, file } objects.",
+    );
+  }
+
+  return {
+    ...config,
+    watchDir: config.watchDir,
+    outputDir: config.outputDir,
+    port,
+  };
+}
 
 /** Strips a `.json`/`.yaml`/`.yml` extension to derive a spec's default name. */
 function basenameWithoutExt(file: string): string {
@@ -149,16 +223,20 @@ export class ConfigManager {
     try {
       if (await fs.pathExists(this.configPath)) {
         const configContent = await fs.readFile(this.configPath, "utf8");
-        const config = JSON.parse(configContent) as DoccupineConfig;
+        const config = validateConfig(JSON.parse(configContent));
         console.log(
           chalk.blue("📄 Using existing configuration from doccupine.json"),
         );
         return config;
       }
     } catch (error) {
-      console.warn(
-        chalk.yellow("⚠️ Error reading config file, will create new one"),
-      );
+      if (await fs.pathExists(this.configPath)) {
+        throw new Error(
+          `Unable to use ${this.configPath}: ${
+            error instanceof Error ? error.message : String(error)
+          }. Run "doccupine config --reset" to repair the configuration.`,
+        );
+      }
     }
     return null;
   }
@@ -251,7 +329,7 @@ export class ConfigManager {
 
     if (!config || options.reset) {
       console.log(chalk.blue("🔧 Setting up Doccupine configuration..."));
-      config = await this.promptForConfig(config || {});
+      config = validateConfig(await this.promptForConfig(config || {}));
       dirty = true;
     } else {
       // Configs written before 0.0.129 stored absolute paths; rewrite them in
@@ -270,6 +348,8 @@ export class ConfigManager {
       config.port = options.port;
       dirty = true;
     }
+
+    config = validateConfig(config);
 
     if (dirty) {
       await this.saveConfig(config);

@@ -7,9 +7,50 @@ import {
   ConfigManager,
   normalizeConfigPaths,
   toProjectRelativePath,
+  validateConfig,
 } from "./config-manager.js";
 
 const ROOT = "/home/dev/project";
+
+describe("validateConfig", () => {
+  it("accepts distinct project directories and defaults the port", () => {
+    expect(
+      validateConfig({ watchDir: "docs", outputDir: "site" }, ROOT),
+    ).toMatchObject({ watchDir: "docs", outputDir: "site", port: "3000" });
+  });
+
+  it("rejects the project root and overlapping directories", () => {
+    expect(() =>
+      validateConfig({ watchDir: "docs", outputDir: "." }, ROOT),
+    ).toThrow("project root");
+    expect(() =>
+      validateConfig(
+        { watchDir: ".", outputDir: "generated", port: "3000" },
+        ROOT,
+      ),
+    ).toThrow("must not overlap");
+  });
+
+  it("rejects invalid ports and OpenAPI shapes", () => {
+    expect(() =>
+      validateConfig(
+        { watchDir: "docs", outputDir: "site", port: "70000" },
+        ROOT,
+      ),
+    ).toThrow("1 to 65535");
+    expect(() =>
+      validateConfig(
+        {
+          watchDir: "docs",
+          outputDir: "site",
+          port: "3000",
+          openapi: [{ name: "Missing file" }] as never,
+        },
+        ROOT,
+      ),
+    ).toThrow("openapi");
+  });
+});
 
 describe("toProjectRelativePath", () => {
   it("rewrites an absolute path inside the root as relative", () => {
@@ -193,5 +234,17 @@ describe("ConfigManager migration", () => {
 
     expect(config.port).toBe("4000");
     expect(config.packageManager).toBe("npm");
+  });
+
+  it("points invalid existing configurations to the reset command", async () => {
+    await fs.writeJSON(path.join(tempDir, "doccupine.json"), {
+      watchDir: ".",
+      outputDir: "nextjs-app",
+      port: "3000",
+    });
+
+    await expect(new ConfigManager().loadConfig()).rejects.toThrow(
+      'Run "doccupine config --reset" to repair the configuration.',
+    );
   });
 });

@@ -1,4 +1,5 @@
 import path from "path";
+import net from "node:net";
 import chalk from "chalk";
 import { dereference } from "@readme/openapi-parser";
 import type { NormalizedOpenApiSpec, PageMeta } from "./types.js";
@@ -145,31 +146,50 @@ function resolveServerUrl(server: ServerDescriptor): string {
 }
 
 /**
- * True when a host literal is loopback/private/link-local/CGNAT (or localhost).
- * Used ONLY at build time to mark an allowlist entry `allowPrivate` when the
- * spec's own declared server is a local-dev host. The runtime SSRF guard still
- * enforces the range checks; this just records the operator's explicit intent.
+ * True only for a loopback host. Loopback is useful for a local playground, but
+ * broader private and link-local ranges are never auto-enabled from spec input:
+ * an imported spec must not be able to turn the generated site into an internal
+ * network or cloud-metadata proxy.
  */
-function isLocalOrPrivateHost(host: string): boolean {
+function isLoopbackHost(host: string): boolean {
   if (host === "localhost" || host.endsWith(".localhost")) return true;
   if (host === "::1") return true;
-  // IPv6 link-local (fe80::/10) and unique-local (fc00::/7 -> fc../fd..).
-  if (
-    host.startsWith("fe80:") ||
-    host.startsWith("fc") ||
-    host.startsWith("fd")
-  ) {
-    return true;
-  }
   const m = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.\d{1,3}$/);
-  if (m) {
-    const a = Number(m[1]);
-    const b = Number(m[2]);
-    if (a === 0 || a === 127 || a === 10) return true;
-    if (a === 169 && b === 254) return true;
-    if (a === 172 && b >= 16 && b <= 31) return true;
-    if (a === 192 && b === 168) return true;
-    if (a === 100 && b >= 64 && b <= 127) return true;
+  return Boolean(m && Number(m[1]) === 127);
+}
+
+/** True when the runtime proxy will reject a non-loopback IP literal. */
+function isBlockedNonLoopbackLiteral(host: string): boolean {
+  const type = net.isIP(host);
+  if (type === 4) {
+    const [a, b] = host.split(".").map(Number);
+    return (
+      a === 0 ||
+      a === 10 ||
+      (a === 100 && b >= 64 && b <= 127) ||
+      (a === 169 && b === 254) ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) ||
+      a >= 224
+    );
+  }
+  if (type === 6) {
+    const clean = host.toLowerCase().split("%")[0];
+    const head = clean.split(":")[0];
+    return (
+      clean === "::" ||
+      head.startsWith("fc") ||
+      head.startsWith("fd") ||
+      head.startsWith("fe8") ||
+      head.startsWith("fe9") ||
+      head.startsWith("fea") ||
+      head.startsWith("feb") ||
+      head.startsWith("fec") ||
+      head.startsWith("fed") ||
+      head.startsWith("fee") ||
+      head.startsWith("fef") ||
+      head.startsWith("ff")
+    );
   }
   return false;
 }
@@ -185,7 +205,10 @@ function serverToAllowlistEntry(
     return null; // relative server URL — no cross-origin host to allow
   }
   if (url.protocol !== "http:" && url.protocol !== "https:") return null;
-  const host = url.hostname.toLowerCase().replace(/\.$/, "");
+  const host = url.hostname
+    .toLowerCase()
+    .replace(/\.$/, "")
+    .replace(/^\[|\]$/g, "");
   const entry: AllowlistEntry = {
     scheme: url.protocol === "https:" ? "https" : "http",
     host,
@@ -194,7 +217,7 @@ function serverToAllowlistEntry(
   if (url.pathname && url.pathname !== "/") {
     entry.basePath = url.pathname.replace(/\/+$/, "");
   }
-  if (isLocalOrPrivateHost(host)) entry.allowPrivate = true;
+  if (isLoopbackHost(host)) entry.allowPrivate = true;
   return entry;
 }
 
@@ -312,6 +335,22 @@ export class OpenApiRegistry {
           error instanceof Error ? error.message : error,
         );
       }
+    }
+
+    if (this.operations.length > 0) {
+      const body = buildApiIndexBody(this.operations);
+      this.pages.unshift({
+        slug: apiBaseSlug,
+        title: "API Reference",
+        description: `Browse all ${this.operations.length} API endpoints.`,
+        date: null,
+        category: "Overview",
+        path: "@openapi/index",
+        categoryOrder: -1,
+        order: -1,
+        section: apiBaseSlug,
+      });
+      this.bodies.set(apiBaseSlug, body);
     }
   }
 
@@ -538,9 +577,89 @@ export class OpenApiRegistry {
       const key = `${entry.scheme}://${entry.host}:${entry.port ?? ""}${entry.basePath ?? ""}`;
       if (keys.has(key)) continue;
       keys.add(key);
+      if (isBlockedNonLoopbackLiteral(entry.host)) {
+        console.warn(
+          chalk.yellow(
+            `⚠️ OpenAPI server "${resolveServerUrl(server)}" is a private or reserved IP. ` +
+              "It remains documented, but the generated playground proxy will block requests to it.",
+          ),
+        );
+      }
       this.allowlistEntries.push(entry);
     }
   }
+}
+
+/**
+ * Builds the API-reference landing page as safe MDX. Endpoint metadata is
+ * emitted through JSX string expressions, so arbitrary OpenAPI summaries,
+ * paths, tags, and descriptions remain text rather than executable MDX.
+ */
+function buildApiIndexBody(operations: OperationDescriptor[]): string {
+  const bySpec = new Map<string, Map<string, OperationDescriptor[]>>();
+  for (const operation of operations) {
+    const tag = operation.tags[0] ?? "Endpoints";
+    let byTag = bySpec.get(operation.specName);
+    if (!byTag) {
+      byTag = new Map();
+      bySpec.set(operation.specName, byTag);
+    }
+    const endpoints = byTag.get(tag) ?? [];
+    endpoints.push(operation);
+    byTag.set(tag, endpoints);
+  }
+
+  const lines = [
+    "# API Reference",
+    "",
+    `Browse all ${operations.length} API endpoint${operations.length === 1 ? "" : "s"}. Select an endpoint to view its parameters, responses, and live request playground.`,
+  ];
+  const multipleSpecs = bySpec.size > 1;
+
+  for (const [specName, byTag] of bySpec) {
+    if (multipleSpecs) {
+      lines.push("", `<h2>{${JSON.stringify(specName)}}</h2>`);
+    }
+    for (const [tag, endpoints] of byTag) {
+      const heading = multipleSpecs ? "h3" : "h2";
+      lines.push(
+        "",
+        `<${heading}>{${JSON.stringify(tag)}}</${heading}>`,
+        "",
+        "<Columns cols={2}>",
+      );
+
+      for (const endpoint of endpoints) {
+        const method = endpoint.method.toUpperCase();
+        const title = endpoint.summary ?? `${method} ${endpoint.path}`;
+        const description =
+          firstLine(endpoint.description) ||
+          `View the ${method} ${endpoint.path} endpoint.`;
+        const badgeColor =
+          endpoint.method === "get"
+            ? "info"
+            : endpoint.method === "post"
+              ? "success"
+              : endpoint.method === "put" || endpoint.method === "patch"
+                ? "warning"
+                : endpoint.method === "delete"
+                  ? "error"
+                  : "gray";
+        lines.push(
+          "",
+          `<Card title={${JSON.stringify(title)}} href={${JSON.stringify(`/${endpoint.slug}`)}}>`,
+          `  <Badge color=${JSON.stringify(badgeColor)} size="sm">{${JSON.stringify(method)}}</Badge>`,
+          `  <code>{${JSON.stringify(endpoint.path)}}</code>`,
+          `  <p>{${JSON.stringify(description)}}</p>`,
+          "</Card>",
+        );
+      }
+
+      lines.push("", "</Columns>");
+    }
+  }
+
+  return lines.join("\n");
 }
 
 /** Minimal markdown body for an endpoint, used by the llms.txt aggregation. */
@@ -602,7 +721,7 @@ function renderDocField(
   const type = docSchemaType(schema);
   const desc = inlineText(description ?? schema?.description);
   const lines = [
-    `<Field value="${name}" type="${type}"${required ? " required" : ""}>`,
+    `<Field value={${JSON.stringify(name)}} type={${JSON.stringify(type)}}${required ? " required" : ""}>`,
   ];
   if (desc) lines.push(desc);
   const shape = depth < MAX_FIELD_DEPTH ? objectShape(schema) : null;

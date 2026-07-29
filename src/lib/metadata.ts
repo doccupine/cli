@@ -143,25 +143,42 @@ function buildFieldExpression(
   configKey: string,
   defaultValue: string,
 ): string {
-  if (staticValue) return staticValue;
-  return `\${config.${configKey} || "${defaultValue}"}`;
+  if (staticValue) return JSON.stringify(String(staticValue));
+  return `config.${configKey} || ${JSON.stringify(defaultValue)}`;
 }
 
 function buildTitleExpression(opts: MetadataOptions): string {
-  const title = opts.title || opts.titleFallback;
+  const title = String(opts.title || opts.titleFallback);
 
   if (opts.titleOrder === "page-first") {
-    const suffix = opts.name
-      ? `- ${opts.name}`
-      : `\${config.name ? "- " + config.name : "- ${DEFAULT_SITE_NAME}"}`;
-    return `${title} ${suffix}`;
+    if (opts.name) {
+      return JSON.stringify(`${title} - ${String(opts.name)}`);
+    }
+    return `[
+  ${JSON.stringify(title)},
+  config.name ? "- " + config.name : ${JSON.stringify(`- ${DEFAULT_SITE_NAME}`)},
+].join(" ")`;
   }
 
-  // name-first
-  const prefix = opts.name
-    ? `${opts.name} -`
-    : `\${config.name ? config.name + " -" : "${DEFAULT_SITE_NAME} -"}`;
-  return `${prefix} ${title}`;
+  if (opts.name) {
+    return JSON.stringify(`${String(opts.name)} - ${title}`);
+  }
+  return `[
+  config.name ? config.name + " -" : ${JSON.stringify(`${DEFAULT_SITE_NAME} -`)},
+  ${JSON.stringify(title)},
+].join(" ")`;
+}
+
+function formatProperty(
+  indent: number,
+  name: string,
+  expression: string,
+): string {
+  const prefix = " ".repeat(indent);
+  const inline = `${prefix}${name}: ${expression},`;
+  return inline.length <= 80
+    ? inline
+    : `${prefix}${name}:\n${prefix}  ${expression},`;
 }
 
 function buildAlternatesBlock(
@@ -196,34 +213,51 @@ export function generateMetadataBlock(opts: MetadataOptions): string {
   const icon = buildFieldExpression(opts.icon, "icon", DEFAULT_FAVICON);
   const image = buildFieldExpression(opts.image, "image", DEFAULT_OG_IMAGE);
   const canonical = buildAlternatesBlock(opts.canonicalPath, opts.rssPath);
+  const inlineTitleDeclaration = `const pageTitle = ${title};`;
+  const titleDeclaration =
+    title.includes("\n") || inlineTitleDeclaration.length <= 80
+      ? inlineTitleDeclaration
+      : `const pageTitle =\n  ${title};`;
+  const descriptionLine = formatProperty(2, "description", desc);
+  const iconLine = formatProperty(2, "icons", icon);
+  const openGraphDescriptionLine = formatProperty(4, "description", desc);
+  const imageLine = formatProperty(4, "images", image);
 
-  return `export const metadata: Metadata = {
-  title: \`${title}\`,
-  description: \`${desc}\`,
-  icons: \`${icon}\`,${canonical}
+  return `${titleDeclaration}
+
+export const metadata: Metadata = {
+  title: pageTitle,
+${descriptionLine}
+${iconLine}${canonical}
   openGraph: {
-    title: \`${title}\`,
-    description: \`${desc}\`,
-    images: \`${image}\`,
+    title: pageTitle,
+${openGraphDescriptionLine}
+${imageLine}
   },
 };`;
 }
 
 export function generateRuntimeOnlyMetadataBlock(): string {
-  const title = `\${config.name || "${DEFAULT_SITE_NAME}"}`;
-  const desc = `\${config.description || "${DEFAULT_META_DESCRIPTION}"}`;
-  const icon = `\${config.icon || "${DEFAULT_FAVICON}"}`;
-  const image = `\${config.image || "${DEFAULT_OG_IMAGE}"}`;
+  const title = `config.name || ${JSON.stringify(DEFAULT_SITE_NAME)}`;
+  const desc = `config.description || ${JSON.stringify(DEFAULT_META_DESCRIPTION)}`;
+  const icon = `config.icon || ${JSON.stringify(DEFAULT_FAVICON)}`;
+  const image = `config.image || ${JSON.stringify(DEFAULT_OG_IMAGE)}`;
+  const descriptionLine = formatProperty(2, "description", desc);
+  const iconLine = formatProperty(2, "icons", icon);
+  const openGraphDescriptionLine = formatProperty(4, "description", desc);
+  const imageLine = formatProperty(4, "images", image);
 
-  return `export const metadata: Metadata = {
-  title: \`${title}\`,
-  description: \`${desc}\`,
-  icons: \`${icon}\`,
+  return `const pageTitle = ${title};
+
+export const metadata: Metadata = {
+  title: pageTitle,
+${descriptionLine}
+${iconLine}
   alternates: { canonical: "/" },
   openGraph: {
-    title: \`${title}\`,
-    description: \`${desc}\`,
-    images: \`${image}\`,
+    title: pageTitle,
+${openGraphDescriptionLine}
+${imageLine}
   },
 };`;
 }

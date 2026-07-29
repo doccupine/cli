@@ -310,6 +310,13 @@ describe.skipIf(!fs.pathExistsSync(distEntry))(
             ),
           ),
         ).toBe(true);
+        const apiIndex = await fs.readFile(
+          path.join(outDir, "app", "(site)", "api-reference", "page.tsx"),
+          "utf8",
+        );
+        expect(apiIndex).not.toContain("redirect(");
+        expect(apiIndex).toContain('href={"/api-reference/admin/getworkbyid"}');
+        expect(apiIndex).toContain('href={"/api-reference/notes/createnote"}');
         // The starting docs ship an <Update> page with `rss: true`, so the
         // format check also covers the generated feed route and the RSS-button
         // page shape.
@@ -335,6 +342,48 @@ describe.skipIf(!fs.pathExistsSync(distEntry))(
               `rewrite files:\n${e.stdout ?? ""}${e.stderr ?? ""}`,
           );
         }
+        expect(stdout).toContain("All matched files use Prettier code style!");
+      } finally {
+        await fs.remove(projectDir);
+      }
+    }, 120_000);
+
+    it("keeps a one-page llms manifest out of generated formatting", async () => {
+      const projectDir = await fs.mkdtemp(
+        path.join(os.tmpdir(), "doccupine-fmt-one-page-"),
+      );
+      try {
+        await fs.writeJson(path.join(projectDir, "doccupine.json"), {
+          watchDir: "docs",
+          outputDir: "out",
+          port: "3000",
+        });
+        await fs.outputFile(
+          path.join(projectDir, "docs", "index.mdx"),
+          "---\ntitle: Home\n---\n# Home\n",
+        );
+
+        await execFileAsync(process.execPath, [distEntry, "build"], {
+          cwd: projectDir,
+          maxBuffer: 20 * 1024 * 1024,
+        });
+
+        const outDir = path.join(projectDir, "out");
+        await expect(
+          fs.readFile(
+            path.join(outDir, ".doccupine-llms-manifest.json"),
+            "utf8",
+          ),
+        ).resolves.toContain('"index.md"');
+        await expect(
+          fs.readFile(path.join(outDir, ".prettierignore"), "utf8"),
+        ).resolves.toContain(".doccupine-*");
+
+        const { stdout } = await execFileAsync(
+          process.execPath,
+          [prettierCli, "--check", "."],
+          { cwd: outDir, maxBuffer: 20 * 1024 * 1024 },
+        );
         expect(stdout).toContain("All matched files use Prettier code style!");
       } finally {
         await fs.remove(projectDir);
@@ -585,3 +634,87 @@ describe.skipIf(!fs.pathExistsSync(distEntry))("MDX error resilience", () => {
     }
   }, 120_000);
 });
+
+describe.skipIf(!fs.pathExistsSync(distEntry))(
+  "generation safety invariants",
+  () => {
+    it("fails with both source paths when MDX routes collide", async () => {
+      const projectDir = await fs.mkdtemp(
+        path.join(os.tmpdir(), "doccupine-collision-"),
+      );
+      try {
+        await fs.writeJson(path.join(projectDir, "doccupine.json"), {
+          watchDir: "docs",
+          outputDir: "out",
+          port: "3000",
+        });
+        await fs.outputFile(
+          path.join(projectDir, "docs", "index.mdx"),
+          "---\ntitle: Home\n---\n# Home\n",
+        );
+        await fs.outputFile(
+          path.join(projectDir, "docs", "guide.mdx"),
+          "---\ntitle: Guide\n---\n# Guide\n",
+        );
+        await fs.outputFile(
+          path.join(projectDir, "docs", "guide", "index.mdx"),
+          "---\ntitle: Other guide\n---\n# Other\n",
+        );
+
+        let stderr = "";
+        try {
+          await execFileAsync(process.execPath, [distEntry, "build"], {
+            cwd: projectDir,
+          });
+          throw new Error("Expected route collision to fail generation");
+        } catch (error) {
+          stderr = (error as { stderr?: string }).stderr ?? "";
+        }
+        expect(stderr).toContain("Route collision");
+        expect(stderr).toContain('"guide.mdx"');
+        expect(stderr).toContain('"guide/index.mdx"');
+      } finally {
+        await fs.remove(projectDir);
+      }
+    });
+
+    it("refuses to overwrite an unrelated non-empty output directory", async () => {
+      const projectDir = await fs.mkdtemp(
+        path.join(os.tmpdir(), "doccupine-output-refusal-"),
+      );
+      try {
+        await fs.writeJson(path.join(projectDir, "doccupine.json"), {
+          watchDir: "docs",
+          outputDir: "existing",
+          port: "3000",
+        });
+        await fs.outputFile(
+          path.join(projectDir, "docs", "index.mdx"),
+          "# Home\n",
+        );
+        await fs.outputFile(
+          path.join(projectDir, "existing", "important.txt"),
+          "keep me",
+        );
+
+        await expect(
+          execFileAsync(process.execPath, [distEntry, "build"], {
+            cwd: projectDir,
+          }),
+        ).rejects.toMatchObject({
+          stderr: expect.stringContaining(
+            "Refusing to overwrite non-empty directory",
+          ),
+        });
+        expect(
+          await fs.readFile(
+            path.join(projectDir, "existing", "important.txt"),
+            "utf8",
+          ),
+        ).toBe("keep me");
+      } finally {
+        await fs.remove(projectDir);
+      }
+    });
+  },
+);
