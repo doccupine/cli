@@ -3,9 +3,9 @@ import { Flex } from "cherry-styled-components";
 import {
   DocsContainer,
   StyledMarkdownContainer,
-  StyledMissingComponent,
 } from "@/components/layout/DocsComponents";
-import { MDXRemote } from "next-mdx-remote/rsc";
+import { Callout } from "@/components/layout/Callout";
+import { compileMDX } from "next-mdx-remote/rsc";
 import remarkGfm from "remark-gfm";
 import { useMDXComponents } from "@/components/MDXComponents";
 import { createMermaidPre } from "@/components/MermaidPre";
@@ -82,10 +82,59 @@ function MissingComponent({
   children?: React.ReactNode;
 }) {
   return (
-    <StyledMissingComponent>
-      Missing component: &lt;{componentName} /&gt;
-    </StyledMissingComponent>
+    <Callout type="danger">
+      <p>Missing component: &lt;{componentName} /&gt;</p>
+    </Callout>
   );
+}
+
+interface MdxBodyProps {
+  source: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  components: Record<string, React.ComponentType<any>>;
+  sourcePath?: string;
+}
+
+// Compiles the MDX body inside a try/catch so an authoring mistake (an
+// orphaned closing tag, a stray {expression}) renders an inline error panel
+// instead of throwing during static prerender - a broken page must never
+// fail \`next build\` for the rest of the site.
+async function MdxBody({ source, components, sourcePath }: MdxBodyProps) {
+  try {
+    const { content } = await compileMDX({
+      source,
+      options: {
+        blockJS: false,
+        mdxOptions: {
+          remarkPlugins: [remarkGfm],
+          rehypePlugins: [rehypeCodeMeta],
+        },
+      },
+      components,
+    });
+    // JS expressions in the body only run when the compiled component
+    // renders, which would escape this try/catch and still fail the build.
+    // The compiled component is a plain sync function, so invoke it once
+    // here to surface those errors (a {placeholder} typo, for example).
+    if (typeof content.type === "function") {
+      await (content.type as React.FC<unknown>)(content.props);
+    }
+    return content;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const where = sourcePath ? \` in \${sourcePath}\` : "";
+    console.error(\`[doccupine] MDX error\${where}:\`, message);
+    return (
+      <Callout type="danger">
+        <p>
+          <strong>This page has an MDX error{where}.</strong> The rest of the
+          site still builds and renders. Fix the syntax below and save the file
+          to rebuild this page.
+        </p>
+        <pre>{message}</pre>
+      </Callout>
+    );
+  }
 }
 
 function Docs({ content, sourcePath, rssHref, children }: DocsProps) {
@@ -122,16 +171,10 @@ function Docs({ content, sourcePath, rssHref, children }: DocsProps) {
             <StyledMarkdownContainer>
               {children}
               {content && (
-                <MDXRemote
+                <MdxBody
                   source={content}
-                  options={{
-                    blockJS: false,
-                    mdxOptions: {
-                      remarkPlugins: [remarkGfm],
-                      rehypePlugins: [rehypeCodeMeta],
-                    },
-                  }}
                   components={allComponents}
+                  sourcePath={sourcePath}
                 />
               )}
             </StyledMarkdownContainer>
