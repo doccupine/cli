@@ -13,11 +13,17 @@ const nextConfig: NextConfig = {
   compiler: {
     styledComponents: true,
   },
-  // Bundle the precomputed embeddings index into the serverless functions that
-  // read it (a dynamic fs read is invisible to Next's file tracing).
+  // Trace the runtime-loaded corpus and precomputed embeddings index into the
+  // serverless functions (dynamic fs reads are invisible to automatic tracing).
   outputFileTracingIncludes: {
-    "/api/rag": ["./services/mcp/docs-index.json"],
-    "/api/mcp": ["./services/mcp/docs-index.json"],
+    "/api/rag": [
+      "./services/mcp/docs-content.json",
+      "./services/mcp/docs-index.json",
+    ],
+    "/api/mcp": [
+      "./services/mcp/docs-content.json",
+      "./services/mcp/docs-index.json",
+    ],
   },
   // Discovery alias: agents probe /mcp for an MCP server. Auth for the alias
   // is handled in the middleware, which runs before this rewrite.
@@ -48,11 +54,17 @@ const nextConfig: NextConfig = {
   compiler: {
     styledComponents: true,
   },
-  // Bundle the precomputed embeddings index into the serverless functions that
-  // read it (a dynamic fs read is invisible to Next's file tracing).
+  // Trace the runtime-loaded corpus and precomputed embeddings index into the
+  // serverless functions (dynamic fs reads are invisible to automatic tracing).
   outputFileTracingIncludes: {
-    "/api/rag": ["./services/mcp/docs-index.json"],
-    "/api/mcp": ["./services/mcp/docs-index.json"],
+    "/api/rag": [
+      "./services/mcp/docs-content.json",
+      "./services/mcp/docs-index.json",
+    ],
+    "/api/mcp": [
+      "./services/mcp/docs-content.json",
+      "./services/mcp/docs-index.json",
+    ],
   },
   // The /mcp entry is a discovery alias: agents probe /mcp for an MCP server.
   // Auth for the alias is handled in the middleware, which runs before this

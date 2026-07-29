@@ -12,6 +12,7 @@ import {
 } from "@/services/mcp";
 import type { MCPToolName } from "@/services/mcp";
 import { rateLimit } from "@/utils/rateLimit";
+import { isMcpRequestAuthorized } from "@/lib/access";
 
 const searchDocsSchema = z.object({
   query: z.string().min(1).max(2000),
@@ -168,6 +169,10 @@ async function handleRESTRequest(body: ToolCallRequest) {
 }
 
 export async function POST(req: Request) {
+  if (!(await isMcpRequestAuthorized(req))) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   const { allowed, retryAfter } = rateLimit(ip);
@@ -206,7 +211,11 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  if (!(await isMcpRequestAuthorized(req))) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   // GET always returns REST API format (tools list and index status)
   const status = getIndexStatus();
   return NextResponse.json({
@@ -219,6 +228,10 @@ export async function GET() {
 }
 
 export async function DELETE(req: Request) {
+  if (!(await isMcpRequestAuthorized(req))) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   // DELETE is only used by MCP protocol
   return handleMCPRequest(req);
 }

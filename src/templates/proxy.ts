@@ -10,7 +10,11 @@ export const proxyTemplate = (
     ? `import { getPostHogServerClient } from "@/lib/posthog";\n`
     : "";
 
-  const gateImport = `import { GATE_COOKIE_NAME, isGateUnlocked } from "@/lib/siteGate";\n`;
+  const gateImport = `import {
+  GATE_COOKIE_NAME,
+  isGateUnlocked,
+  timingSafeEqual,
+} from "@/lib/siteGate";\n`;
 
   const posthogPageviewFn = hasPostHog
     ? `
@@ -268,11 +272,13 @@ ${gateImport}${posthogImport}${posthogPageviewFn}${applyTrackingFn}
 ${fnSignature} {
 ${trackingInit}  const pathname = req.nextUrl.pathname;
   const sitePassword = process.env.SITE_PASSWORD;
+  const isMcpPath = pathname.startsWith("/api/mcp") || pathname === "/mcp";
 
   // API key auth for the MCP endpoint when DOCS_API_KEY is configured. Also
   // matches /mcp, the discovery alias that next.config rewrites to /api/mcp
-  // after the middleware has run.
-  if (pathname.startsWith("/api/mcp") || pathname === "/mcp") {
+  // after the middleware has run. Without a separate API key, a protected site
+  // requires the normal gate cookie instead of exposing MCP around the gate.
+  if (isMcpPath) {
     const apiKey = process.env.DOCS_API_KEY;
     if (apiKey) {
       const authHeader = req.headers.get("authorization");
@@ -280,9 +286,17 @@ ${trackingInit}  const pathname = req.nextUrl.pathname;
         ? authHeader.slice(7)
         : null;
 
-      if (token !== apiKey) {
+      if (token === null || !timingSafeEqual(token, apiKey)) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
+    } else if (
+      sitePassword &&
+      !(await isGateUnlocked(
+        req.cookies.get(GATE_COOKIE_NAME)?.value,
+        sitePassword,
+      ))
+    ) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -290,18 +304,21 @@ ${trackingInit}  const pathname = req.nextUrl.pathname;
   // works even though the doc pages render statically: pages can't read the
   // request cookie, but the middleware always can. Skip Next internals so the
   // gate screen's own assets keep loading.
-  if (sitePassword && !pathname.startsWith("/_next")) {
-    const unlocked = await isGateUnlocked(
+  if (sitePassword && !isMcpPath && !pathname.startsWith("/_next")) {
+    // Defer the HMAC until a request actually crosses the site gate. In
+    // particular, Next.js assets and API-key-authenticated MCP calls avoid it.
+    const gateUnlocked = await isGateUnlocked(
       req.cookies.get(GATE_COOKIE_NAME)?.value,
       sitePassword,
     );
-
-    // Content APIs (RAG chat + search) return 401 without a valid cookie so the
-    // docs can't be scraped around the login screen. /api/mcp keeps its own key
-    // auth above; /api/gate stays open so the gate can unlock.
+    // Content APIs return 401 without a valid cookie so protected docs and the
+    // request playground cannot be reached around the login screen. /api/mcp
+    // keeps its API-key-or-gate auth above; /api/gate stays open to unlock.
     if (
-      !unlocked &&
-      (pathname.startsWith("/api/rag") || pathname.startsWith("/api/search"))
+      !gateUnlocked &&
+      (pathname.startsWith("/api/rag") ||
+        pathname.startsWith("/api/search") ||
+        pathname.startsWith("/api/playground"))
     ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -309,14 +326,14 @@ ${trackingInit}  const pathname = req.nextUrl.pathname;
     // Locked visitors see the gate screen. Rewrite (not redirect) so the URL is
     // preserved — after unlocking, a reload lands them back on the page they
     // asked for. API routes are never rewritten to HTML.
-    if (!unlocked && !pathname.startsWith("/api") && pathname !== "/gate") {
+    if (!gateUnlocked && !pathname.startsWith("/api") && pathname !== "/gate") {
       const res = NextResponse.rewrite(new URL("/gate", req.url));
       res.headers.set("X-Robots-Tag", "noindex, nofollow");
       return applyTracking(res, tracking);
     }
 
     // Unlocked visitors never need the gate screen.
-    if (unlocked && pathname === "/gate") {
+    if (gateUnlocked && pathname === "/gate") {
       return applyTracking(
         NextResponse.redirect(new URL("/", req.url)),
         tracking,

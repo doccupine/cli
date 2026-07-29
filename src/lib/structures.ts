@@ -77,6 +77,7 @@ import { mcpToolsTemplate } from "../templates/services/mcp/tools.js";
 import { mcpTypesTemplate } from "../templates/services/mcp/types.js";
 import { vectorHelpersTemplate } from "../templates/services/mcp/vector.js";
 import { docsIndexStubTemplate } from "../templates/services/mcp/docsIndexStub.js";
+import { docsContentStubTemplate } from "../templates/services/mcp/docsContentStub.js";
 import { llmConfigTemplate } from "../templates/services/llm/config.js";
 import { llmFactoryTemplate } from "../templates/services/llm/factory.js";
 import { llmIndexTemplate } from "../templates/services/llm/index.js";
@@ -86,6 +87,7 @@ import { buildDocsIndexScriptTemplate } from "../templates/scripts/build-docs-in
 import { posthogServerTemplate } from "../templates/lib/posthog.js";
 import { rssLibTemplate } from "../templates/lib/rss.js";
 import { siteGateTemplate } from "../templates/lib/siteGate.js";
+import { accessControlTemplate } from "../templates/lib/access.js";
 
 import { styledDTemplate } from "../templates/types/styled.js";
 import { openapiTypesTemplate } from "../templates/types/openapi.js";
@@ -135,6 +137,7 @@ import { navigationMdxTemplate } from "../templates/mdx/navigation.mdx.js";
 import { promptMdxTemplate } from "../templates/mdx/prompt.mdx.js";
 import { sectionsMdxTemplate } from "../templates/mdx/sections.mdx.js";
 import { sidePanelMdxTemplate } from "../templates/mdx/side-panel.mdx.js";
+import { spaceMdxTemplate } from "../templates/mdx/space.mdx.js";
 import { stepsMdxTemplate } from "../templates/mdx/steps.mdx.js";
 import { tabsMdxTemplate } from "../templates/mdx/tabs.mdx.js";
 import { themeMdxTemplate } from "../templates/mdx/theme.mdx.js";
@@ -190,6 +193,7 @@ export const appStructure: Record<string, string> = {
   "services/mcp/types.ts": mcpTypesTemplate,
   "services/mcp/vector.ts": vectorHelpersTemplate,
   "services/mcp/docs-index.json": docsIndexStubTemplate,
+  "services/mcp/docs-content.json": docsContentStubTemplate,
   "services/llm/config.ts": llmConfigTemplate,
   "services/llm/factory.ts": llmFactoryTemplate,
   "services/llm/index.ts": llmIndexTemplate,
@@ -204,6 +208,7 @@ export const appStructure: Record<string, string> = {
   "lib/posthog.ts": posthogServerTemplate,
   "lib/rss.ts": rssLibTemplate,
   "lib/siteGate.ts": siteGateTemplate,
+  "lib/access.ts": accessControlTemplate,
 
   "utils/branding.ts": brandingTemplate,
   "utils/mermaid.ts": mermaidTemplate,
@@ -315,6 +320,7 @@ export const startingDocsStructure: Record<string, string> = {
   "prompt.mdx": promptMdxTemplate,
   "sections.mdx": sectionsMdxTemplate,
   "side-panel.mdx": sidePanelMdxTemplate,
+  "space.mdx": spaceMdxTemplate,
   "steps.mdx": stepsMdxTemplate,
   "tabs.mdx": tabsMdxTemplate,
   "theme.mdx": themeMdxTemplate,

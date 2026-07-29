@@ -8,6 +8,7 @@ import {
 } from "@/services/mcp/server";
 import { rateLimit } from "@/utils/rateLimit";
 import { config } from "@/utils/config";
+import { isSiteRequestAuthorized } from "@/lib/access";
 
 const messageSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -17,7 +18,6 @@ const messageSchema = z.object({
 const ragSchema = z.object({
   question: z.string().min(1).max(2000),
   history: z.array(messageSchema).max(20).optional(),
-  refresh: z.boolean().optional(),
 });
 
 const projectName = config.name || "Doccupine";
@@ -76,6 +76,10 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
+  if (!(await isSiteRequestAuthorized())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   // Rate limit by IP
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
@@ -103,7 +107,7 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
-  const { question, history, refresh } = parsed.data;
+  const { question, history } = parsed.data;
 
   let llmConfig;
   try {
@@ -148,7 +152,7 @@ export async function POST(req: Request) {
         safeEnqueue(\`: connected\\n\\n\`);
 
         // Ensure docs are indexed (loads precomputed embeddings when present).
-        await ensureDocsIndex(Boolean(refresh));
+        await ensureDocsIndex();
 
         // Use MCP search_docs tool to find relevant documentation
         const searchResults = await searchDocs(question, 6);
@@ -243,6 +247,10 @@ export async function POST(req: Request) {
 }
 
 export async function GET() {
+  if (!(await isSiteRequestAuthorized())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const status = getIndexStatus();
   return NextResponse.json({
     ready: status.ready,

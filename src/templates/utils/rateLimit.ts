@@ -2,6 +2,7 @@ export const rateLimitTemplate = `const rateLimitMap = new Map<string, { count: 
 
 const WINDOW_MS = 60_000; // 1 minute
 const MAX_REQUESTS = 10;
+const MAX_TRACKED_CLIENTS = 10_000;
 
 // Clean up stale entries periodically
 const CLEANUP_INTERVAL_MS = 5 * 60_000;
@@ -28,6 +29,12 @@ export function rateLimit(ip: string): {
   const entry = rateLimitMap.get(ip);
 
   if (!entry || now > entry.resetTime) {
+    // Bound memory even when an attacker rotates spoofed forwarding headers.
+    // Map iteration is insertion ordered, so remove the oldest tracked client.
+    if (rateLimitMap.size >= MAX_TRACKED_CLIENTS) {
+      const oldestKey = rateLimitMap.keys().next().value;
+      if (oldestKey !== undefined) rateLimitMap.delete(oldestKey);
+    }
     rateLimitMap.set(ip, { count: 1, resetTime: now + WINDOW_MS });
     return { allowed: true, retryAfter: 0 };
   }

@@ -72,6 +72,7 @@ async function main() {
   };
 
   writeFileSync(OUTPUT, JSON.stringify(data));
+  // eslint-disable-next-line no-console -- build-time progress belongs in CI logs
   console.log(
     \`[doccupine] Precomputed \${data.chunks.length} doc embeddings -> \${OUTPUT}\`,
   );

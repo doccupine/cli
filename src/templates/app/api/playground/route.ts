@@ -3,6 +3,7 @@ import { z } from "zod";
 import { rateLimit } from "@/utils/rateLimit";
 import { matchAllowlist } from "@/utils/playgroundAllowlist";
 import { guardedFetch, BlockedError } from "@/utils/ssrfGuard";
+import { isSiteRequestAuthorized } from "@/lib/access";
 
 // The playground proxy runs server-side so it can call APIs that block
 // cross-origin browser requests. It is NOT an open forward proxy: every target
@@ -81,6 +82,10 @@ function isTextContentType(contentType: string | null): boolean {
 }
 
 export async function POST(req: Request) {
+  if (!(await isSiteRequestAuthorized())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   const { allowed, retryAfter } = rateLimit(ip);

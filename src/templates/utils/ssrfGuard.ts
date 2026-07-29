@@ -79,11 +79,16 @@ function isBlockedIpv6(ip: string): boolean {
     head.startsWith("fe8") ||
     head.startsWith("fe9") ||
     head.startsWith("fea") ||
-    head.startsWith("feb")
+    head.startsWith("feb") ||
+    head.startsWith("fec") ||
+    head.startsWith("fed") ||
+    head.startsWith("fee") ||
+    head.startsWith("fef")
   ) {
-    return true; // link-local fe80::/10
+    return true; // link-local fe80::/10 + deprecated site-local fec0::/10
   }
   if (head.startsWith("fc") || head.startsWith("fd")) return true; // unique-local
+  if (head.startsWith("ff")) return true; // multicast
   return false;
 }
 
@@ -92,6 +97,48 @@ function isBlockedIp(ip: string): boolean {
   if (type === 4) return isBlockedIpv4(ip);
   if (type === 6) return isBlockedIpv6(ip);
   return true; // not a parseable IP -> fail closed
+}
+
+/**
+ * Ranges that remain blocked even for an explicitly loopback-enabled entry.
+ * In particular, link-local addresses include cloud instance metadata services
+ * and must never become reachable through an imported OpenAPI document.
+ */
+function isAlwaysBlockedIp(ip: string): boolean {
+  const type = net.isIP(ip);
+  if (type === 4) {
+    const [a, b] = ip.split(".").map(Number);
+    return a === 0 || (a === 169 && b === 254) || a >= 224;
+  }
+  if (type === 6) {
+    const clean = ip.toLowerCase().split("%")[0];
+    if (clean.startsWith("::ffff:")) {
+      const rest = clean.slice("::ffff:".length);
+      if (rest.includes(".")) return isAlwaysBlockedIp(rest);
+      const [hiRaw, loRaw] = rest.split(":");
+      const hi = parseInt(hiRaw, 16);
+      const lo = parseInt(loRaw, 16);
+      if (Number.isInteger(hi) && Number.isInteger(lo)) {
+        return isAlwaysBlockedIp(
+          [(hi >> 8) & 255, hi & 255, (lo >> 8) & 255, lo & 255].join("."),
+        );
+      }
+    }
+    const head = clean.split(":")[0];
+    return (
+      clean === "::" ||
+      head.startsWith("fe8") ||
+      head.startsWith("fe9") ||
+      head.startsWith("fea") ||
+      head.startsWith("feb") ||
+      head.startsWith("fec") ||
+      head.startsWith("fed") ||
+      head.startsWith("fee") ||
+      head.startsWith("fef") ||
+      head.startsWith("ff")
+    );
+  }
+  return true;
 }
 
 function flattenHeaders(
@@ -113,6 +160,7 @@ export async function guardedFetch(
   const url = new URL(targetUrl);
   let host = url.hostname.toLowerCase();
   if (host.endsWith(".")) host = host.slice(0, -1);
+  host = host.replace(/^\\[|\\]$/g, "");
 
   const literalType = net.isIP(host);
   let validated: LookupAddress[];
@@ -120,7 +168,7 @@ export async function guardedFetch(
   if (literalType !== 0) {
     // Raw-IP target: only allowed if the spec itself declared this host, and
     // only into a private range when it opted in via allowPrivate.
-    if (isBlockedIp(host) && !entry.allowPrivate) {
+    if (isAlwaysBlockedIp(host) || (isBlockedIp(host) && !entry.allowPrivate)) {
       throw new BlockedError("blocked: private IP-literal target");
     }
     validated = [{ address: host, family: literalType }];
@@ -132,11 +180,12 @@ export async function guardedFetch(
       throw new BlockedError("blocked: DNS resolution failed");
     }
     if (records.length === 0) throw new BlockedError("blocked: no DNS records");
-    if (!entry.allowPrivate) {
-      for (const record of records) {
-        if (isBlockedIp(record.address)) {
-          throw new BlockedError("blocked: private IP");
-        }
+    for (const record of records) {
+      if (
+        isAlwaysBlockedIp(record.address) ||
+        (isBlockedIp(record.address) && !entry.allowPrivate)
+      ) {
+        throw new BlockedError("blocked: private IP");
       }
     }
     validated = records;

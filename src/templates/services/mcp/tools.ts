@@ -1,5 +1,5 @@
-export const mcpToolsTemplate = `import path from "node:path";
-import fs from "node:fs/promises";
+export const mcpToolsTemplate = `import fs from "node:fs";
+import path from "node:path";
 import type {
   MCPToolDefinition,
   DocsResource,
@@ -8,8 +8,41 @@ import type {
   ListDocsParams,
 } from "@/services/mcp/types";
 
-const APP_DIR = path.join(process.cwd(), "app");
-const VALID_EXT = new Set([".ts", ".tsx", ".js", ".jsx"]);
+// Keep the corpus out of the function's JavaScript bundle. next.config.ts
+// traces this fixed file into the RAG/MCP functions, just like docs-index.json.
+const DOCS_CONTENT_FILE = path.join(
+  process.cwd(),
+  "services",
+  "mcp",
+  "docs-content.json",
+);
+
+let docsContentCache:
+  { mtimeMs: number; size: number; docs: DocsResource[] } | undefined;
+
+function loadDocsContent(): DocsResource[] {
+  try {
+    // Generated content changes while \`next dev\` stays alive. Key the cache by
+    // file metadata so watch-mode updates become visible without parsing the
+    // whole corpus on every tool call.
+    const stat = fs.statSync(DOCS_CONTENT_FILE);
+    if (
+      docsContentCache?.mtimeMs === stat.mtimeMs &&
+      docsContentCache.size === stat.size
+    ) {
+      return docsContentCache.docs;
+    }
+    const parsed: unknown = JSON.parse(
+      fs.readFileSync(DOCS_CONTENT_FILE, "utf8"),
+    );
+    const docs = Array.isArray(parsed) ? (parsed as DocsResource[]) : [];
+    docsContentCache = { mtimeMs: stat.mtimeMs, size: stat.size, docs };
+    return docs;
+  } catch {
+    docsContentCache = undefined;
+    return [];
+  }
+}
 
 /**
  * Tool definitions for MCP - these describe the available tools
@@ -68,109 +101,17 @@ export const DOCS_TOOLS: MCPToolDefinition[] = [
 ];
 
 /**
- * Recursively walk directory to find documentation files
- */
-async function* walkDocs(dir: string): AsyncGenerator<string> {
-  const entries = await fs.readdir(dir, { withFileTypes: true });
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      if (["node_modules", ".next", ".git", "api"].includes(entry.name)) {
-        continue;
-      }
-      yield* walkDocs(fullPath);
-    } else {
-      const ext = path.extname(entry.name).toLowerCase();
-      if (VALID_EXT.has(ext) && entry.name.startsWith("page.")) {
-        yield fullPath;
-      }
-    }
-  }
-}
-
-/**
- * Extract content blocks from a file
- */
-function extractContentBlocks(fileText: string): string[] {
-  const results: string[] = [];
-
-  const tplRegex = /(?:export\\s+)?const\\s+content\\s*=\\s*\`((?:\\\\\`|[^\`])*)\`\\s*;/g;
-  let m: RegExpExecArray | null;
-  while ((m = tplRegex.exec(fileText)) !== null) {
-    results.push(m[1]);
-  }
-
-  const sglRegex = /(?:export\\s+)?const\\s+content\\s*=\\s*'([^']*)'\\s*;/g;
-  while ((m = sglRegex.exec(fileText)) !== null) {
-    results.push(m[1]);
-  }
-
-  const dblRegex = /(?:export\\s+)?const\\s+content\\s*=\\s*"([^"]*)"\\s*;/g;
-  while ((m = dblRegex.exec(fileText)) !== null) {
-    results.push(m[1]);
-  }
-
-  return results;
-}
-
-/**
- * Convert a page file path to its URL path, stripping the leading "app/"
- * and Next.js route group segments like "(site)" which never appear in URLs.
- */
-function toDocPath(pagePath: string): string {
-  return (
-    path
-      .dirname(pagePath)
-      .replace(/^app\\/?/, "")
-      .split("/")
-      .filter((seg) => !(seg.startsWith("(") && seg.endsWith(")")))
-      .join("/") || "/"
-  );
-}
-
-/**
- * Get the title from markdown content
- */
-function extractTitle(content: string): string {
-  const match = content.match(/^#\\s+(.+)$/m);
-  return match ? match[1].trim() : "Untitled";
-}
-
-/**
  * List all documentation resources
  */
 export async function listDocs(
   params?: ListDocsParams,
 ): Promise<DocsResource[]> {
-  const resources: DocsResource[] = [];
-  const filterDir = params?.directory;
-
-  for await (const filePath of walkDocs(APP_DIR)) {
-    const relativePath = path.join("app", path.relative(APP_DIR, filePath));
-
-    if (filterDir && !relativePath.includes(filterDir)) {
-      continue;
-    }
-
-    try {
-      const fileContent = await fs.readFile(filePath, "utf8");
-      const blocks = extractContentBlocks(fileContent);
-      const content = blocks.join("\\n\\n");
-      const title = extractTitle(content);
-      const docPath = toDocPath(relativePath);
-
-      resources.push({
-        uri: \`docs://\${docPath}\`,
-        name: title,
-        path: relativePath,
-        content,
-      });
-    } catch (error) {
-      console.warn(\`Failed to read doc file: \${filePath}\`, error);
-    }
-  }
-
-  return resources;
+  const docsContent = loadDocsContent();
+  const filterDir = params?.directory?.replace(/\\\\/g, "/");
+  const resources = filterDir
+    ? docsContent.filter((doc) => doc.path.includes(filterDir))
+    : docsContent;
+  return resources.map((doc) => ({ ...doc }));
 }
 
 /**
@@ -179,41 +120,28 @@ export async function listDocs(
 export async function getDoc(
   params: GetDocParams,
 ): Promise<DocsResource | null> {
-  let targetPath = params.path;
+  const docsContent = loadDocsContent();
+  const requested = params.path.trim().replace(/\\\\/g, "/");
+  if (!requested || requested.includes("\\0")) return null;
 
-  // Normalize path - strip leading "app/" if present to get the relative part
-  const relativePart = targetPath.replace(/^app\\//, "");
-  if (!relativePart.includes("page.")) {
-    targetPath = path.join("app", relativePart, "page.tsx");
-  } else if (!targetPath.startsWith("app/")) {
-    targetPath = path.join("app", relativePart);
-  }
+  const withoutScheme = requested.replace(/^docs:\\/\\//, "");
+  const route = withoutScheme
+    .replace(/^app\\/(?:\\([^/]+\\)\\/)?/, "")
+    .replace(/(?:^|\\/)page\\.(?:tsx?|jsx?)$/, "")
+    .replace(/^\\/+|\\/+$/g, "");
 
-  const fullPath = path.join(APP_DIR, targetPath.replace(/^app\\//, ""));
+  const doc = docsContent.find((candidate) => {
+    const candidateRoute = candidate.uri
+      .replace(/^docs:\\/\\//, "")
+      .replace(/^\\/+|\\/+$/g, "");
+    return (
+      candidate.path === requested ||
+      candidate.uri === requested ||
+      candidateRoute === route
+    );
+  });
 
-  // Prevent path traversal
-  const resolvedPath = path.resolve(fullPath);
-  if (!resolvedPath.startsWith(path.resolve(APP_DIR))) {
-    return null;
-  }
-
-  try {
-    const fileContent = await fs.readFile(fullPath, "utf8");
-    const blocks = extractContentBlocks(fileContent);
-    const content = blocks.join("\\n\\n");
-    const title = extractTitle(content);
-    const docPath = toDocPath(targetPath);
-
-    return {
-      uri: \`docs://\${docPath}\`,
-      name: title,
-      path: targetPath,
-      content,
-    };
-  } catch (error) {
-    console.warn(\`Failed to read doc: \${targetPath}\`, error);
-    return null;
-  }
+  return doc ? { ...doc } : null;
 }
 
 /**
