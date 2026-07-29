@@ -18,6 +18,7 @@ import { MDXRemote, MDXRemoteSerializeResult } from "next-mdx-remote";
 import { serialize } from "next-mdx-remote/serialize";
 import Link from "next/link";
 import { mq, Theme } from "@/app/theme";
+import { Callout } from "@/components/layout/Callout";
 import { useLockBodyScroll } from "@/components/LockBodyScroll";
 import { useMDXComponents as getMDXComponents } from "@/components/MDXComponents";
 import {
@@ -471,16 +472,9 @@ const StyledGlowSmallButton = styled(StyledSmallButton)<{
     \`}
 \`;
 
-const StyledError = styled.div<{ theme: Theme }>\`
-  overflow-x: auto;
-  \${thinScrollbar};
-  background: \${({ theme }) => theme.colors.error};
-  color: \${({ theme }) => theme.colors.surface};
-  padding: 10px;
-  border-radius: 8px;
+const StyledError = styled.div\`
   margin: 20px 0;
   width: 100%;
-  \${styledText};
 \`;
 
 const loadingDotAnimation = keyframes\`
@@ -889,7 +883,11 @@ function Chat() {
         )}
         {error && (
           <StyledError>
-            <strong>Error:</strong> {error}
+            <Callout type="danger">
+              <p>
+                <strong>Error:</strong> {error}
+              </p>
+            </Callout>
           </StyledError>
         )}
         <div ref={endRef} />
@@ -1078,69 +1076,70 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
         buffer = parts.pop() ?? "";
 
         for (const line of parts) {
-          if (line.startsWith("data: ")) {
+          if (!line.startsWith("data: ")) continue;
+
+          // Guard only the parse: a malformed frame is skipped, while the
+          // server's error event below must throw past this loop to the
+          // outer catch so it renders in the chat's error callout instead
+          // of dying in a parse-error log.
+          let data;
+          try {
+            data = JSON.parse(line.slice(6));
+          } catch {
+            console.error("Failed to parse SSE data:", line);
+            continue;
+          }
+
+          if (data.type === "metadata") {
+            const allSources: Source[] = data.data?.sources ?? [];
+            const seen = new Set<string>();
+            sources = allSources.filter((s: Source) => {
+              if (s.score < 0.4 || seen.has(s.uri)) return false;
+              seen.add(s.uri);
+              return true;
+            });
+          } else if (data.type === "content") {
+            contentParts.push(data.data);
+            const streamedContent = contentParts.join("");
+
+            setAnswer((prev) => {
+              const newAnswers = [...prev];
+              newAnswers[streamingAnswerIndex] = {
+                text: streamedContent,
+                answer: true,
+                sources,
+              };
+              return newAnswers;
+            });
+          } else if (data.type === "error") {
+            throw new Error(data.data);
+          } else if (data.type === "done") {
+            const streamedContent = contentParts.join("");
+            let mdxSource: MDXRemoteSerializeResult | null = null;
             try {
-              const data = JSON.parse(line.slice(6));
-
-              if (data.type === "metadata") {
-                const allSources: Source[] = data.data?.sources ?? [];
-                const seen = new Set<string>();
-                sources = allSources.filter((s: Source) => {
-                  if (s.score < 0.4 || seen.has(s.uri)) return false;
-                  seen.add(s.uri);
-                  return true;
-                });
-              } else if (data.type === "content") {
-                contentParts.push(data.data);
-                const streamedContent = contentParts.join("");
-
-                setAnswer((prev) => {
-                  const newAnswers = [...prev];
-                  newAnswers[streamingAnswerIndex] = {
-                    text: streamedContent,
-                    answer: true,
-                    sources,
-                  };
-                  return newAnswers;
-                });
-              } else if (data.type === "error") {
-                throw new Error(data.data);
-              } else if (data.type === "done") {
-                const streamedContent = contentParts.join("");
-                let mdxSource: MDXRemoteSerializeResult | null = null;
-                try {
-                  mdxSource = await serialize(streamedContent, {
-                    parseFrontmatter: false,
-                    mdxOptions: {
-                      remarkPlugins: [remarkGfm],
-                      rehypePlugins: [rehypeHighlight],
-                      format: "md",
-                      development: false,
-                    },
-                  });
-                } catch (mdxError: unknown) {
-                  console.error("MDX serialization error:", mdxError);
-                }
-
-                setAnswer((prev) => {
-                  const newAnswers = [...prev];
-                  newAnswers[streamingAnswerIndex] = {
-                    text: streamedContent,
-                    answer: true,
-                    mdx: mdxSource || undefined,
-                    sources,
-                  };
-                  return newAnswers;
-                });
-              }
-            } catch (parseError) {
-              if (
-                parseError instanceof Error &&
-                parseError.message !== "Unknown error"
-              ) {
-                console.error("Failed to parse SSE data:", parseError);
-              }
+              mdxSource = await serialize(streamedContent, {
+                parseFrontmatter: false,
+                mdxOptions: {
+                  remarkPlugins: [remarkGfm],
+                  rehypePlugins: [rehypeHighlight],
+                  format: "md",
+                  development: false,
+                },
+              });
+            } catch (mdxError: unknown) {
+              console.error("MDX serialization error:", mdxError);
             }
+
+            setAnswer((prev) => {
+              const newAnswers = [...prev];
+              newAnswers[streamingAnswerIndex] = {
+                text: streamedContent,
+                answer: true,
+                mdx: mdxSource || undefined,
+                sources,
+              };
+              return newAnswers;
+            });
           }
         }
       }

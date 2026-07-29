@@ -13,6 +13,7 @@ import { Code, CodeTabs } from "@/components/layout/Code";
 import { Icon } from "@/components/layout/Icon";
 import { Accordion } from "@/components/layout/Accordion";
 import { Badge, httpMethodBadgeColor } from "@/components/layout/Badge";
+import { Callout } from "@/components/layout/Callout";
 import { CopyButton } from "@/components/layout/CopyButton";
 import { Spinner } from "@/components/Spinner";
 import { matchAllowlist, matchAllowlistIn } from "@/utils/playgroundAllowlist";
@@ -451,12 +452,6 @@ const StatusPill = styled.span<{ theme: Theme; $ok: boolean }>\`
 const Meta = styled.span\`
   \${({ theme }: { theme: Theme }) => styledSmall(theme)};
   color: \${({ theme }: { theme: Theme }) => theme.colors.gray};
-\`;
-
-const ErrorText = styled.p\`
-  margin: 0;
-  \${({ theme }: { theme: Theme }) => styledSmall(theme)};
-  color: \${({ theme }: { theme: Theme }) => theme.colors.error};
 \`;
 
 const Placeholder = styled.div\`
@@ -1004,7 +999,9 @@ export function ApiPlayground({
 
             {error ? (
               <Field>
-                <ErrorText>{error}</ErrorText>
+                <Callout type="danger">
+                  <p>{error}</p>
+                </Callout>
                 {corsRetry ? (
                   <Toggle type="button" onClick={retryViaProxy}>
                     Retry via proxy
