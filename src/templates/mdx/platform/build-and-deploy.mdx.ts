@@ -22,7 +22,7 @@ The project header always shows your current deployment status:
 - **Error** - the build failed
 
 <Callout type="warning">
-  If a deployment fails, check the build logs for error details. Common issues include MDX syntax errors or missing frontmatter fields.
+  If a deployment fails, check the build logs for error details. Broken MDX does not fail the build - the affected page renders an inline error panel describing the syntax error while the rest of the site deploys - and invalid frontmatter is ignored with a warning in the build logs.
 </Callout>
 
 ## Build logs
