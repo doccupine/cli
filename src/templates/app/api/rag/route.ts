@@ -50,6 +50,25 @@ Each context chunk includes a "URL:" line with the pre-computed page URL. Use it
 ## Greetings & Small Talk
 If the user sends a greeting or non-documentation question, respond briefly and ask how you can help with the documentation.\`;
 
+// Maps provider/stream failures to fixed visitor-safe messages. Raw provider
+// errors can include API-key fragments, org ids, and billing URLs, so only
+// these strings ever reach the client; the full error goes to the server log.
+function friendlyLLMError(error: unknown): string {
+  const raw = error instanceof Error ? error.message : String(error);
+  if (/\\b401\\b|api.?key|authenticat|unauthorized/i.test(raw)) {
+    return "The assistant's model provider rejected its API key. If you are the site owner, check the server logs and your API key configuration.";
+  }
+  if (/\\b429\\b|quota|rate.?limit|billing/i.test(raw)) {
+    return "The assistant's model provider is rate limiting requests right now. Please try again in a moment.";
+  }
+  if (
+    /timed?.?out|ETIMEDOUT|ECONNRESET|ENOTFOUND|fetch failed|network/i.test(raw)
+  ) {
+    return "The assistant could not reach its model provider. Please try again.";
+  }
+  return "The assistant hit an unexpected error. Please try again.";
+}
+
 // LangChain + the MCP SDK require the Node.js runtime (not edge).
 export const runtime = "nodejs";
 // Safety net for the streaming function (Vercel-only; ignored elsewhere).
@@ -90,9 +109,15 @@ export async function POST(req: Request) {
   try {
     llmConfig = getLLMConfig();
   } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : "LLM configuration error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    // Setup details (provider names, env var names) stay in the server log.
+    console.error("[doccupine] LLM configuration error:", error);
+    return NextResponse.json(
+      {
+        error:
+          "The AI assistant is not configured on this site. If you are the site owner, check the server logs.",
+      },
+      { status: 500 },
+    );
   }
 
   const encoder = new TextEncoder();
@@ -189,9 +214,9 @@ export async function POST(req: Request) {
 
         safeEnqueue(\`data: \${JSON.stringify({ type: "done" })}\\n\\n\`);
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : "Stream error";
+        console.error("[doccupine] RAG stream error:", error);
         safeEnqueue(
-          \`data: \${JSON.stringify({ type: "error", data: message })}\\n\\n\`,
+          \`data: \${JSON.stringify({ type: "error", data: friendlyLLMError(error) })}\\n\\n\`,
         );
       } finally {
         if (heartbeat) clearInterval(heartbeat);

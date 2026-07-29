@@ -530,18 +530,6 @@ export const StyledMobileBurger = styled.span<Props>\`
     \`};
 \`;
 
-export const StyledMissingComponent = styled.div\`
-  background: \${({ theme }) => theme.colors.error};
-  border-radius: \${({ theme }) => theme.spacing.radius.lg};
-  padding: 20px;
-  font-size: \${({ theme }) => theme.fontSizes.small.lg};
-  color: \${({ theme }) => theme.colors.surface};
-  font-weight: 600;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-\`;
-
 // Visually hidden but present for crawlers and agents: points at llms.txt and
 // the .md mirrors. Rendered as the first element of the site layout.
 const StyledLlmsDirective = styled.div\`

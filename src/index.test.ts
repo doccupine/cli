@@ -14,6 +14,8 @@ import {
   getFullSlug,
   isProcessEntrypoint,
 } from "./index.js";
+import { safeMatter } from "./lib/utils.js";
+import { docsTemplate } from "./templates/components/Docs.js";
 
 const execFileAsync = promisify(execFile);
 const selfPath = fileURLToPath(import.meta.url);
@@ -476,6 +478,108 @@ describe.skipIf(!fs.pathExistsSync(distEntry))("homepage RSS feed", () => {
         { maxBuffer: 20 * 1024 * 1024 },
       );
       expect(stdout).toContain("All matched files use Prettier code style!");
+    } finally {
+      await fs.remove(projectDir);
+    }
+  }, 120_000);
+});
+
+// The generated Docs component must never let a broken MDX body fail
+// `next build`: the body compiles through compileMDX inside a try/catch and
+// falls back to a danger Callout panel. These guards pin the template to that
+// shape so a refactor can't silently reintroduce the unguarded <MDXRemote>
+// path (which throws during static prerender and aborts the whole build).
+describe("Docs template MDX error guard", () => {
+  it("compiles the MDX body through compileMDX inside a try/catch", () => {
+    expect(docsTemplate).toContain(
+      'import { compileMDX } from "next-mdx-remote/rsc";',
+    );
+    expect(docsTemplate).toContain("catch (error)");
+    expect(docsTemplate).toContain('<Callout type="danger">');
+  });
+
+  it("does not render the unguarded MDXRemote component", () => {
+    expect(docsTemplate).not.toContain("<MDXRemote");
+  });
+});
+
+describe("safeMatter", () => {
+  it("parses valid frontmatter like gray-matter", () => {
+    const { data, content } = safeMatter('---\ntitle: "Hi"\n---\n\nBody.\n');
+    expect(data.title).toBe("Hi");
+    expect(content.trim()).toBe("Body.");
+  });
+
+  it("passes through files without frontmatter", () => {
+    const raw = "# Just a doc\n";
+    const { data, content } = safeMatter(raw);
+    expect(data).toEqual({});
+    expect(content).toBe(raw);
+  });
+
+  it("degrades broken YAML to empty frontmatter with the block stripped", () => {
+    const { data, content } = safeMatter(
+      '---\ntitle: "unclosed\n---\n\nBody.\n',
+      "badfm.mdx",
+    );
+    expect(data).toEqual({});
+    expect(content.trim()).toBe("Body.");
+  });
+});
+
+// A broken MDX body or frontmatter block must degrade per page, never abort
+// the CLI build: every page still gets emitted (the app-side guard renders
+// the error panel at prerender time) and invalid frontmatter is warned about.
+describe.skipIf(!fs.pathExistsSync(distEntry))("MDX error resilience", () => {
+  it("builds through broken MDX and broken frontmatter", async () => {
+    const projectDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), "doccupine-broken-"),
+    );
+    try {
+      await fs.writeJson(path.join(projectDir, "doccupine.json"), {
+        watchDir: "docs",
+        outputDir: "out",
+        port: "3000",
+      });
+      await fs.outputFile(
+        path.join(projectDir, "docs", "index.mdx"),
+        '---\ntitle: "Home"\n---\n\n# Welcome\n',
+      );
+      await fs.outputFile(
+        path.join(projectDir, "docs", "broken.mdx"),
+        '---\ntitle: "Broken"\n---\n\nAn orphaned closing tag:\n\n</Card>\n',
+      );
+      await fs.outputFile(
+        path.join(projectDir, "docs", "badfm.mdx"),
+        '---\ntitle: "unclosed\n---\n\nStill readable body.\n',
+      );
+
+      const { stdout, stderr } = await execFileAsync(
+        process.execPath,
+        [distEntry, "build"],
+        { cwd: projectDir, maxBuffer: 20 * 1024 * 1024 },
+      );
+
+      const outDir = path.join(projectDir, "out");
+      const brokenPage = await fs.readFile(
+        path.join(outDir, "app", "(site)", "broken", "page.tsx"),
+        "utf8",
+      );
+      expect(brokenPage).toContain("</Card>");
+
+      const badfmPage = await fs.readFile(
+        path.join(outDir, "app", "(site)", "badfm", "page.tsx"),
+        "utf8",
+      );
+      expect(badfmPage).toContain("Still readable body.");
+      expect(`${stdout}${stderr}`).toContain("Invalid frontmatter");
+
+      const docsComponent = await fs.readFile(
+        path.join(outDir, "components", "Docs.tsx"),
+        "utf8",
+      );
+      expect(docsComponent).toContain("compileMDX");
+      expect(docsComponent).toContain('<Callout type="danger">');
     } finally {
       await fs.remove(projectDir);
     }

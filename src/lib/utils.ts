@@ -2,6 +2,7 @@ import fs from "fs-extra";
 import path from "path";
 import { execSync } from "child_process";
 import chalk from "chalk";
+import matter from "gray-matter";
 
 export type PackageManagerName = "pnpm" | "npm";
 
@@ -122,6 +123,33 @@ export function escapeTemplateContent(content: string): string {
     .replace(/\\/g, "\\\\")
     .replace(/`/g, "\\`")
     .replace(/\$\{/g, "\\${");
+}
+
+/**
+ * gray-matter that never throws: malformed YAML frontmatter is reported as a
+ * warning and the file is treated as having no frontmatter, so one typo in a
+ * `---` block can't abort a whole build or site-wide aggregation pass. The
+ * broken block is stripped from the body best-effort; an unterminated block
+ * passes through as-is and the generated app's MDX error panel absorbs it.
+ */
+export function safeMatter(
+  raw: string,
+  label?: string,
+): { data: { [key: string]: any }; content: string } {
+  try {
+    const { data, content } = matter(raw);
+    return { data, content };
+  } catch (error) {
+    const where = label ? ` in ${label}` : "";
+    console.warn(
+      chalk.yellow(`⚠️  Invalid frontmatter${where}; ignoring it.`),
+      error instanceof Error ? error.message : error,
+    );
+    return {
+      data: {},
+      content: raw.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, ""),
+    };
+  }
 }
 
 /**

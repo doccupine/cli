@@ -6,7 +6,6 @@ import fs from "fs-extra";
 import path from "path";
 import { fileURLToPath } from "url";
 
-import matter from "gray-matter";
 import chalk from "chalk";
 
 import {
@@ -28,6 +27,7 @@ import {
   escapeTemplateContent,
   toJsStringLiteral,
   resolvePackageManager,
+  safeMatter,
 } from "./lib/utils.js";
 import {
   generateMetadataBlock,
@@ -355,7 +355,7 @@ class MDXToNextJSGenerator {
     for (const file of files) {
       const fullPath = path.join(this.watchDir, file);
       const content = await fs.readFile(fullPath, "utf8");
-      const { data: frontmatter } = matter(content);
+      const { data: frontmatter } = safeMatter(content, file);
 
       if (frontmatter.section) {
         const label = frontmatter.section as string;
@@ -961,7 +961,7 @@ class MDXToNextJSGenerator {
   private async parseMDXFile(file: string): Promise<PageMeta> {
     const fullPath = path.join(this.watchDir, file);
     const content = await fs.readFile(fullPath, "utf8");
-    const { data: frontmatter } = matter(content);
+    const { data: frontmatter } = safeMatter(content, file);
 
     const { sectionSlug, pageSlug } = this.determineSectionForFile(
       file,
@@ -1050,7 +1050,10 @@ class MDXToNextJSGenerator {
   private async writePageForFile(filePath: string): Promise<void> {
     const fullPath = path.join(this.watchDir, filePath);
     const content = await fs.readFile(fullPath, "utf8");
-    const { data: frontmatter, content: mdxContent } = matter(content);
+    const { data: frontmatter, content: mdxContent } = safeMatter(
+      content,
+      filePath,
+    );
 
     const { sectionSlug, pageSlug } = this.determineSectionForFile(
       filePath,
@@ -1758,7 +1761,10 @@ export default function Page() {
       if (file === "index.mdx" || file === "./index.mdx") {
         const fullPath = path.join(this.watchDir, file);
         const content = await fs.readFile(fullPath, "utf8");
-        const { data: frontmatter, content: mdxContent } = matter(content);
+        const { data: frontmatter, content: mdxContent } = safeMatter(
+          content,
+          file,
+        );
 
         indexMDX = {
           content: mdxContent,
@@ -2158,7 +2164,7 @@ export default function Page() {
     }
     const fullPath = path.join(this.watchDir, page.path);
     const raw = await fs.readFile(fullPath, "utf8");
-    const { content: body } = matter(raw);
+    const { content: body } = safeMatter(raw, page.path);
     return { ...page, body };
   }
 
