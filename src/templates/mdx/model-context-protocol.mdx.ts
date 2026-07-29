@@ -59,15 +59,17 @@ When \`DOCS_API_KEY\` is set, all requests to \`/api/mcp\` must include an \`Aut
 Authorization: Bearer your-secret-key
 \`\`\`
 
-Requests without a valid token receive a \`401 Unauthorized\` response. When \`DOCS_API_KEY\` is not set, the MCP server is publicly accessible with no authentication required.
+Requests without a valid token receive a \`401 Unauthorized\` response. When \`DOCS_API_KEY\` is not set, the MCP server follows the site's access mode: it is public on a public site and requires the normal gate session when \`SITE_PASSWORD\` is configured.
 
 <Callout type="note">
-  The \`DOCS_API_KEY\` check only applies to the \`/api/mcp\` endpoint. It does not affect the \`/api/rag\` endpoint used by the built-in AI Assistant chat. To gate the entire site (including the chat and search APIs) behind a shared password instead, see the [Authentication](/authentication) documentation.
+  \`DOCS_API_KEY\` only applies to \`/api/mcp\`; it does not grant access to the chat, search, or playground APIs. To gate the entire site behind a shared password, see the [Authentication](/authentication) documentation.
 </Callout>
 
 ### Rate limiting
 
 Tool calls to \`POST /api/mcp\` are rate limited per client IP address. When a client exceeds the limit, the server responds with \`429 Too Many Requests\` and a \`Retry-After\` header indicating how many seconds to wait before retrying.
+
+The included limiter is intentionally lightweight and scoped to each running server instance. For a globally consistent limit across multiple serverless instances or regions, configure rate limiting at your hosting edge or use a shared external rate-limit store.
 
 ### API Endpoints
 
@@ -197,12 +199,12 @@ Doccupine's MCP server uses semantic search powered by vector embeddings to prov
 
 Doccupine runs this pipeline at build time and ships the resulting vectors with your site, so the server loads a ready-made index instead of re-embedding your docs on every cold start.
 
-1. **Document Discovery**: Doccupine scans your \`app/\` directory for all \`page.tsx\`, \`page.ts\`, \`page.jsx\`, and \`page.js\` files.
-2. **Content Extraction**: It extracts content from \`const content =\` declarations in your page files.
+1. **Content Manifest**: During generation, Doccupine writes the source MDX and generated API-reference content to \`services/mcp/docs-content.json\`.
+2. **Runtime Loading**: The build traces that manifest into the MCP and RAG functions, which read it from one fixed path without inlining the corpus into their JavaScript bundles.
 3. **Chunking**: Large documents are split into chunks of approximately 800 characters with 100 character overlap for better context preservation.
 4. **Embedding Generation**: Each chunk is converted to a vector embedding using your configured LLM provider's embedding model.
 5. **Compaction**: Each vector is truncated to \`LLM_EMBEDDING_DIMS\` dimensions (default 512) and quantized to int8, keeping the index roughly 20x smaller than raw floats so large doc sets don't stall the chat on cold start.
-6. **Index Building**: The compact embeddings are written to \`services/mcp/docs-index.json\`, bundled into your serverless functions, and loaded into memory at runtime for fast similarity search.
+6. **Index Building**: The compact embeddings are written to \`services/mcp/docs-index.json\`, traced into your serverless functions as a data file, and loaded into memory at runtime for fast similarity search.
 
 ### Search Process
 
@@ -212,7 +214,7 @@ Doccupine runs this pipeline at build time and ships the resulting vectors with 
 4. **Response**: The top N results (based on the limit parameter) are returned with their paths, URIs, scores, and text content.
 
 <Callout type="note">
-  Embeddings are precomputed at build time and bundled with your site, so the server loads the ready-made index into memory on startup instead of re-embedding your docs on every cold start. It only embeds at runtime when the precomputed index is missing or was built with a different provider or model. When you update your documentation, rebuild or redeploy your site to regenerate the index with fresh content.
+  Embeddings are precomputed at build time and shipped as a traced data file, so the server loads the ready-made index into memory on startup instead of re-embedding your docs on every cold start. It only embeds at runtime when the precomputed index is missing or was built with a different provider or model. When you update your documentation, regenerate and rebuild or redeploy your site to refresh both the content manifest and index.
 </Callout>
 
 ## Use your MCP server
@@ -323,30 +325,9 @@ See the [AI Assistant documentation](/ai-assistant) for configuration details.
 
 ## Content indexing
 
-Your MCP server searches content extracted from your page files. The server automatically discovers and indexes all \`page.tsx\`, \`page.ts\`, \`page.jsx\`, and \`page.js\` files in your \`app/\` directory.
+Doccupine builds a \`services/mcp/docs-content.json\` manifest from your source MDX and generated API-reference pages. The deployed MCP and RAG routes load that traced data file at runtime, so the documentation corpus is not inlined into the server function's JavaScript bundle and the server never scans user-controlled paths.
 
-### Content extraction
-
-The server extracts content from \`const content =\` declarations in your page files. Make sure your documentation pages export a \`content\` constant with your markdown or MDX content.
-
-**Example:**
-
-\`\`\`tsx
-export const content = \`
-# Getting Started
-
-Welcome to the documentation...
-\`;
-\`\`\`
-
-### Excluded directories
-
-The following directories are automatically excluded from indexing:
-
-- \`node_modules\`
-- \`.next\`
-- \`.git\`
-- \`api\`
+The manifest is refreshed whenever the CLI generates the site. In watch mode, saved MDX and OpenAPI changes become available to MCP automatically. For a one-time workflow, run \`doccupine build\` or \`doccupine generate\` before building and deploying the generated Next.js app.
 
 ## Troubleshooting
 
@@ -356,14 +337,15 @@ If the index is not building, check:
 
 - Your LLM provider is configured correctly in your \`.env\` file
 - You have a valid API key set
-- Your documentation pages export a \`content\` constant
+- \`services/mcp/docs-content.json\` exists in the generated app
+- The latest Doccupine generation completed successfully before deployment
 
 ### No search results
 
 If searches return no results:
 
-- Verify that your documentation pages are in the \`app/\` directory
-- Check that your pages export a \`content\` constant
+- Verify that your source MDX files are inside the configured \`watchDir\`
+- Regenerate the app so \`docs-content.json\` contains the latest pages
 - Ensure the index has been built (check the \`index.ready\` status via GET \`/api/mcp\`)
 
 ### Slow search performance

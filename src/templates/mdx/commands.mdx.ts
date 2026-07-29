@@ -26,11 +26,21 @@ This will start the development server on port 3000. Open your browser and navig
 
 ## Options
 
-| Flag            | Description                                                          |
-| --------------- | -------------------------------------------------------------------- |
-| \`--port <port>\` | Port for the dev server (default: \`3000\`). Auto-increments if taken. |
-| \`--verbose\`     | Show all Next.js output including compilation details.               |
-| \`--reset\`       | Re-prompt for watch/output directories and the OpenAPI spec path.    |
+| Flag                       | Description                                                                 |
+| -------------------------- | --------------------------------------------------------------------------- |
+| \`--port <port>\`            | Port for the dev server (default: \`3000\`). Auto-increments if taken.        |
+| \`--verbose\`                | Show all Next.js output including compilation details.                      |
+| \`--reset\`                  | Re-prompt for watch/output directories and the OpenAPI spec path.           |
+| \`--skip-install\`           | Always skip dependency installation before starting the development server. |
+| \`--package-manager <name>\` | Use \`pnpm\` or \`npm\` for the generated app instead of auto-detection.        |
+
+<Callout type="warning">
+  The watch and output directories must not overlap. The output directory must be empty, contain only local metadata such as \`.DS_Store\` or \`.env.local\`, or already be owned by Doccupine. This prevents the generator from overwriting another project. If an older \`doccupine.json\` no longer validates, run \`doccupine config --reset\`. Generation also reports a validation error, instead of letting one page overwrite another, when two source files resolve to the same route.
+</Callout>
+
+## Dependency installation
+
+The first run installs the generated app's dependencies. After that, Doccupine records a fingerprint of the generated \`package.json\` and the package manager in \`.doccupine-install\` and reinstalls only when that fingerprint changes or \`node_modules\` is missing - later runs start the dev server straight away. Pass \`--skip-install\` to skip the check entirely, for example when you manage dependencies yourself.
 
 ## Verbose mode
 
@@ -48,7 +58,7 @@ npx doccupine --verbose
 npx doccupine build
 \`\`\`
 
-This scaffolds the Next.js app from your MDX files without starting the development server. To produce a production build, run \`npm install && npm run build\` in the generated output directory.
+You can also use the equivalent \`npx doccupine generate\` command. These commands scaffold the Next.js app from your MDX files without installing dependencies or starting the development server. To produce a production build, install dependencies and run the generated app's \`build\` script.
 
 ## Show current configuration
 

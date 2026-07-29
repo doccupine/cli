@@ -35,7 +35,7 @@ Every snippet points to your site's own MCP endpoint, for example:
 
 ## MCP server authentication
 
-By default your MCP endpoint is publicly accessible. You can restrict access with an API key:
+On a public site, the MCP endpoint is publicly accessible by default. When \`SITE_PASSWORD\` protects the site, MCP requires the same gate session unless you configure its dedicated API key:
 
 1. Enable **Require API key for MCP access**.
 2. Enter an API key.

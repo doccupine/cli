@@ -29,11 +29,11 @@ That is the only setting. Everyone who visits the site shares this single passwo
 While a password is set, protection is enforced across three layers:
 
 - **Pages**: Every page renders a login screen instead of your documentation until the visitor enters the correct password.
-- **Content APIs**: The AI chat (\`/api/rag\`) and search (\`/api/search\`) endpoints return \`401 Unauthorized\` without a valid session, so the docs cannot be scraped around the login screen.
+- **Content APIs**: The AI chat (\`/api/rag\`), search (\`/api/search\`), and [API playground](/api-playground) proxy (\`/api/playground\`) endpoints return \`401 Unauthorized\` without a valid session. The docs cannot be scraped around the login screen, and the proxy cannot be used to relay requests on behalf of an anonymous visitor. Each route re-checks the session itself, so a direct invocation is refused even when it does not pass through the middleware.
 - **Search engines and crawlers**: \`robots.txt\` disallows all crawlers, every page ships a \`noindex, nofollow\` meta tag, and responses carry an \`X-Robots-Tag: noindex, nofollow\` header.
 
 <Callout type="note">
-  The [MCP server](/model-context-protocol) keeps its own authentication through the \`DOCS_API_KEY\` bearer token and is not affected by \`SITE_PASSWORD\`. Set both when you want the docs and the MCP endpoint locked down.
+  The [MCP server](/model-context-protocol) uses \`DOCS_API_KEY\` bearer authentication when that variable is set. Otherwise, a password-protected site requires the normal gate session for MCP too, so the endpoint cannot bypass \`SITE_PASSWORD\`.
 </Callout>
 
 ## How it works

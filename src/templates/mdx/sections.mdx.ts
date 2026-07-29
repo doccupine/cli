@@ -130,6 +130,10 @@ When the directory name differs from the slug, use the \`directory\` field to ma
 - **slug**: The URL prefix for this section. Use an empty string \`""\` for the default section that serves at the root.
 - **directory** (optional): The subdirectory under your watch directory that contains this section's MDX files. Only needed when the directory name differs from the slug.
 
+<Callout type="warning">
+  Section slugs and directories must be safe relative paths, and no two entries may reuse the same slug or directory. Doccupine stops with an actionable validation error instead of generating overlapping routes.
+</Callout>
+
 ### Directory structure example
 
 With the explicit directory config above and a watch directory of \`docs\`, your files would look like:
