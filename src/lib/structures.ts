@@ -93,7 +93,6 @@ import { styledDTemplate } from "../templates/types/styled.js";
 import { openapiTypesTemplate } from "../templates/types/openapi.js";
 
 import { orderNavItemsTemplate } from "../templates/utils/orderNavItems.js";
-import { polishedCompatTemplate } from "../templates/utils/polishedCompat.js";
 import { rateLimitTemplate } from "../templates/utils/rateLimit.js";
 import { brandingTemplate } from "../templates/utils/branding.js";
 import { configTemplate } from "../templates/utils/config.js";
@@ -215,7 +214,6 @@ export const appStructure: Record<string, string> = {
   "utils/mermaid.ts": mermaidTemplate,
   "utils/orderNavItems.ts": orderNavItemsTemplate,
   "utils/parseCodeMeta.ts": parseCodeMetaTemplate,
-  "utils/polishedCompat.ts": polishedCompatTemplate,
   "utils/rateLimit.ts": rateLimitTemplate,
   "utils/rehypeCodeMeta.ts": rehypeCodeMetaTemplate,
   "utils/config.ts": configTemplate,
@@ -285,6 +283,7 @@ export const appStructure: Record<string, string> = {
 // copies around — failing lint or importing modules that are gone.
 export const obsoleteFiles: string[] = [
   "components/ClickOutside.ts",
+  "utils/polishedCompat.ts",
   "components/layout/ClientThemeProvider.tsx",
   "components/layout/ThemeToggle.tsx",
 ];

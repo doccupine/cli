@@ -1,14 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { rootLayoutTemplate } from "../lib/layout.js";
-import { appStructure } from "../lib/structures.js";
 import { themeTemplate } from "./app/theme.js";
 import { cardTemplate } from "./components/layout/Card.js";
 import { cherryThemeProviderTemplate } from "./components/layout/CherryThemeProvider.js";
 import { globalStylesTemplate } from "./components/layout/GlobalStyles.js";
-import { nextConfigTemplate } from "./next.config.js";
 import { stepsTemplate } from "./components/layout/Steps.js";
-import { polishedCompatTemplate } from "./utils/polishedCompat.js";
 
 // Doc pages are force-static, so the server cannot know the visitor's mode.
 // The whole no-flash story rests on painted colors resolving from CSS custom
@@ -81,25 +78,5 @@ describe("generated theming", () => {
       expect(template).not.toContain("color={theme.colors.primary}");
       expect(template).toContain("& > svg.lucide {");
     }
-  });
-
-  it("routes JavaScript color math into CSS, where var() resolves", () => {
-    // A dependency that parses colors in JavaScript throws on a var()
-    // reference and takes the whole render down with it. The shim does the
-    // same operations in CSS; it only works if both halves are wired up.
-    expect(polishedCompatTemplate).toContain("export const rgba");
-    expect(polishedCompatTemplate).toContain("export const darken");
-    expect(polishedCompatTemplate).toContain("export const lighten");
-    expect(polishedCompatTemplate).toContain("color-mix(in srgb");
-    const configs = [
-      nextConfigTemplate(null),
-      nextConfigTemplate({ provider: "posthog", posthog: { key: "phc_x" } }),
-    ];
-    for (const config of configs) {
-      expect(config).toContain('polished: "./utils/polishedCompat.ts"');
-    }
-    expect(appStructure["utils/polishedCompat.ts"]).toBe(
-      polishedCompatTemplate,
-    );
   });
 });
