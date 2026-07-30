@@ -25,7 +25,7 @@ const StyledCallout = styled.div<{ theme: Theme; $type?: CalloutType }>\`
 
   /* Callout tints are alert-semantic (info-blue, warning-amber, danger-red,
      etc.) and intentionally independent of theme.json. Light-mode values are
-     defined by default; dark-mode overrides live in :root.dark & blocks so
+     defined by default; dark-mode overrides live in :root[data-theme="dark"] & blocks so
      the swap happens via the active <html> class with no re-render. */
   \${({ $type }) =>
     $type === "note" &&
@@ -38,7 +38,7 @@ const StyledCallout = styled.div<{ theme: Theme; $type?: CalloutType }>\`
         color: #0c4a6e;
       }
 
-      :root.dark & {
+      :root[data-theme="dark"] & {
         border-color: #0ea5e94d;
         background: #0ea5e91a;
 
@@ -61,7 +61,7 @@ const StyledCallout = styled.div<{ theme: Theme; $type?: CalloutType }>\`
         color: #18181b;
       }
 
-      :root.dark & {
+      :root[data-theme="dark"] & {
         border-color: #71717a4d;
         background: #71717a1a;
 
@@ -84,7 +84,7 @@ const StyledCallout = styled.div<{ theme: Theme; $type?: CalloutType }>\`
         color: #78350f;
       }
 
-      :root.dark & {
+      :root[data-theme="dark"] & {
         border-color: #f59e0b4d;
         background: #f59e0b1a;
 
@@ -106,7 +106,7 @@ const StyledCallout = styled.div<{ theme: Theme; $type?: CalloutType }>\`
         color: #7f1d1d;
       }
 
-      :root.dark & {
+      :root[data-theme="dark"] & {
         border-color: #ef44444d;
         background: #ef44441a;
 
@@ -128,7 +128,7 @@ const StyledCallout = styled.div<{ theme: Theme; $type?: CalloutType }>\`
         color: #064e3b;
       }
 
-      :root.dark & {
+      :root[data-theme="dark"] & {
         border-color: #10b9814d;
         background: #10b9811a;
 

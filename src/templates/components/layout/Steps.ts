@@ -62,6 +62,12 @@ const StyledStepTitle = styled.div<{ theme: Theme }>\`
   display: flex;
   align-items: center;
   gap: 10px;
+
+  /* See Card: lucide's color prop lands on an SVG presentation attribute,
+     where a CSS custom property would not resolve. */
+  & > svg.lucide {
+    color: \${({ theme }) => theme.colors.primary};
+  }
 \`;
 
 const StepContent = styled.div<{ theme: Theme }>\`
@@ -105,7 +111,7 @@ function Steps({ children }: StepsProps) {
             <StepNumber theme={theme}>{index + 1}</StepNumber>
             {(title || icon) && (
               <StyledStepTitle theme={theme}>
-                {icon && <Icon name={icon} color={theme.colors.primary} />}
+                {icon && <Icon name={icon} />}
                 {title}
               </StyledStepTitle>
             )}

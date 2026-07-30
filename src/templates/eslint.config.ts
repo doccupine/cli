@@ -52,6 +52,7 @@ const config = [
       ...reactPlugin.configs.recommended.rules,
       ...reactHooksPlugin.configs.recommended.rules,
       ...nextPlugin.configs.recommended.rules,
+      ...jsxA11yPlugin.configs.recommended.rules,
       "import/no-anonymous-default-export": "warn",
       "react/no-unknown-property": "off",
       "react/react-in-jsx-scope": "off",
@@ -69,6 +70,25 @@ const config = [
         "warn",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
+    },
+  },
+  {
+    // These generated previews intentionally render user-selected media without
+    // author-provided caption tracks. Keep the complete recommended ruleset on
+    // everywhere else while this isolated preview remains user-controlled.
+    name: "doccupine/media-preview",
+    files: ["components/layout/ApiPlayground.tsx"],
+    rules: {
+      "jsx-a11y/media-has-caption": "off",
+    },
+  },
+  {
+    // Cherry's Input owns the actual DOM input and focus behavior. Ignore only
+    // non-DOM controls; raw JSX inputs remain covered by the recommended rule.
+    name: "doccupine/cherry-controls",
+    files: ["components/layout/SiteGate.tsx"],
+    rules: {
+      "jsx-a11y/no-autofocus": ["error", { ignoreNonDOM: true }],
     },
   },
 ];

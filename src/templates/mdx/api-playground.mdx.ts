@@ -35,7 +35,7 @@ Press **Try it** below to open the playground, tweak the request body, and send 
 \`\`\`
   </Step>
   <Step title="Run Doccupine.">
-    On the next build (or live, while watching) Doccupine parses the document, resolves every \`$ref\`, and writes an endpoint page for each operation.
+    On the next build (or live, while watching) Doccupine parses the document and writes an endpoint page for each operation. Local \`$ref\` files must stay inside the configured spec's directory, use \`.json\`, \`.yaml\`, or \`.yml\`, and cannot be dotfiles or live inside dot-directories.
   </Step>
   <Step title="Open the API Reference section.">
     Endpoints appear in the sidebar grouped by their OpenAPI tag. Editing the spec regenerates the pages automatically.
@@ -91,7 +91,7 @@ Each part maps to something in the playground: \`servers\` sets the request targ
 
 ## What gets generated
 
-Every operation becomes its own page under \`/api-reference/{tag}/{operation}\`, showing:
+The generated \`/api-reference\` index lists every operation with a direct link, grouped by API and tag. Each operation also gets its own page under \`/api-reference/{tag}/{operation}\`, showing:
 
 <Field value="Parameters" type="path, query, header, cookie">
 Each parameter is rendered with its name, type, and whether it is required, grouped into a collapsible section with an input to fill in.
@@ -133,7 +133,9 @@ Requests run one of two ways, and readers can switch between them:
 **Proxy (default).** The request is forwarded server-side, so it works even when the target API blocks cross-origin browser calls. **Direct.** The browser calls the API itself - useful when the API allows CORS and you want requests to never leave the reader's machine.
 </Callout>
 
-The proxy is deliberately locked down. It only forwards to the servers declared in your OpenAPI document, refuses to reach private or internal network addresses, and never logs request URLs, headers, or bodies - so API keys a reader enters are not written anywhere.
+The proxy is deliberately locked down. It only forwards to servers declared in your OpenAPI document and refuses private, internal, metadata, and reserved network addresses, including IPv4 destinations represented through IPv6 translation ranges. An explicitly declared loopback server such as \`http://localhost:4000\` is available only outside production for local development and tests; production always blocks loopback and every other private target even when the spec declares one. Request URLs, headers, and bodies are never logged, so API keys a reader enters are not written anywhere. On a [password-protected site](/authentication), the proxy also requires the visitor's unlocked session, so it cannot be called anonymously.
+
+Proxy requests are rate limited per trusted client address on recognized hosting platforms. Unknown and self-hosted proxy setups share one fallback bucket rather than trusting spoofable forwarding headers; use your trusted edge or a shared rate-limit store when those deployments need accurate per-client limits.
 
 <Callout type="warning">
 Keys and tokens a reader types are used only to make the request. Turn on "Show secrets" to reveal them in the generated code snippets; they are redacted by default.

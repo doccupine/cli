@@ -1,15 +1,16 @@
 export const platformSelfUpdatingDocsMdxTemplate = `---
-title: "Self-updating Docs"
-description: "Link documentation pages to the code they describe and let the agent rewrite them when that code changes."
+title: "Agent Sync"
+description: "Agent Sync links documentation pages to the code they describe and rewrites them when that code changes, keeping your docs self-updating."
 date: "2026-07-24"
+updated: "2026-07-30"
 category: "Editing"
 categoryOrder: 1
 order: 2
 section: "Platform"
 ---
-# Self-updating Docs
+# Agent Sync
 
-Documentation goes stale because code moves and nobody notices. Agent Sync closes that gap: every page can be linked to the source files it documents, pinned to the exact commit it was written from. When those files change, the page is flagged as **drifted** - and the agent can rewrite it for you.
+Documentation goes stale because code moves and nobody notices. **Agent Sync** closes that gap: every page can be linked to the source files it documents, pinned to the exact commit it was written from. When those files change, the page is flagged as **drifted** - and the agent can rewrite it for you.
 
 You'll find it under **Agent Sync** in the project sidebar.
 
@@ -48,13 +49,37 @@ A page needs at least one source link before drift can be detected. There are th
   <Step title="Automatically, as the agent writes">
     Every page the agent produces records the files it was derived from. Sites created by [Import from GitHub](/platform/import-from-github) arrive fully linked.
   </Step>
-  <Step title="Scan for sources">
-    The **Scan for sources** button matches your existing pages against the repository by name and structure, then proposes links for you to approve. It's a good way to bootstrap a hand-written site. The scan itself uses no AI credit.
+  <Step title="Auto-link existing pages">
+    **Auto-link code** scans your existing pages, proposes matching files from every source repository, and lets you approve the links in one batch. It's a good way to bootstrap a hand-written site.
   </Step>
   <Step title="By hand">
-    Open a page in the editor and use the source status button in the toolbar, or the detail panel on the Map view, to say "this page documents that file". Hand-written pages can be tracked this way without ever having been generated.
+    Open an MDX page in the editor, select **Source links** in the toolbar, then choose a repository and match one file, a folder, or a path pattern. Hand-written pages can be tracked this way without ever having been generated.
   </Step>
 </Steps>
+
+## Auto-link existing pages
+
+Use **Auto-link code** in the Agent Sync header when you already have documentation but it is not connected to its source code yet.
+
+<Steps>
+  <Step title="Start the scan">
+    Select **Auto-link code**. Doccupine reads the committed Markdown and MDX pages in your docs repository that do not have source links yet, then compares them with file paths from all your source repositories. Pending editor changes are not included until they are published.
+  </Step>
+  <Step title="Review the suggestions">
+    Suggestions are grouped by page. A strong match means the page names or references the file, so it starts selected. A weaker name match is left unselected for you to confirm. You can change any checkbox, and existing source links are never replaced.
+  </Step>
+  <Step title="Link the selected files">
+    Select **Link selected (N)**. Each approved file is recorded against the page and pinned to the repository's current commit. The page appears as **In sync** in the Map and Table views; Auto-link does not rewrite, commit, or publish the documentation.
+  </Step>
+</Steps>
+
+The normal scan is deterministic and uses no AI credit. **AI auto-select** is optional: it asks the configured AI model to refine the offered matches, uses AI credit, and only changes which checkboxes are selected. You still review the result and select **Link selected (N)** to save it.
+
+<Callout type="note">
+  Auto-link skips pages that already have at least one source link. To add another file, folder, or pattern to one of those pages, open the page's **Source links** panel in the editor and link it manually.
+</Callout>
+
+If the scan finds an OpenAPI specification and your \`doccupine.json\` does not configure one yet, it also offers **Add to doccupine.json (N)**. This stages the configuration and, when needed, a copy of the specification as pending changes. Review and publish those changes through the normal publishing flow.
 
 ## How drift is detected
 
@@ -87,10 +112,24 @@ For anything in review, **Review update** opens the change set - the same diff v
 
 Your project's own repository is always a source, so a repo that holds both code and docs needs no setup at all.
 
-For a multi-repo or monorepo setup, add the other repositories in the Source repositories manager. The agent can then be pointed at any of them, and drift is tracked across all of them.
+For a multi-repo setup, add the other repositories from Agent Sync:
+
+<Steps>
+  <Step title="Open Source repositories">
+    Select **Source repositories** in the Agent Sync header. Your project's repository appears first with a **Default** badge and cannot be removed.
+  </Step>
+  <Step title="Choose another repository">
+    Project owners and editors can select **Add repository**, then search the GitHub repositories they own, collaborate on, or can access through an organization. If GitHub is not connected yet, select **Connect GitHub**, finish authorization, then reopen the manager.
+  </Step>
+  <Step title="Check its connection">
+    Selecting a repository adds it immediately. **Instant** means Doccupine installed a push webhook; **~30 min** means it will check for source changes on a schedule instead. Both modes support the agent, manual source links, Auto-link code, and drift tracking.
+  </Step>
+</Steps>
+
+Once connected, the repository appears in the Agent view's **Source repository** selector and anywhere you create a source link.
 
 <Callout type="note">
-  Removing a repository that still has linked pages asks for confirmation first and tells you how many pages are affected.
+  Removing a repository never deletes your documentation pages. If pages still link to it, Doccupine tells you how many are affected and asks again before removing those source links. The pages remain, but they stop tracking changes from that repository.
 </Callout>
 
 ## Notifications

@@ -4,6 +4,7 @@ export const docsComponentsTemplate = `"use client";
 import React, { createContext, useContext } from "react";
 import styled, { css } from "styled-components";
 import {
+  Button,
   resetButton,
   styledSmall,
   styledStrong,
@@ -98,6 +99,7 @@ const StyledDocsContainer = styled.main<{
 
   & code:not([class]),
   & kbd {
+    max-width: max-content;
     background: \${({ theme }) =>
       \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
     color: \${({ theme }) => theme.colors.dark};
@@ -145,7 +147,11 @@ export const StyledSidebar = styled.nav<Props>\`
   padding: 20px;
   opacity: 0;
   pointer-events: none;
-  transition: all 0.3s ease;
+  visibility: hidden;
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease,
+    visibility 0s linear 0.3s;
   transform: translateY(30px);
   left: 0;
   background: \${({ theme }) => theme.colors.light};
@@ -166,6 +172,7 @@ export const StyledSidebar = styled.nav<Props>\`
     padding: 82px 20px 20px 20px;
     opacity: 1;
     pointer-events: all;
+    visibility: visible;
     transform: translateY(0);
     background: \${({ theme }) =>
       \`color-mix(in srgb, \${theme.colors.primaryLight} 5%, transparent)\`};
@@ -179,9 +186,21 @@ export const StyledSidebar = styled.nav<Props>\`
       transform: translateY(0);
       opacity: 1;
       pointer-events: all;
+      visibility: visible;
+      transition-delay: 0s;
     \`}
 
   \${focusModeHide("left")};
+
+  \${mq("lg")} {
+    html[data-focus-mode] & {
+      visibility: hidden;
+      transition:
+        transform 0.3s ease,
+        opacity 0.3s ease,
+        visibility 0s linear 0.3s;
+    }
+  }
 \`;
 
 export const StyledSidebarFooter = styled.div\`
@@ -229,6 +248,16 @@ export const StyledIndexSidebar = styled.ul<{ theme: Theme }>\`
   }
 
   \${focusModeHide("right")};
+
+  \${mq("lg")} {
+    html[data-focus-mode] & {
+      visibility: hidden;
+      transition:
+        transform 0.3s ease,
+        opacity 0.3s ease,
+        visibility 0s linear 0.3s;
+    }
+  }
 \`;
 
 export const StyledIndexSidebarLabel = styled.span<{ theme: Theme }>\`
@@ -376,11 +405,13 @@ export const StyledSidebarMethodTag = styled(Badge)\`
 // page pairs a link with a chevron toggle. Children live in
 // StyledSidebarGroupContent, which animates open/closed via height 0 <-> auto
 // (enabled by interpolate-size in GlobalStyles, same as the Accordion).
-export const StyledSidebarGroupButton = styled.button<Props>\`
+export const StyledSidebarGroupButton = styled(Button)<Props>\`
   \${resetButton};
   \${sidebarRowStyles};
   \${sidebarChevron};
   width: 100%;
+  height: auto;
+  min-height: 0;
   text-align: left;
 
   /* Buttons aren't covered by the global a:focus-visible ring, so this
@@ -426,11 +457,15 @@ export const StyledSidebarGroupLink = styled(Link)\`
   }
 \`;
 
-export const StyledSidebarGroupChevron = styled.button\`
+export const StyledSidebarGroupChevron = styled(Button)\`
+  \${resetButton};
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  width: auto;
+  height: auto;
+  min-height: 0;
   padding: 0;
   border: 0;
   background: none;
@@ -443,22 +478,36 @@ export const StyledSidebarGroupChevron = styled.button\`
   }
 \`;
 
-export const StyledSidebarGroupContent = styled.ul<Props>\`
+export const StyledSidebarGroupContent = styled.ul.attrs<Props>(
+  ({ $isOpen }) => ({
+    "aria-hidden": !$isOpen,
+    inert: !$isOpen,
+  }),
+)<Props>\`
   list-style: none;
   margin: 0;
   padding: 0;
   height: 0;
   overflow: clip;
-  transition: all 0.3s ease;
+  visibility: hidden;
+  transition:
+    height 0.3s ease,
+    visibility 0s linear 0.3s;
 
   \${({ $isOpen }) =>
     $isOpen &&
     css\`
       height: auto;
+      visibility: visible;
+      transition-delay: 0s;
     \`}
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 \`;
 
-export const StyleMobileBar = styled.button<Props>\`
+export const StyleMobileBar = styled(Button)<Props>\`
   \${resetButton};
   position: fixed;
   z-index: 999;
@@ -478,6 +527,8 @@ export const StyleMobileBar = styled.button<Props>\`
   display: flex;
   justify-content: flex-start;
   width: auto;
+  height: auto;
+  min-height: 0;
 
   \${mq("lg")} {
     display: none;

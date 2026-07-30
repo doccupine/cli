@@ -20,6 +20,41 @@ import type { DocsChunk } from "@/services/mcp/types";
 /** A doc chunk with its stored int8-quantized embedding. */
 type IndexedChunk = DocsChunk & { embedding: Int8Array };
 
+export const MCP_MAX_REQUEST_BYTES = 64 * 1024;
+export const MCP_MAX_TOOL_ARGUMENT_BYTES = 8 * 1024;
+export const MCP_MAX_RESULT_BYTES = 256 * 1024;
+
+export const searchDocsArgsSchema = z
+  .object({
+    query: z.string().min(1).max(2000),
+    limit: z.number().int().min(1).max(20).optional(),
+  })
+  .strict();
+
+export const getDocArgsSchema = z
+  .object({ path: z.string().min(1).max(500) })
+  .strict();
+
+export const listDocsArgsSchema = z
+  .object({ directory: z.string().max(500).optional() })
+  .strict();
+
+export function serializeMCPResult(value: unknown): {
+  text: string;
+  tooLarge: boolean;
+} {
+  const text = JSON.stringify(value, null, 2) ?? "null";
+  if (new TextEncoder().encode(text).byteLength <= MCP_MAX_RESULT_BYTES) {
+    return { text, tooLarge: false };
+  }
+  return {
+    text: JSON.stringify({
+      error: "Tool result exceeds the maximum response size",
+    }),
+    tooLarge: true,
+  };
+}
+
 /**
  * Thrown when a query arrives but no usable prebuilt embeddings index exists AND
  * the doc set is too large to embed within a single serverless request. Surfaced
@@ -237,7 +272,11 @@ async function buildDocsIndex(force = false): Promise<void> {
  * Ensure the docs index is ready.
  * On first call, triggers the build; subsequent calls wait for the same promise.
  */
-export async function ensureDocsIndex(force = false): Promise<void> {
+export async function ensureDocsIndex(
+  force = false,
+  signal?: AbortSignal,
+): Promise<void> {
+  signal?.throwIfAborted();
   if (force) {
     // Wait for any in-flight build before starting a forced rebuild
     if (docsIndex.building && indexReady) {
@@ -246,12 +285,68 @@ export async function ensureDocsIndex(force = false): Promise<void> {
     docsIndex.ready = false;
     docsIndex.chunks = [];
     indexReady = buildDocsIndex(true);
-    return indexReady;
-  }
-  if (!indexReady) {
+  } else if (!indexReady) {
     indexReady = buildDocsIndex();
   }
-  return indexReady;
+
+  const build = indexReady;
+  if (!signal) return build;
+
+  // Embedding clients do not expose AbortSignal parameters. Keep the shared
+  // index build alive for other requests, but stop this caller waiting as soon
+  // as its request is cancelled.
+  await new Promise<void>((resolve, reject) => {
+    const abort = () => reject(signal.reason);
+    signal.addEventListener("abort", abort, { once: true });
+    void build.then(resolve, reject).finally(() => {
+      signal.removeEventListener("abort", abort);
+    });
+  });
+  signal.throwIfAborted();
+}
+
+function throwIfCancelled(signal?: AbortSignal): void {
+  signal?.throwIfAborted();
+}
+
+async function embedQuery(
+  query: string,
+  signal?: AbortSignal,
+): Promise<number[]> {
+  throwIfCancelled(signal);
+  // LangChain's provider-neutral Embeddings interface has no signal option.
+  const vector = await getEmbeddings().embedQuery(query);
+  throwIfCancelled(signal);
+  return vector;
+}
+
+function normalizeSearchLimit(limit: number): number {
+  if (!Number.isFinite(limit)) return 6;
+  return Math.max(1, Math.min(20, Math.floor(limit)));
+}
+
+function toolResult(value: unknown) {
+  const serialized = serializeMCPResult(value);
+  return {
+    content: [{ type: "text" as const, text: serialized.text }],
+    ...(serialized.tooLarge ? { isError: true as const } : {}),
+  };
+}
+
+function toolError(message: string) {
+  return {
+    content: [
+      {
+        type: "text" as const,
+        text: JSON.stringify({ error: message }),
+      },
+    ],
+    isError: true as const,
+  };
+}
+
+function resourceText(value: unknown): string {
+  return serializeMCPResult(value).text;
 }
 
 // Eagerly start building the index on server startup if LLM is configured
@@ -280,13 +375,15 @@ function getEmbeddings() {
 export async function searchDocs(
   query: string,
   limit = 6,
+  signal?: AbortSignal,
 ): Promise<{ chunk: DocsChunk; score: number }[]> {
-  await ensureDocsIndex();
+  await ensureDocsIndex(false, signal);
+  throwIfCancelled(signal);
 
   // Reduce the query vector with the exact same transform used at index time so
   // dimensions line up. Scoring runs directly against the int8 vectors - cosine
   // is scale-invariant, so no dequantization is needed.
-  const rawQueryVector = await getEmbeddings().embedQuery(query);
+  const rawQueryVector = await embedQuery(query, signal);
   const queryVector = reduceDims(rawQueryVector, getLLMConfig().embeddingDims);
 
   const scored = docsIndex.chunks
@@ -295,7 +392,7 @@ export async function searchDocs(
       score: cosineFloatInt8(queryVector, c.embedding),
     }))
     .sort((a, b) => b.score - a.score)
-    .slice(0, limit);
+    .slice(0, normalizeSearchLimit(limit));
 
   return scored;
 }
@@ -325,99 +422,61 @@ export function createMCPServer(): McpServer {
   });
 
   // Register the search_docs tool
-  server.tool(
+  server.registerTool(
     "search_docs",
-    DOCS_TOOLS[0].description,
     {
-      query: z
-        .string()
-        .describe("The search query to find relevant documentation"),
-      limit: z
-        .number()
-        .optional()
-        .describe("Maximum number of results to return (default: 6)"),
+      description: DOCS_TOOLS[0].description,
+      inputSchema: searchDocsArgsSchema,
     },
-    async ({ query, limit }) => {
-      const results = await searchDocs(query, limit ?? 6);
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(
-              results.map(({ chunk, score }) => ({
-                path: chunk.path,
-                uri: chunk.uri,
-                score: score.toFixed(3),
-                text: chunk.text,
-              })),
-              null,
-              2,
-            ),
-          },
-        ],
-      };
+    async ({ query, limit }, { signal }) => {
+      const results = await searchDocs(query, limit ?? 6, signal);
+      return toolResult(
+        results.map(({ chunk, score }) => ({
+          path: chunk.path,
+          uri: chunk.uri,
+          score: score.toFixed(3),
+          text: chunk.text,
+        })),
+      );
     },
   );
 
   // Register the get_doc tool
-  server.tool(
+  server.registerTool(
     "get_doc",
-    DOCS_TOOLS[1].description,
     {
-      path: z.string().describe("The file path to the documentation page"),
+      description: DOCS_TOOLS[1].description,
+      inputSchema: getDocArgsSchema,
     },
-    async ({ path }) => {
+    async ({ path }, { signal }) => {
+      signal.throwIfAborted();
       const doc = await getDoc({ path });
+      signal.throwIfAborted();
       if (!doc) {
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify({ error: "Document not found" }),
-            },
-          ],
-          isError: true,
-        };
+        return toolError("Document not found");
       }
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(doc, null, 2),
-          },
-        ],
-      };
+      return toolResult(doc);
     },
   );
 
   // Register the list_docs tool
-  server.tool(
+  server.registerTool(
     "list_docs",
-    DOCS_TOOLS[2].description,
     {
-      directory: z
-        .string()
-        .optional()
-        .describe("Optional directory to filter results"),
+      description: DOCS_TOOLS[2].description,
+      inputSchema: listDocsArgsSchema,
     },
-    async ({ directory }) => {
+    async ({ directory }, { signal }) => {
+      signal.throwIfAborted();
       const docs = await listDocs({ directory });
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(
-              docs.map((d) => ({
-                name: d.name,
-                path: d.path,
-                uri: d.uri,
-              })),
-              null,
-              2,
-            ),
-          },
-        ],
-      };
+      signal.throwIfAborted();
+      return toolResult(
+        docs.map((d) => ({
+          name: d.name,
+          path: d.path,
+          uri: d.uri,
+        })),
+      );
     },
   );
 
@@ -428,10 +487,8 @@ export function createMCPServer(): McpServer {
       contents: [
         {
           uri: "docs://list",
-          text: JSON.stringify(
+          text: resourceText(
             docs.map((d) => ({ name: d.name, path: d.path, uri: d.uri })),
-            null,
-            2,
           ),
         },
       ],

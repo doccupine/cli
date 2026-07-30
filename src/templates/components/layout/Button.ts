@@ -21,10 +21,10 @@ interface LinkButtonProps extends ButtonProps {
   theme?: typeof localTheme;
 }
 
-// Cherry's buttonStyles picks filled-button text via \`isDark ? colors.dark : colors.light\`.
-// Our theme's isDark is a stub (false) because mode switching lives in CSS vars, so
-// the fallback resolves to --color-light (black in dark mode). Re-pin to \`surface\`,
-// which resolves to white in both modes, for the filled, non-disabled case.
+// Cherry's buttonStyles picks filled-button text from the theme object, which
+// this app keeps on the light mode for static rendering, so pin it to
+// \`surface\` instead: that token resolves through a CSS variable and is the
+// readable-on-brand color in both modes. Filled, non-disabled case only.
 // The "button-link" class opts this anchor out of the global a:focus-visible
 // ring (see GlobalStyles) so Cherry's buttonStyles owns the button's focus look.
 const StyledLinkButton = styled(Link).attrs({

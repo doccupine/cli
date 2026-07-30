@@ -2,6 +2,7 @@ export const platformApiPlaygroundMdxTemplate = `---
 title: "API Playground"
 description: "Register an OpenAPI spec and turn it into an interactive API reference with a live request playground."
 date: "2026-07-26"
+updated: "2026-07-30"
 category: "AI & Integrations"
 categoryOrder: 3
 order: 2
@@ -24,6 +25,10 @@ Open the **API Playground** settings page and choose your OpenAPI file with the 
 Press **Save Configuration**, then commit the change. Both YAML and JSON specs (OpenAPI 3.0 and 3.1) are supported.
 
 > For multiple specs, edit the \`openapi\` array in \`doccupine.json\` directly - the settings page manages a single spec.
+
+<Callout type="warning">
+  The spec has to be in the repository for the site to build - a configured \`openapi\` path that resolves to nothing stops the whole build, not just the API pages. Publish the config change and the spec file together, and if you later move or delete a spec, update \`doccupine.json\` in the same change set. Doccupine [checks this before publishing](/platform/publishing) rather than letting the deploy fail.
+</Callout>
 
 ## Embedding a playground on a page
 
@@ -48,6 +53,8 @@ Press **Generate API pages** to create one page per operation from your spec. Ea
 - is placed under an **API Reference** section, grouped by tag,
 - documents every parameter, the request body, and each response,
 - is staged as a pending change for you to review and commit.
+
+Alongside them you get an **API Reference** landing page at the section root, listing every endpoint as a card with its method and path. It is a normal page like any other, so you can edit it, add an introduction, or delete it if you would rather write your own.
 
 Generation reads the committed spec, so save and commit your configuration first. Endpoints are shown with a colored HTTP-method badge so they are easy to scan in the file list.
 

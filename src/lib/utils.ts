@@ -1,8 +1,13 @@
 import fs from "fs-extra";
+import { randomBytes } from "node:crypto";
+import { constants } from "node:fs";
+import { open, unlink, type FileHandle } from "node:fs/promises";
 import path from "path";
 import { execSync } from "child_process";
 import chalk from "chalk";
 import matter from "gray-matter";
+
+import { assertClaimedOutputPath } from "./output-safety.js";
 
 export type PackageManagerName = "pnpm" | "npm";
 
@@ -12,6 +17,106 @@ export interface ResolvedPackageManager {
    *  Spawning the resolved path (not the bare name) is what lets pnpm work
    *  even when its install dir is missing from the process PATH. */
   bin: string;
+}
+
+async function createAtomicTempFile(
+  filePath: string,
+): Promise<{ handle: FileHandle; tempPath: string }> {
+  const noFollow =
+    typeof constants.O_NOFOLLOW === "number" ? constants.O_NOFOLLOW : 0;
+  const flags =
+    constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | noFollow;
+
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const tempPath = path.join(
+      path.dirname(filePath),
+      `.doccupine-${process.pid}-${randomBytes(16).toString("hex")}.tmp`,
+    );
+    try {
+      return { handle: await open(tempPath, flags, 0o666), tempPath };
+    } catch (error) {
+      const code =
+        error && typeof error === "object" && "code" in error
+          ? String(error.code)
+          : "";
+      if (code !== "EEXIST") throw error;
+    }
+  }
+
+  throw new Error(`Unable to create a unique temporary file for ${filePath}`);
+}
+
+async function removeAtomicTempFile(tempPath: string): Promise<void> {
+  try {
+    await unlink(tempPath);
+  } catch (error) {
+    const code =
+      error && typeof error === "object" && "code" in error
+        ? String(error.code)
+        : "";
+    if (code !== "ENOENT") throw error;
+  }
+}
+
+/**
+ * Writes a generated file without exposing a partially-written version to the
+ * Next.js dev server or another watcher pass.
+ */
+export async function writeFileAtomic(
+  filePath: string,
+  content: string | Uint8Array,
+): Promise<void> {
+  assertClaimedOutputPath(filePath);
+  await fs.ensureDir(path.dirname(filePath));
+  assertClaimedOutputPath(filePath);
+
+  let handle: FileHandle | undefined;
+  let tempPath: string | undefined;
+  try {
+    ({ handle, tempPath } = await createAtomicTempFile(filePath));
+    if (typeof content === "string") {
+      await handle.writeFile(content, "utf8");
+    } else {
+      await handle.writeFile(content);
+    }
+    await handle.close();
+    handle = undefined;
+    assertClaimedOutputPath(filePath);
+    try {
+      // Atomic replacement on POSIX: the destination is never absent or
+      // partially written, so dev-server watchers see one coherent change.
+      await fs.rename(tempPath, filePath);
+      return;
+    } catch (error) {
+      const code =
+        error && typeof error === "object" && "code" in error
+          ? String(error.code)
+          : "";
+      const windowsReplaceFailure =
+        process.platform === "win32" && (code === "EPERM" || code === "EEXIST");
+      if (!windowsReplaceFailure) throw error;
+      // Windows cannot always rename over an existing destination. fs-extra's
+      // overwrite move is the compatibility fallback for that platform only.
+      await fs.move(tempPath, filePath, { overwrite: true });
+      return;
+    }
+  } catch (error) {
+    if (handle) {
+      try {
+        await handle.close();
+      } catch {
+        // Preserve the original write/open error.
+      }
+    }
+    if (tempPath) {
+      try {
+        await removeAtomicTempFile(tempPath);
+      } catch {
+        // Preserve the original error; cleanup is best effort.
+      }
+    }
+    throw error;
+  }
 }
 
 /**
@@ -126,16 +231,33 @@ export function escapeTemplateContent(content: string): string {
 }
 
 /**
- * gray-matter that never throws: malformed YAML frontmatter is reported as a
- * warning and the file is treated as having no frontmatter, so one typo in a
- * `---` block can't abort a whole build or site-wide aggregation pass. The
- * broken block is stripped from the body best-effort; an unterminated block
- * passes through as-is and the generated app's MDX error panel absorbs it.
+ * YAML-only gray-matter that never throws: unsupported tagged engines and
+ * malformed YAML frontmatter are reported as warnings and treated as having no
+ * frontmatter. The broken block is stripped from the body best-effort; an
+ * unterminated block passes through as-is and the generated app's MDX error
+ * panel absorbs it.
  */
 export function safeMatter(
   raw: string,
   label?: string,
 ): { data: { [key: string]: any }; content: string } {
+  const taggedDelimiter = raw.match(/^\uFEFF?---[^\r\n]+(?:\r?\n|$)/);
+  if (taggedDelimiter) {
+    const where = label ? ` in ${label}` : "";
+    console.warn(
+      chalk.yellow(
+        `⚠️  Unsupported tagged frontmatter${where}; only YAML frontmatter is allowed.`,
+      ),
+    );
+    return {
+      data: {},
+      content: raw.replace(
+        /^\uFEFF?---[^\r\n]+\r?\n[\s\S]*?\r?\n---\r?\n?/,
+        "",
+      ),
+    };
+  }
+
   try {
     const { data, content } = matter(raw);
     return { data, content };

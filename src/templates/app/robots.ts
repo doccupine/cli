@@ -1,29 +1,4 @@
-export const robotsTemplate = (hasSiteUrl: boolean): string => {
-  if (!hasSiteUrl) {
-    return `import type { MetadataRoute } from "next";
-
-export default function robots(): MetadataRoute.Robots {
-  // When the site is password protected, keep every crawler out entirely.
-  if (process.env.SITE_PASSWORD) {
-    return {
-      rules: {
-        userAgent: "*",
-        disallow: "/",
-      },
-    };
-  }
-
-  return {
-    rules: {
-      userAgent: "*",
-      allow: "/",
-    },
-  };
-}
-`;
-  }
-
-  return `import type { MetadataRoute } from "next";
+export const robotsTemplate = `import type { MetadataRoute } from "next";
 import { config } from "@/utils/config";
 
 function resolveBaseUrl(): string | null {
@@ -57,4 +32,3 @@ export default function robots(): MetadataRoute.Robots {
   return rules;
 }
 `;
-};

@@ -14,8 +14,6 @@ jobs:
       - uses: actions/checkout@v7
 
       - uses: pnpm/action-setup@v6
-        with:
-          version: 10
 
       - uses: actions/setup-node@v7
         with:
@@ -23,5 +21,7 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
+      - run: pnpm format:check
       - run: pnpm test
+      - run: pnpm test:package
+      - run: pnpm smoke:generated

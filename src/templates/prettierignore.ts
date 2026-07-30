@@ -6,4 +6,5 @@ package-lock.json
 pnpm-lock.yaml
 pnpm-workspace.yaml
 services/mcp/docs-index.json
+.doccupine-*
 `;

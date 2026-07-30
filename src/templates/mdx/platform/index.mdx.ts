@@ -16,6 +16,7 @@ The Doccupine platform gives you everything you need to create, customize, and h
 
 - **Browser-based editor** for writing and managing your documentation files
 - **One-click publishing** that commits to GitHub and deploys automatically
+- **Agent Sync** to link pages to the code they document and rewrite them when it changes
 - **Visual configuration** for themes, navigation, fonts, links, and more
 - **Custom domains** with automatic HTTPS
 - **AI assistant** built into every deployed site

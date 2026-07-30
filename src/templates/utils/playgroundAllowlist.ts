@@ -2,8 +2,8 @@ export const playgroundAllowlistTemplate = `import allowlistData from "@/service
 
 // A single request-execution target the API playground is permitted to call.
 // Derived at build time from the union of every OpenAPI spec's \`servers\`.
-// \`allowPrivate\` is set ONLY when the spec's own declared server host is itself
-// a loopback/private/metadata literal (the local-dev case).
+// \`allowPrivate\` is set ONLY for a loopback server declared by the spec (the
+// local-development case). Private-network and metadata ranges stay blocked.
 export interface AllowlistEntry {
   scheme: "http" | "https";
   host: string;
@@ -50,7 +50,10 @@ export function matchAllowlistIn(
   // Reject embedded credentials (userinfo) outright.
   if (url.username || url.password) return null;
 
-  const host = url.hostname.toLowerCase().replace(/\\.$/, "");
+  const host = url.hostname
+    .toLowerCase()
+    .replace(/\\.$/, "")
+    .replace(/^\\[|\\]$/g, "");
   const port = url.port ? Number(url.port) : defaultPort(scheme);
 
   for (const entry of entries) {
@@ -58,7 +61,13 @@ export function matchAllowlistIn(
     if (entry.host !== host) continue;
     const entryPort = entry.port ?? defaultPort(entry.scheme);
     if (entryPort !== port) continue;
-    if (entry.basePath && !url.pathname.startsWith(entry.basePath)) continue;
+    if (
+      entry.basePath &&
+      url.pathname !== entry.basePath &&
+      !url.pathname.startsWith(entry.basePath + "/")
+    ) {
+      continue;
+    }
     return entry;
   }
   return null;

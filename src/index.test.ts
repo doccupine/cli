@@ -20,6 +20,9 @@ import { docsTemplate } from "./templates/components/Docs.js";
 const execFileAsync = promisify(execFile);
 const selfPath = fileURLToPath(import.meta.url);
 const distEntry = path.resolve(selfPath, "..", "..", "dist", "index.js");
+if (!fs.pathExistsSync(distEntry)) {
+  throw new Error("Compiled CLI is missing; run `pnpm build` before Vitest");
+}
 
 // A generated app formats with `prettier --write .` and pins prettier ^3.9.6.
 // Tests can't `npm install` the generated app, so we reuse this repo's matching
@@ -188,8 +191,8 @@ describe("isProcessEntrypoint", () => {
   });
 });
 
-// Runs against the compiled output, so it needs a build. CI always runs
-// `pnpm build` before `pnpm test`, and `pnpm install` builds via `prepare`.
+// Runs against compiled output. The test script builds first so these checks
+// can never silently exercise stale output or disappear on a clean checkout.
 describe.skipIf(!fs.pathExistsSync(distEntry))(
   "compiled CLI entrypoint",
   () => {
@@ -219,7 +222,7 @@ describe.skipIf(!fs.pathExistsSync(distEntry))(
 // A generated Doccupine app ships a `format` script (`prettier --write .`).
 // This builds a real app from the templates and asserts it is already
 // Prettier-clean - i.e. running that script is a no-op - so every template
-// emits format-stable output. Skipped unless the CLI is built (dist present).
+// emits format-stable output. The test script builds dist before Vitest runs.
 describe.skipIf(!fs.pathExistsSync(distEntry))(
   "generated site is prettier-clean",
   () => {
@@ -243,7 +246,14 @@ describe.skipIf(!fs.pathExistsSync(distEntry))(
                 schema: { type: "string" },
               },
             ],
-            responses: { "200": { description: "OK" } },
+            responses: {
+              "200": {
+                description: "OK",
+                content: {
+                  "application/json": { example: { id: "OL123W" } },
+                },
+              },
+            },
           },
         },
         "/notes": {
@@ -297,19 +307,26 @@ describe.skipIf(!fs.pathExistsSync(distEntry))(
         );
         // ...and the spec must have produced an endpoint page, so the format
         // check actually covers the synthetic API-page output.
-        expect(
-          await fs.pathExists(
-            path.join(
-              outDir,
-              "app",
-              "(site)",
-              "api-reference",
-              "admin",
-              "getworkbyid",
-              "page.tsx",
-            ),
-          ),
-        ).toBe(true);
+        const endpointPagePath = path.join(
+          outDir,
+          "app",
+          "(site)",
+          "api-reference",
+          "admin",
+          "getworkbyid",
+          "page.tsx",
+        );
+        expect(await fs.pathExists(endpointPagePath)).toBe(true);
+        expect(await fs.readFile(endpointPagePath, "utf8")).toContain(
+          '<Code language="json" code={',
+        );
+        const apiIndex = await fs.readFile(
+          path.join(outDir, "app", "(site)", "api-reference", "page.tsx"),
+          "utf8",
+        );
+        expect(apiIndex).not.toContain("redirect(");
+        expect(apiIndex).toContain('href={"/api-reference/admin/getworkbyid"}');
+        expect(apiIndex).toContain('href={"/api-reference/notes/createnote"}');
         // The starting docs ship an <Update> page with `rss: true`, so the
         // format check also covers the generated feed route and the RSS-button
         // page shape.
@@ -335,6 +352,45 @@ describe.skipIf(!fs.pathExistsSync(distEntry))(
               `rewrite files:\n${e.stdout ?? ""}${e.stderr ?? ""}`,
           );
         }
+        expect(stdout).toContain("All matched files use Prettier code style!");
+      } finally {
+        await fs.remove(projectDir);
+      }
+    }, 120_000);
+
+    it("keeps a one-page artifact manifest out of generated formatting", async () => {
+      const projectDir = await fs.mkdtemp(
+        path.join(os.tmpdir(), "doccupine-fmt-one-page-"),
+      );
+      try {
+        await fs.writeJson(path.join(projectDir, "doccupine.json"), {
+          watchDir: "docs",
+          outputDir: "out",
+          port: "3000",
+        });
+        await fs.outputFile(
+          path.join(projectDir, "docs", "index.mdx"),
+          "---\ntitle: Home\n---\n# Home\n",
+        );
+
+        await execFileAsync(process.execPath, [distEntry, "build"], {
+          cwd: projectDir,
+          maxBuffer: 20 * 1024 * 1024,
+        });
+
+        const outDir = path.join(projectDir, "out");
+        await expect(
+          fs.readFile(path.join(outDir, ".doccupine-artifacts.json"), "utf8"),
+        ).resolves.toContain('"index.md"');
+        await expect(
+          fs.readFile(path.join(outDir, ".prettierignore"), "utf8"),
+        ).resolves.toContain(".doccupine-*");
+
+        const { stdout } = await execFileAsync(
+          process.execPath,
+          [prettierCli, "--check", "."],
+          { cwd: outDir, maxBuffer: 20 * 1024 * 1024 },
+        );
         expect(stdout).toContain("All matched files use Prettier code style!");
       } finally {
         await fs.remove(projectDir);
@@ -585,3 +641,87 @@ describe.skipIf(!fs.pathExistsSync(distEntry))("MDX error resilience", () => {
     }
   }, 120_000);
 });
+
+describe.skipIf(!fs.pathExistsSync(distEntry))(
+  "generation safety invariants",
+  () => {
+    it("fails with both source paths when MDX routes collide", async () => {
+      const projectDir = await fs.mkdtemp(
+        path.join(os.tmpdir(), "doccupine-collision-"),
+      );
+      try {
+        await fs.writeJson(path.join(projectDir, "doccupine.json"), {
+          watchDir: "docs",
+          outputDir: "out",
+          port: "3000",
+        });
+        await fs.outputFile(
+          path.join(projectDir, "docs", "index.mdx"),
+          "---\ntitle: Home\n---\n# Home\n",
+        );
+        await fs.outputFile(
+          path.join(projectDir, "docs", "guide.mdx"),
+          "---\ntitle: Guide\n---\n# Guide\n",
+        );
+        await fs.outputFile(
+          path.join(projectDir, "docs", "guide", "index.mdx"),
+          "---\ntitle: Other guide\n---\n# Other\n",
+        );
+
+        let stderr = "";
+        try {
+          await execFileAsync(process.execPath, [distEntry, "build"], {
+            cwd: projectDir,
+          });
+          throw new Error("Expected route collision to fail generation");
+        } catch (error) {
+          stderr = (error as { stderr?: string }).stderr ?? "";
+        }
+        expect(stderr).toContain("Route collision");
+        expect(stderr).toContain('"guide.mdx"');
+        expect(stderr).toContain('"guide/index.mdx"');
+      } finally {
+        await fs.remove(projectDir);
+      }
+    });
+
+    it("refuses to overwrite an unrelated non-empty output directory", async () => {
+      const projectDir = await fs.mkdtemp(
+        path.join(os.tmpdir(), "doccupine-output-refusal-"),
+      );
+      try {
+        await fs.writeJson(path.join(projectDir, "doccupine.json"), {
+          watchDir: "docs",
+          outputDir: "existing",
+          port: "3000",
+        });
+        await fs.outputFile(
+          path.join(projectDir, "docs", "index.mdx"),
+          "# Home\n",
+        );
+        await fs.outputFile(
+          path.join(projectDir, "existing", "important.txt"),
+          "keep me",
+        );
+
+        await expect(
+          execFileAsync(process.execPath, [distEntry, "build"], {
+            cwd: projectDir,
+          }),
+        ).rejects.toMatchObject({
+          stderr: expect.stringContaining(
+            "Refusing to overwrite non-empty directory",
+          ),
+        });
+        expect(
+          await fs.readFile(
+            path.join(projectDir, "existing", "important.txt"),
+            "utf8",
+          ),
+        ).toBe("keep me");
+      } finally {
+        await fs.remove(projectDir);
+      }
+    });
+  },
+);

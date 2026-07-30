@@ -26,8 +26,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
-.env*.local
+# environment files may contain provider and API secrets
+.env*
+!.env.example
 
 # vercel
 .vercel
@@ -36,8 +37,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-.env
 .vscode
+.doccupine-*
 
 # generated build artifact (precomputed embeddings)
 services/mcp/docs-index.json

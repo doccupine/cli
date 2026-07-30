@@ -7,13 +7,21 @@
     "doccupine": "dist/index.js"
   },
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@11.18.0",
   "scripts": {
-    "build": "tsc",
+    "clean": "node scripts/clean.mjs",
+    "build": "pnpm clean && tsc",
     "dev": "tsc --watch",
     "start": "node dist/index.js",
-    "prepare": "tsc",
-    "test": "vitest run",
-    "format": "prettier --write ."
+    "prepare": "node scripts/clean.mjs && tsc",
+    "test": "pnpm build && vitest run",
+    "test:package": "pnpm build && node scripts/verify-package.mjs",
+    "smoke:generated": "node scripts/smoke-generated-site.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "keywords": [
     "doccupine",
@@ -40,10 +48,7 @@
     "commander": "^15.0.0",
     "fs-extra": "^11.4.0",
     "gray-matter": "^4.0.3",
-    "next": "^16.2.12",
-    "prompts": "^2.4.2",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "prompts": "^2.4.2"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",

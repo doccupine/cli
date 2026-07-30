@@ -1,6 +1,7 @@
 export const searchRoutesTemplate = `import { NextResponse } from "next/server";
 import { z } from "zod";
 import { searchContent } from "@/services/search";
+import { isSiteRequestAuthorized } from "@/lib/access";
 
 const searchSchema = z.object({
   q: z.string().min(1).max(200),
@@ -8,6 +9,10 @@ const searchSchema = z.object({
 });
 
 export async function GET(req: Request) {
+  if (!(await isSiteRequestAuthorized())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const url = new URL(req.url);
   const limitParam = url.searchParams.get("limit");
   const parsed = searchSchema.safeParse({

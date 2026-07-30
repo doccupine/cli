@@ -1,7 +1,7 @@
 export const accordionTemplate = `"use client";
 import { useId, useState } from "react";
 import styled, { css } from "styled-components";
-import { styledText } from "cherry-styled-components";
+import { Button, resetButton, styledText } from "cherry-styled-components";
 import { Theme } from "@/app/theme";
 import { Icon } from "@/components/layout/Icon";
 
@@ -15,7 +15,11 @@ const StyledAccordion = styled.div<{ theme: Theme }>\`
   width: 100%;
 \`;
 
-const StyledAccordionTitle = styled.button<{ theme: Theme; $isOpen: boolean }>\`
+const StyledAccordionTitle = styled(Button)<{
+  theme: Theme;
+  $isOpen: boolean;
+}>\`
+  \${resetButton};
   appearance: none;
   display: block;
   width: 100%;
@@ -34,6 +38,12 @@ const StyledAccordionTitle = styled.button<{ theme: Theme; $isOpen: boolean }>\`
 
   &:hover {
     color: \${({ theme }) => theme.colors.primaryDark};
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-radius: \${({ theme }) => theme.spacing.radius.xs};
+    box-shadow: 0 0 0 2px \${({ theme }) => theme.colors.primaryLight};
   }
 
   & .lucide-chevron-down {
@@ -69,6 +79,10 @@ const StyledAccordionContent = styled.div<{ theme: Theme; $isOpen: boolean }>\`
       margin: 20px 0 0;
       height: auto;
     \`}
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 \`;
 
 interface AccordionProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -80,10 +94,12 @@ interface AccordionProps extends React.HTMLAttributes<HTMLDivElement> {
 function Accordion({ children, title, defaultOpen = false }: AccordionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const contentId = useId();
+  const titleId = useId();
 
   return (
     <StyledAccordion>
       <StyledAccordionTitle
+        id={titleId}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         $isOpen={isOpen}
@@ -92,7 +108,14 @@ function Accordion({ children, title, defaultOpen = false }: AccordionProps) {
       >
         {title} <Icon name="ChevronDown" />
       </StyledAccordionTitle>
-      <StyledAccordionContent id={contentId} role="region" $isOpen={isOpen}>
+      <StyledAccordionContent
+        id={contentId}
+        role="region"
+        aria-labelledby={titleId}
+        aria-hidden={!isOpen}
+        inert={!isOpen}
+        $isOpen={isOpen}
+      >
         {children}
       </StyledAccordionContent>
     </StyledAccordion>

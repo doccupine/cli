@@ -122,8 +122,8 @@ export interface OperationDescriptor {
  * A single entry in the request-execution allowlist emitted at build time from
  * the union of every spec's `servers[]`. The proxy route (server) and the
  * playground component (client) both read this to decide whether a target URL
- * may be called. `allowPrivate` is set ONLY when the spec's own declared server
- * host is itself a loopback/private/metadata literal (the local-dev case).
+ * may be called. `allowPrivate` is set ONLY for an explicit loopback server
+ * (the local-development case); other private and metadata targets stay blocked.
  */
 export interface AllowlistEntry {
   scheme: "http" | "https";

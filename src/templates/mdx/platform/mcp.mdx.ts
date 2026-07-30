@@ -2,6 +2,7 @@ export const platformMcpMdxTemplate = `---
 title: "MCP"
 description: "Connect external AI apps like Claude and Cursor to your documentation with a Model Context Protocol server, and protect it with an API key."
 date: "2026-07-12"
+updated: "2026-07-30"
 category: "AI & Integrations"
 categoryOrder: 3
 order: 1
@@ -35,7 +36,7 @@ Every snippet points to your site's own MCP endpoint, for example:
 
 ## MCP server authentication
 
-By default your MCP endpoint is publicly accessible. You can restrict access with an API key:
+On a public site, the MCP endpoint is publicly accessible by default. When the site is [password protected](/platform/authentication), MCP requires the same session unless you configure its dedicated API key:
 
 1. Enable **Require API key for MCP access**.
 2. Enter an API key.

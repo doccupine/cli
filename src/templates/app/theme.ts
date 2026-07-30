@@ -40,11 +40,10 @@ const spacing: Spacing = {
   gridGap: { xs: "20px", lg: "40px" },
 };
 
-// Resolved hex palettes for each mode. They feed the literal \`theme\` /
-// \`themeDark\` objects below (swapped by Cherry's ClientThemeProvider) and
-// GlobalStyles, which also emits them as CSS custom properties on :root and
-// :root.dark for plain-CSS consumers. Custom theme.json overrides are merged
-// here, so both consumers pick them up automatically.
+// Resolved hex palettes for each mode. GlobalStyles emits them as CSS custom
+// properties, one block per mode, and that is where every painted color
+// actually comes from — the theme objects below only reference those variables.
+// Custom theme.json overrides are merged here, so they flow through both.
 export const colorsLight: CustomColors = {
   primaryLight: "#d1d5db",
   primary: "#556272",
@@ -170,11 +169,9 @@ const lineHeights: LineHeights = {
 };
 
 // Builds the full Colors record for a mode: the resolved brand palette plus
-// the semantic tokens derived from it. Cherry's ClientThemeProvider swaps
-// whole theme objects on toggle, so components read literal values here —
-// the CSS variables emitted by GlobalStyles stay in sync via the "dark"
-// class for plain-CSS consumers (e.g. Callout's / Code's :root.dark blocks).
-// Exported so DemoTheme can derive preset themes with the same rules.
+// the semantic tokens derived from it. Used here only as the key template for
+// the CSS-variable theme below; the resolved values themselves are emitted as
+// custom properties by GlobalStyles.
 export function buildColors(palette: CustomColors, isDark: boolean): Colors {
   const accent = isDark ? palette.primaryLight : palette.primaryDark;
   return {
@@ -187,11 +184,32 @@ export function buildColors(palette: CustomColors, isDark: boolean): Colors {
   };
 }
 
+// Maps every key of a token record to the CSS custom property that holds its
+// value, keeping the record's exact shape. Passing the resolved light objects
+// as templates means a new token can never be forgotten here.
+function cssVarTokens<T extends object>(prefix: string, template: T): T {
+  return Object.fromEntries(
+    Object.keys(template).map((key) => [key, \`var(--\${prefix}-\${key})\`]),
+  ) as T;
+}
+
+// Every painted color and shadow resolves through a CSS custom property rather
+// than a literal, so the CSS styled-components generates is identical in light
+// and dark mode. That is what makes a statically rendered page paint the right
+// theme on its first frame: the data-theme attribute the blocking script in the
+// root layout stamps on <html> before paint selects the variable block, and
+// nothing has to wait for hydration to swap a theme object. \`theme\` and
+// \`themeDark\` therefore differ only in \`isDark\`, which Cherry's
+// ClientThemeProvider reads to persist the choice, and which
+// ThemeModeAttribute mirrors back onto the attribute.
+const colors = cssVarTokens("color", buildColors(colorsLight, false));
+const shadows = cssVarTokens("shadow", shadowsLight);
+
 export const theme: Theme = {
   breakpoints,
   spacing,
-  colors: buildColors(colorsLight, false),
-  shadows: shadowsLight,
+  colors,
+  shadows,
   fonts,
   fontSizes,
   lineHeights,
@@ -199,13 +217,7 @@ export const theme: Theme = {
 };
 
 export const themeDark: Theme = {
-  breakpoints,
-  spacing,
-  colors: buildColors(colorsDark, true),
-  shadows: shadowsDark,
-  fonts,
-  fontSizes,
-  lineHeights,
+  ...theme,
   isDark: true,
 };
 

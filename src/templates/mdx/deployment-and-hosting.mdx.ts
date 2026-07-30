@@ -61,7 +61,7 @@ Doccupine generates a standard Next.js app, so you can deploy it anywhere that s
 
 ### Sitemap and robots.txt
 
-Doccupine generates \`sitemap.xml\` and \`robots.txt\` automatically when you set a site URL. This is required for search engine indexing and is strongly recommended for any public deployment.
+Doccupine always generates \`sitemap.xml\` and \`robots.txt\`. Set a public site URL so the sitemap can list your pages as absolute URLs and \`robots.txt\` can advertise it to search engines.
 
 Set the URL in \`config.json\`:
 
@@ -77,7 +77,7 @@ At deploy time, you can override the value with the \`NEXT_PUBLIC_SITE_URL\` env
 NEXT_PUBLIC_SITE_URL=https://staging.example.com
 \`\`\`
 
-The generated sitemap includes every page from every [section](/sections), with \`lastModified\` derived from each page's frontmatter \`date\` or the file's modification time. When no URL is configured, the sitemap is skipped and \`robots.txt\` is emitted without a sitemap reference.
+The generated sitemap includes every page from every [section](/sections), with \`lastModified\` derived from each page's frontmatter \`updated\` value, then \`date\`, then the file's modification time. When no URL is configured, \`/sitemap.xml\` is still served but stays empty, and \`robots.txt\` omits its sitemap reference until a public URL is available. Set the variable before the build - it is baked into the deployed app, so a change to it needs a redeploy.
 
 ### Troubleshooting
 

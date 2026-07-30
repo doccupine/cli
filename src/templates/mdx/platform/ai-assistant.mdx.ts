@@ -2,6 +2,7 @@ export const platformAiAssistantMdxTemplate = `---
 title: "AI Assistant"
 description: "Configure the built-in AI assistant that ships with every Doccupine documentation site."
 date: "2026-02-19"
+updated: "2026-07-30"
 category: "AI & Integrations"
 categoryOrder: 3
 categoryIcon: "sparkles"
@@ -59,6 +60,28 @@ Completely disables the AI assistant on your site.
 
 <Callout type="warning">
   AI settings are stored as environment variables on your deployment, not in a JSON file. After saving, a redeploy is triggered automatically to apply the changes.
+</Callout>
+
+## AI endpoint authentication
+
+Your site's chat endpoint (\`/api/rag\`) is public by default, in the same way your documentation is. That means anyone who finds the endpoint can send it questions, and every question spends from your AI budget. On a site you expect to be found, it is worth deciding deliberately whether that is what you want.
+
+To require a key:
+
+1. Enable **Require API key for AI chat** in the Authentication card.
+2. Enter an API key.
+3. Save.
+
+Clients must then send the key as a Bearer token in the \`Authorization\` header of every request to \`/api/rag\`.
+
+<Callout type="warning">
+  On a public site, turning this on also stops the chat widget on your own documentation from answering visitors. A browser cannot safely hold a server secret, so there is nowhere for the page to keep the key - only API clients that send the Bearer token get answers.
+</Callout>
+
+If you want readers to keep using the assistant while still closing the endpoint to strangers, protect the whole site with a password instead - see [Authentication](/platform/authentication). Readers who have unlocked the site keep chatting as normal, and the API key becomes a second way in for programmatic clients rather than a replacement for the first.
+
+<Callout type="note">
+  The key is stored as an environment variable (\`RAG_API_KEY\`) on your deployment. After saving, a redeploy is triggered automatically to apply the change. See [Authentication](/authentication) for how the site gate, \`RAG_API_KEY\`, and \`DOCS_API_KEY\` interact.
 </Callout>
 
 <Callout type="note">

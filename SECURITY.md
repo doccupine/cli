@@ -41,8 +41,9 @@ Please include:
 
 Doccupine is a CLI that generates a Next.js application you run and host yourself. A few points matter when assessing the security surface:
 
-- **API keys and secrets** - the generated app reads provider keys (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`), an optional `DOCS_API_KEY`, and an optional `SITE_PASSWORD` from environment variables. These belong in the generated app's `.env` file, which is git-ignored by default. Never commit real keys.
-- **MCP endpoint** - the `/api/mcp` route requires a bearer token only when `DOCS_API_KEY` is set. If `DOCS_API_KEY` is not set, the endpoint is publicly accessible with no authentication. Set `DOCS_API_KEY` before exposing the generated site publicly.
+- **API keys and secrets** - the generated app reads provider keys (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`), optional endpoint keys (`RAG_API_KEY`, `DOCS_API_KEY`), and an optional `SITE_PASSWORD` from environment variables. These belong in the generated app's `.env` file, which is git-ignored by default. Never commit real keys.
+- **Paid RAG endpoint** - public documentation leaves `/api/rag` available to the browser assistant by default. Set `RAG_API_KEY` to require a bearer token and prevent anonymous model spend on a public site. Because the browser cannot safely hold this secret, use `SITE_PASSWORD` instead when authenticated browser visitors need the built-in assistant.
+- **MCP endpoint** - the `/api/mcp` route requires a bearer token when `DOCS_API_KEY` is set. Without `DOCS_API_KEY`, it falls back to the site gate: a configured `SITE_PASSWORD` requires a valid gate session, while an intentionally public site leaves MCP public. Set `DOCS_API_KEY` for independent server-to-server authentication.
 - **Site password** - `SITE_PASSWORD` gates the whole site behind a single shared password. It is a lightweight access gate, not a substitute for per-user authentication.
 - **Generated output** - review generated code before deploying to production, especially if you customize templates.
 

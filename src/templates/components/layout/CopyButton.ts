@@ -9,7 +9,7 @@ import { Icon } from "@/components/layout/Icon";
    the code block: interactiveStyles supplies the border highlight on hover plus
    the focus/active rings, and the icon swaps to a check in success green for two
    seconds after a successful copy. Theme tokens swap for dark mode on their own,
-   so no :root.dark override is needed. */
+   so no :root[data-theme="dark"] override is needed. */
 const StyledCopyButton = styled.button<{ theme: Theme; $copied: boolean }>\`
   \${resetButton}
   \${interactiveStyles}

@@ -81,4 +81,7 @@ Doccupine includes a rich set of built-in components you can use directly in you
   <Card title="Mermaid" icon="workflow" href="/mermaid">
     Flowcharts, sequence diagrams, and other visualizations from Mermaid syntax.
   </Card>
+  <Card title="Space" icon="move-vertical" href="/space">
+    Precise vertical or horizontal gaps, with per-breakpoint control.
+  </Card>
 </Columns>`;

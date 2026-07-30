@@ -1,5 +1,5 @@
 export const sideBarTemplate = `"use client";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useId, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Flex, Space, ThemeToggle } from "cherry-styled-components";
 import { httpMethodBadgeColor } from "@/components/layout/Badge";
@@ -70,6 +70,7 @@ function SidebarNavLink({
   const href = link.slug !== undefined ? \`/\${link.slug}\` : undefined;
   const isActive = href !== undefined && pathname === href;
   const indent = { paddingLeft: \`\${20 + depth * 14}px\` };
+  const groupContentId = useId();
 
   // Open collapsible groups that contain the active page so deep links land
   // with their ancestors already expanded.
@@ -132,6 +133,7 @@ function SidebarNavLink({
             type="button"
             onClick={toggle}
             aria-expanded={isOpen}
+            aria-controls={groupContentId}
             aria-label={toggleLabel}
           >
             <Icon name="chevron-right" size={16} />
@@ -145,6 +147,7 @@ function SidebarNavLink({
           $isOpen={isOpen}
           style={indent}
           aria-expanded={isOpen}
+          aria-controls={groupContentId}
           aria-label={toggleLabel}
         >
           {link.icon && <Icon name={link.icon} size={16} />}
@@ -152,7 +155,7 @@ function SidebarNavLink({
           <Icon name="chevron-right" size={16} />
         </StyledSidebarGroupButton>
       )}
-      <StyledSidebarGroupContent $isOpen={isOpen}>
+      <StyledSidebarGroupContent id={groupContentId} $isOpen={isOpen}>
         {children.map((child: NavItemLink, index: number) => (
           <SidebarNavLink
             key={index}
@@ -171,6 +174,7 @@ function SideBar({ result }: SideBarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const hasSectionBar = useContext(SectionBarContext);
   const pathname = usePathname();
+  const sidebarId = useId();
   const navRef = useRef<HTMLElement>(null);
   const footerRef = useRef<HTMLDivElement>(null);
 
@@ -227,11 +231,13 @@ function SideBar({ result }: SideBarProps) {
           isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"
         }
         aria-expanded={isMobileMenuOpen}
+        aria-controls={sidebarId}
       >
         <StyledMobileBurger $isActive={isMobileMenuOpen} />
       </StyleMobileBar>
 
       <StyledSidebar
+        id={sidebarId}
         ref={navRef}
         $isActive={isMobileMenuOpen}
         $hasSectionBar={hasSectionBar}

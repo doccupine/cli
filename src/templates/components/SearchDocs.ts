@@ -97,6 +97,7 @@ function SearchProvider({
   const [isClosing, setIsClosing] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
+  const [returnFocusTo, setReturnFocusTo] = useState<HTMLElement | null>(null);
   // Latest completed content search, keyed by the query that produced it.
   // contentResults and isSearching are derived from it at render time, so
   // the debounced-search effect never sets state synchronously (which would
@@ -107,10 +108,14 @@ function SearchProvider({
   } | null>(null);
   const resultsRef = useRef<HTMLUListElement>(null);
   const closingRef = useRef(false);
+  const isVisibleRef = useRef(false);
+  const searchOpenerRef = useRef<HTMLElement | null>(null);
+  const restoreSearchFocusRef = useRef(true);
   const abortRef = useRef<AbortController | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
   const router = useRouter();
-  const { isChatActive, askAssistant } = useContext(ChatContext);
+  const { isChatActive, askAssistant, closeChat, registerSearchClose } =
+    useContext(ChatContext);
 
   const sectionLabels = useMemo(() => {
     const map: Record<string, string> = {};
@@ -121,10 +126,23 @@ function SearchProvider({
   }, [sections]);
 
   const openSearch = useCallback(() => {
+    const previousOverlayOpener = closeChat(false);
     closingRef.current = false;
+    restoreSearchFocusRef.current = true;
+    const activeElement = document.activeElement;
+    const opener =
+      previousOverlayOpener?.isConnected === true
+        ? previousOverlayOpener
+        : activeElement instanceof HTMLElement &&
+            activeElement !== document.body
+          ? activeElement
+          : null;
+    searchOpenerRef.current = opener;
+    setReturnFocusTo(opener);
+    isVisibleRef.current = true;
     setIsClosing(false);
     setIsVisible(true);
-  }, []);
+  }, [closeChat]);
 
   const closeSearch = useCallback(() => {
     closingRef.current = true;
@@ -133,15 +151,53 @@ function SearchProvider({
     if (debounceRef.current) clearTimeout(debounceRef.current);
   }, []);
 
+  const shouldRestoreSearchFocus = useCallback(
+    () => restoreSearchFocusRef.current,
+    [],
+  );
+
   const handleCloseAnimationEnd = useCallback(() => {
     if (!closingRef.current) return;
     closingRef.current = false;
+    isVisibleRef.current = false;
     setIsVisible(false);
     setIsClosing(false);
     setQuery("");
     setActiveIndex(0);
     setFetched(null);
+    searchOpenerRef.current = null;
+    setReturnFocusTo(null);
   }, []);
+
+  const closeSearchImmediately = useCallback((restoreFocus = true) => {
+    if (!isVisibleRef.current) return null;
+    restoreSearchFocusRef.current = restoreFocus;
+    const opener = searchOpenerRef.current;
+    searchOpenerRef.current = null;
+    setReturnFocusTo(null);
+    closingRef.current = false;
+    isVisibleRef.current = false;
+    if (abortRef.current) abortRef.current.abort();
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const activeElement = document.activeElement;
+    if (
+      activeElement instanceof HTMLElement &&
+      activeElement.closest("[data-search-dialog]")
+    ) {
+      activeElement.blur();
+    }
+    setIsVisible(false);
+    setIsClosing(false);
+    setQuery("");
+    setActiveIndex(0);
+    setFetched(null);
+    return opener;
+  }, []);
+
+  useEffect(
+    () => registerSearchClose(closeSearchImmediately),
+    [closeSearchImmediately, registerSearchClose],
+  );
 
   const trimmedQuery = query.trim();
   const contentResults =
@@ -263,17 +319,11 @@ function SearchProvider({
   const askAssistantWithQuery = useCallback(() => {
     const q = query.trim();
     if (!q) return;
-    askAssistant(q);
-    closeSearch();
-  }, [query, askAssistant, closeSearch]);
+    const opener = closeSearchImmediately(false);
+    askAssistant(q, opener);
+  }, [query, askAssistant, closeSearchImmediately]);
 
   // Global Cmd+K / Ctrl+K listener
-  const isVisibleRef = useRef(false);
-
-  useEffect(() => {
-    isVisibleRef.current = isVisible;
-  }, [isVisible]);
-
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -335,6 +385,8 @@ function SearchProvider({
           navigate={navigate}
           canAskAssistant={isChatActive}
           onAskAssistant={askAssistantWithQuery}
+          shouldRestoreFocus={shouldRestoreSearchFocus}
+          returnFocusTo={returnFocusTo}
         />
       )}
     </SearchContext.Provider>

@@ -40,22 +40,24 @@ All fields are optional. Doccupine uses sensible defaults when a field is not se
 - **description**: A concise summary of your project, used in site metadata (e.g., HTML meta description) and social previews when not overridden.
 - **icon**: The favicon for your site. You can provide a full URL or a relative path to an asset in your project.
 - **image**: The Open Graph image used when links to your docs are shared on social platforms. Accepts a full URL or a relative path.
-- **url**: The public URL of your deployed site. Used as the base URL for \`sitemap.xml\` and \`robots.txt\`. When omitted, no sitemap is generated. Can be overridden at deploy time with the \`NEXT_PUBLIC_SITE_URL\` environment variable.
+- **url**: The public URL of your deployed site. Used as the base URL for \`sitemap.xml\` and \`robots.txt\`. When omitted, \`/sitemap.xml\` is served but empty and \`robots.txt\` omits its sitemap reference. Can be overridden at deploy time with the \`NEXT_PUBLIC_SITE_URL\` environment variable.
 
 ## Per-page overrides
 
 Any page can override global values by defining the matching key in its frontmatter. When present, the page's value takes precedence over \`config.json\` for that page only.
 
-| Frontmatter field | Overrides     | Effect                                                      |
-| ----------------- | ------------- | ----------------------------------------------------------- |
-| **title**         | -             | Page title in metadata and Open Graph                       |
-| **description**   | \`description\` | Meta description and Open Graph description                 |
-| **name**          | \`name\`        | Site name shown in the title suffix (e.g. "Page - My Docs") |
-| **icon**          | \`icon\`        | Favicon for this page                                       |
-| **image**         | \`image\`       | Open Graph preview image                                    |
-| **section**       | -             | Assigns the page to a [section](/sections)                  |
-| **sectionOrder**  | -             | Controls section position in the tab bar                    |
-| **sectionLabel**  | -             | Renames the default "Docs" tab (use on \`index.mdx\`)         |
+| Frontmatter field | Overrides     | Effect                                                              |
+| ----------------- | ------------- | ------------------------------------------------------------------- |
+| **title**         | -             | Page title in metadata and Open Graph                               |
+| **description**   | \`description\` | Meta description and Open Graph description                         |
+| **name**          | \`name\`        | Site name shown in the title suffix (e.g. "Page - My Docs")         |
+| **icon**          | \`icon\`        | Favicon for this page                                               |
+| **image**         | \`image\`       | Open Graph preview image                                            |
+| **date**          | -             | Publication date, used for JSON-LD \`datePublished\`                  |
+| **updated**       | -             | Last-modified date, used for JSON-LD \`dateModified\` and the sitemap |
+| **section**       | -             | Assigns the page to a [section](/sections)                          |
+| **sectionOrder**  | -             | Controls section position in the tab bar                            |
+| **sectionLabel**  | -             | Renames the default "Docs" tab (use on \`index.mdx\`)                 |
 
 <Callout type="note">
   If a key is not specified in a page's frontmatter, Doccupine falls back to the corresponding value in \`config.json\`.
@@ -71,6 +73,7 @@ name: "My Product Docs"
 icon: "/custom-favicon.ico"
 image: "/custom-preview.png"
 date: "2026-02-19"
+updated: "2026-03-04"
 category: "Guides"
 ---
 \`\`\``;

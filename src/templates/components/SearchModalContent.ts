@@ -42,6 +42,8 @@ export interface SearchModalContentProps {
   ) => void;
   canAskAssistant: boolean;
   onAskAssistant: () => void;
+  shouldRestoreFocus: () => boolean;
+  returnFocusTo: HTMLElement | null;
 }
 
 const ANIMATION_MS = 300;
@@ -133,6 +135,14 @@ const StyledInput = styled.input<{ theme: Theme }>\`
   &::placeholder {
     color: \${({ theme }) => theme.colors.gray};
   }
+
+  /* type="search" gets the platform clear button, which duplicates the modal's
+     own close control and sits at a size and color we do not control. */
+  &::-webkit-search-cancel-button,
+  &::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+  }
 \`;
 
 // "Ask AI" affordance shown before the close button when the AI chat is
@@ -211,21 +221,20 @@ const StyledResults = styled.ul<{ theme: Theme }>\`
   -webkit-overflow-scrolling: touch;
   \${thinScrollbar};
 
-  /* The results list is a keyboard-focusable scroll container; frame it with
-     the app focus ring (inset so it hugs the visible viewport and isn't clipped
-     by the scroll overflow) instead of the browser's default outline. */
-  &:focus-visible {
-    outline: none;
-    border-radius: \${({ theme }) => theme.spacing.radius.xs};
-    box-shadow: inset 0 0 0 2px \${({ theme }) => theme.colors.primaryLight};
+  &[hidden] {
+    display: none;
   }
 \`;
 
 // Single indicator that slides between result items instead of each item
-// fading its own background in and out. Positioned/sized inline from the active
-// item's measured offset (see the layout effect below); the transition on
+// fading its own background in and out. Positioned/sized from the active item's
+// measured offset (see the layout effect below); the transition on
 // transform + height produces the up/down glide as the active item changes.
-const StyledHighlight = styled.div<{ theme: Theme }>\`
+const StyledHighlight = styled.div<{
+  theme: Theme;
+  $top: number;
+  $height: number;
+}>\`
   position: absolute;
   left: 8px;
   right: 8px;
@@ -239,6 +248,8 @@ const StyledHighlight = styled.div<{ theme: Theme }>\`
     transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
     height 0.2s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform, height;
+  transform: translateY(\${({ $top }) => $top}px);
+  height: \${({ $height }) => $height}px;
 
   @media (prefers-reduced-motion: reduce) {
     transition: none;
@@ -251,6 +262,11 @@ const StyledResultItem = styled.li<{ theme: Theme; $isActive: boolean }>\`
   padding: 10px 12px;
   border-radius: \${({ theme }) => theme.spacing.radius.xs};
   cursor: pointer;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px \${({ theme }) => theme.colors.primaryLight};
+  }
 
   \${({ $isActive, theme }) =>
     $isActive &&
@@ -301,9 +317,24 @@ const StyledEmpty = styled.div<{ theme: Theme }>\`
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Separates the spinner from "Searching documentation..."; the whitespace
+     between them in the markup collapses away as an anonymous flex item. */
+  gap: 8px;
   text-align: center;
   font-size: \${({ theme }) => theme.fontSizes.small.lg};
   color: \${({ theme }) => theme.colors.gray};
+\`;
+
+const StyledLiveStatus = styled.div\`
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 \`;
 
 function escapeHtml(str: string): string {
@@ -341,7 +372,79 @@ export function SearchModalContent({
   navigate,
   canAskAssistant,
   onAskAssistant,
+  shouldRestoreFocus,
+  returnFocusTo,
 }: SearchModalContentProps) {
+  const dialogRef = React.useRef<HTMLDivElement | null>(null);
+  const inputRef = React.useRef<HTMLInputElement | null>(null);
+  const previouslyFocusedRef = React.useRef<HTMLElement | null>(
+    returnFocusTo?.isConnected === true
+      ? returnFocusTo
+      : typeof document === "undefined"
+        ? null
+        : (document.activeElement as HTMLElement | null),
+  );
+  const listboxId = React.useId();
+  const optionId = (index: number) => listboxId + "-option-" + index;
+
+  React.useEffect(() => {
+    const previouslyFocused = previouslyFocusedRef.current;
+    const containFocus = (event: FocusEvent) => {
+      if (
+        event.target instanceof Node &&
+        !dialogRef.current?.contains(event.target)
+      ) {
+        inputRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("focusin", containFocus);
+    inputRef.current?.focus();
+
+    return () => {
+      document.removeEventListener("focusin", containFocus);
+      if (shouldRestoreFocus() && previouslyFocused?.isConnected) {
+        previouslyFocused.focus();
+      }
+    };
+  }, [shouldRestoreFocus]);
+
+  const handleDialogKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      closeSearch();
+      return;
+    }
+
+    if (event.key !== "Tab") return;
+
+    const focusable = Array.from(
+      dialogRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ) ?? [],
+    ).filter(
+      (element) =>
+        element.offsetParent !== null &&
+        element.getAttribute("aria-hidden") !== "true",
+    );
+
+    if (focusable.length === 0) {
+      event.preventDefault();
+      return;
+    }
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
   // Measure the active item so the sliding highlight can be placed over it.
   // useLayoutEffect runs before paint, so the first position is committed
   // without a transition (no slide-in on open); later activeIndex/hover
@@ -397,11 +500,21 @@ export function SearchModalContent({
         if (e.target === e.currentTarget) onCloseAnimationEnd();
       }}
     >
-      <StyledModal $isClosing={isClosing} onClick={(e) => e.stopPropagation()}>
+      <StyledModal
+        ref={dialogRef}
+        $isClosing={isClosing}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Search documentation"
+        data-search-dialog
+        onKeyDownCapture={handleDialogKeyDown}
+        onClick={(e) => e.stopPropagation()}
+      >
         <StyledInputWrapper>
           <Search size={18} />
           <StyledInput
-            autoFocus
+            ref={inputRef}
+            type="search"
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
@@ -411,6 +524,15 @@ export function SearchModalContent({
             placeholder="Search docs..."
             autoComplete="off"
             spellCheck={false}
+            aria-label="Search documentation"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-haspopup="listbox"
+            aria-expanded="true"
+            aria-controls={listboxId}
+            aria-activedescendant={
+              merged[activeIndex] ? optionId(activeIndex) : undefined
+            }
           />
           {canAskAssistant && (
             <StyledAskAssistant
@@ -437,44 +559,64 @@ export function SearchModalContent({
             <X />
           </IconButton>
         </StyledInputWrapper>
-        {merged.length > 0 ? (
-          <StyledResults ref={resultsRef}>
-            {indicator && (
-              <StyledHighlight
-                aria-hidden="true"
-                style={{
-                  transform: \`translateY(\${indicator.top}px)\`,
-                  height: \`\${indicator.height}px\`,
-                }}
-              />
+        <StyledLiveStatus role="status" aria-live="polite" aria-atomic="true">
+          {isSearching
+            ? "Searching documentation"
+            : merged.length === 0
+              ? "No search results found"
+              : \`\${merged.length} search \${merged.length === 1 ? "result" : "results"} available\`}
+        </StyledLiveStatus>
+        <StyledResults
+          ref={resultsRef}
+          id={listboxId}
+          role="listbox"
+          aria-label="Search results"
+          aria-busy={isSearching}
+          hidden={merged.length === 0}
+        >
+          {indicator && (
+            <StyledHighlight
+              aria-hidden="true"
+              $top={indicator.top}
+              $height={indicator.height}
+            />
+          )}
+          {merged.map((result, index) => (
+            <StyledResultItem
+              key={result.page.slug + result.page.section}
+              id={optionId(index)}
+              role="option"
+              aria-selected={index === activeIndex}
+              $isActive={index === activeIndex}
+              onClick={(e) => navigate(result.page.slug, e)}
+              onMouseEnter={() => setActiveIndex(index)}
+            >
+              <StyledResultTitle>{result.page.title}</StyledResultTitle>
+              <StyledResultMeta>
+                {result.page.section
+                  ? \`\${sectionLabels[result.page.section] || result.page.section} / \`
+                  : ""}
+                {result.page.category}
+              </StyledResultMeta>
+              {result.snippet && (
+                <StyledSnippet
+                  dangerouslySetInnerHTML={{
+                    __html: highlightMatch(result.snippet, query),
+                  }}
+                />
+              )}
+            </StyledResultItem>
+          ))}
+        </StyledResults>
+        {merged.length === 0 && (
+          <StyledEmpty aria-hidden="true">
+            {isSearching ? (
+              <>
+                <Spinner size={18} /> Searching documentation...
+              </>
+            ) : (
+              "No results found"
             )}
-            {merged.map((result, index) => (
-              <StyledResultItem
-                key={result.page.slug + result.page.section}
-                $isActive={index === activeIndex}
-                onClick={(e) => navigate(result.page.slug, e)}
-                onMouseEnter={() => setActiveIndex(index)}
-              >
-                <StyledResultTitle>{result.page.title}</StyledResultTitle>
-                <StyledResultMeta>
-                  {result.page.section
-                    ? \`\${sectionLabels[result.page.section] || result.page.section} / \`
-                    : ""}
-                  {result.page.category}
-                </StyledResultMeta>
-                {result.snippet && (
-                  <StyledSnippet
-                    dangerouslySetInnerHTML={{
-                      __html: highlightMatch(result.snippet, query),
-                    }}
-                  />
-                )}
-              </StyledResultItem>
-            ))}
-          </StyledResults>
-        ) : (
-          <StyledEmpty>
-            {isSearching ? <Spinner size={18} /> : "No results found"}
           </StyledEmpty>
         )}
       </StyledModal>

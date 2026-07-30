@@ -35,11 +35,14 @@ Doccupine will prompt you for:
 
 It then scaffolds the app, installs dependencies, and starts the dev server. Open http://localhost:3000 to view your docs.
 
+The source and output directories must not overlap. To prevent accidental data loss, Doccupine only claims an empty output directory, one containing harmless local metadata such as `.DS_Store` or `.env.local`, or an existing Doccupine-generated app. Run `doccupine config --reset` if an older configuration no longer passes validation.
+
 ## CLI Commands
 
 ```bash
 doccupine watch [options]   # Default. Watch MDX files and start dev server
-doccupine build [options]   # One-time build without starting the server
+doccupine build [options]   # Generate the site without installing or serving it
+doccupine generate [options] # Alias for build
 doccupine config --show     # Show current configuration
 doccupine config --reset    # Re-prompt for configuration
 ```
@@ -53,6 +56,7 @@ doccupine config --reset    # Re-prompt for configuration
 | `--port <port>`            | Port for the dev server (default: `3000`). Auto-increments if taken.                                                                     |
 | `--verbose`                | Show all Next.js output including compilation details                                                                                    |
 | `--reset`                  | Re-prompt for watch/output directories                                                                                                   |
+| `--skip-install`           | Generate and serve without running the dependency installer (installs are skipped automatically when `package.json` is unchanged)        |
 | `--package-manager <name>` | Package manager for the generated app: `pnpm` or `npm` (default: auto-detect). Overrides the `packageManager` field in `doccupine.json`. |
 
 `build`:
@@ -149,7 +153,7 @@ Each entry has:
 
 ## API Reference
 
-Point Doccupine at an OpenAPI document (`.json`, `.yaml`, or `.yml`, OpenAPI 3.0/3.1) and it generates an interactive API reference: one page per operation, each with a live playground for sending requests. Set the `openapi` field in `doccupine.json`:
+Point Doccupine at an OpenAPI document (`.json`, `.yaml`, or `.yml`, OpenAPI 3.0/3.1) and it generates an interactive API reference: a directory at `/api-reference` linking every operation, plus one page per operation with a live playground for sending requests. Set the `openapi` field in `doccupine.json`:
 
 ```json
 {
@@ -209,7 +213,7 @@ Doccupine generates `robots.ts` automatically for every site. When you set a `ur
 }
 ```
 
-You can override the URL at deploy time by setting the `NEXT_PUBLIC_SITE_URL` environment variable. When no URL is configured (neither in `config.json` nor via env), the sitemap is skipped and `robots.txt` is emitted without a sitemap reference.
+You can override the URL at deploy time by setting the `NEXT_PUBLIC_SITE_URL` environment variable. When no URL is configured, `/sitemap.xml` is still served but stays empty, and `robots.txt` omits its sitemap reference until a public URL is available. The variable is baked in at build time, so changing it needs a redeploy.
 
 ## llms.txt
 
@@ -223,7 +227,7 @@ Doccupine generates [llms.txt](https://llmstxt.org) artifacts so AI agents can d
 
 The site name and description used in `llms.txt` come from `config.json` (`name`, `description`). Page URLs are absolute when `url` is set in `config.json` (or via `NEXT_PUBLIC_SITE_URL`), and root-relative otherwise.
 
-A `.doccupine-llms-manifest.json` file in the generated app tracks which per-page mirrors were emitted so renamed or deleted pages get cleaned up on the next regeneration. Don't commit this file — it's regenerated automatically.
+A `.doccupine-artifacts.json` file in the generated app tracks generated route ownership and per-page mirrors so renamed or deleted sources clean up only their own outputs. Don't commit this file; it is regenerated automatically.
 
 ## AI Chat Setup
 
@@ -250,9 +254,12 @@ LLM_EMBEDDING_MODEL=text-embedding-3-small  # Override the default embedding mod
 LLM_TEMPERATURE=0                           # Set temperature (0-1, default: 0)
 LLM_EMBEDDING_DIMS=512                       # Dimensions for the prebuilt search index (default: 512)
 RAG_RUNTIME_EMBED_MAX_CHUNKS=400             # Max chunks embedded on demand in production (default: 400; 0 requires a prebuilt index)
+# RAG_API_KEY=...                            # Optional bearer auth for direct /api/rag requests
 ```
 
 `LLM_EMBEDDING_DIMS` Matryoshka-truncates document vectors so the prebuilt search index stays small; lower values shrink the index at a slight cost to recall. `RAG_RUNTIME_EMBED_MAX_CHUNKS` caps how many chunks the chat will embed on demand in production before requiring a prebuilt index (it's unlimited under `next dev`).
+
+Public documentation leaves browser chat available by default. Setting `RAG_API_KEY` requires a bearer token for `/api/rag` and is intended for server-to-server use; the built-in browser cannot safely hold that secret. Use `SITE_PASSWORD` instead when authenticated browser visitors should retain chat access.
 
 Default models per provider:
 
@@ -270,7 +277,7 @@ The generated app exposes an MCP endpoint at `/api/mcp` with three tools:
 - `get_doc` - retrieve a specific document by path
 - `list_docs` - list all available documents
 
-This lets AI agents (Claude, ChatGPT, etc.) query your docs programmatically. Requires the AI chat setup above for embeddings.
+This lets AI agents (Claude, ChatGPT, etc.) query your docs programmatically. Semantic `search_docs` requires the AI setup above for embeddings; `get_doc` and `list_docs` work from the generated content manifest without an embedding provider.
 
 ## Password Protection
 
@@ -283,12 +290,12 @@ SITE_PASSWORD=choose-a-strong-shared-password
 When set, every visitor sees a login screen until they enter the password. Protection is enforced across three layers:
 
 - **Pages** are gated behind the login screen.
-- **Content APIs** (`/api/rag` chat and `/api/search`) return `401` without a valid session, so the docs can't be scraped around the login.
+- **Content APIs** (`/api/rag` chat, `/api/search`, and the `/api/playground` proxy) return `401` without a valid session, so the docs can't be scraped and the proxy can't relay anonymous requests around the login. Each route re-checks the session itself, not just the middleware.
 - **Search engines and crawlers** are blocked: `robots.txt` disallows everything, pages carry a `noindex, nofollow` tag, and responses include an `X-Robots-Tag` header.
 
 A successful login sets a signed, `httpOnly` cookie that lasts 30 days. The cookie stores an HMAC of the password, never the password itself. Leave `SITE_PASSWORD` unset (the default) to keep the site fully public. Documentation pages stay statically rendered either way - the gate is enforced in middleware.
 
-> **Note:** The [MCP endpoint](#mcp-server) uses its own `DOCS_API_KEY` bearer token and is not affected by `SITE_PASSWORD`.
+> **Note:** The [MCP endpoint](#mcp-server) uses `DOCS_API_KEY` bearer authentication when configured. Without an API key, a password-protected site requires the normal gate session for MCP as well.
 
 ## License
 

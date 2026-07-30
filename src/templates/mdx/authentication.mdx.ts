@@ -29,12 +29,14 @@ That is the only setting. Everyone who visits the site shares this single passwo
 While a password is set, protection is enforced across three layers:
 
 - **Pages**: Every page renders a login screen instead of your documentation until the visitor enters the correct password.
-- **Content APIs**: The AI chat (\`/api/rag\`) and search (\`/api/search\`) endpoints return \`401 Unauthorized\` without a valid session, so the docs cannot be scraped around the login screen.
+- **Content APIs**: The AI chat (\`/api/rag\`), search (\`/api/search\`), and [API playground](/api-playground) proxy (\`/api/playground\`) endpoints return \`401 Unauthorized\` without a valid session. The docs cannot be scraped around the login screen, and the proxy cannot be used to relay requests on behalf of an anonymous visitor. Each route re-checks the session itself, so a direct invocation is refused even when it does not pass through the middleware.
 - **Search engines and crawlers**: \`robots.txt\` disallows all crawlers, every page ships a \`noindex, nofollow\` meta tag, and responses carry an \`X-Robots-Tag: noindex, nofollow\` header.
 
 <Callout type="note">
-  The [MCP server](/model-context-protocol) keeps its own authentication through the \`DOCS_API_KEY\` bearer token and is not affected by \`SITE_PASSWORD\`. Set both when you want the docs and the MCP endpoint locked down.
+  The [MCP server](/model-context-protocol) uses \`DOCS_API_KEY\` bearer authentication when that variable is set. Otherwise, a password-protected site requires the normal gate session for MCP too, so the endpoint cannot bypass \`SITE_PASSWORD\`.
 </Callout>
+
+The AI endpoint also supports \`RAG_API_KEY\` for authenticated server-to-server access on public sites. Because the browser cannot safely hold that secret, use \`SITE_PASSWORD\` rather than \`RAG_API_KEY\` when authenticated browser visitors should use the built-in assistant.
 
 ## How it works
 
@@ -46,7 +48,7 @@ Because the check reads \`SITE_PASSWORD\` at request time, you can turn protecti
 
 - **Use a strong password.** It is shared by everyone with access, so treat it like any other shared secret and rotate it when needed.
 - **Serve over HTTPS in production.** The session cookie is marked \`secure\` in production, so it is only sent over encrypted connections.
-- **Brute-force protection.** Password attempts are rate limited by IP address to slow down guessing.
+- **Brute-force protection.** On recognized hosting platforms, password attempts are rate limited by the platform's trusted client address. Unknown and self-hosted proxy setups use one shared fallback bucket rather than trusting a spoofable forwarding header; configure a trusted edge limiter for accurate per-client limits there.
 - **Rotating the password.** Changing \`SITE_PASSWORD\` invalidates every existing session immediately - visitors will need to enter the new password.
 
 <Callout type="warning">

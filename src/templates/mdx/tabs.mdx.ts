@@ -62,6 +62,10 @@ You can use the Tabs component directly within your MDX files without any import
 
 Each tab also accepts an optional \`icon\` - any [Lucide](https://lucide.dev/icons) icon name - rendered before its title, as shown above.
 
+## Keyboard navigation
+
+Tabs use the standard horizontal keyboard pattern. Press **Left Arrow** or **Right Arrow** to move between tabs, and **Home** or **End** to jump to the first or last tab. **Up Arrow** and **Down Arrow** continue to scroll the page and are not captured by the tab list.
+
 ## Properties
 
 <Field value="title" type="string">
