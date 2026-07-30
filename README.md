@@ -227,7 +227,7 @@ Doccupine generates [llms.txt](https://llmstxt.org) artifacts so AI agents can d
 
 The site name and description used in `llms.txt` come from `config.json` (`name`, `description`). Page URLs are absolute when `url` is set in `config.json` (or via `NEXT_PUBLIC_SITE_URL`), and root-relative otherwise.
 
-A `.doccupine-llms-manifest.json` file in the generated app tracks which per-page mirrors were emitted so renamed or deleted pages get cleaned up on the next regeneration. Don't commit this file — it's regenerated automatically.
+A `.doccupine-artifacts.json` file in the generated app tracks generated route ownership and per-page mirrors so renamed or deleted sources clean up only their own outputs. Don't commit this file; it is regenerated automatically.
 
 ## AI Chat Setup
 
@@ -254,9 +254,12 @@ LLM_EMBEDDING_MODEL=text-embedding-3-small  # Override the default embedding mod
 LLM_TEMPERATURE=0                           # Set temperature (0-1, default: 0)
 LLM_EMBEDDING_DIMS=512                       # Dimensions for the prebuilt search index (default: 512)
 RAG_RUNTIME_EMBED_MAX_CHUNKS=400             # Max chunks embedded on demand in production (default: 400; 0 requires a prebuilt index)
+# RAG_API_KEY=...                            # Optional bearer auth for direct /api/rag requests
 ```
 
 `LLM_EMBEDDING_DIMS` Matryoshka-truncates document vectors so the prebuilt search index stays small; lower values shrink the index at a slight cost to recall. `RAG_RUNTIME_EMBED_MAX_CHUNKS` caps how many chunks the chat will embed on demand in production before requiring a prebuilt index (it's unlimited under `next dev`).
+
+Public documentation leaves browser chat available by default. Setting `RAG_API_KEY` requires a bearer token for `/api/rag` and is intended for server-to-server use; the built-in browser cannot safely hold that secret. Use `SITE_PASSWORD` instead when authenticated browser visitors should retain chat access.
 
 Default models per provider:
 
@@ -274,7 +277,7 @@ The generated app exposes an MCP endpoint at `/api/mcp` with three tools:
 - `get_doc` - retrieve a specific document by path
 - `list_docs` - list all available documents
 
-This lets AI agents (Claude, ChatGPT, etc.) query your docs programmatically. Requires the AI chat setup above for embeddings.
+This lets AI agents (Claude, ChatGPT, etc.) query your docs programmatically. Semantic `search_docs` requires the AI setup above for embeddings; `get_doc` and `list_docs` work from the generated content manifest without an embedding provider.
 
 ## Password Protection
 
