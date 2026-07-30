@@ -246,7 +246,28 @@ export class SecureSourceFs {
     );
   }
 
-  async ensureSafeStarterPath(relativePath: string): Promise<string> {
+  private async removeCreatedStarterFile(
+    targetPath: string,
+    openedStat: fs.Stats,
+  ): Promise<void> {
+    try {
+      const currentStat = await fs.lstat(targetPath);
+      if (
+        !currentStat.isSymbolicLink() &&
+        currentStat.isFile() &&
+        sameFileIdentity(openedStat, currentStat)
+      ) {
+        await fs.unlink(targetPath);
+      }
+    } catch (error) {
+      if (errorCode(error) !== "ENOENT") throw error;
+    }
+  }
+
+  async writeStarterFile(
+    relativePath: string,
+    content: string | Uint8Array,
+  ): Promise<void> {
     const resolvedRoot = path.resolve(this.documentationRoot);
     const targetPath = path.resolve(resolvedRoot, relativePath);
     if (!isPathInside(resolvedRoot, targetPath)) {
@@ -294,6 +315,10 @@ export class SecureSourceFs {
       }
     }
 
+    const parentPath = path.dirname(targetPath);
+    const parentStat = await fs.lstat(parentPath);
+    const realParent = await fs.realpath(parentPath);
+
     try {
       const stat = await fs.lstat(targetPath);
       const detail = stat.isSymbolicLink()
@@ -303,7 +328,84 @@ export class SecureSourceFs {
     } catch (error) {
       if (errorCode(error) !== "ENOENT") throw error;
     }
-    return targetPath;
+
+    const noFollow =
+      typeof constants.O_NOFOLLOW === "number" ? constants.O_NOFOLLOW : 0;
+    let handle: FileHandle;
+    try {
+      handle = await open(
+        targetPath,
+        constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | noFollow,
+        0o666,
+      );
+    } catch (error) {
+      if (errorCode(error) === "EEXIST" || errorCode(error) === "ELOOP") {
+        throw this.sourcePathError(
+          "documentation source",
+          targetPath,
+          "the starter path changed before it could be created",
+        );
+      }
+      throw error;
+    }
+
+    let openedStat: fs.Stats | undefined;
+    try {
+      openedStat = await handle.stat();
+      let currentParentStat: fs.Stats;
+      let currentRealParent: string;
+      let currentTargetStat: fs.Stats;
+      try {
+        currentParentStat = await fs.lstat(parentPath);
+        currentRealParent = await fs.realpath(parentPath);
+        currentTargetStat = await fs.lstat(targetPath);
+      } catch {
+        throw this.sourcePathError(
+          "documentation source",
+          targetPath,
+          "the starter path changed while it was being created",
+        );
+      }
+
+      const stableRootSymlink =
+        parentPath === resolvedRoot &&
+        parentStat.isSymbolicLink() &&
+        currentParentStat.isSymbolicLink() &&
+        sameFileIdentity(parentStat, currentParentStat);
+
+      if (
+        (!currentParentStat.isDirectory() && !stableRootSymlink) ||
+        currentRealParent !== realParent ||
+        !isPathInside(realRoot, currentRealParent) ||
+        !sameFileIdentity(parentStat, currentParentStat) ||
+        currentTargetStat.isSymbolicLink() ||
+        !currentTargetStat.isFile() ||
+        !sameFileIdentity(openedStat, currentTargetStat)
+      ) {
+        throw this.sourcePathError(
+          "documentation source",
+          targetPath,
+          "the starter path changed while it was being created",
+        );
+      }
+
+      await handle.writeFile(content);
+    } catch (error) {
+      try {
+        await handle.close();
+      } catch {
+        // Preserve the creation failure; cleanup below still verifies identity.
+      }
+      if (openedStat) {
+        try {
+          await this.removeCreatedStarterFile(targetPath, openedStat);
+        } catch {
+          // Preserve the original failure rather than masking its cause.
+        }
+      }
+      throw error;
+    }
+    await handle.close();
   }
 
   async pathState(filePath: string, hashContents = false): Promise<string> {

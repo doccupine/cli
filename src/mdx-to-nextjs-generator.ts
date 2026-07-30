@@ -168,8 +168,11 @@ export class MDXToNextJSGenerator {
     return this.sourceFs.readMdxSourceFile(filePath);
   }
 
-  private async ensureSafeStarterPath(relativePath: string): Promise<string> {
-    return this.sourceFs.ensureSafeStarterPath(relativePath);
+  private async writeStarterFile(
+    relativePath: string,
+    content: string | Uint8Array,
+  ): Promise<void> {
+    return this.sourceFs.writeStarterFile(relativePath, content);
   }
 
   async init() {
@@ -244,7 +247,8 @@ export class MDXToNextJSGenerator {
   async createStartingDocs() {
     return this.appScaffolder.createStartingDocs({
       getAllMdxFiles: () => this.getAllMDXFiles(),
-      ensureSafeStarterPath: (filePath) => this.ensureSafeStarterPath(filePath),
+      writeStarterFile: (filePath, content) =>
+        this.writeStarterFile(filePath, content),
     });
   }
 
@@ -745,10 +749,10 @@ export class MDXToNextJSGenerator {
 
   async generateSectionIndexPages(pages?: PageMeta[]) {
     const nextSlugs = new Set<string>();
+    const resolvedPages = pages ?? (await this.buildAllPagesMeta());
+    const occupiedSlugs = new Set(resolvedPages.map((page) => page.slug));
 
     if (this.sectionsConfig && this.sectionsConfig.length > 0) {
-      const resolvedPages = pages ?? (await this.buildAllPagesMeta());
-
       for (const section of this.sectionsConfig) {
         if (section.slug === "") continue;
 
@@ -793,22 +797,23 @@ export default function SectionIndex() {
       }
     }
 
-    await this.cleanupStaleSectionIndexPages(nextSlugs);
+    await this.cleanupStaleSectionIndexPages(nextSlugs, occupiedSlugs);
   }
 
   /**
    * Removes section index redirects written earlier in this session whose
    * section has since disappeared (e.g. the API Reference section after the
-   * `openapi` config is removed mid-watch). Only files that still contain the
-   * generated redirect are deleted, so a hand-written page that has taken
-   * over the slug is never touched. Fresh processes start clean anyway -
-   * init() wipes app/ - so in-session tracking is enough.
+   * `openapi` config is removed mid-watch). Slugs now occupied by real pages
+   * are preserved. Fresh processes start clean anyway - init() wipes app/ -
+   * so in-session tracking is enough.
    */
   private async cleanupStaleSectionIndexPages(
     nextSlugs: Set<string>,
+    occupiedSlugs: Set<string>,
   ): Promise<void> {
     return this.generatedRouteManager.cleanupStaleSectionIndexPages(
       nextSlugs,
+      occupiedSlugs,
       (dir, stopDir) => this.removeEmptyDirsUpTo(dir, stopDir),
     );
   }
@@ -1147,7 +1152,9 @@ export default function SectionIndex() {
   }
 
   async loadSiteUrl(): Promise<string | null> {
-    return loadSiteUrlArtifact(this.rootDir);
+    return loadSiteUrlArtifact(() =>
+      this.projectConfigRepository.readConfigFile(),
+    );
   }
 
   async updateSitemap(pages?: PageMeta[]) {
@@ -1170,7 +1177,8 @@ export default function SectionIndex() {
       async () => pages ?? (await this.buildAllPagesMeta()),
       (filePath) => this.readMdxSourceFile(filePath),
       (slug) => this.apiRegistry.bodyForSlug(slug),
-      () => loadSiteMetadata(this.rootDir),
+      () =>
+        loadSiteMetadata(() => this.projectConfigRepository.readConfigFile()),
       this.publicAssetManager,
     );
   }

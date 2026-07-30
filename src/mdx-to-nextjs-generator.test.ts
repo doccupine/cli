@@ -65,6 +65,59 @@ describe.sequential("MDXToNextJSGenerator ownership", () => {
     expect(await fs.pathExists(path.join(outputDir, "app"))).toBe(false);
   });
 
+  it("does not emit metadata read through a symlinked config source", async () => {
+    const { root } = await fixture();
+    const projectRoot = path.join(root, "project");
+    const watchDir = path.join(projectRoot, "docs");
+    const outputDir = path.join(projectRoot, "site");
+    const externalConfig = path.join(root, "external-config.json");
+    await fs.outputFile(path.join(watchDir, "index.mdx"), "# Home\n");
+    await fs.writeJson(externalConfig, {
+      name: "EXTERNAL_SECRET_MARKER",
+      description: "LEAKED_DESCRIPTION",
+    });
+    await fs.symlink(externalConfig, path.join(projectRoot, "config.json"));
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const generator = new MDXToNextJSGenerator(
+      watchDir,
+      outputDir,
+      [],
+      projectRoot,
+    );
+
+    await expect(generator.init()).rejects.toThrow(
+      /config source.*config\.json.*symbolic link/i,
+    );
+
+    const llms = await fs.readFile(
+      path.join(outputDir, "public", "llms.txt"),
+      "utf8",
+    );
+    expect(llms).not.toContain("EXTERNAL_SECRET_MARKER");
+    expect(llms).not.toContain("LEAKED_DESCRIPTION");
+  });
+
+  it("does not load sections through a symlinked source", async () => {
+    const { root } = await fixture();
+    const projectRoot = path.join(root, "project");
+    const watchDir = path.join(projectRoot, "docs");
+    const externalSections = path.join(root, "external-sections.json");
+    await fs.ensureDir(watchDir);
+    await fs.writeJson(externalSections, [
+      { label: "External", slug: "external", directory: "external" },
+    ]);
+    await fs.symlink(externalSections, path.join(projectRoot, "sections.json"));
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const generator = new MDXToNextJSGenerator(
+      watchDir,
+      path.join(projectRoot, "site"),
+      [],
+      projectRoot,
+    );
+
+    await expect(generator.loadSectionsConfig()).resolves.toBeNull();
+  });
+
   it("ignores non-MDX file symlinks during documentation scans", async () => {
     const { root, watchDir, outputDir } = await fixture();
     const linkedTarget = path.join(root, "notes.txt");
@@ -93,6 +146,89 @@ describe.sequential("MDXToNextJSGenerator ownership", () => {
     );
     expect(await fs.pathExists(path.join(watchDir, "index.mdx"))).toBe(false);
   });
+
+  it("seeds starter docs through an unchanged symlinked source root", async () => {
+    const { root, outputDir } = await fixture();
+    const realWatchDir = path.join(root, "real-docs");
+    const linkedWatchDir = path.join(root, "linked-docs");
+    await fs.ensureDir(realWatchDir);
+    await fs.symlink(realWatchDir, linkedWatchDir, "dir");
+    const generator = new MDXToNextJSGenerator(linkedWatchDir, outputDir);
+
+    await generator.createStartingDocs();
+
+    expect(await fs.pathExists(path.join(realWatchDir, "index.mdx"))).toBe(
+      true,
+    );
+  });
+
+  it.skipIf(process.platform === "win32")(
+    "does not overwrite an external starter file when the source root is swapped",
+    async () => {
+      const { root, watchDir, outputDir } = await fixture();
+      const displacedDir = path.join(root, "docs-original");
+      const victimDir = path.join(root, "victim");
+      const victimIndex = path.join(victimDir, "index.mdx");
+      const starterIndex = path.join(watchDir, "index.mdx");
+      await fs.outputFile(victimIndex, "UNCHANGED\n");
+      const generator = new MDXToNextJSGenerator(watchDir, outputDir);
+      const lstat = fs.lstat.bind(fs);
+      let swapped = false;
+      vi.spyOn(fs, "lstat").mockImplementation(async (candidate: string) => {
+        try {
+          return await lstat(candidate);
+        } catch (error) {
+          if (!swapped && path.resolve(candidate) === starterIndex) {
+            await fs.rename(watchDir, displacedDir);
+            await fs.symlink(victimDir, watchDir, "dir");
+            swapped = true;
+          }
+          throw error;
+        }
+      });
+
+      await expect(generator.createStartingDocs()).rejects.toThrow(
+        /starter path changed/i,
+      );
+
+      expect(swapped).toBe(true);
+      expect(await fs.readFile(victimIndex, "utf8")).toBe("UNCHANGED\n");
+    },
+  );
+
+  it.skipIf(process.platform === "win32")(
+    "removes an external starter file created during a source-root swap",
+    async () => {
+      const { root, watchDir, outputDir } = await fixture();
+      const displacedDir = path.join(root, "docs-original");
+      const victimDir = path.join(root, "victim");
+      const victimIndex = path.join(victimDir, "index.mdx");
+      const starterIndex = path.join(watchDir, "index.mdx");
+      await fs.ensureDir(victimDir);
+      const generator = new MDXToNextJSGenerator(watchDir, outputDir);
+      const lstat = fs.lstat.bind(fs);
+      let swapped = false;
+      vi.spyOn(fs, "lstat").mockImplementation(async (candidate: string) => {
+        try {
+          return await lstat(candidate);
+        } catch (error) {
+          if (!swapped && path.resolve(candidate) === starterIndex) {
+            await fs.rename(watchDir, displacedDir);
+            await fs.symlink(victimDir, watchDir, "dir");
+            swapped = true;
+          }
+          throw error;
+        }
+      });
+
+      await expect(generator.createStartingDocs()).rejects.toThrow(
+        /starter path changed/i,
+      );
+
+      expect(swapped).toBe(true);
+      expect(await fs.pathExists(victimIndex)).toBe(false);
+    },
+  );
 
   it("restores required JSON modules when project config is deleted", async () => {
     const { watchDir, outputDir } = await fixture();
@@ -161,6 +297,31 @@ describe.sequential("MDXToNextJSGenerator ownership", () => {
         path.join(outputDir, "app", "(site)", "guides", "intro", "page.tsx"),
       ),
     ).toBe(true);
+  });
+
+  it("preserves a real section page containing the redirect function name", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    await fs.outputFile(
+      path.join(watchDir, "guides", "intro.mdx"),
+      "---\ntitle: Intro\n---\nIntro\n",
+    );
+    await fs.writeJson(path.join(root, "sections.json"), [
+      { label: "Guides", slug: "guides", directory: "guides" },
+    ]);
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+    await generator.init();
+    await fs.outputFile(
+      path.join(watchDir, "guides", "index.mdx"),
+      "---\ntitle: Guides\n---\n```tsx\nfunction SectionIndex() {}\n```\n",
+    );
+
+    await generator.handleFileChange("added", path.join("guides", "index.mdx"));
+
+    const page = await fs.readFile(
+      path.join(outputDir, "app", "(site)", "guides", "page.tsx"),
+      "utf8",
+    );
+    expect(page).toContain("function SectionIndex() {}");
   });
 
   it("deletes the recorded frontmatter route and preserves nested pages", async () => {

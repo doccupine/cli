@@ -1,6 +1,5 @@
 import chalk from "chalk";
 import fs from "fs-extra";
-import path from "node:path";
 
 import { resolveOutputPath } from "../lib/output-safety.js";
 import type { PageMeta, SectionConfig } from "../lib/types.js";
@@ -27,16 +26,17 @@ export interface SiteMetadata {
 type ResolvePages = () => Promise<PageMeta[]>;
 type ReadMdxSource = (filePath: string) => Promise<{ content: string }>;
 type ReadOpenApiBody = (slug: string) => string | undefined;
+type ReadConfigSource = () => Promise<string | null>;
 
-export async function loadSiteUrl(rootDir: string): Promise<string | null> {
+export async function loadSiteUrl(
+  readConfigSource: ReadConfigSource,
+): Promise<string | null> {
   const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (fromEnv) return fromEnv.replace(/\/$/, "");
 
-  const configPath = path.join(rootDir, "config.json");
-
   try {
-    if (await fs.pathExists(configPath)) {
-      const content = await fs.readFile(configPath, "utf8");
+    const content = await readConfigSource();
+    if (content !== null) {
       const parsed = JSON.parse(content) as { url?: unknown };
       if (typeof parsed.url === "string" && parsed.url.trim() !== "") {
         return parsed.url.trim().replace(/\/$/, "");
@@ -49,8 +49,9 @@ export async function loadSiteUrl(rootDir: string): Promise<string | null> {
   return null;
 }
 
-export async function loadSiteMetadata(rootDir: string): Promise<SiteMetadata> {
-  const configPath = path.join(rootDir, "config.json");
+export async function loadSiteMetadata(
+  readConfigSource: ReadConfigSource,
+): Promise<SiteMetadata> {
   let url: string | null = null;
   let name = "Documentation";
   let description = "";
@@ -58,8 +59,8 @@ export async function loadSiteMetadata(rootDir: string): Promise<SiteMetadata> {
   try {
     const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim();
     if (fromEnv) url = fromEnv.replace(/\/$/, "");
-    if (await fs.pathExists(configPath)) {
-      const content = await fs.readFile(configPath, "utf8");
+    const content = await readConfigSource();
+    if (content !== null) {
       const parsed = JSON.parse(content) as {
         url?: unknown;
         name?: unknown;

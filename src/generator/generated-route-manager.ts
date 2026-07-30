@@ -68,10 +68,12 @@ export class GeneratedRouteManager {
 
   async cleanupStaleSectionIndexPages(
     nextSlugs: Set<string>,
+    occupiedSlugs: Set<string>,
     removeEmptyDirs: (dir: string, stopDir: string) => Promise<void>,
   ): Promise<void> {
     for (const stale of this.generatedSectionIndexSlugs) {
       if (nextSlugs.has(stale)) continue;
+      if (occupiedSlugs.has(stale)) continue;
       const pagePath = resolveOutputPath(
         this.outputDir,
         "app",
@@ -81,8 +83,6 @@ export class GeneratedRouteManager {
       );
       try {
         if (!(await fs.pathExists(pagePath))) continue;
-        const content = await fs.readFile(pagePath, "utf8");
-        if (!content.includes("function SectionIndex()")) continue;
         await fs.remove(pagePath);
         await removeEmptyDirs(
           path.dirname(pagePath),

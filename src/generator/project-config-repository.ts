@@ -48,6 +48,23 @@ export class ProjectConfigRepository {
     await writeFileAtomic(destPath, data);
   }
 
+  private async readOptionalRootSourceFile(
+    fileName: string,
+    label: string,
+  ): Promise<string | null> {
+    const sourcePath = path.join(this.rootDir, fileName);
+    if (!(await fs.pathExists(sourcePath))) return null;
+    const { data } = await this.sourceFs.readProjectSourceFile(
+      sourcePath,
+      label,
+    );
+    return data.toString("utf8");
+  }
+
+  async readConfigFile(): Promise<string | null> {
+    return this.readOptionalRootSourceFile("config.json", "config source");
+  }
+
   async copyConfigFile(configFile: string): Promise<void> {
     await this.copyRootSourceFile(
       path.join(this.rootDir, configFile),
@@ -181,11 +198,12 @@ export class ProjectConfigRepository {
   }
 
   async loadSectionsConfig(): Promise<SectionConfig[] | null> {
-    const sectionsPath = path.join(this.rootDir, "sections.json");
-
     try {
-      if (await fs.pathExists(sectionsPath)) {
-        const content = await fs.readFile(sectionsPath, "utf8");
+      const content = await this.readOptionalRootSourceFile(
+        "sections.json",
+        "sections source",
+      );
+      if (content !== null) {
         const parsed = JSON.parse(content) as unknown;
         return validateSectionsConfig(parsed);
       }
