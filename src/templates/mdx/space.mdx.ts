@@ -122,8 +122,4 @@ It belongs inside a line of inline content, where a gap along that axis has some
 
 <Field value="horizontal" type="boolean">
   Spaces along the inline axis instead of the block axis, so the size props control width. Defaults to false.
-</Field>
-
-<Callout type="note">
-  Pages written before these names existed pass the same props with a \`$\` prefix (\`$size\`, \`$md\`, \`$horizontal\`). Those still render, so nothing breaks on upgrade, but the unprefixed names above are the supported form - the \`$\` prefix belongs to the styling library underneath, not to the components you author with.
-</Callout>`;
+</Field>`;
