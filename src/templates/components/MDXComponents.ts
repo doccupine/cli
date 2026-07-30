@@ -3,7 +3,6 @@ import Link from "next/link";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type MDXComponents = Record<string, React.ComponentType<any>>;
-import { Space } from "cherry-styled-components";
 import { Badge } from "@/components/layout/Badge";
 import { Code as CodeBlock, CodeTabs } from "@/components/layout/Code";
 import { Card } from "@/components/layout/Card";
@@ -16,6 +15,7 @@ import { Field } from "@/components/layout/Field";
 import { Frame } from "@/components/layout/Frame";
 import { Prompt } from "@/components/layout/Prompt";
 import { SidePanel } from "@/components/layout/SidePanel";
+import { Space } from "@/components/layout/Space";
 import { Update } from "@/components/layout/Update";
 import { Steps, Step } from "@/components/layout/Steps";
 import { Button } from "@/components/layout/Button";

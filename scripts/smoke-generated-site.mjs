@@ -65,6 +65,14 @@ try {
       "",
       "A sectioned page.",
       "",
+      // Doc pages are prerendered, so an authoring component that throws
+      // fails the build. Space carries both prop forms here: the documented
+      // unprefixed names and the $-prefixed ones pages were written with
+      // before the wrapper existed.
+      "<Space size={40} md={80} />",
+      "",
+      "<Space $size={24} />",
+      "",
     ].join("\n"),
   );
   await fs.writeFile(
@@ -104,6 +112,21 @@ try {
   await run(packageManager, ["run", "type-check"], siteDir);
   await run(packageManager, ["run", "lint", "--max-warnings=0"], siteDir);
   await run(packageManager, ["run", "build"], siteDir);
+
+  // A prop-mapping wrapper fails silently: a name that never reaches Cherry
+  // renders an empty span rather than an error, so the gap has to be read back
+  // out of the prerendered page. Each size is distinct so it can only come
+  // from one prop: 40px from size, 80px from its md override, 24px from the
+  // $-prefixed form pages were written with before the wrapper existed.
+  const guideHtml = await fs.readFile(
+    path.join(siteDir, ".next", "server", "app", "guides", "guide.html"),
+    "utf8",
+  );
+  for (const gap of [40, 80, 24]) {
+    if (!new RegExp(`min-height:\\s*${gap}px`).test(guideHtml)) {
+      throw new Error(`Space did not render a ${gap}px gap into the page`);
+    }
+  }
 
   for (const route of ["mcp", "rag"]) {
     const tracePath = path.join(

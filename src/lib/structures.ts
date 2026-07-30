@@ -61,6 +61,7 @@ import { sidePanelTemplate } from "../templates/components/layout/SidePanel.js";
 import { notFoundComponentTemplate } from "../templates/components/layout/NotFound.js";
 import { siteGateComponentTemplate } from "../templates/components/layout/SiteGate.js";
 import { slugTemplate } from "../templates/components/layout/Slug.js";
+import { spaceTemplate } from "../templates/components/layout/Space.js";
 import { staticLinksTemplate } from "../templates/components/layout/StaticLinks.js";
 import { stepsTemplate } from "../templates/components/layout/Steps.js";
 import { tabsTemplate } from "../templates/components/layout/Tabs.js";
@@ -270,6 +271,7 @@ export const appStructure: Record<string, string> = {
   "components/layout/NotFound.tsx": notFoundComponentTemplate,
   "components/layout/SiteGate.tsx": siteGateComponentTemplate,
   "components/layout/Slug.ts": slugTemplate,
+  "components/layout/Space.tsx": spaceTemplate,
   "components/layout/StaticLinks.tsx": staticLinksTemplate,
   "components/layout/Steps.tsx": stepsTemplate,
   "components/layout/Tabs.tsx": tabsTemplate,

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.143
+
+- Give `Space` the same prop names as every other component you author with, so a gap is written `<Space size={60} md={80} />` rather than `<Space $size={60} $md={80} />`. Space was the one component handed to MDX straight from the styling library, whose `$` prefix marks a prop transient - the mechanism styled-components uses to keep it off the DOM node - and means nothing in a document. A generated `components/layout/Space.tsx` now wraps it and maps each plain name onto the prefixed one, `size`, `xs` through `xxxl`, and `horizontal` are documented without the prefix, and the `$` form stays accepted so pages already written against it keep their gaps rather than silently losing them on upgrade. Because a prop name that never reaches the styling layer renders an empty span instead of raising an error, the generated-site smoke build now renders both forms and reads the resulting gaps back out of the prerendered HTML
+
 ## 0.0.142
 
 - Restore `next`, `react`, and `react-dom` to the CLI's own dependencies. 0.0.141 dropped them on the grounds that they belong to the generated app's `package.json` rather than the CLI runtime, but hosting platforms decide which framework a project uses by reading the `package.json` at the deployment's root directory, so a repository that deploys from the CLI's own manifest stopped being recognized as a Next.js project and its builds failed with "No Next.js version detected". The three packages return at the versions the generated app already pins - `next` 16.2.12 with `react` and `react-dom` 19.2.8 - so the CLI and the site it produces stay on one Next.js and one React release
