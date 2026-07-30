@@ -2,13 +2,7 @@ export const searchModalContentTemplate = `"use client";
 import React from "react";
 import styled, { css, keyframes } from "styled-components";
 import { Search, X } from "lucide-react";
-import {
-  Button,
-  IconButton,
-  Input,
-  resetButton,
-  StyledInputWrapper as CherryInputWrapper,
-} from "cherry-styled-components";
+import { IconButton } from "cherry-styled-components";
 import { mq, Theme } from "@/app/theme";
 import { Spinner } from "@/components/Spinner";
 import {
@@ -121,29 +115,14 @@ const StyledInputWrapper = styled.div<{ theme: Theme }>\`
   flex-shrink: 0;
   border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
 
-  & \${CherryInputWrapper} {
-    flex: 1;
-    min-width: 0;
-  }
-
-  & \${CherryInputWrapper} > span {
-    width: 100%;
-    min-width: 0;
-  }
-
   & svg.lucide {
     color: \${({ theme }) => theme.colors.gray};
     flex-shrink: 0;
   }
 \`;
 
-const StyledInput = styled(Input)<{ theme: Theme }>\`
+const StyledInput = styled.input<{ theme: Theme }>\`
   flex: 1;
-  width: 100%;
-  min-width: 0;
-  height: auto;
-  min-height: 0;
-  padding: 0;
   border: none;
   outline: none;
   background: transparent;
@@ -155,13 +134,20 @@ const StyledInput = styled(Input)<{ theme: Theme }>\`
   &::placeholder {
     color: \${({ theme }) => theme.colors.gray};
   }
+
+  /* type="search" gets the platform clear button, which duplicates the modal's
+     own close control and sits at a size and color we do not control. */
+  &::-webkit-search-cancel-button,
+  &::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+  }
 \`;
 
 // "Ask AI" affordance shown before the close button when the AI chat is
 // enabled. Desktop-only (like the header's Cmd+K hint) since it advertises the
 // Option+Enter shortcut; mobile users reach the assistant from the header CTA.
-const StyledAskAssistant = styled(Button)<{ theme: Theme }>\`
-  \${resetButton};
+const StyledAskAssistant = styled.button<{ theme: Theme }>\`
   \${interactiveStyles};
   display: none;
   align-items: center;
@@ -178,8 +164,6 @@ const StyledAskAssistant = styled(Button)<{ theme: Theme }>\`
   line-height: 1;
   white-space: nowrap;
   cursor: pointer;
-  height: auto;
-  min-height: 0;
 
   &:disabled {
     opacity: 0.5;
@@ -332,6 +316,9 @@ const StyledEmpty = styled.div<{ theme: Theme }>\`
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Separates the spinner from "Searching documentation..."; the whitespace
+     between them in the markup collapses away as an anonymous flex item. */
+  gap: 8px;
   text-align: center;
   font-size: \${({ theme }) => theme.fontSizes.small.lg};
   color: \${({ theme }) => theme.colors.gray};
@@ -532,7 +519,6 @@ export function SearchModalContent({
             placeholder="Search docs..."
             autoComplete="off"
             spellCheck={false}
-            $fullWidth
             aria-label="Search documentation"
             role="combobox"
             aria-autocomplete="list"

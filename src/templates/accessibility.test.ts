@@ -33,8 +33,6 @@ describe("generated accessibility behavior", () => {
     expect(
       searchModalContentTemplate.indexOf("<StyledLiveStatus"),
     ).toBeLessThan(searchModalContentTemplate.indexOf("<StyledResults"));
-    expect(searchModalContentTemplate).toContain("CherryInputWrapper");
-    expect(searchModalContentTemplate).toContain("$fullWidth");
     expect(searchDocsTemplate).toContain(
       "askAssistant(q, searchOpenerRef.current)",
     );
@@ -61,8 +59,6 @@ describe("generated accessibility behavior", () => {
     expect(chatTemplate).toContain("distanceFromBottom <=");
     expect(chatTemplate).toContain("cancelAnimationFrame");
     expect(chatTemplate).toContain('"(prefers-reduced-motion: reduce)"');
-    expect(chatTemplate).toContain("CherryInputWrapper");
-    expect(chatTemplate).toContain("$fullWidth");
   });
 
   it("hides collapsed accordion and sidebar-group descendants", () => {
@@ -97,9 +93,6 @@ describe("generated accessibility behavior", () => {
   });
 
   it("resets inherited Cherry heights on compact custom controls", () => {
-    expect(searchModalContentTemplate).toMatch(
-      /const StyledAskAssistant[\s\S]*?height: auto;[\s\S]*?min-height: 0;/,
-    );
     expect(docsComponentsTemplate).toMatch(
       /StyledSidebarGroupButton[\s\S]*?height: auto;[\s\S]*?min-height: 0;/,
     );

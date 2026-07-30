@@ -12,12 +12,7 @@ import React, {
   useSyncExternalStore,
 } from "react";
 import styled, { css, keyframes } from "styled-components";
-import {
-  Button,
-  IconButton,
-  Input,
-  StyledInputWrapper as CherryInputWrapper,
-} from "cherry-styled-components";
+import { Button, IconButton } from "cherry-styled-components";
 import { ArrowUp, LoaderPinwheel, RotateCcw, Sparkles, X } from "lucide-react";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -200,12 +195,6 @@ const StyledRainbowInputWrapper = styled.div<{
 
   position: relative;
   flex: 1;
-  min-width: 0;
-
-  & \${CherryInputWrapper}, & \${CherryInputWrapper} > span {
-    width: 100%;
-    min-width: 0;
-  }
 
   &::before {
     content: "";
@@ -309,7 +298,7 @@ const StyledSparkle = styled.div<{
   animation-delay: \${({ $delay }) => $delay}s;
 \`;
 
-const StyledRainbowInput = styled(Input)<{ theme: Theme }>\`
+const StyledRainbowInput = styled.input<{ theme: Theme }>\`
   position: relative;
   z-index: 1;
   width: 100%;
@@ -835,7 +824,6 @@ function RainbowInput({
         placeholder={placeholder}
         autoComplete={autoComplete}
         aria-label={ariaLabel}
-        $fullWidth
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
       />
