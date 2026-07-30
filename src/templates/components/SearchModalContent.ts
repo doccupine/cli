@@ -43,6 +43,7 @@ export interface SearchModalContentProps {
   canAskAssistant: boolean;
   onAskAssistant: () => void;
   shouldRestoreFocus: () => boolean;
+  returnFocusTo: HTMLElement | null;
 }
 
 const ANIMATION_MS = 300;
@@ -372,13 +373,16 @@ export function SearchModalContent({
   canAskAssistant,
   onAskAssistant,
   shouldRestoreFocus,
+  returnFocusTo,
 }: SearchModalContentProps) {
   const dialogRef = React.useRef<HTMLDivElement | null>(null);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const previouslyFocusedRef = React.useRef<HTMLElement | null>(
-    typeof document === "undefined"
-      ? null
-      : (document.activeElement as HTMLElement | null),
+    returnFocusTo?.isConnected === true
+      ? returnFocusTo
+      : typeof document === "undefined"
+        ? null
+        : (document.activeElement as HTMLElement | null),
   );
   const listboxId = React.useId();
   const optionId = (index: number) => listboxId + "-option-" + index;
@@ -502,6 +506,7 @@ export function SearchModalContent({
         role="dialog"
         aria-modal="true"
         aria-label="Search documentation"
+        data-search-dialog
         onKeyDownCapture={handleDialogKeyDown}
         onClick={(e) => e.stopPropagation()}
       >

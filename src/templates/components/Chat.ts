@@ -1028,7 +1028,7 @@ function Chat() {
               <RotateCcw />
             </IconButton>
             <IconButton
-              onClick={closeChat}
+              onClick={() => closeChat()}
               aria-label="Close chat"
               title="Close chat"
             >
@@ -1132,7 +1132,10 @@ const ChatContext = createContext<{
   setAnswer: (answers: Answer[]) => void;
   ask: (e: React.FormEvent) => void;
   askAssistant: (question: string, returnFocusTo?: HTMLElement | null) => void;
-  closeChat: () => void;
+  closeChat: (restoreFocus?: boolean) => HTMLElement | null;
+  registerSearchClose: (
+    closeSearch: (restoreFocus?: boolean) => HTMLElement | null,
+  ) => () => void;
   resetChat: () => void;
   chatInputRef: React.RefObject<HTMLInputElement | null>;
 }>({
@@ -1148,7 +1151,8 @@ const ChatContext = createContext<{
   setAnswer: () => {},
   ask: () => {},
   askAssistant: () => {},
-  closeChat: () => {},
+  closeChat: () => null,
+  registerSearchClose: () => () => {},
   resetChat: () => {},
   chatInputRef: { current: null },
 });
@@ -1172,7 +1176,11 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
   const restoreFocusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+  const pendingRestoreFocusRef = useRef<HTMLElement | null>(null);
   const openerRef = useRef<HTMLElement | null>(null);
+  const closeSearchRef = useRef<
+    ((restoreFocus?: boolean) => HTMLElement | null) | null
+  >(null);
   const isOpenRef = useRef(isOpen);
 
   useEffect(() => {
@@ -1180,15 +1188,26 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
   }, [isOpen]);
 
   const showChat = useCallback((returnFocusTo?: HTMLElement | null) => {
+    const previousOverlayOpener = closeSearchRef.current?.(false) ?? null;
+    const pendingChatOpener = pendingRestoreFocusRef.current;
+    if (restoreFocusTimeoutRef.current) {
+      clearTimeout(restoreFocusTimeoutRef.current);
+      restoreFocusTimeoutRef.current = null;
+    }
+    pendingRestoreFocusRef.current = null;
     if (!isOpenRef.current) {
       const activeElement = document.activeElement;
       openerRef.current =
         returnFocusTo?.isConnected === true
           ? returnFocusTo
-          : activeElement instanceof HTMLElement &&
-              activeElement !== document.body
-            ? activeElement
-            : null;
+          : previousOverlayOpener?.isConnected === true
+            ? previousOverlayOpener
+            : pendingChatOpener?.isConnected === true
+              ? pendingChatOpener
+              : activeElement instanceof HTMLElement &&
+                  activeElement !== document.body
+                ? activeElement
+                : null;
     }
     isOpenRef.current = true;
     setIsOpen(true);
@@ -1208,7 +1227,14 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
     );
   }, [showChat]);
 
-  const closeChat = useCallback(() => {
+  const closeChat = useCallback((restoreFocus = true) => {
+    const pendingOpener = pendingRestoreFocusRef.current;
+    if (!restoreFocus && restoreFocusTimeoutRef.current) {
+      clearTimeout(restoreFocusTimeoutRef.current);
+      restoreFocusTimeoutRef.current = null;
+      pendingRestoreFocusRef.current = null;
+    }
+    if (!isOpenRef.current) return pendingOpener;
     if (focusTimeoutRef.current) {
       clearTimeout(focusTimeoutRef.current);
       focusTimeoutRef.current = null;
@@ -1227,11 +1253,31 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
     if (restoreFocusTimeoutRef.current) {
       clearTimeout(restoreFocusTimeoutRef.current);
     }
-    restoreFocusTimeoutRef.current = setTimeout(() => {
-      restoreFocusTimeoutRef.current = null;
-      if (opener?.isConnected) opener.focus();
-    }, 0);
+    if (restoreFocus) {
+      pendingRestoreFocusRef.current = opener;
+      restoreFocusTimeoutRef.current = setTimeout(() => {
+        const focusTarget = pendingRestoreFocusRef.current;
+        restoreFocusTimeoutRef.current = null;
+        pendingRestoreFocusRef.current = null;
+        if (focusTarget?.isConnected) focusTarget.focus();
+      }, 0);
+    } else {
+      pendingRestoreFocusRef.current = null;
+    }
+    return opener;
   }, []);
+
+  const registerSearchClose = useCallback(
+    (closeSearch: (restoreFocus?: boolean) => HTMLElement | null) => {
+      closeSearchRef.current = closeSearch;
+      return () => {
+        if (closeSearchRef.current === closeSearch) {
+          closeSearchRef.current = null;
+        }
+      };
+    },
+    [],
+  );
 
   const toggleChat = useCallback(() => {
     if (isOpenRef.current) {
@@ -1461,6 +1507,7 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
         ask,
         askAssistant,
         closeChat,
+        registerSearchClose,
         resetChat,
         chatInputRef,
       }}

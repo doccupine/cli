@@ -34,11 +34,46 @@ describe("generated accessibility behavior", () => {
       searchModalContentTemplate.indexOf("<StyledLiveStatus"),
     ).toBeLessThan(searchModalContentTemplate.indexOf("<StyledResults"));
     expect(searchDocsTemplate).toContain(
-      "askAssistant(q, searchOpenerRef.current)",
+      "const opener = closeSearchImmediately(false)",
+    );
+    expect(searchDocsTemplate).toContain("askAssistant(q, opener)");
+  });
+
+  it("allows only one Chat or Search modal and transfers opener ownership", () => {
+    const closeChatIndex = searchDocsTemplate.indexOf(
+      "const previousOverlayOpener = closeChat(false)",
+    );
+    const showSearchIndex = searchDocsTemplate.indexOf("setIsVisible(true)");
+    expect(closeChatIndex).toBeGreaterThan(-1);
+    expect(closeChatIndex).toBeLessThan(showSearchIndex);
+    expect(searchDocsTemplate).toContain(
+      "registerSearchClose(closeSearchImmediately)",
     );
     expect(searchDocsTemplate).toContain(
-      "restoreSearchFocusRef.current = false",
+      "restoreSearchFocusRef.current = restoreFocus",
     );
+    expect(searchDocsTemplate).toContain("returnFocusTo={returnFocusTo}");
+
+    const closeSearchIndex = chatTemplate.indexOf(
+      "const previousOverlayOpener = closeSearchRef.current?.(false) ?? null",
+    );
+    const showChatIndex = chatTemplate.indexOf("setIsOpen(true)");
+    expect(closeSearchIndex).toBeGreaterThan(-1);
+    expect(closeSearchIndex).toBeLessThan(showChatIndex);
+    expect(chatTemplate).toContain(
+      "previousOverlayOpener?.isConnected === true",
+    );
+    expect(chatTemplate).toContain("pendingRestoreFocusRef.current");
+    expect(chatTemplate).toContain("if (restoreFocus)");
+    expect(searchDocsTemplate).toContain("{isVisible && (");
+    expect(chatTemplate).toContain(
+      "const isMobileModal = isOpen && isMobileChat",
+    );
+
+    expect(searchDocsTemplate).toContain('e.key === "k"');
+    expect(searchDocsTemplate).toContain("openSearch()");
+    expect(chatTemplate).toContain('e.key.toLowerCase() === "i"');
+    expect(chatTemplate).toContain("toggleChat()");
   });
 
   it("makes mobile chat modal, restores focus, and scrolls only near bottom", () => {
@@ -54,7 +89,7 @@ describe("generated accessibility behavior", () => {
       'document.addEventListener("focusin", containFocus)',
     );
     expect(chatTemplate).toContain("sibling.inert = true");
-    expect(chatTemplate).toContain("opener?.isConnected");
+    expect(chatTemplate).toContain("focusTarget?.isConnected");
     expect(chatTemplate).toContain("shouldAutoScrollRef.current");
     expect(chatTemplate).toContain("distanceFromBottom <=");
     expect(chatTemplate).toContain("cancelAnimationFrame");
