@@ -1,7 +1,10 @@
 import path from "path";
 import net from "node:net";
+import { constants } from "node:fs";
+import fs from "node:fs/promises";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import chalk from "chalk";
-import { dereference } from "@readme/openapi-parser";
+import { bundle, dereference, parse } from "@readme/openapi-parser";
 import type { NormalizedOpenApiSpec, PageMeta } from "./types.js";
 import type {
   AllowlistEntry,
@@ -274,6 +277,214 @@ function firstLine(text: unknown): string {
   return text.split("\n")[0]?.trim() ?? "";
 }
 
+function isWithinDirectory(root: string, candidate: string): boolean {
+  const relative = path.relative(root, candidate);
+  return (
+    relative === "" ||
+    (relative !== ".." &&
+      !relative.startsWith(`..${path.sep}`) &&
+      !path.isAbsolute(relative))
+  );
+}
+
+export function isLocalOpenApiPath(reference: string): boolean {
+  if (path.win32.isAbsolute(reference)) return true;
+  return !/^[a-z][a-z\d+.-]*:/i.test(reference);
+}
+
+async function resolveLocalOpenApiFile(
+  rootRealPath: string,
+  candidate: string,
+  reference: string,
+): Promise<string> {
+  let realPath: string;
+  try {
+    realPath = await fs.realpath(candidate);
+  } catch (error) {
+    throw new Error(`Unable to resolve OpenAPI file "${reference}"`, {
+      cause: error,
+    });
+  }
+  if (!isWithinDirectory(rootRealPath, realPath)) {
+    throw new Error(`OpenAPI file "${reference}" resolves outside rootDir`);
+  }
+  return realPath;
+}
+
+interface ResolverFile {
+  url: string;
+}
+
+interface OpenApiFileResolver {
+  order: number;
+  canRead(file: ResolverFile): boolean;
+  read(file: ResolverFile): unknown | Promise<unknown>;
+}
+
+// The wrapper's runtime passes resolver objects through, although its public
+// ParserOptions type narrows resolve.file to boolean.
+function parserFileResolver(resolver: OpenApiFileResolver): boolean {
+  return resolver as unknown as boolean;
+}
+
+async function readOpenApiSnapshot(
+  rootRealPath: string,
+  realPath: string,
+  reference: string,
+): Promise<Buffer> {
+  let handle: Awaited<ReturnType<typeof fs.open>>;
+  try {
+    const noFollow = process.platform === "win32" ? 0 : constants.O_NOFOLLOW;
+    handle = await fs.open(realPath, constants.O_RDONLY | noFollow);
+  } catch (error) {
+    throw new Error(`Unable to open OpenAPI file "${reference}"`, {
+      cause: error,
+    });
+  }
+
+  try {
+    const [openedStat, confirmedRealPath] = await Promise.all([
+      handle.stat(),
+      fs.realpath(realPath),
+    ]);
+    if (
+      !openedStat.isFile() ||
+      !isWithinDirectory(rootRealPath, confirmedRealPath)
+    ) {
+      throw new Error(`OpenAPI file "${reference}" resolves outside rootDir`);
+    }
+    const currentStat = await fs.stat(confirmedRealPath);
+    if (
+      openedStat.dev !== currentStat.dev ||
+      openedStat.ino !== currentStat.ino
+    ) {
+      throw new Error(`OpenAPI file "${reference}" changed while being read`);
+    }
+    return await handle.readFile();
+  } finally {
+    await handle.close();
+  }
+}
+
+async function parseOpenApiSnapshot(
+  filePath: string,
+  contents: Buffer,
+): Promise<any> {
+  return parse(filePath, {
+    resolve: {
+      file: parserFileResolver({
+        order: 1,
+        canRead: () => true,
+        read: () => contents,
+      }),
+    },
+  });
+}
+
+function resolveOpenApiReference(filePath: string, reference: string): string {
+  if (path.isAbsolute(reference) || path.win32.isAbsolute(reference)) {
+    return path.normalize(reference);
+  }
+  try {
+    const url = new URL(reference, pathToFileURL(filePath));
+    if (url.protocol !== "file:") throw new Error("Not a local file");
+    return fileURLToPath(url);
+  } catch (error) {
+    throw new Error(`Invalid OpenAPI external reference "${reference}"`, {
+      cause: error,
+    });
+  }
+}
+
+/**
+ * Captures every allowed file once and rewrites external refs to closed,
+ * in-memory snapshot URLs. No parser phase after this function reads disk.
+ */
+async function snapshotOpenApiDocuments(
+  rootRealPath: string,
+  rootFile: string,
+): Promise<{ rootDocument: any; snapshots: Map<string, any> }> {
+  const byRealPath = new Map<string, { document: any; url: string }>();
+  const snapshots = new Map<string, any>();
+
+  const visit = async (
+    candidate: string,
+    reference: string,
+  ): Promise<string> => {
+    const realPath = await resolveLocalOpenApiFile(
+      rootRealPath,
+      candidate,
+      reference,
+    );
+    const existing = byRealPath.get(realPath);
+    if (existing) return existing.url;
+
+    const contents = await readOpenApiSnapshot(
+      rootRealPath,
+      realPath,
+      reference,
+    );
+    const document: any = await parseOpenApiSnapshot(realPath, contents);
+    const snapshotUrl = `file:///__doccupine_openapi_snapshot__/${byRealPath.size}.json`;
+    byRealPath.set(realPath, { document, url: snapshotUrl });
+    snapshots.set(snapshotUrl, document);
+
+    const seen = new WeakSet<object>();
+    const scan = async (value: any): Promise<void> => {
+      if (value === null || typeof value !== "object" || seen.has(value))
+        return;
+      seen.add(value);
+
+      if (typeof value.$ref === "string") {
+        const hashIndex = value.$ref.indexOf("#");
+        const externalPath =
+          hashIndex >= 0 ? value.$ref.slice(0, hashIndex) : value.$ref;
+        if (externalPath) {
+          if (!isLocalOpenApiPath(externalPath)) {
+            throw new Error(
+              `OpenAPI external reference "${value.$ref}" must be a local file`,
+            );
+          }
+          const targetUrl = await visit(
+            resolveOpenApiReference(realPath, externalPath),
+            value.$ref,
+          );
+          const fragment = hashIndex >= 0 ? value.$ref.slice(hashIndex) : "";
+          value.$ref = `${targetUrl}${fragment}`;
+        }
+      }
+
+      await Promise.all(Object.values(value).map(scan));
+    };
+    await scan(document);
+    return snapshotUrl;
+  };
+
+  const rootUrl = await visit(rootFile, rootFile);
+  return { rootDocument: snapshots.get(rootUrl), snapshots };
+}
+
+async function dereferenceOpenApiSnapshots(
+  rootDocument: any,
+  snapshots: Map<string, any>,
+): Promise<any> {
+  const snapshotResolver = parserFileResolver({
+    order: 1,
+    canRead: (file) => snapshots.has(file.url),
+    read: (file) => {
+      const document = snapshots.get(file.url);
+      if (document === undefined) {
+        throw new Error(`Unknown OpenAPI snapshot "${file.url}"`);
+      }
+      return document;
+    },
+  });
+  const bundled = await bundle(rootDocument, {
+    resolve: { file: snapshotResolver },
+  });
+  return dereference(bundled, { resolve: { external: false } });
+}
+
 /**
  * Parses one or more OpenAPI specs and exposes everything the generator needs:
  * the operation descriptors, lookup indices for the MDX frontmatter path,
@@ -310,11 +521,31 @@ export class OpenApiRegistry {
     const usedSlugs = new Set<string>();
     const allowlistKeys = new Set<string>();
 
+    const rootRealPath =
+      specs.length > 0 ? await fs.realpath(rootDir) : path.resolve(rootDir);
+
     for (const spec of specs) {
-      const absolute = path.resolve(rootDir, spec.file);
       let doc: any;
       try {
-        doc = await dereference(absolute);
+        if (!isLocalOpenApiPath(spec.file)) {
+          throw new Error(
+            `OpenAPI spec "${spec.file}" must be a local file within rootDir`,
+          );
+        }
+        const configuredPath =
+          path.isAbsolute(spec.file) || path.win32.isAbsolute(spec.file)
+            ? path.normalize(spec.file)
+            : path.resolve(rootDir, spec.file);
+        const absolute = await resolveLocalOpenApiFile(
+          rootRealPath,
+          configuredPath,
+          spec.file,
+        );
+        const { rootDocument, snapshots } = await snapshotOpenApiDocuments(
+          rootRealPath,
+          absolute,
+        );
+        doc = await dereferenceOpenApiSnapshots(rootDocument, snapshots);
       } catch (error) {
         throw new Error(
           `Failed to parse OpenAPI spec "${spec.file}": ${error instanceof Error ? error.message : String(error)}`,
@@ -698,6 +929,16 @@ function inlineText(text: unknown): string {
   return text.replace(/\s+/g, " ").trim();
 }
 
+/** Emits untrusted prose as a JSX string expression, never as executable MDX. */
+function jsxText(text: string): string {
+  return `{${JSON.stringify(text)}}`;
+}
+
+function jsonCode(value: unknown): string {
+  const serialized = JSON.stringify(value, null, 2) ?? "null";
+  return `<pre><code>${jsxText(serialized)}</code></pre>`;
+}
+
 /** The object schema whose `properties` we can document (unwraps arrays). */
 function objectShape(schema: any): any | null {
   if (!schema || typeof schema !== "object") return null;
@@ -724,7 +965,7 @@ function renderDocField(
   const lines = [
     `<Field value={${JSON.stringify(name)}} type={${JSON.stringify(type)}}${required ? " required" : ""}>`,
   ];
-  if (desc) lines.push(desc);
+  if (desc) lines.push(jsxText(desc));
   const shape = depth < MAX_FIELD_DEPTH ? objectShape(schema) : null;
   if (shape) {
     const req: string[] = Array.isArray(shape.required) ? shape.required : [];
@@ -754,12 +995,13 @@ const PARAM_LOCATION_TITLES: Record<string, string> = {
 /**
  * Builds the MDX body for a generated endpoint page: the operation description,
  * followed by `<Field>` documentation for the parameters and request body, and
- * a schema/example code block per response. Rendered above the playground.
+ * a schema/example code block per response. Spec-derived strings are emitted
+ * only through serialized JSX expressions. Rendered above the playground.
  */
 export function buildEndpointDoc(op: OperationDescriptor): string {
   const out: string[] = [];
-  if (op.description) out.push(op.description);
-  else if (op.summary) out.push(op.summary);
+  if (op.description) out.push(jsxText(op.description));
+  else if (op.summary) out.push(jsxText(op.summary));
 
   for (const location of ["path", "query", "header", "cookie"] as const) {
     const params = op.parameters.filter((p) => p.in === location);
@@ -790,23 +1032,23 @@ export function buildEndpointDoc(op: OperationDescriptor): string {
         );
       }
     } else {
-      out.push("```json\n" + JSON.stringify(body.schema, null, 2) + "\n```");
+      out.push(jsonCode(body.schema));
     }
   }
 
   if (op.responses.length > 0) {
     out.push("## Responses");
     for (const response of op.responses) {
-      out.push(`### ${response.status}`);
+      out.push(`<h3>{${JSON.stringify(response.status)}}</h3>`);
       if (response.description) {
-        out.push(inlineText(response.description));
+        out.push(jsxText(inlineText(response.description)));
       }
       const media =
         response.content.find((m) => m.contentType.includes("json")) ??
         response.content[0];
       const payload = media?.example ?? media?.schema;
       if (payload !== undefined) {
-        out.push("```json\n" + JSON.stringify(payload, null, 2) + "\n```");
+        out.push(jsonCode(payload));
       }
     }
   }
