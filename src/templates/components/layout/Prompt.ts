@@ -1,11 +1,7 @@
 export const promptTemplate = `"use client";
 import React from "react";
 import styled from "styled-components";
-import {
-  interactiveStyles,
-  styledSmall,
-  styledText,
-} from "cherry-styled-components";
+import { interactiveStyles, styledText } from "cherry-styled-components";
 import { Theme } from "@/app/theme";
 import { Icon } from "@/components/layout/Icon";
 import { CopyButton } from "@/components/layout/CopyButton";
@@ -46,15 +42,16 @@ const StyledPrompt = styled.div<{ theme: Theme }>\`
 
 const StyledPromptHeader = styled.div<{ theme: Theme }>\`
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   margin: 0 0 15px;
-  \${({ theme }) => styledSmall(theme)};
+  \${({ theme }) => styledText(theme)};
   font-weight: 700;
   color: \${({ theme }) => theme.colors.dark};
 
   & > svg.lucide {
     flex-shrink: 0;
+    margin-top: 4px;
     color: inherit;
   }
 \`;
