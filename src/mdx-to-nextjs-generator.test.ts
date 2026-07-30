@@ -20,6 +20,14 @@ async function fixture(): Promise<{
   return { root, watchDir, outputDir };
 }
 
+async function waitUntil(check: () => Promise<boolean>): Promise<void> {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    if (await check()) return;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  throw new Error("Timed out waiting for watcher output");
+}
+
 afterEach(async () => {
   vi.restoreAllMocks();
   await Promise.all(
@@ -605,6 +613,163 @@ describe.sequential("MDXToNextJSGenerator ownership", () => {
     );
     await expect(fs.readFile(externalPeer, "utf8")).resolves.toBe("keep");
   });
+
+  it("prunes public files deleted while the generator was stopped", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const sourcePath = path.join(root, "public", "obsolete.txt");
+    const outputPath = path.join(outputDir, "public", "obsolete.txt");
+    await fs.outputFile(sourcePath, "obsolete\n");
+    await fs.outputFile(path.join(watchDir, "index.mdx"), "# Home\n");
+
+    const first = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+    await first.init();
+    expect(await fs.readFile(outputPath, "utf8")).toBe("obsolete\n");
+
+    await fs.remove(sourcePath);
+    const second = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+    await second.init();
+
+    expect(await fs.pathExists(outputPath)).toBe(false);
+    const manifest = await fs.readJson(
+      path.join(outputDir, ".doccupine-artifacts.json"),
+    );
+    expect(manifest.publicFiles).toEqual([]);
+  });
+
+  it("writes normalized analytics configuration to the generated runtime", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    await fs.outputFile(path.join(watchDir, "index.mdx"), "# Home\n");
+    await fs.writeJson(path.join(root, "analytics.json"), {
+      provider: "posthog",
+      posthog: {
+        key: "phc_test-key",
+        host: "  https://posthog.example/  ",
+      },
+    });
+
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+    await generator.init();
+
+    expect(await fs.readJson(path.join(outputDir, "analytics.json"))).toEqual({
+      provider: "posthog",
+      posthog: {
+        key: "phc_test-key",
+        host: "https://posthog.example",
+      },
+    });
+    expect(
+      await fs.readFile(path.join(outputDir, "next.config.ts"), "utf8"),
+    ).toContain('destination: "https://posthog.example/:path*"');
+  });
+
+  it("reconciles source changes that predate watcher readiness", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const mdxPath = path.join(watchDir, "guide.mdx");
+    const publicPath = path.join(root, "public", "asset.txt");
+    await fs.outputFile(mdxPath, "---\ntitle: Old\n---\nOld body\n");
+    await fs.outputFile(publicPath, "old asset\n");
+
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+    await generator.init();
+
+    await fs.writeFile(mdxPath, "---\ntitle: New\n---\nNew body\n");
+    await fs.remove(publicPath);
+    await generator.startWatching();
+
+    const page = await fs.readFile(
+      path.join(outputDir, "app", "(site)", "guide", "page.tsx"),
+      "utf8",
+    );
+    expect(page).toContain("New body");
+    expect(
+      await fs.pathExists(path.join(outputDir, "public", "asset.txt")),
+    ).toBe(false);
+    await generator.stop();
+  });
+
+  it("does not replay unchanged sources when watchers become ready", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    await fs.outputFile(path.join(watchDir, "index.mdx"), "# Home\n");
+    await fs.writeJson(path.join(root, "config.json"), { name: "Docs" });
+    await fs.outputFile(path.join(root, "public", "asset.txt"), "asset\n");
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+    await generator.init();
+    const processAll = vi.spyOn(generator, "processAllMDXFiles");
+    const configChange = vi.spyOn(generator, "handleConfigFileChange");
+    const configDelete = vi.spyOn(generator, "handleConfigFileDelete");
+    const publicCopy = vi.spyOn(generator, "copyPublicFiles");
+
+    await generator.startWatching();
+
+    expect(processAll).not.toHaveBeenCalled();
+    expect(configChange).not.toHaveBeenCalled();
+    expect(configDelete).not.toHaveBeenCalled();
+    expect(publicCopy).not.toHaveBeenCalled();
+    await generator.stop();
+  });
+
+  it("recreates public watching after the source directory is replaced", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const publicDir = path.join(root, "public");
+    await fs.outputFile(path.join(watchDir, "index.mdx"), "# Home\n");
+    await fs.outputFile(path.join(publicDir, "old.txt"), "old\n");
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+    await generator.init();
+    await generator.startWatching();
+
+    await fs.remove(publicDir);
+    await waitUntil(() =>
+      fs
+        .pathExists(path.join(outputDir, "public", "old.txt"))
+        .then((exists) => !exists),
+    );
+    await fs.outputFile(path.join(publicDir, "new.txt"), "new\n");
+    await waitUntil(() =>
+      fs.pathExists(path.join(outputDir, "public", "new.txt")),
+    );
+    await fs.writeFile(path.join(publicDir, "new.txt"), "updated\n");
+    await waitUntil(async () => {
+      try {
+        return (
+          (await fs.readFile(
+            path.join(outputDir, "public", "new.txt"),
+            "utf8",
+          )) === "updated\n"
+        );
+      } catch {
+        return false;
+      }
+    });
+
+    await generator.stop();
+  });
+
+  it.skipIf(process.platform !== "darwin" && process.platform !== "win32")(
+    "preserves case-only public renames on case-insensitive filesystems",
+    async () => {
+      const { root, watchDir, outputDir } = await fixture();
+      const lowerSource = path.join(root, "public", "asset.txt");
+      const upperSource = path.join(root, "public", "ASSET.txt");
+      await fs.outputFile(path.join(watchDir, "index.mdx"), "# Home\n");
+      await fs.outputFile(lowerSource, "asset\n");
+
+      const first = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+      await first.init();
+      await fs.rename(lowerSource, upperSource);
+
+      const second = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+      await second.init();
+
+      await expect(
+        fs.readFile(path.join(outputDir, "public", "ASSET.txt"), "utf8"),
+      ).resolves.toBe("asset\n");
+      const manifest = await fs.readJson(
+        path.join(outputDir, ".doccupine-artifacts.json"),
+      );
+      expect(manifest.publicFiles).toContain("ASSET.txt");
+      expect(manifest.publicFiles).not.toContain("asset.txt");
+    },
+  );
 
   it.skipIf(process.platform === "win32")(
     "atomically replaces a symlinked public destination",

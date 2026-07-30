@@ -8,7 +8,7 @@ import {
   getAllDocsChunks,
   DOCS_TOOLS,
 } from "@/services/mcp/tools";
-import { getLLMConfig, isLLMAvailable, createEmbeddings } from "@/services/llm";
+import { getLLMConfig, createEmbeddings } from "@/services/llm";
 import {
   reduceDims,
   quantizeInt8,
@@ -91,7 +91,7 @@ const RUNTIME_EMBED_MAX_CHUNKS = resolveRuntimeEmbedMax();
 
 /**
  * In-memory cache for document embeddings.
- * Built once at server startup since docs are static.
+ * Built lazily on first use since docs are static.
  */
 let docsIndex: {
   ready: boolean;
@@ -347,16 +347,6 @@ function toolError(message: string) {
 
 function resourceText(value: unknown): string {
   return serializeMCPResult(value).text;
-}
-
-// Eagerly start building the index on server startup if LLM is configured
-if (isLLMAvailable()) {
-  const initialBuild = buildDocsIndex();
-  indexReady = initialBuild;
-  // A failed eager build (e.g. a missing prebuilt index on a large doc set) must
-  // not surface as an unhandledRejection at startup; the first request retries
-  // via ensureDocsIndex and returns a real error to the client.
-  void initialBuild.catch(() => {});
 }
 
 /** Cached embeddings instance for search queries */

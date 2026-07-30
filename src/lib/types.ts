@@ -60,8 +60,21 @@ export interface NormalizedOpenApiSpec {
   file: string;
 }
 
+export interface GoogleFontConfig {
+  fontName: string;
+  subsets?: string[];
+  weight?: string | string[];
+}
+
+export interface LocalFontSource {
+  path: string;
+  weight?: string;
+  style?: string;
+}
+
 export interface FontConfig {
-  [key: string]: any;
+  googleFont?: GoogleFontConfig;
+  localFonts?: string | { src: LocalFontSource[] };
 }
 
 export interface PostHogConfig {

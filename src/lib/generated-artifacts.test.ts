@@ -37,6 +37,7 @@ describe("GeneratedArtifacts", () => {
       { source: "guide.mdx", slug: "api/guide" },
     ]);
     artifacts.replaceLlmsPageFiles(["api/guide.md"]);
+    artifacts.replacePublicFiles(["images/logo.png"]);
     await artifacts.save();
 
     const reloaded = new GeneratedArtifacts(outputDir);
@@ -44,6 +45,7 @@ describe("GeneratedArtifacts", () => {
 
     expect(reloaded.routeFor("mdx", "guide.mdx")).toBe("api/guide");
     expect(reloaded.llmsPageFiles()).toEqual(new Set(["api/guide.md"]));
+    expect(reloaded.publicFiles()).toEqual(new Set(["images/logo.png"]));
   });
 
   it("rejects unsafe paths written through its API", async () => {
@@ -57,6 +59,9 @@ describe("GeneratedArtifacts", () => {
     ).toThrow("unsafe mdx route ownership");
     expect(() => artifacts.replaceLlmsPageFiles(["../../outside.md"])).toThrow(
       "unsafe llms page path",
+    );
+    expect(() => artifacts.replacePublicFiles(["../../outside.png"])).toThrow(
+      "unsafe public path",
     );
   });
 

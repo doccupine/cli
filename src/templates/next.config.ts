@@ -77,11 +77,11 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/ingest/static/:path*",
-        destination: "${assetsHost}/static/:path*",
+        destination: ${JSON.stringify(`${assetsHost}/static/:path*`)},
       },
       {
         source: "/ingest/:path*",
-        destination: "${host}/:path*",
+        destination: ${JSON.stringify(`${host}/:path*`)},
       },
     ];
   },

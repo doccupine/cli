@@ -13,9 +13,10 @@ interface RouteArtifact {
 }
 
 interface ArtifactManifest {
-  schemaVersion: 1;
+  schemaVersion: 2;
   routes: RouteArtifact[];
   llmsPageFiles: string[];
+  publicFiles: string[];
 }
 
 const MANIFEST_FILE = ".doccupine-artifacts.json";
@@ -58,9 +59,14 @@ function normalizeLlmsPageFile(value: unknown): string | null {
   return normalized?.endsWith(".md") ? normalized : null;
 }
 
+function normalizePublicFile(value: unknown): string | null {
+  return typeof value === "string" ? normalizeRelativePath(value) : null;
+}
+
 export class GeneratedArtifacts {
   private routes = new Map<string, RouteArtifact>();
   private llmsFiles = new Set<string>();
+  private publicFilePaths = new Set<string>();
 
   constructor(private readonly outputDir: string) {}
 
@@ -75,6 +81,7 @@ export class GeneratedArtifacts {
   async load(): Promise<void> {
     this.routes.clear();
     this.llmsFiles.clear();
+    this.publicFilePaths.clear();
 
     const manifestContent = await readOutputFileIfPresent(
       this.outputDir,
@@ -85,6 +92,7 @@ export class GeneratedArtifacts {
         const parsed = JSON.parse(manifestContent) as {
           routes?: unknown;
           llmsPageFiles?: unknown;
+          publicFiles?: unknown;
         };
         if (Array.isArray(parsed.routes)) {
           for (const value of parsed.routes) {
@@ -97,6 +105,12 @@ export class GeneratedArtifacts {
           for (const value of parsed.llmsPageFiles) {
             const file = normalizeLlmsPageFile(value);
             if (file) this.llmsFiles.add(file);
+          }
+        }
+        if (Array.isArray(parsed.publicFiles)) {
+          for (const value of parsed.publicFiles) {
+            const file = normalizePublicFile(value);
+            if (file) this.publicFilePaths.add(file);
           }
         }
       } catch {
@@ -174,13 +188,28 @@ export class GeneratedArtifacts {
     this.llmsFiles = next;
   }
 
+  publicFiles(): Set<string> {
+    return new Set(this.publicFilePaths);
+  }
+
+  replacePublicFiles(files: Iterable<string>): void {
+    const next = new Set<string>();
+    for (const value of files) {
+      const file = normalizePublicFile(value);
+      if (!file) throw new Error("Refusing to record an unsafe public path");
+      next.add(file);
+    }
+    this.publicFilePaths = next;
+  }
+
   async save(): Promise<void> {
     const manifest: ArtifactManifest = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       routes: [...this.routes.values()].sort((a, b) =>
         `${a.kind}:${a.source}`.localeCompare(`${b.kind}:${b.source}`),
       ),
       llmsPageFiles: [...this.llmsFiles].sort(),
+      publicFiles: [...this.publicFilePaths].sort(),
     };
     await writeFileAtomic(
       this.manifestPath(MANIFEST_FILE),

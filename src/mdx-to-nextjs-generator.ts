@@ -1,5 +1,6 @@
 import chokidar, { FSWatcher } from "chokidar";
 import fs from "fs-extra";
+import { createHash } from "node:crypto";
 import { constants } from "node:fs";
 import { open, type FileHandle } from "node:fs/promises";
 import path from "path";
@@ -17,6 +18,10 @@ import {
   validateConfig,
 } from "./lib/config-manager.js";
 import { GeneratedArtifacts } from "./lib/generated-artifacts.js";
+import {
+  validateAnalyticsConfig,
+  validateFontConfig,
+} from "./lib/project-config.js";
 import {
   claimOutputDirectory,
   isPathInside,
@@ -87,6 +92,12 @@ function isManagedPublicArtifact(relativePath: string): boolean {
   return PUBLIC_AGGREGATE_PATHS.has(normalized) || normalized.endsWith(".md");
 }
 
+function publicDestinationRelativePath(relativePath: string): string {
+  return isPublicAggregate(relativePath)
+    ? normalizePublicArtifactPath(relativePath)
+    : relativePath.replace(/\\/g, "/");
+}
+
 function errorCode(error: unknown): string | undefined {
   return error && typeof error === "object" && "code" in error
     ? String(error.code)
@@ -95,6 +106,16 @@ function errorCode(error: unknown): string | undefined {
 
 function sameFileIdentity(left: fs.Stats, right: fs.Stats): boolean {
   return left.dev === right.dev && left.ino === right.ino;
+}
+
+interface WatchSourceSnapshot {
+  mdx: string;
+  configs: Record<string, string>;
+  font: string;
+  analytics: string;
+  doccupine: string;
+  public: string;
+  openapi: string;
 }
 
 export class MDXToNextJSGenerator {
@@ -132,6 +153,10 @@ export class MDXToNextJSGenerator {
   private generatedSectionIndexSlugs = new Set<string>();
   /** Serializes watcher mutations so aggregate files never race one another. */
   private mutationQueue: Promise<void> = Promise.resolve();
+  private stopping = false;
+  private readyCancellations = new Set<() => void>();
+  private watchSourceSnapshot: WatchSourceSnapshot | null = null;
+  private publicWatcherStarting = false;
 
   constructor(
     watchDir: string,
@@ -456,6 +481,206 @@ export class MDXToNextJSGenerator {
     });
   }
 
+  private waitForWatcherReady(watcher: FSWatcher): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const cleanup = () => {
+        watcher.removeListener("ready", onReady);
+        watcher.removeListener("error", onError);
+        this.readyCancellations.delete(onStop);
+      };
+      const onReady = () => {
+        cleanup();
+        resolve();
+      };
+      const onError = (error: unknown) => {
+        cleanup();
+        reject(error);
+      };
+      const onStop = () => {
+        cleanup();
+        resolve();
+      };
+      this.readyCancellations.add(onStop);
+      watcher.once("ready", onReady);
+      watcher.once("error", onError);
+    });
+  }
+
+  private async pathState(
+    filePath: string,
+    hashContents = false,
+  ): Promise<string> {
+    try {
+      const stat = await fs.lstat(filePath);
+      const kind = stat.isDirectory()
+        ? "directory"
+        : stat.isFile()
+          ? "file"
+          : stat.isSymbolicLink()
+            ? "symlink"
+            : "other";
+      const hash =
+        hashContents && stat.isFile()
+          ? createHash("sha256")
+              .update(await fs.readFile(filePath))
+              .digest("hex")
+          : "";
+      return `${kind}:${stat.size}:${stat.mtimeMs}:${stat.dev}:${stat.ino}:${hash}`;
+    } catch (error) {
+      if (errorCode(error) === "ENOENT") return "missing";
+      throw error;
+    }
+  }
+
+  private async treeState(
+    root: string,
+    includeFile: (relativePath: string) => boolean,
+    hashContents = false,
+  ): Promise<string> {
+    if (!(await fs.pathExists(root))) return "missing";
+    const entries: string[] = [];
+    const scan = async (directory: string, relativePath = "") => {
+      const children = await fs.readdir(directory, { withFileTypes: true });
+      children.sort((left, right) => left.name.localeCompare(right.name));
+      for (const child of children) {
+        const childRelativePath = path.join(relativePath, child.name);
+        const childPath = path.join(directory, child.name);
+        const state = await this.pathState(childPath, hashContents);
+        if (state === "missing") continue;
+        if (child.isDirectory()) {
+          entries.push(`${childRelativePath.replace(/\\/g, "/")}:${state}`);
+          await scan(childPath, childRelativePath);
+        } else if (includeFile(childRelativePath)) {
+          entries.push(`${childRelativePath.replace(/\\/g, "/")}:${state}`);
+        }
+      }
+    };
+    await scan(root);
+    return entries.join("\n");
+  }
+
+  private async captureWatchSourceSnapshot(): Promise<WatchSourceSnapshot> {
+    const configs = Object.fromEntries(
+      await Promise.all(
+        this.configFiles.map(async (fileName) => [
+          fileName,
+          await this.pathState(path.join(this.rootDir, fileName), true),
+        ]),
+      ),
+    );
+    const openapi = (
+      await Promise.all(
+        this.openApiSpecs.map(async (spec) => {
+          const specPath = path.resolve(this.rootDir, spec.file);
+          return `${specPath}:${await this.pathState(specPath, true)}`;
+        }),
+      )
+    ).join("\n");
+
+    return {
+      mdx: await this.treeState(
+        this.watchDir,
+        (relativePath) => relativePath.toLowerCase().endsWith(".mdx"),
+        true,
+      ),
+      configs,
+      font: await this.pathState(
+        path.join(this.rootDir, this.fontConfigFile),
+        true,
+      ),
+      analytics: await this.pathState(
+        path.join(this.rootDir, this.analyticsConfigFile),
+        true,
+      ),
+      doccupine: await this.pathState(
+        path.join(this.rootDir, this.doccupineConfigFile),
+        true,
+      ),
+      public: await this.treeState(
+        path.join(this.rootDir, "public"),
+        () => true,
+      ),
+      openapi,
+    };
+  }
+
+  private async reconcileWatchedSources(
+    previous: WatchSourceSnapshot | null,
+    current: WatchSourceSnapshot,
+  ): Promise<void> {
+    const doccupineConfigPath = path.join(
+      this.rootDir,
+      this.doccupineConfigFile,
+    );
+    const doccupineChanged =
+      previous === null || previous.doccupine !== current.doccupine;
+    if (doccupineChanged && (await fs.pathExists(doccupineConfigPath))) {
+      await this.handleDoccupineConfigChange();
+    }
+
+    let sectionsChanged = false;
+    for (const configFile of this.configFiles) {
+      if (
+        previous !== null &&
+        previous.configs[configFile] === current.configs[configFile]
+      ) {
+        continue;
+      }
+      const sourcePath = path.join(this.rootDir, configFile);
+      if (await fs.pathExists(sourcePath)) {
+        await this.handleConfigFileChange(sourcePath);
+      } else {
+        await this.handleConfigFileDelete(sourcePath);
+      }
+      if (configFile === "sections.json") sectionsChanged = true;
+    }
+
+    const fontPath = path.join(this.rootDir, this.fontConfigFile);
+    if (previous === null || previous.font !== current.font) {
+      if (await fs.pathExists(fontPath)) {
+        await this.handleFontConfigChange();
+      } else {
+        await this.handleFontConfigDelete();
+      }
+    }
+
+    const analyticsPath = path.join(this.rootDir, this.analyticsConfigFile);
+    if (previous === null || previous.analytics !== current.analytics) {
+      if (await fs.pathExists(analyticsPath)) {
+        await this.handleAnalyticsConfigChange();
+      } else {
+        await this.handleAnalyticsConfigDelete();
+      }
+    }
+
+    const publicDir = path.join(this.rootDir, "public");
+    if (previous === null || previous.public !== current.public) {
+      if (
+        !this.stopping &&
+        !this.publicWatcher &&
+        (await fs.pathExists(publicDir))
+      ) {
+        await this.waitForWatcherReady(this.setupPublicWatcher());
+        if (this.stopping) return;
+      }
+      await this.copyPublicFiles();
+    }
+
+    if (
+      !doccupineChanged &&
+      this.openApiSpecs.length > 0 &&
+      (previous === null || previous.openapi !== current.openapi)
+    ) {
+      await this.handleOpenApiChange();
+    }
+    if (
+      !sectionsChanged &&
+      (previous === null || previous.mdx !== current.mdx)
+    ) {
+      await this.processAllMDXFiles();
+    }
+  }
+
   async init() {
     console.log(chalk.blue("🚀 Initializing MDX to Next.js generator..."));
 
@@ -503,6 +728,8 @@ export class MDXToNextJSGenerator {
     await this.writeApiPages();
 
     await this.processAllMDXFiles();
+
+    this.watchSourceSnapshot = await this.captureWatchSourceSnapshot();
 
     console.log(chalk.green("✅ Initial setup complete!"));
     console.log(chalk.cyan("💡 To start the Next.js dev server:"));
@@ -605,8 +832,13 @@ export class MDXToNextJSGenerator {
 
     try {
       if (await fs.pathExists(fontPath)) {
-        const fontContent = await fs.readFile(fontPath, "utf8");
-        return JSON.parse(fontContent) as FontConfig;
+        const { data } = await this.readSafeSourceFile(
+          this.rootDir,
+          fontPath,
+          "font source",
+          false,
+        );
+        return validateFontConfig(JSON.parse(data.toString("utf8")));
       }
     } catch (error) {
       console.warn(
@@ -623,11 +855,13 @@ export class MDXToNextJSGenerator {
 
     try {
       if (await fs.pathExists(analyticsPath)) {
-        const content = await fs.readFile(analyticsPath, "utf8");
-        const parsed = JSON.parse(content);
-        if (parsed?.provider === "posthog" && parsed.posthog?.key) {
-          return parsed as AnalyticsConfig;
-        }
+        const { data } = await this.readSafeSourceFile(
+          this.rootDir,
+          analyticsPath,
+          "analytics source",
+          false,
+        );
+        return validateAnalyticsConfig(JSON.parse(data.toString("utf8")));
       }
     } catch (error) {
       console.warn(
@@ -646,7 +880,11 @@ export class MDXToNextJSGenerator {
     const destPath = this.outputPath(this.analyticsConfigFile);
 
     if (await fs.pathExists(sourcePath)) {
-      await this.copyRootSourceFile(sourcePath, destPath, "analytics source");
+      const config = await this.loadAnalyticsConfig();
+      await writeFileAtomic(
+        destPath,
+        config ? `${JSON.stringify(config, null, 2)}\n` : `{}\n`,
+      );
       console.log(
         chalk.green(`  ✓ Copied ${this.analyticsConfigFile} to Next.js app`),
       );
@@ -1038,16 +1276,19 @@ export class MDXToNextJSGenerator {
   async handleAnalyticsConfigChange() {
     console.log(chalk.cyan(`📊 Analytics configuration changed`));
 
-    const sourcePath = path.join(this.rootDir, this.analyticsConfigFile);
     const destPath = this.outputPath(this.analyticsConfigFile);
 
     try {
-      await this.copyRootSourceFile(sourcePath, destPath, "analytics source");
+      this.analyticsConfig = await this.loadAnalyticsConfig();
+      await writeFileAtomic(
+        destPath,
+        this.analyticsConfig
+          ? `${JSON.stringify(this.analyticsConfig, null, 2)}\n`
+          : `{}\n`,
+      );
       console.log(
         chalk.green(`📋 Updated ${this.analyticsConfigFile} in Next.js app`),
       );
-
-      this.analyticsConfig = await this.loadAnalyticsConfig();
 
       // Regenerate dynamic templates that depend on analytics config
       await writeFileAtomic(
@@ -1107,6 +1348,7 @@ export class MDXToNextJSGenerator {
 
   async copyPublicFiles() {
     const publicDir = path.join(this.rootDir, "public");
+    const previousFiles = this.artifacts.publicFiles();
 
     console.log(chalk.blue(`🔍 Checking for public directory...`));
 
@@ -1116,6 +1358,11 @@ export class MDXToNextJSGenerator {
     } catch (error) {
       if (errorCode(error) !== "ENOENT") throw error;
       console.log(chalk.gray(`  ✗ public directory not found, skipping`));
+      for (const stale of previousFiles) {
+        await fs.remove(this.publicOutputFilePath(stale));
+      }
+      this.artifacts.replacePublicFiles([]);
+      await this.artifacts.save();
       return;
     }
     if (publicStat.isSymbolicLink() || !publicStat.isDirectory()) {
@@ -1168,26 +1415,55 @@ export class MDXToNextJSGenerator {
     };
 
     await scanDir(publicDir);
+    const nextFiles = new Set<string>();
+    const nextByFoldedPath = new Map<string, string>();
     for (const relativePath of files) {
+      const destRelativePath = publicDestinationRelativePath(relativePath);
+      nextFiles.add(destRelativePath);
+      nextByFoldedPath.set(destRelativePath.toLowerCase(), destRelativePath);
+    }
+    const removedBeforeCopy = new Set<string>();
+    for (const stale of previousFiles) {
+      const replacement = nextByFoldedPath.get(stale.toLowerCase());
+      if (
+        replacement &&
+        replacement !== stale &&
+        (await fs.pathExists(this.publicOutputFilePath(replacement)))
+      ) {
+        await fs.remove(this.publicOutputFilePath(stale));
+        removedBeforeCopy.add(stale);
+      }
+    }
+    for (const relativePath of files) {
+      const destRelativePath = publicDestinationRelativePath(relativePath);
       await this.copyRegularPublicFile(
         publicDir,
         path.join(publicDir, relativePath),
-        this.publicOutputFilePath(relativePath),
+        this.publicOutputFilePath(destRelativePath),
       );
     }
+    for (const stale of previousFiles) {
+      if (!nextFiles.has(stale) && !removedBeforeCopy.has(stale)) {
+        await fs.remove(this.publicOutputFilePath(stale));
+      }
+    }
+    this.artifacts.replacePublicFiles(nextFiles);
+    await this.artifacts.save();
     console.log(chalk.green(`  ✓ Copied public directory to Next.js app`));
   }
 
   async handlePublicFileChange(filePath: string) {
     const publicDir = path.join(this.rootDir, "public");
     const relativePath = path.relative(publicDir, filePath);
-    const destRelativePath = isPublicAggregate(relativePath)
-      ? normalizePublicArtifactPath(relativePath)
-      : relativePath;
+    const destRelativePath = publicDestinationRelativePath(relativePath);
     const destPath = this.publicOutputFilePath(destRelativePath);
 
     try {
       await this.copyRegularPublicFile(publicDir, filePath, destPath);
+      const publicFiles = this.artifacts.publicFiles();
+      publicFiles.add(destRelativePath);
+      this.artifacts.replacePublicFiles(publicFiles);
+      await this.artifacts.save();
       console.log(
         chalk.green(`📋 Updated public/${relativePath} in Next.js app`),
       );
@@ -1206,9 +1482,7 @@ export class MDXToNextJSGenerator {
   async handlePublicFileDelete(filePath: string) {
     const publicDir = path.join(this.rootDir, "public");
     const relativePath = path.relative(publicDir, filePath);
-    const destRelativePath = isPublicAggregate(relativePath)
-      ? normalizePublicArtifactPath(relativePath)
-      : relativePath;
+    const destRelativePath = publicDestinationRelativePath(relativePath);
     const destPath = this.outputPath("public", destRelativePath);
 
     try {
@@ -1224,6 +1498,10 @@ export class MDXToNextJSGenerator {
           chalk.yellow(`🗑️ Removed public/${relativePath} from Next.js app`),
         );
       }
+      const publicFiles = this.artifacts.publicFiles();
+      publicFiles.delete(destRelativePath);
+      this.artifacts.replacePublicFiles(publicFiles);
+      await this.artifacts.save();
       if (isManagedPublicArtifact(relativePath)) {
         await this.updateLlmsFiles();
       }
@@ -1236,7 +1514,9 @@ export class MDXToNextJSGenerator {
   }
 
   async startWatching() {
+    this.stopping = false;
     console.log(chalk.yellow(`👀 Watching for changes in: ${this.watchDir}`));
+    const ready: Promise<void>[] = [];
 
     this.watcher = chokidar.watch(this.watchDir, {
       persistent: true,
@@ -1256,6 +1536,7 @@ export class MDXToNextJSGenerator {
         return false;
       },
     });
+    ready.push(this.waitForWatcherReady(this.watcher));
 
     this.watcher
       .on("add", (filePath: string) => {
@@ -1291,6 +1572,7 @@ export class MDXToNextJSGenerator {
       persistent: true,
       ignoreInitial: true,
     });
+    ready.push(this.waitForWatcherReady(this.configWatcher));
 
     this.configWatcher
       .on("add", (filePath: string) => {
@@ -1327,6 +1609,7 @@ export class MDXToNextJSGenerator {
       persistent: true,
       ignoreInitial: true,
     });
+    ready.push(this.waitForWatcherReady(this.fontWatcher));
 
     this.fontWatcher
       .on("add", () => {
@@ -1355,6 +1638,7 @@ export class MDXToNextJSGenerator {
       persistent: true,
       ignoreInitial: true,
     });
+    ready.push(this.waitForWatcherReady(this.analyticsWatcher));
 
     this.analyticsWatcher
       .on("add", () => {
@@ -1388,6 +1672,7 @@ export class MDXToNextJSGenerator {
       persistent: true,
       ignoreInitial: true,
     });
+    ready.push(this.waitForWatcherReady(this.doccupineConfigWatcher));
 
     this.doccupineConfigWatcher
       .on("add", () =>
@@ -1407,41 +1692,80 @@ export class MDXToNextJSGenerator {
     const publicDir = path.join(this.rootDir, "public");
 
     if (await fs.pathExists(publicDir)) {
-      this.setupPublicWatcher();
+      ready.push(this.waitForWatcherReady(this.setupPublicWatcher()));
     }
 
     // Watch rootDir for public directory creation
     this.rootDirWatcher = chokidar.watch(this.rootDir, {
       persistent: true,
       ignoreInitial: true,
-      depth: 0,
+      depth: 1,
     });
+    ready.push(this.waitForWatcherReady(this.rootDirWatcher));
+
+    const queuePublicWatcherStart = () => {
+      if (this.stopping || this.publicWatcher || this.publicWatcherStarting) {
+        return;
+      }
+      this.publicWatcherStarting = true;
+      this.enqueueMutation("Error initializing public directory", async () => {
+        try {
+          console.log(chalk.cyan("📁 Public directory created"));
+          await this.waitForWatcherReady(this.setupPublicWatcher());
+          if (this.stopping) return;
+          await this.copyPublicFiles();
+        } finally {
+          this.publicWatcherStarting = false;
+        }
+      });
+    };
 
     this.rootDirWatcher
       .on("addDir", (dirPath: string) => {
         if (
           path.basename(dirPath) === "public" &&
-          path.dirname(dirPath) === this.rootDir &&
-          !this.publicWatcher
+          path.dirname(dirPath) === this.rootDir
         ) {
-          this.enqueueMutation(
-            "Error initializing public directory",
-            async () => {
-              console.log(chalk.cyan("📁 Public directory created"));
-              await this.copyPublicFiles();
-              this.setupPublicWatcher();
-            },
-          );
+          queuePublicWatcherStart();
         }
+      })
+      .on("add", (filePath: string) => {
+        if (isPathInside(publicDir, filePath)) queuePublicWatcherStart();
+      })
+      .on("unlinkDir", (dirPath: string) => {
+        if (
+          path.basename(dirPath) !== "public" ||
+          path.dirname(dirPath) !== this.rootDir
+        ) {
+          return;
+        }
+        const watcher = this.publicWatcher;
+        this.publicWatcher = null;
+        void watcher?.close();
+        this.enqueueMutation("Error removing public directory", () =>
+          this.copyPublicFiles(),
+        );
       })
       .on("error", (error: unknown) => {
         console.error(chalk.red("❌ Root dir watcher error:"), error);
       });
+
+    await Promise.all(ready);
+    if (this.stopping) return;
+    this.enqueueMutation("Error reconciling watched sources", async () => {
+      const current = await this.captureWatchSourceSnapshot();
+      await this.reconcileWatchedSources(this.watchSourceSnapshot, current);
+      this.watchSourceSnapshot = await this.captureWatchSourceSnapshot();
+    });
+    await this.mutationQueue;
   }
 
-  private setupPublicWatcher() {
+  private setupPublicWatcher(): FSWatcher {
     if (this.publicWatcher) {
-      return;
+      return this.publicWatcher;
+    }
+    if (this.stopping) {
+      throw new Error("Cannot start a public watcher while stopping");
     }
 
     const publicDir = path.join(this.rootDir, "public");
@@ -1483,9 +1807,19 @@ export class MDXToNextJSGenerator {
           this.handlePublicFileDelete(filePath),
         );
       })
+      .on("unlinkDir", (dirPath: string) => {
+        if (path.resolve(dirPath) !== path.resolve(publicDir)) return;
+        const watcher = this.publicWatcher;
+        this.publicWatcher = null;
+        void watcher?.close();
+        this.enqueueMutation("Error removing public directory", () =>
+          this.copyPublicFiles(),
+        );
+      })
       .on("error", (error: unknown) => {
         console.error(chalk.red("❌ Public watcher error:"), error);
       });
+    return this.publicWatcher;
   }
 
   private async parseMDXFile(file: string): Promise<PageMeta> {
@@ -2269,7 +2603,7 @@ export default function Page() {
       await this.openApiWatcher.close();
       this.openApiWatcher = null;
     }
-    if (this.openApiSpecs.length === 0) return;
+    if (this.stopping || this.openApiSpecs.length === 0) return;
 
     const specPaths = this.openApiSpecs.map((spec) =>
       path.resolve(this.rootDir, spec.file),
@@ -2299,6 +2633,11 @@ export default function Page() {
       .on("error", (error: unknown) => {
         console.error(chalk.red("❌ OpenAPI watcher error:"), error);
       });
+    await this.waitForWatcherReady(this.openApiWatcher);
+    if (this.stopping && this.openApiWatcher) {
+      await this.openApiWatcher.close();
+      this.openApiWatcher = null;
+    }
   }
 
   /**
@@ -3069,6 +3408,8 @@ export default function Page() {
   }
 
   async stop() {
+    this.stopping = true;
+    for (const cancel of [...this.readyCancellations]) cancel();
     if (this.watcher) {
       await this.watcher.close();
       console.log(chalk.yellow("👋 Stopped watching for MDX changes"));
@@ -3107,5 +3448,13 @@ export default function Page() {
       await this.rootDirWatcher.close();
     }
     await this.mutationQueue;
+    if (this.openApiWatcher) {
+      await this.openApiWatcher.close();
+      this.openApiWatcher = null;
+    }
+    if (this.publicWatcher) {
+      await this.publicWatcher.close();
+      this.publicWatcher = null;
+    }
   }
 }

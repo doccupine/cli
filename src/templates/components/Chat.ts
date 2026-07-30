@@ -1330,9 +1330,10 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
     try {
       const history = answer
         .filter((a) => a.text.trim() !== "")
+        .slice(-20)
         .map((a) => ({
           role: a.answer ? ("assistant" as const) : ("user" as const),
-          content: a.text,
+          content: a.text.slice(0, 4000),
         }));
 
       const res = await fetch("/api/rag", {

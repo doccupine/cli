@@ -12,7 +12,8 @@ import { isSiteRequestAuthorized } from "@/lib/access";
 import { timingSafeEqual } from "@/lib/siteGate";
 import { readJsonBody, RequestTooLargeError } from "@/utils/requestBody";
 
-const MAX_RAG_REQUEST_BYTES = 32 * 1024;
+// Covers the schema's worst-case UTF-8 payload while retaining a hard cap.
+const MAX_RAG_REQUEST_BYTES = 512 * 1024;
 
 const messageSchema = z
   .object({

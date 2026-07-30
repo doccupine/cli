@@ -1,5 +1,6 @@
-import { spawn } from "child_process";
+import { spawn, type ChildProcess } from "child_process";
 import { createHash } from "crypto";
+import type { EventEmitter } from "events";
 import { fileURLToPath } from "url";
 import { Command } from "commander";
 import fs from "fs-extra";
@@ -13,6 +14,161 @@ import {
   writeFileAtomic,
 } from "./lib/utils.js";
 import { MDXToNextJSGenerator } from "./mdx-to-nextjs-generator.js";
+
+export type WatchSignal = "SIGINT" | "SIGTERM";
+
+type WatchChildProcess = EventEmitter &
+  Pick<ChildProcess, "exitCode" | "signalCode" | "kill" | "pid">;
+
+const CHILD_EXIT_TIMEOUT_MS = 5_000;
+const CHILD_FORCE_EXIT_TIMEOUT_MS = 1_000;
+
+function signalChildProcessTree(
+  child: WatchChildProcess,
+  signal: NodeJS.Signals,
+): boolean {
+  if (process.platform !== "win32" && child.pid !== undefined) {
+    try {
+      process.kill(-child.pid, signal);
+      return true;
+    } catch (error) {
+      if (
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        error.code === "ESRCH"
+      ) {
+        return false;
+      }
+      throw error;
+    }
+  }
+  return child.kill(signal);
+}
+
+function waitForChildClose(
+  child: WatchChildProcess,
+  timeoutMs: number,
+): Promise<boolean> {
+  if (child.exitCode !== null || child.signalCode !== null) {
+    return Promise.resolve(true);
+  }
+  return new Promise((resolve) => {
+    const done = (closed: boolean) => {
+      clearTimeout(timer);
+      child.removeListener("close", onClose);
+      resolve(closed);
+    };
+    const onClose = () => done(true);
+    const timer = setTimeout(() => done(false), timeoutMs);
+    timer.unref();
+    child.once("close", onClose);
+  });
+}
+
+async function terminateChildProcess(child: WatchChildProcess): Promise<void> {
+  if (child.exitCode !== null || child.signalCode !== null) return;
+
+  const closed = waitForChildClose(child, CHILD_EXIT_TIMEOUT_MS);
+  signalChildProcessTree(child, "SIGTERM");
+  if (await closed) return;
+
+  const forceClosed = waitForChildClose(child, CHILD_FORCE_EXIT_TIMEOUT_MS);
+  signalChildProcessTree(child, "SIGKILL");
+  if (!(await forceClosed)) {
+    throw new Error("Next.js dev server did not terminate");
+  }
+}
+
+export function superviseWatchLifecycle(
+  devServer: WatchChildProcess,
+  stopGenerator: () => Promise<void>,
+  signalSource: EventEmitter = process,
+): Promise<WatchSignal> {
+  return new Promise((resolve, reject) => {
+    let finishing = false;
+
+    const removeSignalListeners = () => {
+      signalSource.removeListener("SIGINT", onSigint);
+      signalSource.removeListener("SIGTERM", onSigterm);
+    };
+
+    const finish = (
+      outcome: { signal: WatchSignal } | { error: Error },
+      terminateChild: boolean,
+    ) => {
+      if (finishing) return;
+      finishing = true;
+      removeSignalListeners();
+
+      void (async () => {
+        const cleanupErrors: unknown[] = [];
+        const cleanup = [stopGenerator()];
+        if (terminateChild) cleanup.push(terminateChildProcess(devServer));
+        for (const result of await Promise.allSettled(cleanup)) {
+          if (result.status === "rejected") cleanupErrors.push(result.reason);
+        }
+
+        if ("error" in outcome) {
+          if (cleanupErrors.length > 0) {
+            reject(
+              new AggregateError(
+                [outcome.error, ...cleanupErrors],
+                outcome.error.message,
+              ),
+            );
+          } else {
+            reject(outcome.error);
+          }
+        } else if (cleanupErrors.length > 0) {
+          reject(
+            new AggregateError(cleanupErrors, "Failed to shut down cleanly"),
+          );
+        } else {
+          resolve(outcome.signal);
+        }
+      })();
+    };
+
+    const onError = (error: Error) => {
+      finish(
+        {
+          error: new Error(
+            `Error starting Next.js dev server: ${error.message}`,
+            {
+              cause: error,
+            },
+          ),
+        },
+        false,
+      );
+    };
+    const onClose = (code: number | null, signal: NodeJS.Signals | null) => {
+      devServer.removeListener("error", onError);
+      if (finishing) return;
+
+      const detail =
+        code !== null
+          ? ` with code ${code}`
+          : signal
+            ? ` from signal ${signal}`
+            : "";
+      finish(
+        {
+          error: new Error(`Next.js dev server exited unexpectedly${detail}`),
+        },
+        false,
+      );
+    };
+    const onSigint = () => finish({ signal: "SIGINT" }, true);
+    const onSigterm = () => finish({ signal: "SIGTERM" }, true);
+
+    devServer.once("error", onError);
+    devServer.once("close", onClose);
+    signalSource.once("SIGINT", onSigint);
+    signalSource.once("SIGTERM", onSigterm);
+  });
+}
 
 async function dependencyFingerprint(
   outputDir: string,
@@ -97,8 +253,6 @@ export async function runCli(argv?: string[]): Promise<void> {
 
       await generator.init();
 
-      let devServer: ReturnType<typeof spawn> | null = null;
-
       // Prefer pnpm (the generated app ships a pnpm workspace) and fall back to
       // npm. A --package-manager flag or a "packageManager" field in
       // doccupine.json overrides detection; the flag wins.
@@ -149,15 +303,24 @@ export async function runCli(argv?: string[]): Promise<void> {
       console.log(
         chalk.blue(`🚀 Starting Next.js dev server on port ${port}...`),
       );
+      await generator.startWatching();
+
       const portStr = String(port);
       const devArgs =
         packageManager.name === "npm"
           ? ["run", "dev", "--", "--port", portStr]
           : ["run", "dev", "--port", portStr];
-      devServer = spawn(packageManager.bin, devArgs, {
-        cwd: outputDir,
-        stdio: ["ignore", "pipe", "pipe"],
-      });
+      let devServer: ReturnType<typeof spawn>;
+      try {
+        devServer = spawn(packageManager.bin, devArgs, {
+          cwd: outputDir,
+          stdio: ["ignore", "pipe", "pipe"],
+          detached: process.platform !== "win32",
+        });
+      } catch (error) {
+        await generator.stop();
+        throw error;
+      }
 
       devServer.stdout?.on("data", (data: Buffer) => {
         const output = data.toString();
@@ -188,33 +351,16 @@ export async function runCli(argv?: string[]): Promise<void> {
         }
       });
 
-      devServer.on("error", (error: Error) => {
-        console.error(chalk.red("❌ Error starting dev server:"), error);
-      });
-
-      devServer.on("close", (code: number | null) => {
-        if (code && code !== 0) {
-          console.error(
-            chalk.red(`❌ Next.js dev server exited with code ${code}`),
-          );
-        }
-      });
-
-      await generator.startWatching();
-
-      process.on("SIGINT", async () => {
-        console.log(chalk.yellow("\n🛑 Shutting down..."));
-        await generator.stop();
-        if (devServer) {
-          devServer.kill();
-        }
-        process.exit(0);
-      });
-
       console.log(
         chalk.green("🎉 Generator is running! Press Ctrl+C to stop."),
       );
       console.log(chalk.cyan(`📝 Edit your MDX files in: ${config.watchDir}`));
+
+      const signal = await superviseWatchLifecycle(devServer, () =>
+        generator.stop(),
+      );
+      console.log(chalk.yellow("\n🛑 Shutting down..."));
+      process.exitCode = signal === "SIGINT" ? 130 : 143;
     });
 
   program

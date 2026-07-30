@@ -4,7 +4,7 @@ import {
   DEFAULT_OG_IMAGE,
   DEFAULT_SITE_NAME,
 } from "./constants.js";
-import type { SectionConfig } from "./types.js";
+import type { FontConfig, SectionConfig } from "./types.js";
 
 function formatObjectArray<T extends object>(items: T[]): string {
   const MAX_WIDTH = 80;
@@ -39,27 +39,13 @@ interface PageData {
   section: string;
 }
 
-interface GoogleFontConfig {
-  fontName?: string;
-  subsets?: string[];
-  weight?: string | string[];
-}
-
-interface LocalFontSrc {
-  path: string;
-  weight: string;
-  style: string;
-}
-
-interface FontConfig {
-  googleFont?: GoogleFontConfig;
-  localFonts?: string | { src?: LocalFontSrc[] };
-}
-
 function isGoogleFont(
   fc: FontConfig | null,
-): fc is FontConfig & { googleFont: GoogleFontConfig } {
-  return !!fc?.googleFont?.fontName;
+): fc is FontConfig & { googleFont: NonNullable<FontConfig["googleFont"]> } {
+  return (
+    !!fc?.googleFont?.fontName &&
+    /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(fc.googleFont.fontName)
+  );
 }
 
 function isLocalFont(fc: FontConfig | null): boolean {
@@ -69,11 +55,8 @@ function isLocalFont(fc: FontConfig | null): boolean {
 }
 
 function getLocalFontSrc(fc: FontConfig): string {
-  if (typeof fc.localFonts === "string") return `"${fc.localFonts}"`;
-  return JSON.stringify(fc.localFonts?.src, null, 2).replace(
-    /"([^"]+)":/g,
-    "$1:",
-  );
+  if (typeof fc.localFonts === "string") return JSON.stringify(fc.localFonts);
+  return JSON.stringify(fc.localFonts?.src, null, 2);
 }
 
 function fontImportLine(fontConfig: FontConfig | null): string {
@@ -94,7 +77,7 @@ function fontDeclLine(fontConfig: FontConfig | null): string {
           ? `weight: ${
               Array.isArray(fontConfig.googleFont.weight)
                 ? JSON.stringify(fontConfig.googleFont.weight)
-                : `"${fontConfig.googleFont.weight}"`
+                : JSON.stringify(fontConfig.googleFont.weight)
             }`
           : "",
       ]

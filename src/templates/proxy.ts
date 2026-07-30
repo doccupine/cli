@@ -126,7 +126,7 @@ function resolveTrackingIdentity(req: NextRequest): TrackingIdentity {
   let deviceId: string | undefined;
 
   const phCookie = req.cookies.get(
-    "ph_${analyticsConfig!.posthog.key}_posthog",
+    ${JSON.stringify(`ph_${analyticsConfig!.posthog.key}_posthog`)},
   )?.value;
   if (phCookie) {
     try {

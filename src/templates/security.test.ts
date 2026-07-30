@@ -19,6 +19,7 @@ import { rateLimitTemplate } from "./utils/rateLimit.js";
 import { ssrfGuardTemplate } from "./utils/ssrfGuard.js";
 import { playgroundAllowlistTemplate } from "./utils/playgroundAllowlist.js";
 import { requestBodyTemplate } from "./utils/requestBody.js";
+import { chatTemplate } from "./components/Chat.js";
 
 interface GeneratedRequestBodyModule {
   RequestTooLargeError: new () => Error;
@@ -358,6 +359,68 @@ describe("generated security boundaries", () => {
   it("does not accept a public request flag that rebuilds embeddings", () => {
     expect(ragRoutesTemplate).not.toContain("refresh: z.boolean().optional()");
     expect(ragRoutesTemplate).not.toContain("Boolean(refresh)");
+  });
+
+  it("initializes embeddings lazily after RAG and MCP authorization", () => {
+    const buildCalls = mcpServerTemplate.match(/\bbuildDocsIndex\(/g) ?? [];
+    const ensureStart = mcpServerTemplate.indexOf(
+      "export async function ensureDocsIndex",
+    );
+    const ensureEnd = mcpServerTemplate.indexOf(
+      "function throwIfCancelled",
+      ensureStart,
+    );
+    const ensureSource = mcpServerTemplate.slice(ensureStart, ensureEnd);
+    const searchStart = mcpServerTemplate.indexOf(
+      "export async function searchDocs",
+    );
+    const searchEnd = mcpServerTemplate.indexOf(
+      "export function getIndexStatus",
+      searchStart,
+    );
+    const searchSource = mcpServerTemplate.slice(searchStart, searchEnd);
+
+    expect(buildCalls).toHaveLength(3);
+    expect(ensureSource.match(/\bbuildDocsIndex\(/g)).toHaveLength(2);
+    expect(searchSource).toContain("await ensureDocsIndex(false, signal)");
+    expect(mcpServerTemplate).not.toContain("isLLMAvailable");
+    expect(mcpServerTemplate).not.toContain("initialBuild");
+
+    const ragAuthorization = ragRoutesTemplate.indexOf(
+      "if (!(await isRagRequestAuthorized(req)))",
+    );
+    expect(ragAuthorization).toBeLessThan(
+      ragRoutesTemplate.indexOf("await ensureDocsIndex(false, signal)"),
+    );
+    expect(ragAuthorization).toBeLessThan(
+      ragRoutesTemplate.indexOf("await searchDocs(question, 6, signal)"),
+    );
+
+    const mcpPost = mcpRoutesTemplate.indexOf(
+      "export async function POST(req: Request)",
+    );
+    const mcpAuthorization = mcpRoutesTemplate.indexOf(
+      "if (!(await isMcpRequestAuthorized(req)))",
+      mcpPost,
+    );
+    expect(mcpAuthorization).toBeLessThan(
+      mcpRoutesTemplate.indexOf("return handleMCPRequest(req, body)", mcpPost),
+    );
+    expect(mcpAuthorization).toBeLessThan(
+      mcpRoutesTemplate.indexOf("return handleRESTRequest(req", mcpPost),
+    );
+  });
+
+  it("bounds submitted chat history to the RAG server contract", () => {
+    expect(chatTemplate).toContain(".slice(-20)");
+    expect(chatTemplate).toContain("content: a.text.slice(0, 4000)");
+    expect(ragRoutesTemplate).toContain(
+      "history: z.array(messageSchema).max(20).optional()",
+    );
+    expect(ragRoutesTemplate).toContain("content: z.string().max(4000)");
+    expect(ragRoutesTemplate).toContain(
+      "const MAX_RAG_REQUEST_BYTES = 512 * 1024",
+    );
   });
 
   it("bounds MCP bodies, tool arguments, batches, and results on both transports", () => {
