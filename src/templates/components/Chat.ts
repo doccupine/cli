@@ -6,18 +6,25 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import styled, { css, keyframes } from "styled-components";
-import { Button, IconButton } from "cherry-styled-components";
+import {
+  Button,
+  IconButton,
+  Input,
+  StyledInputWrapper as CherryInputWrapper,
+} from "cherry-styled-components";
 import { ArrowUp, LoaderPinwheel, RotateCcw, Sparkles, X } from "lucide-react";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import { MDXRemote, MDXRemoteSerializeResult } from "next-mdx-remote";
 import { serialize } from "next-mdx-remote/serialize";
 import Link from "next/link";
-import { mq, Theme } from "@/app/theme";
+import { mq, theme, Theme } from "@/app/theme";
 import { Callout } from "@/components/layout/Callout";
 import { useLockBodyScroll } from "@/components/LockBodyScroll";
 import { useMDXComponents as getMDXComponents } from "@/components/MDXComponents";
@@ -32,6 +39,26 @@ import {
 
 const mdxComponents = getMDXComponents({});
 
+const MOBILE_CHAT_QUERY = \`(max-width: \${theme.breakpoints.lg - 1}px)\`;
+
+function subscribeToMobileChat(callback: () => void) {
+  const mediaQuery = window.matchMedia(MOBILE_CHAT_QUERY);
+  mediaQuery.addEventListener("change", callback);
+  return () => mediaQuery.removeEventListener("change", callback);
+}
+
+function getMobileChatSnapshot() {
+  return window.matchMedia(MOBILE_CHAT_QUERY).matches;
+}
+
+function useIsMobileChat() {
+  return useSyncExternalStore(
+    subscribeToMobileChat,
+    getMobileChatSnapshot,
+    () => false,
+  );
+}
+
 const styledText = css<{ theme: Theme }>\`
   font-size: \${({ theme }) => theme.fontSizes.text.xs};
   line-height: \${({ theme }) => theme.lineHeights.text.xs};
@@ -40,6 +67,27 @@ const styledText = css<{ theme: Theme }>\`
     font-size: \${({ theme }) => theme.fontSizes.small.lg};
     line-height: \${({ theme }) => theme.lineHeights.small.lg};
   }
+\`;
+
+const StyledChatSurface = styled.div<{ $isVisible: boolean }>\`
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+
+  & > * {
+    pointer-events: auto;
+  }
+
+  \${({ $isVisible }) =>
+    !$isVisible &&
+    css\`
+      visibility: hidden;
+
+      & > * {
+        pointer-events: none;
+      }
+    \`}
 \`;
 
 const StyledChat = styled.div<{ theme: Theme; $isVisible: boolean }>\`
@@ -58,6 +106,7 @@ const StyledChat = styled.div<{ theme: Theme; $isVisible: boolean }>\`
   background: \${({ theme }) => theme.colors.light};
   -webkit-overflow-scrolling: touch;
   opacity: 1;
+  visibility: visible;
 
   &::-webkit-scrollbar {
     display: none;
@@ -68,7 +117,12 @@ const StyledChat = styled.div<{ theme: Theme; $isVisible: boolean }>\`
     css\`
       transform: translateX(100%);
       opacity: 0;
+      visibility: hidden;
     \`}
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 
   \${mq("lg")} {
     width: ${CHAT_WIDTH}px;
@@ -140,6 +194,12 @@ const StyledRainbowInputWrapper = styled.div<{
 
   position: relative;
   flex: 1;
+  min-width: 0;
+
+  & \${CherryInputWrapper}, & \${CherryInputWrapper} > span {
+    width: 100%;
+    min-width: 0;
+  }
 
   &::before {
     content: "";
@@ -243,7 +303,7 @@ const StyledSparkle = styled.div<{
   animation-delay: \${({ $delay }) => $delay}s;
 \`;
 
-const StyledRainbowInput = styled.input<{ theme: Theme }>\`
+const StyledRainbowInput = styled(Input)<{ theme: Theme }>\`
   position: relative;
   z-index: 1;
   width: 100%;
@@ -364,6 +424,7 @@ const StyledChatForm = styled.form<{ theme: Theme; $isVisible: boolean }>\`
   transition: all 0.3s ease;
   transform: translateX(100%);
   opacity: 0;
+  visibility: hidden;
 
   \${mq("lg")} {
     width: ${CHAT_WIDTH}px;
@@ -375,7 +436,12 @@ const StyledChatForm = styled.form<{ theme: Theme; $isVisible: boolean }>\`
     css\`
       opacity: 1;
       transform: translateX(0);
+      visibility: visible;
     \`}
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 
   & .loading {
     animation: \${loadingAnimation} 1s linear infinite;
@@ -755,6 +821,7 @@ function RainbowInput({
         placeholder={placeholder}
         autoComplete={autoComplete}
         aria-label={ariaLabel}
+        $fullWidth
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
       />
@@ -793,23 +860,158 @@ function Chat() {
     resetChat,
     chatInputRef,
   } = useContext(ChatContext);
-  const endRef = useRef<HTMLDivElement | null>(null);
+  const chatSurfaceRef = useRef<HTMLDivElement | null>(null);
+  const chatScrollRef = useRef<HTMLDivElement | null>(null);
+  const scrollFrameRef = useRef<number | null>(null);
+  const shouldAutoScrollRef = useRef(true);
+  const loadingRef = useRef(loading);
+  const isMobileChat = useIsMobileChat();
+  const isMobileModal = isOpen && isMobileChat;
 
   useLockBodyScroll(isOpen);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [answer]);
+    loadingRef.current = loading;
+  }, [loading]);
+
+  useLayoutEffect(() => {
+    if (isOpen) {
+      shouldAutoScrollRef.current = true;
+      return;
+    }
+
+    if (scrollFrameRef.current !== null) {
+      cancelAnimationFrame(scrollFrameRef.current);
+      scrollFrameRef.current = null;
+    }
+  }, [isOpen]);
 
   useEffect(() => {
-    if (answer?.length > 0) {
-      chatInputRef.current?.focus();
+    if (!isOpen || !shouldAutoScrollRef.current) return;
+    if (scrollFrameRef.current !== null) return;
+
+    scrollFrameRef.current = requestAnimationFrame(() => {
+      scrollFrameRef.current = null;
+      const scrollContainer = chatScrollRef.current;
+      if (!scrollContainer || !shouldAutoScrollRef.current) return;
+      const reduceMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      scrollContainer.scrollTo({
+        top: scrollContainer.scrollHeight,
+        behavior: reduceMotion || loadingRef.current ? "auto" : "smooth",
+      });
+    });
+  }, [answer, isOpen, loading]);
+
+  useEffect(() => {
+    return () => {
+      if (scrollFrameRef.current !== null) {
+        cancelAnimationFrame(scrollFrameRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isMobileModal || !chatSurfaceRef.current) return;
+
+    const surface = chatSurfaceRef.current;
+    const inertSiblings: Array<{
+      element: HTMLElement;
+      wasInert: boolean;
+    }> = [];
+    let current: HTMLElement = surface;
+
+    while (current.parentElement) {
+      const parent = current.parentElement;
+      for (const sibling of Array.from(parent.children)) {
+        if (sibling === current || !(sibling instanceof HTMLElement)) continue;
+        inertSiblings.push({ element: sibling, wasInert: sibling.inert });
+        sibling.inert = true;
+      }
+      if (parent === document.body) break;
+      current = parent;
     }
-  }, [answer, chatInputRef]);
+
+    const containFocus = (event: FocusEvent) => {
+      if (event.target instanceof Node && !surface.contains(event.target)) {
+        chatInputRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("focusin", containFocus);
+    chatInputRef.current?.focus();
+
+    return () => {
+      document.removeEventListener("focusin", containFocus);
+      for (const { element, wasInert } of inertSiblings) {
+        element.inert = wasInert;
+      }
+    };
+  }, [chatInputRef, isMobileModal]);
+
+  const handleChatScroll = () => {
+    const scrollContainer = chatScrollRef.current;
+    if (!scrollContainer) return;
+    const distanceFromBottom =
+      scrollContainer.scrollHeight -
+      scrollContainer.scrollTop -
+      scrollContainer.clientHeight;
+    shouldAutoScrollRef.current =
+      distanceFromBottom <= scrollContainer.clientHeight * 0.15;
+  };
+
+  const handleSurfaceKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Escape" && isMobileModal) {
+      event.preventDefault();
+      event.stopPropagation();
+      closeChat();
+      return;
+    }
+
+    if (event.key !== "Tab" || !isMobileModal) return;
+    const focusable = Array.from(
+      chatSurfaceRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ) ?? [],
+    ).filter(
+      (element) =>
+        element.offsetParent !== null &&
+        element.getAttribute("aria-hidden") !== "true",
+    );
+    if (focusable.length === 0) {
+      event.preventDefault();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
 
   return (
-    <>
-      <StyledChat $isVisible={isOpen} data-markdown-ignore>
+    <StyledChatSurface
+      ref={chatSurfaceRef}
+      $isVisible={isOpen}
+      inert={!isOpen}
+      aria-hidden={!isOpen}
+      role={isMobileModal ? "dialog" : "complementary"}
+      aria-modal={isMobileModal ? "true" : undefined}
+      aria-label="AI Assistant"
+      data-chat-surface
+      data-markdown-ignore
+      onKeyDownCapture={handleSurfaceKeyDown}
+    >
+      <StyledChat
+        ref={chatScrollRef}
+        $isVisible={isOpen}
+        onScroll={handleChatScroll}
+      >
         <StyledChatTitle>
           <StyledChatTitleIconWrapper>
             <Sparkles />
@@ -890,7 +1092,6 @@ function Chat() {
             </Callout>
           </StyledError>
         )}
-        <div ref={endRef} />
       </StyledChat>
 
       <StyledChatForm onSubmit={ask} $isVisible={isOpen} data-markdown-ignore>
@@ -912,7 +1113,7 @@ function Chat() {
           {loading ? <LoaderPinwheel className="loading" /> : <ArrowUp />}
         </StyledRainbowButton>
       </StyledChatForm>
-    </>
+    </StyledChatSurface>
   );
 }
 
@@ -928,7 +1129,7 @@ const ChatContext = createContext<{
   answer: Answer[];
   setAnswer: (answers: Answer[]) => void;
   ask: (e: React.FormEvent) => void;
-  askAssistant: (question: string) => void;
+  askAssistant: (question: string, returnFocusTo?: HTMLElement | null) => void;
   closeChat: () => void;
   resetChat: () => void;
   chatInputRef: React.RefObject<HTMLInputElement | null>;
@@ -965,31 +1166,87 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
   const [answer, setAnswer] = useState<Answer[]>([]);
   const abortRef = useRef<AbortController | null>(null);
   const chatInputRef = useRef<HTMLInputElement | null>(null);
+  const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const restoreFocusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const openerRef = useRef<HTMLElement | null>(null);
   const isOpenRef = useRef(isOpen);
 
   useEffect(() => {
     isOpenRef.current = isOpen;
   }, [isOpen]);
 
-  // Open the assistant, seeding a greeting the first time and focusing the
-  // input once the panel has slid in (matches the 0.3s panel transition).
-  const openChat = useCallback(() => {
+  const showChat = useCallback((returnFocusTo?: HTMLElement | null) => {
+    if (!isOpenRef.current) {
+      const activeElement = document.activeElement;
+      openerRef.current =
+        returnFocusTo?.isConnected === true
+          ? returnFocusTo
+          : activeElement instanceof HTMLElement &&
+              activeElement !== document.body
+            ? activeElement
+            : null;
+    }
+    isOpenRef.current = true;
     setIsOpen(true);
+    if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
+    focusTimeoutRef.current = setTimeout(() => {
+      focusTimeoutRef.current = null;
+      chatInputRef.current?.focus();
+    }, 0);
+  }, []);
+
+  // Open the assistant and seed its greeting on the first visit. The opener is
+  // captured before the mobile dialog makes the rest of the page inert.
+  const openChat = useCallback(() => {
+    showChat();
     setAnswer((prev) =>
       prev.length === 0 ? [{ text: INITIAL_GREETING, answer: true }] : prev,
     );
-    setTimeout(() => {
-      chatInputRef.current?.focus();
-    }, 350);
+  }, [showChat]);
+
+  const closeChat = useCallback(() => {
+    if (focusTimeoutRef.current) {
+      clearTimeout(focusTimeoutRef.current);
+      focusTimeoutRef.current = null;
+    }
+    const activeElement = document.activeElement;
+    if (
+      activeElement instanceof HTMLElement &&
+      activeElement.closest("[data-chat-surface]")
+    ) {
+      activeElement.blur();
+    }
+    const opener = openerRef.current;
+    openerRef.current = null;
+    isOpenRef.current = false;
+    setIsOpen(false);
+    if (restoreFocusTimeoutRef.current) {
+      clearTimeout(restoreFocusTimeoutRef.current);
+    }
+    restoreFocusTimeoutRef.current = setTimeout(() => {
+      restoreFocusTimeoutRef.current = null;
+      if (opener?.isConnected) opener.focus();
+    }, 0);
   }, []);
 
   const toggleChat = useCallback(() => {
     if (isOpenRef.current) {
-      setIsOpen(false);
+      closeChat();
     } else {
       openChat();
     }
-  }, [openChat]);
+  }, [closeChat, openChat]);
+
+  useEffect(() => {
+    return () => {
+      if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
+      if (restoreFocusTimeoutRef.current) {
+        clearTimeout(restoreFocusTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Global Cmd/Ctrl+I toggles the assistant, but only when chat is enabled.
   useEffect(() => {
@@ -1004,9 +1261,12 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isChatActive, toggleChat]);
 
-  async function runQuestion(currentQuestion: string) {
+  async function runQuestion(
+    currentQuestion: string,
+    returnFocusTo?: HTMLElement | null,
+  ) {
     setQuestion("");
-    setIsOpen(true);
+    showChat(returnFocusTo);
     setLoading(true);
     setError(null);
 
@@ -1162,19 +1422,18 @@ const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
   // response is already streaming (loading), we can't submit yet - open the
   // panel and pre-fill the input so the user can send it the moment the
   // current answer finishes. Otherwise submit it right away.
-  function askAssistant(rawQuestion: string) {
+  function askAssistant(
+    rawQuestion: string,
+    returnFocusTo?: HTMLElement | null,
+  ) {
     const trimmed = rawQuestion.trim();
     if (trimmed === "") return;
     if (loading) {
-      openChat();
+      showChat(returnFocusTo);
       setQuestion(trimmed);
     } else {
-      void runQuestion(trimmed);
+      void runQuestion(trimmed, returnFocusTo);
     }
-  }
-
-  function closeChat() {
-    setIsOpen(false);
   }
 
   function resetChat() {

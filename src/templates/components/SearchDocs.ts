@@ -107,6 +107,8 @@ function SearchProvider({
   } | null>(null);
   const resultsRef = useRef<HTMLUListElement>(null);
   const closingRef = useRef(false);
+  const searchOpenerRef = useRef<HTMLElement | null>(null);
+  const restoreSearchFocusRef = useRef(true);
   const abortRef = useRef<AbortController | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
   const router = useRouter();
@@ -122,6 +124,11 @@ function SearchProvider({
 
   const openSearch = useCallback(() => {
     closingRef.current = false;
+    restoreSearchFocusRef.current = true;
+    searchOpenerRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     setIsClosing(false);
     setIsVisible(true);
   }, []);
@@ -132,6 +139,11 @@ function SearchProvider({
     if (abortRef.current) abortRef.current.abort();
     if (debounceRef.current) clearTimeout(debounceRef.current);
   }, []);
+
+  const shouldRestoreSearchFocus = useCallback(
+    () => restoreSearchFocusRef.current,
+    [],
+  );
 
   const handleCloseAnimationEnd = useCallback(() => {
     if (!closingRef.current) return;
@@ -263,9 +275,17 @@ function SearchProvider({
   const askAssistantWithQuery = useCallback(() => {
     const q = query.trim();
     if (!q) return;
-    askAssistant(q);
-    closeSearch();
-  }, [query, askAssistant, closeSearch]);
+    restoreSearchFocusRef.current = false;
+    closingRef.current = false;
+    if (abortRef.current) abortRef.current.abort();
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    setIsVisible(false);
+    setIsClosing(false);
+    setQuery("");
+    setActiveIndex(0);
+    setFetched(null);
+    askAssistant(q, searchOpenerRef.current);
+  }, [query, askAssistant]);
 
   // Global Cmd+K / Ctrl+K listener
   const isVisibleRef = useRef(false);
@@ -335,6 +355,7 @@ function SearchProvider({
           navigate={navigate}
           canAskAssistant={isChatActive}
           onAskAssistant={askAssistantWithQuery}
+          shouldRestoreFocus={shouldRestoreSearchFocus}
         />
       )}
     </SearchContext.Provider>
