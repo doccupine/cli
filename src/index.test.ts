@@ -20,6 +20,9 @@ import { docsTemplate } from "./templates/components/Docs.js";
 const execFileAsync = promisify(execFile);
 const selfPath = fileURLToPath(import.meta.url);
 const distEntry = path.resolve(selfPath, "..", "..", "dist", "index.js");
+if (!fs.pathExistsSync(distEntry)) {
+  throw new Error("Compiled CLI is missing; run `pnpm build` before Vitest");
+}
 
 // A generated app formats with `prettier --write .` and pins prettier ^3.9.6.
 // Tests can't `npm install` the generated app, so we reuse this repo's matching
@@ -188,8 +191,8 @@ describe("isProcessEntrypoint", () => {
   });
 });
 
-// Runs against the compiled output, so it needs a build. CI always runs
-// `pnpm build` before `pnpm test`, and `pnpm install` builds via `prepare`.
+// Runs against compiled output. The test script builds first so these checks
+// can never silently exercise stale output or disappear on a clean checkout.
 describe.skipIf(!fs.pathExistsSync(distEntry))(
   "compiled CLI entrypoint",
   () => {
@@ -219,7 +222,7 @@ describe.skipIf(!fs.pathExistsSync(distEntry))(
 // A generated Doccupine app ships a `format` script (`prettier --write .`).
 // This builds a real app from the templates and asserts it is already
 // Prettier-clean - i.e. running that script is a no-op - so every template
-// emits format-stable output. Skipped unless the CLI is built (dist present).
+// emits format-stable output. The test script builds dist before Vitest runs.
 describe.skipIf(!fs.pathExistsSync(distEntry))(
   "generated site is prettier-clean",
   () => {
@@ -348,7 +351,7 @@ describe.skipIf(!fs.pathExistsSync(distEntry))(
       }
     }, 120_000);
 
-    it("keeps a one-page llms manifest out of generated formatting", async () => {
+    it("keeps a one-page artifact manifest out of generated formatting", async () => {
       const projectDir = await fs.mkdtemp(
         path.join(os.tmpdir(), "doccupine-fmt-one-page-"),
       );
@@ -370,10 +373,7 @@ describe.skipIf(!fs.pathExistsSync(distEntry))(
 
         const outDir = path.join(projectDir, "out");
         await expect(
-          fs.readFile(
-            path.join(outDir, ".doccupine-llms-manifest.json"),
-            "utf8",
-          ),
+          fs.readFile(path.join(outDir, ".doccupine-artifacts.json"), "utf8"),
         ).resolves.toContain('"index.md"');
         await expect(
           fs.readFile(path.join(outDir, ".prettierignore"), "utf8"),
