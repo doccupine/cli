@@ -101,7 +101,12 @@ const StyledChat = styled.div<{ theme: Theme; $isVisible: boolean }>\`
   overflow-x: hidden;
   z-index: 1000;
   padding: 0 20px;
-  transition: all 0.3s ease;
+  /* See StyledChatForm: visibility snaps open and is delayed on close, so the
+     panel is focusable as soon as it opens. */
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease,
+    visibility 0s linear 0s;
   transform: translateX(0);
   background: \${({ theme }) => theme.colors.light};
   -webkit-overflow-scrolling: touch;
@@ -118,6 +123,7 @@ const StyledChat = styled.div<{ theme: Theme; $isVisible: boolean }>\`
       transform: translateX(100%);
       opacity: 0;
       visibility: hidden;
+      transition-delay: 0.3s;
     \`}
 
   @media (prefers-reduced-motion: reduce) {
@@ -421,7 +427,14 @@ const StyledChatForm = styled.form<{ theme: Theme; $isVisible: boolean }>\`
   z-index: 1000;
   width: 100%;
   border-top: solid 1px \${({ theme }) => theme.colors.grayLight};
-  transition: all 0.3s ease;
+  /* visibility is animatable, so transitioning "all" keeps this hidden for the
+     whole slide-in - long enough for the focus() that follows opening to be a
+     silent no-op. Snap it on open (transition-delay below) and delay it on
+     close so the slide-out stays visible while it animates. */
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease,
+    visibility 0s linear 0.3s;
   transform: translateX(100%);
   opacity: 0;
   visibility: hidden;
@@ -437,6 +450,7 @@ const StyledChatForm = styled.form<{ theme: Theme; $isVisible: boolean }>\`
       opacity: 1;
       transform: translateX(0);
       visibility: visible;
+      transition-delay: 0s;
     \`}
 
   @media (prefers-reduced-motion: reduce) {
