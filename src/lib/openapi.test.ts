@@ -115,7 +115,7 @@ describe("OpenAPI safety", () => {
     ).toContain(`{${JSON.stringify(summaryText)}}`);
   });
 
-  it("serializes malicious response keys as heading text", () => {
+  it("renders response examples as JSON code without executing untrusted content", () => {
     const status = '200\n{process.env.RESPONSE_KEY}\n<Response status="bad" />';
     const payload = "```\n{process.env.RESPONSE_BODY}\n<ResponseBody />";
     const operation: OperationDescriptor = {
@@ -140,9 +140,10 @@ describe("OpenAPI safety", () => {
     const doc = buildEndpointDoc(operation);
     expect(doc).toContain(`<h3>{${JSON.stringify(status)}}</h3>`);
     expect(doc).toContain(
-      `<pre><code>{${JSON.stringify(JSON.stringify(payload, null, 2))}}</code></pre>`,
+      `<Code language="json" code={${JSON.stringify(JSON.stringify(payload, null, 2))}} />`,
     );
     expect(doc).not.toContain(`### ${status}`);
+    expect(doc).not.toContain("<pre><code>");
     expect(doc).not.toContain("```json");
     expect(doc.split("\n")).not.toContain("{process.env.RESPONSE_KEY}");
     expect(doc.split("\n")).not.toContain("{process.env.RESPONSE_BODY}");

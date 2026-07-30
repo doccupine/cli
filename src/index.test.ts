@@ -246,7 +246,14 @@ describe.skipIf(!fs.pathExistsSync(distEntry))(
                 schema: { type: "string" },
               },
             ],
-            responses: { "200": { description: "OK" } },
+            responses: {
+              "200": {
+                description: "OK",
+                content: {
+                  "application/json": { example: { id: "OL123W" } },
+                },
+              },
+            },
           },
         },
         "/notes": {
@@ -300,19 +307,19 @@ describe.skipIf(!fs.pathExistsSync(distEntry))(
         );
         // ...and the spec must have produced an endpoint page, so the format
         // check actually covers the synthetic API-page output.
-        expect(
-          await fs.pathExists(
-            path.join(
-              outDir,
-              "app",
-              "(site)",
-              "api-reference",
-              "admin",
-              "getworkbyid",
-              "page.tsx",
-            ),
-          ),
-        ).toBe(true);
+        const endpointPagePath = path.join(
+          outDir,
+          "app",
+          "(site)",
+          "api-reference",
+          "admin",
+          "getworkbyid",
+          "page.tsx",
+        );
+        expect(await fs.pathExists(endpointPagePath)).toBe(true);
+        expect(await fs.readFile(endpointPagePath, "utf8")).toContain(
+          '<Code language="json" code={',
+        );
         const apiIndex = await fs.readFile(
           path.join(outDir, "app", "(site)", "api-reference", "page.tsx"),
           "utf8",

@@ -936,7 +936,7 @@ function jsxText(text: string): string {
 
 function jsonCode(value: unknown): string {
   const serialized = JSON.stringify(value, null, 2) ?? "null";
-  return `<pre><code>${jsxText(serialized)}</code></pre>`;
+  return `<Code language="json" code=${jsxText(serialized)} />`;
 }
 
 /** The object schema whose `properties` we can document (unwraps arrays). */
