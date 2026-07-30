@@ -13,6 +13,14 @@ const nextConfig: NextConfig = {
   compiler: {
     styledComponents: true,
   },
+  turbopack: {
+    // Every painted color is a var(--color-*) reference, which polished cannot
+    // parse - see utils/polishedCompat.ts. Older cherry-styled-components
+    // releases call polished at render time, so route it through the shim.
+    resolveAlias: {
+      polished: "./utils/polishedCompat.ts",
+    },
+  },
   // Trace the runtime-loaded corpus and precomputed embeddings index into the
   // serverless functions (dynamic fs reads are invisible to automatic tracing).
   outputFileTracingIncludes: {
@@ -53,6 +61,14 @@ export default nextConfig;
 const nextConfig: NextConfig = {
   compiler: {
     styledComponents: true,
+  },
+  turbopack: {
+    // Every painted color is a var(--color-*) reference, which polished cannot
+    // parse - see utils/polishedCompat.ts. Older cherry-styled-components
+    // releases call polished at render time, so route it through the shim.
+    resolveAlias: {
+      polished: "./utils/polishedCompat.ts",
+    },
   },
   // Trace the runtime-loaded corpus and precomputed embeddings index into the
   // serverless functions (dynamic fs reads are invisible to automatic tracing).

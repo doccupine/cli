@@ -2,14 +2,7 @@ export const demoThemeTemplate = `"use client";
 import { useContext } from "react";
 import { useTheme } from "styled-components";
 import { ThemeContext } from "cherry-styled-components";
-import {
-  buildColors,
-  colorsLight,
-  colorsDark,
-  theme,
-  themeDark,
-  Theme,
-} from "@/app/theme";
+import { theme, themeDark, Theme } from "@/app/theme";
 import { Button } from "@/components/layout/Button";
 import { Columns } from "@/components/layout/Columns";
 
@@ -20,12 +13,11 @@ interface DemoThemeProps {
 type Palette = Record<string, string>;
 
 // Each preset is light + dark color overrides, mirroring what a user editing
-// theme.json would see. Applying one does two things: swaps in a theme object
-// rebuilt with the overridden palette (Cherry's setTheme, which also persists
-// the mode), and mirrors the overrides onto the --color-* CSS custom
-// properties on <html> for the plain-CSS consumers that read variables
-// (e.g. Callout's and Code's :root.dark blocks). Reset clears both so the
-// defaults take over again.
+// theme.json would see. Applying one does two things: writes the overrides as
+// --color-* custom properties on <html>, which is where every painted color
+// resolves from, and switches the mode through Cherry's setTheme so the choice
+// persists and the "dark" class follows. Reset removes the properties so the
+// values from theme.json (or the defaults) take over again.
 const PRESETS: Record<
   DemoThemeProps["variant"],
   { light: Palette; dark: Palette; label: string }
@@ -87,18 +79,6 @@ function clearPresetVars() {
   }
 }
 
-// Rebuilds a mode's theme with the preset palette merged in, so the semantic
-// tokens (accent, accentStrong, …) derive from the preset colors exactly like
-// they would from a theme.json override.
-function presetTheme(palette: Palette, dark: boolean): Theme {
-  const base = dark ? themeDark : theme;
-  const paletteBase = dark ? colorsDark : colorsLight;
-  return {
-    ...base,
-    colors: buildColors({ ...paletteBase, ...palette }, dark),
-  };
-}
-
 function DemoTheme({ variant }: DemoThemeProps) {
   const { setTheme } = useContext(ThemeContext);
   const activeTheme = useTheme() as Theme;
@@ -125,7 +105,7 @@ function DemoTheme({ variant }: DemoThemeProps) {
       <Button
         onClick={() => {
           applyPresetVars(preset.light);
-          setTheme(presetTheme(preset.light, false));
+          setTheme(theme);
         }}
         icon="sun"
         fullWidth
@@ -136,7 +116,7 @@ function DemoTheme({ variant }: DemoThemeProps) {
         outline
         onClick={() => {
           applyPresetVars(preset.dark);
-          setTheme(presetTheme(preset.dark, true));
+          setTheme(themeDark);
         }}
         icon="moon-star"
         fullWidth

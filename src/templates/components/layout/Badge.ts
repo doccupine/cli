@@ -406,7 +406,7 @@ const StyledBadge = styled.span<{
       color: \${palette.text};
       border: solid 1px \${palette.border};
 
-      :root.dark & {
+      :root[data-theme="dark"] & {
         background: \${palette.darkBackground};
         color: \${palette.darkText};
         border-color: \${palette.darkBorder};

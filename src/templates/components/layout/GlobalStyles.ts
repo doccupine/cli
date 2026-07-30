@@ -7,10 +7,10 @@ import {
   shadowsDark,
 } from "@/app/theme";
 
-// Build "name: value;" lines for every entry in a record. Used to emit
-// :root and :root.dark blocks from the resolved hex objects in theme.ts.
-// Custom theme.json overrides flow through automatically because they are
-// already merged into colorsLight / colorsDark.
+// Build "name: value;" lines for every entry in a record. Used to emit the
+// :root and dark-mode blocks from the resolved hex objects in theme.ts. Custom
+// theme.json overrides flow through automatically because they are already
+// merged into colorsLight / colorsDark.
 function toCssVars<T extends object>(prefix: string, record: T): string {
   return Object.entries(record)
     .map(([k, v]) => \`  --\${prefix}-\${k}: \${v};\`)
@@ -55,11 +55,17 @@ const diagramVars = [
 
 const GlobalStyles = createGlobalStyle\`
 :root {
+  color-scheme: light;
 \${lightVars}
 \${diagramVars}
 }
 
-:root.dark {
+/* The blocking theme-init script in the root layout stamps this attribute
+   before the first paint, so a statically rendered page arrives already dark.
+   Declaring color-scheme here rather than inline on <html> keeps native form
+   controls and scrollbars following the mode when the theme is toggled. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
 \${darkVars}
 }
 
@@ -179,12 +185,12 @@ b {
 }
 
 /* Mode-conditional visibility helpers. ThemeToggle uses these to swap Sun
-   and Moon icons; Header uses them to swap light/dark logos. Pure CSS so
-   the swap happens via the active <html> class without JS or re-render. */
-:root.dark .light-only {
+   and Moon icons; Header uses them to swap light/dark logos. Pure CSS so the
+   swap happens via the active <html> attribute without JS or re-render. */
+:root[data-theme="dark"] .light-only {
   display: none !important;
 }
-:root:not(.dark) .dark-only {
+:root:not([data-theme="dark"]) .dark-only {
   display: none !important;
 }
 \`;
