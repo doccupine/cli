@@ -10,9 +10,16 @@ import {
   startingDocsStructure,
 } from "./lib/structures.js";
 import { rootLayoutTemplate, siteLayoutTemplate } from "./lib/layout.js";
-import { normalizeOpenApiConfig } from "./lib/config-manager.js";
+import {
+  normalizeOpenApiConfig,
+  validateConfig,
+} from "./lib/config-manager.js";
 import { GeneratedArtifacts } from "./lib/generated-artifacts.js";
-import { claimOutputDirectory, resolveWithin } from "./lib/output-safety.js";
+import {
+  claimOutputDirectory,
+  resolveOutputPath,
+  resolveWithin,
+} from "./lib/output-safety.js";
 import {
   OpenApiRegistry,
   DEFAULT_API_BASE_SLUG,
@@ -56,6 +63,26 @@ import type {
   NormalizedOpenApiSpec,
 } from "./lib/types.js";
 import type { OperationDescriptor } from "./lib/openapi-types.js";
+
+const PUBLIC_AGGREGATE_PATHS = new Set([
+  "llms.txt",
+  "llms-full.txt",
+  "skill.md",
+  ".well-known/mcp.json",
+]);
+
+function normalizePublicArtifactPath(relativePath: string): string {
+  return relativePath.replace(/\\/g, "/").toLowerCase();
+}
+
+function isPublicAggregate(relativePath: string): boolean {
+  return PUBLIC_AGGREGATE_PATHS.has(normalizePublicArtifactPath(relativePath));
+}
+
+function isManagedPublicArtifact(relativePath: string): boolean {
+  const normalized = normalizePublicArtifactPath(relativePath);
+  return PUBLIC_AGGREGATE_PATHS.has(normalized) || normalized.endsWith(".md");
+}
 
 export class MDXToNextJSGenerator {
   private watchDir: string;
@@ -104,6 +131,10 @@ export class MDXToNextJSGenerator {
     this.rootDir = path.resolve(rootDir);
     this.openApiSpecs = openApiSpecs;
     this.artifacts = new GeneratedArtifacts(this.outputDir);
+  }
+
+  private outputPath(...segments: string[]): string {
+    return resolveOutputPath(this.outputDir, ...segments);
   }
 
   private enqueueMutation(label: string, task: () => Promise<void>): void {
@@ -177,12 +208,12 @@ export class MDXToNextJSGenerator {
     // Everything under app/ is regenerated below and by processAllMDXFiles /
     // generateSectionIndexPages, so nothing here is user-authored. Config JSONs
     // and other generated dirs live outside app/ and are untouched.
-    await fs.remove(path.join(this.outputDir, "app"));
+    await fs.remove(this.outputPath("app"));
 
     // Drop files that earlier CLI versions generated but no longer exist in
     // the template set, so upgraded projects don't keep stale copies.
     await Promise.all(
-      obsoleteFiles.map((file) => fs.remove(path.join(this.outputDir, file))),
+      obsoleteFiles.map((file) => fs.remove(this.outputPath(file))),
     );
 
     const structure: Record<string, string | Promise<string>> = {
@@ -202,7 +233,7 @@ export class MDXToNextJSGenerator {
     };
 
     for (const [filePath, content] of Object.entries(structure)) {
-      const fullPath = path.join(this.outputDir, filePath);
+      const fullPath = this.outputPath(filePath);
       await fs.ensureDir(path.dirname(fullPath));
       await writeFileAtomic(fullPath, String(await content));
     }
@@ -228,7 +259,7 @@ export class MDXToNextJSGenerator {
 
     for (const configFile of this.configFiles) {
       const sourcePath = path.join(this.rootDir, configFile);
-      const destPath = path.join(this.outputDir, configFile);
+      const destPath = this.outputPath(configFile);
 
       console.log(chalk.gray(`  Checking ${configFile}...`));
 
@@ -245,7 +276,7 @@ export class MDXToNextJSGenerator {
     console.log(chalk.blue(`🔍 Checking for font configuration...`));
 
     const sourcePath = path.join(this.rootDir, this.fontConfigFile);
-    const destPath = path.join(this.outputDir, this.fontConfigFile);
+    const destPath = this.outputPath(this.fontConfigFile);
 
     if (await fs.pathExists(sourcePath)) {
       await fs.copy(sourcePath, destPath);
@@ -300,7 +331,7 @@ export class MDXToNextJSGenerator {
     console.log(chalk.blue(`🔍 Checking for analytics configuration...`));
 
     const sourcePath = path.join(this.rootDir, this.analyticsConfigFile);
-    const destPath = path.join(this.outputDir, this.analyticsConfigFile);
+    const destPath = this.outputPath(this.analyticsConfigFile);
 
     if (await fs.pathExists(sourcePath)) {
       await fs.copy(sourcePath, destPath);
@@ -596,7 +627,7 @@ export class MDXToNextJSGenerator {
 
     if (this.configFiles.includes(fileName)) {
       const sourcePath = path.join(this.rootDir, fileName);
-      const destPath = path.join(this.outputDir, fileName);
+      const destPath = this.outputPath(fileName);
 
       try {
         await fs.copy(sourcePath, destPath);
@@ -621,7 +652,7 @@ export class MDXToNextJSGenerator {
     const fileName = path.basename(filePath);
 
     if (this.configFiles.includes(fileName)) {
-      const destPath = path.join(this.outputDir, fileName);
+      const destPath = this.outputPath(fileName);
 
       try {
         const arrayDefaults = new Set([
@@ -656,7 +687,7 @@ export class MDXToNextJSGenerator {
     console.log(chalk.cyan(`🔤 Font configuration changed`));
 
     const sourcePath = path.join(this.rootDir, this.fontConfigFile);
-    const destPath = path.join(this.outputDir, this.fontConfigFile);
+    const destPath = this.outputPath(this.fontConfigFile);
 
     try {
       await fs.copy(sourcePath, destPath);
@@ -674,7 +705,7 @@ export class MDXToNextJSGenerator {
   async handleFontConfigDelete() {
     console.log(chalk.red(`🗑️ Font configuration deleted`));
 
-    const destPath = path.join(this.outputDir, this.fontConfigFile);
+    const destPath = this.outputPath(this.fontConfigFile);
 
     try {
       if (await fs.pathExists(destPath)) {
@@ -697,7 +728,7 @@ export class MDXToNextJSGenerator {
     console.log(chalk.cyan(`📊 Analytics configuration changed`));
 
     const sourcePath = path.join(this.rootDir, this.analyticsConfigFile);
-    const destPath = path.join(this.outputDir, this.analyticsConfigFile);
+    const destPath = this.outputPath(this.analyticsConfigFile);
 
     try {
       await fs.copy(sourcePath, destPath);
@@ -709,11 +740,11 @@ export class MDXToNextJSGenerator {
 
       // Regenerate dynamic templates that depend on analytics config
       await writeFileAtomic(
-        path.join(this.outputDir, "next.config.ts"),
+        this.outputPath("next.config.ts"),
         nextConfigTemplate(this.analyticsConfig),
       );
       await writeFileAtomic(
-        path.join(this.outputDir, "proxy.ts"),
+        this.outputPath("proxy.ts"),
         proxyTemplate(this.analyticsConfig),
       );
       await this.updateRootLayout();
@@ -738,7 +769,7 @@ export class MDXToNextJSGenerator {
   async handleAnalyticsConfigDelete() {
     console.log(chalk.red(`🗑️ Analytics configuration deleted`));
 
-    const destPath = path.join(this.outputDir, this.analyticsConfigFile);
+    const destPath = this.outputPath(this.analyticsConfigFile);
 
     try {
       // Write empty analytics.json so runtime imports don't break
@@ -748,13 +779,10 @@ export class MDXToNextJSGenerator {
 
       // Regenerate dynamic templates without analytics
       await writeFileAtomic(
-        path.join(this.outputDir, "next.config.ts"),
+        this.outputPath("next.config.ts"),
         nextConfigTemplate(null),
       );
-      await writeFileAtomic(
-        path.join(this.outputDir, "proxy.ts"),
-        proxyTemplate(null),
-      );
+      await writeFileAtomic(this.outputPath("proxy.ts"), proxyTemplate(null));
       await this.updateRootLayout();
 
       console.log(chalk.green(`✅ Analytics removed from Next.js app`));
@@ -768,7 +796,7 @@ export class MDXToNextJSGenerator {
 
   async copyPublicFiles() {
     const publicDir = path.join(this.rootDir, "public");
-    const destDir = path.join(this.outputDir, "public");
+    const destDir = this.outputPath("public");
 
     console.log(chalk.blue(`🔍 Checking for public directory...`));
 
@@ -783,7 +811,10 @@ export class MDXToNextJSGenerator {
   async handlePublicFileChange(filePath: string) {
     const publicDir = path.join(this.rootDir, "public");
     const relativePath = path.relative(publicDir, filePath);
-    const destPath = path.join(this.outputDir, "public", relativePath);
+    const destRelativePath = isPublicAggregate(relativePath)
+      ? normalizePublicArtifactPath(relativePath)
+      : relativePath;
+    const destPath = this.outputPath("public", destRelativePath);
 
     try {
       await fs.ensureDir(path.dirname(destPath));
@@ -791,6 +822,9 @@ export class MDXToNextJSGenerator {
       console.log(
         chalk.green(`📋 Updated public/${relativePath} in Next.js app`),
       );
+      if (isManagedPublicArtifact(relativePath)) {
+        await this.updateLlmsFiles();
+      }
     } catch (error) {
       console.error(
         chalk.red(`❌ Error copying public/${relativePath}:`),
@@ -802,14 +836,26 @@ export class MDXToNextJSGenerator {
   async handlePublicFileDelete(filePath: string) {
     const publicDir = path.join(this.rootDir, "public");
     const relativePath = path.relative(publicDir, filePath);
-    const destPath = path.join(this.outputDir, "public", relativePath);
+    const destRelativePath = isPublicAggregate(relativePath)
+      ? normalizePublicArtifactPath(relativePath)
+      : relativePath;
+    const destPath = this.outputPath("public", destRelativePath);
 
     try {
+      // A rapid replace can queue an unlink after the replacement already
+      // exists. Copy the current source instead of deleting its fresh mirror.
+      if (await fs.pathExists(filePath)) {
+        await this.handlePublicFileChange(filePath);
+        return;
+      }
       if (await fs.pathExists(destPath)) {
         await fs.remove(destPath);
         console.log(
           chalk.yellow(`🗑️ Removed public/${relativePath} from Next.js app`),
         );
+      }
+      if (isManagedPublicArtifact(relativePath)) {
+        await this.updateLlmsFiles();
       }
     } catch (error) {
       console.error(
@@ -1170,11 +1216,11 @@ export class MDXToNextJSGenerator {
 
   private async removeOwnedRoute(slug: string): Promise<void> {
     if (!slug) return;
-    const siteDir = path.join(this.outputDir, "app", "(site)");
-    const routeDir = resolveWithin(siteDir, slug);
+    const siteDir = this.outputPath("app", "(site)");
+    const routeDir = resolveOutputPath(siteDir, slug);
     await Promise.all([
-      fs.remove(path.join(routeDir, "page.tsx")),
-      fs.remove(path.join(routeDir, "rss.xml")),
+      fs.remove(resolveOutputPath(siteDir, slug, "page.tsx")),
+      fs.remove(resolveOutputPath(siteDir, slug, "rss.xml")),
     ]);
     await this.removeEmptyDirsUpTo(routeDir, siteDir);
   }
@@ -1440,8 +1486,10 @@ export default function SectionIndex() {
 }
 `;
 
-        const pagePath = resolveWithin(
-          path.join(this.outputDir, "app", "(site)"),
+        const pagePath = resolveOutputPath(
+          this.outputDir,
+          "app",
+          "(site)",
           section.slug,
           "page.tsx",
         );
@@ -1472,8 +1520,10 @@ export default function SectionIndex() {
   ): Promise<void> {
     for (const stale of this.generatedSectionIndexSlugs) {
       if (nextSlugs.has(stale)) continue;
-      const pagePath = resolveWithin(
-        path.join(this.outputDir, "app", "(site)"),
+      const pagePath = resolveOutputPath(
+        this.outputDir,
+        "app",
+        "(site)",
         stale,
         "page.tsx",
       );
@@ -1484,7 +1534,7 @@ export default function SectionIndex() {
         await fs.remove(pagePath);
         await this.removeEmptyDirsUpTo(
           path.dirname(pagePath),
-          path.join(this.outputDir, "app", "(site)"),
+          this.outputPath("app", "(site)"),
         );
         console.log(
           chalk.blue(`🧹 Removed stale section index redirect: /${stale}`),
@@ -1633,8 +1683,10 @@ export default function Page() {
 }
 `;
 
-    const pagePath = resolveWithin(
-      path.join(this.outputDir, "app", "(site)"),
+    const pagePath = resolveOutputPath(
+      this.outputDir,
+      "app",
+      "(site)",
       mdxFile.slug,
       "page.tsx",
     );
@@ -1647,11 +1699,11 @@ export default function Page() {
     // Update blocks. Cross-run staleness is covered by the app/ wipe in
     // createNextJSStructure.
     if (!isSynthetic) {
-      const rssDir = path.join(path.dirname(pagePath), "rss.xml");
+      const rssDir = resolveOutputPath(path.dirname(pagePath), "rss.xml");
       if (hasFeed) {
         await fs.ensureDir(rssDir);
         await writeFileAtomic(
-          path.join(rssDir, "route.ts"),
+          resolveOutputPath(path.dirname(pagePath), "rss.xml", "route.ts"),
           rssRouteTemplate({
             pagePath: mdxFile.slug,
             title: typeof fm.title === "string" ? fm.title : null,
@@ -1765,8 +1817,7 @@ export default function Page() {
 
   /** Writes the request-execution allowlist (overwrites the shipped stub). */
   private async writeApiAllowlist(): Promise<void> {
-    const target = path.join(
-      this.outputDir,
+    const target = this.outputPath(
       "services",
       "openapi",
       "playground-allowlist.json",
@@ -1887,14 +1938,16 @@ export default function Page() {
     const configPath = path.join(this.rootDir, this.doccupineConfigFile);
     let config: DoccupineConfig;
     try {
-      config = JSON.parse(
-        await fs.readFile(configPath, "utf8"),
-      ) as DoccupineConfig;
-    } catch {
+      config = validateConfig(
+        JSON.parse(await fs.readFile(configPath, "utf8")),
+        this.rootDir,
+      );
+    } catch (error) {
       console.warn(
         chalk.yellow(
           "⚠️ doccupine.json is missing or invalid - keeping the current configuration",
         ),
+        error instanceof Error ? error.message : error,
       );
       return;
     }
@@ -1920,12 +1973,22 @@ export default function Page() {
     console.log(
       chalk.cyan("📘 OpenAPI configuration changed - updating API reference"),
     );
+    let nextRegistry: OpenApiRegistry;
     try {
       // Validate the complete candidate before changing the active spec list or
       // its watcher. A half-written/invalid replacement keeps both the current
       // generated reference and its live watcher intact.
-      const nextRegistry = new OpenApiRegistry();
+      nextRegistry = new OpenApiRegistry();
       await nextRegistry.load(nextSpecs, this.rootDir, this.apiBaseSlug);
+    } catch (error) {
+      console.error(chalk.red("❌ Error updating API reference:"), error);
+      return;
+    }
+
+    const previousRegistry = this.apiRegistry;
+    const previousSpecs = this.openApiSpecs;
+    const previousSections = this.sectionsConfig;
+    try {
       this.apiRegistry = nextRegistry;
       this.openApiSpecs = nextSpecs;
       await this.syncOpenApiSpecWatcher();
@@ -1935,6 +1998,26 @@ export default function Page() {
       console.log(chalk.green("✅ API reference updated"));
     } catch (error) {
       console.error(chalk.red("❌ Error updating API reference:"), error);
+      this.apiRegistry = previousRegistry;
+      this.openApiSpecs = previousSpecs;
+      this.sectionsConfig = previousSections;
+      try {
+        await this.syncOpenApiSpecWatcher();
+      } catch (rollbackError) {
+        console.error(
+          chalk.red("❌ Error restoring the previous OpenAPI watcher:"),
+          rollbackError,
+        );
+      }
+      try {
+        await this.writeApiPages();
+        await this.refreshSiteAggregates();
+      } catch (rollbackError) {
+        console.error(
+          chalk.red("❌ Error restoring previous API reference output:"),
+          rollbackError,
+        );
+      }
     }
   }
 
@@ -2073,7 +2156,7 @@ export default function Home() {
 }
 `;
 
-    const homePath = path.join(this.outputDir, "app", "(site)", "page.tsx");
+    const homePath = this.outputPath("app", "(site)", "page.tsx");
     await fs.ensureDir(path.dirname(homePath));
     await writeFileAtomic(homePath, indexContent);
 
@@ -2081,11 +2164,11 @@ export default function Home() {
     // root feed route while the homepage has Update blocks, prune it when
     // they go away or index.mdx is deleted (this runs on every aggregate
     // refresh, including the delete path).
-    const rssDir = path.join(this.outputDir, "app", "(site)", "rss.xml");
+    const rssDir = this.outputPath("app", "(site)", "rss.xml");
     if (hasFeed && indexMDX) {
       await fs.ensureDir(rssDir);
       await writeFileAtomic(
-        path.join(rssDir, "route.ts"),
+        this.outputPath("app", "(site)", "rss.xml", "route.ts"),
         rssRouteTemplate({
           pagePath: "",
           title: indexMDX.title,
@@ -2182,8 +2265,10 @@ export default function Page() {
 }
 `;
 
-    const pagePath = resolveWithin(
-      path.join(this.outputDir, "app", "(site)"),
+    const pagePath = resolveOutputPath(
+      this.outputDir,
+      "app",
+      "(site)",
       sectionSlug,
       "page.tsx",
     );
@@ -2193,15 +2278,10 @@ export default function Page() {
 
   async updateRootLayout(pages?: PageMeta[]) {
     await writeFileAtomic(
-      path.join(this.outputDir, "app", "layout.tsx"),
+      this.outputPath("app", "layout.tsx"),
       await this.generateRootLayout(),
     );
-    const siteLayoutPath = path.join(
-      this.outputDir,
-      "app",
-      "(site)",
-      "layout.tsx",
-    );
+    const siteLayoutPath = this.outputPath("app", "(site)", "layout.tsx");
     await fs.ensureDir(path.dirname(siteLayoutPath));
     await writeFileAtomic(siteLayoutPath, await this.generateSiteLayout(pages));
   }
@@ -2261,7 +2341,7 @@ export default function Page() {
   }
 
   async updateSitemap(pages?: PageMeta[]) {
-    const sitemapPath = path.join(this.outputDir, "app", "sitemap.ts");
+    const sitemapPath = this.outputPath("app", "sitemap.ts");
     const siteUrl = await this.loadSiteUrl();
 
     const resolvedPages = pages ?? (await this.buildAllPagesMeta());
@@ -2278,10 +2358,7 @@ export default function Page() {
 
   async updateRobots() {
     const siteUrl = await this.loadSiteUrl();
-    await writeFileAtomic(
-      path.join(this.outputDir, "app", "robots.ts"),
-      robotsTemplate,
-    );
+    await writeFileAtomic(this.outputPath("app", "robots.ts"), robotsTemplate);
     console.log(
       chalk.green(
         siteUrl
@@ -2356,9 +2433,54 @@ export default function Page() {
     return { ...page, body };
   }
 
-  async updateLlmsFiles(pages?: PageMeta[]) {
-    const publicDir = path.join(this.outputDir, "public");
+  private async findSourcePublicAsset(
+    relativePath: string,
+  ): Promise<string | null> {
     const sourcePublicDir = path.join(this.rootDir, "public");
+    const normalized = relativePath.replace(/\\/g, "/");
+    const exactPath = resolveWithin(sourcePublicDir, normalized);
+    if (await fs.pathExists(exactPath)) return exactPath;
+
+    let currentPath = sourcePublicDir;
+    for (const part of normalized.split("/")) {
+      let entries: string[];
+      try {
+        entries = await fs.readdir(currentPath);
+      } catch {
+        return null;
+      }
+      const actualName = entries.find(
+        (entry) => entry.toLowerCase() === part.toLowerCase(),
+      );
+      if (!actualName) return null;
+      currentPath = path.join(currentPath, actualName);
+    }
+    return currentPath;
+  }
+
+  private async writePublicAggregate(
+    relativePath: string,
+    content: string,
+  ): Promise<void> {
+    const sourcePath = await this.findSourcePublicAsset(relativePath);
+    const targetPath = this.outputPath("public", relativePath);
+    if (sourcePath) {
+      console.warn(
+        chalk.yellow(
+          `⚠️ Skipping generated public/${relativePath}; a project public asset owns that path`,
+        ),
+      );
+      await fs.ensureDir(path.dirname(targetPath));
+      await fs.copy(sourcePath, targetPath);
+      return;
+    }
+
+    await fs.ensureDir(path.dirname(targetPath));
+    await writeFileAtomic(targetPath, content);
+  }
+
+  async updateLlmsFiles(pages?: PageMeta[]) {
+    const publicDir = this.outputPath("public");
     await fs.ensureDir(publicDir);
 
     const { url: baseUrl, name, description } = await this.loadSiteMetadata();
@@ -2379,7 +2501,7 @@ export default function Page() {
       };
     });
     await writeFileAtomic(
-      path.join(this.outputDir, "services", "mcp", "docs-content.json"),
+      this.outputPath("services", "mcp", "docs-content.json"),
       JSON.stringify(docsContent, null, 2) + "\n",
     );
 
@@ -2398,8 +2520,8 @@ export default function Page() {
       sectionsConfig: this.sectionsConfig,
     });
 
-    await writeFileAtomic(path.join(publicDir, "llms.txt"), indexContent);
-    await writeFileAtomic(path.join(publicDir, "llms-full.txt"), fullContent);
+    await this.writePublicAggregate("llms.txt", indexContent);
+    await this.writePublicAggregate("llms-full.txt", fullContent);
 
     const skillContent = skillMdTemplate({
       siteName: name,
@@ -2408,12 +2530,22 @@ export default function Page() {
       pages: resolvedPages,
       sectionsConfig: this.sectionsConfig,
     });
-    await writeFileAtomic(path.join(publicDir, "skill.md"), skillContent);
+    await this.writePublicAggregate("skill.md", skillContent);
 
     // MCP discovery manifest. Needs an absolute URL, so it only exists when
     // config.json declares the site url; it is pruned if the url is removed.
-    const mcpJsonPath = path.join(publicDir, ".well-known", "mcp.json");
-    if (baseUrl) {
+    const mcpRelativePath = ".well-known/mcp.json";
+    const mcpJsonPath = resolveOutputPath(publicDir, mcpRelativePath);
+    const sourceMcpJsonPath = await this.findSourcePublicAsset(mcpRelativePath);
+    if (sourceMcpJsonPath) {
+      console.warn(
+        chalk.yellow(
+          `⚠️ Skipping generated public/${mcpRelativePath}; a project public asset owns that path`,
+        ),
+      );
+      await fs.ensureDir(path.dirname(mcpJsonPath));
+      await fs.copy(sourceMcpJsonPath, mcpJsonPath);
+    } else if (baseUrl) {
       const mcpJson =
         JSON.stringify(
           {
@@ -2437,16 +2569,20 @@ export default function Page() {
     await Promise.all(
       pagesWithBodies.map(async (page) => {
         const relPath = page.slug === "" ? "index.md" : `${page.slug}.md`;
-        const sourceAssetPath = resolveWithin(sourcePublicDir, relPath);
-        if (await fs.pathExists(sourceAssetPath)) {
+        if (isPublicAggregate(relPath)) return;
+        const sourceAssetPath = await this.findSourcePublicAsset(relPath);
+        if (sourceAssetPath) {
           console.warn(
             chalk.yellow(
               `⚠️ Skipping generated public/${relPath}; a project public asset owns that path`,
             ),
           );
+          const targetPath = resolveOutputPath(publicDir, relPath);
+          await fs.ensureDir(path.dirname(targetPath));
+          await fs.copy(sourceAssetPath, targetPath);
           return;
         }
-        const targetPath = resolveWithin(publicDir, relPath);
+        const targetPath = resolveOutputPath(publicDir, relPath);
         await fs.ensureDir(path.dirname(targetPath));
         await writeFileAtomic(targetPath, llmsPageTemplate(page, baseUrl));
         nextRelativePaths.add(relPath);
@@ -2458,9 +2594,9 @@ export default function Page() {
     for (const stale of previousRelativePaths) {
       if (!nextRelativePaths.has(stale)) {
         try {
-          const sourceAssetPath = resolveWithin(sourcePublicDir, stale);
-          if (await fs.pathExists(sourceAssetPath)) continue;
-          const stalePath = resolveWithin(publicDir, stale);
+          if (isPublicAggregate(stale)) continue;
+          if (await this.findSourcePublicAsset(stale)) continue;
+          const stalePath = resolveOutputPath(publicDir, stale);
           if (await fs.pathExists(stalePath)) {
             await fs.remove(stalePath);
           }

@@ -1,7 +1,7 @@
 import fs from "fs-extra";
 import os from "node:os";
 import path from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { MDXToNextJSGenerator } from "./mdx-to-nextjs-generator.js";
 
@@ -21,6 +21,7 @@ async function fixture(): Promise<{
 }
 
 afterEach(async () => {
+  vi.restoreAllMocks();
   await Promise.all(
     temporaryDirectories.splice(0).map((dir) => fs.remove(dir)),
   );
@@ -162,9 +163,12 @@ describe.sequential("MDXToNextJSGenerator ownership", () => {
       "---\ntitle: Hand Written\n---\nHAND_WRITTEN_SENTINEL\n",
     );
 
-    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [
-      { name: "Test", file: specPath },
-    ]);
+    const generator = new MDXToNextJSGenerator(
+      watchDir,
+      outputDir,
+      [{ name: "Test", file: specPath }],
+      root,
+    );
     await generator.init();
     const pagePath = path.join(
       outputDir,
@@ -240,6 +244,382 @@ describe.sequential("MDXToNextJSGenerator ownership", () => {
     expect(await fs.readFile(pagePath, "utf8")).toContain(
       "Updated active summary",
     );
+  });
+
+  it("rolls back a parsed OpenAPI config when regeneration fails", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const oldSpecPath = path.join(root, "old-openapi.json");
+    const candidateSpecPath = path.join(root, "candidate-openapi.json");
+    const writeSpec = (specPath: string, resource: string, summary: string) =>
+      fs.writeJson(specPath, {
+        openapi: "3.0.0",
+        info: { title: "Test", version: "1.0.0" },
+        paths: {
+          [`/${resource}`]: {
+            get: {
+              operationId: `list${resource}`,
+              summary,
+              tags: [resource],
+              responses: { "200": { description: "OK" } },
+            },
+          },
+        },
+      });
+    await writeSpec(oldSpecPath, "users", "Old users");
+    await writeSpec(candidateSpecPath, "pets", "Candidate pets");
+    await fs.outputFile(path.join(watchDir, "index.mdx"), "# Home\n");
+
+    const generator = new MDXToNextJSGenerator(
+      watchDir,
+      outputDir,
+      [{ name: "Old", file: oldSpecPath }],
+      root,
+    );
+    await generator.init();
+    const oldPagePath = path.join(
+      outputDir,
+      "app",
+      "(site)",
+      "api-reference",
+      "users",
+      "listusers",
+      "page.tsx",
+    );
+    const candidatePagePath = path.join(
+      outputDir,
+      "app",
+      "(site)",
+      "api-reference",
+      "pets",
+      "listpets",
+      "page.tsx",
+    );
+    const llmsPath = path.join(outputDir, "public", "llms.txt");
+    const oldPage = await fs.readFile(oldPagePath, "utf8");
+    const oldLlms = await fs.readFile(llmsPath, "utf8");
+
+    type GeneratorInternals = {
+      openApiSpecs: Array<{ name: string; file: string }>;
+      syncOpenApiSpecWatcher(): Promise<void>;
+    };
+    const internals = generator as unknown as GeneratorInternals;
+    const syncWatcher = internals.syncOpenApiSpecWatcher.bind(generator);
+    const watcherTargets: string[] = [];
+    vi.spyOn(internals, "syncOpenApiSpecWatcher").mockImplementation(
+      async () => {
+        watcherTargets.push(
+          internals.openApiSpecs.map((spec) => path.basename(spec.file)).join(),
+        );
+        await syncWatcher();
+      },
+    );
+    let candidatePageWasWritten = false;
+    vi.spyOn(generator, "updateLlmsFiles").mockImplementationOnce(async () => {
+      candidatePageWasWritten = await fs.pathExists(candidatePagePath);
+      throw new Error("Injected aggregate failure");
+    });
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    await fs.writeJson(path.join(root, "doccupine.json"), {
+      watchDir: "docs",
+      outputDir: "site",
+      openapi: [{ name: "Candidate", file: "candidate-openapi.json" }],
+    });
+
+    await generator.handleDoccupineConfigChange();
+
+    expect(candidatePageWasWritten).toBe(true);
+    expect(internals.openApiSpecs).toEqual([
+      { name: "Old", file: oldSpecPath },
+    ]);
+    expect(watcherTargets).toEqual([
+      "candidate-openapi.json",
+      "old-openapi.json",
+    ]);
+    expect(await fs.pathExists(candidatePagePath)).toBe(false);
+    expect(await fs.readFile(oldPagePath, "utf8")).toBe(oldPage);
+    expect(await fs.readFile(llmsPath, "utf8")).toBe(oldLlms);
+
+    await writeSpec(oldSpecPath, "users", "Updated old users");
+    await generator.handleOpenApiChange();
+    expect(await fs.readFile(oldPagePath, "utf8")).toContain(
+      "Updated old users",
+    );
+    await generator.stop();
+  });
+
+  it("rejects schema-invalid config reloads before changing generated output", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const specPath = path.join(root, "openapi.json");
+    const writeSpec = (summary: string) =>
+      fs.writeJson(specPath, {
+        openapi: "3.0.0",
+        info: { title: "Test", version: "1.0.0" },
+        paths: {
+          "/users": {
+            get: {
+              operationId: "listUsers",
+              summary,
+              tags: ["users"],
+              responses: { "200": { description: "OK" } },
+            },
+          },
+        },
+      });
+    await writeSpec("Initial summary");
+    await fs.outputFile(path.join(watchDir, "index.mdx"), "# Home\n");
+
+    const generator = new MDXToNextJSGenerator(
+      watchDir,
+      outputDir,
+      [{ name: "Test", file: specPath }],
+      root,
+    );
+    await generator.init();
+    const pagePath = path.join(
+      outputDir,
+      "app",
+      "(site)",
+      "api-reference",
+      "users",
+      "listusers",
+      "page.tsx",
+    );
+    const llmsPath = path.join(outputDir, "public", "llms.txt");
+    const initialPage = await fs.readFile(pagePath, "utf8");
+    const initialLlms = await fs.readFile(llmsPath, "utf8");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const invalidConfigs: unknown[] = [
+      {},
+      {
+        watchDir: "docs",
+        outputDir: "site",
+        openapi: [{ name: "Missing file" }],
+      },
+      {
+        watchDir: "docs",
+        outputDir: "docs/generated",
+        openapi: specPath,
+      },
+      { watchDir: "", outputDir: "site", openapi: specPath },
+      {
+        watchDir: "docs",
+        outputDir: "site",
+        port: "70000",
+        openapi: specPath,
+      },
+      {
+        watchDir: "docs",
+        outputDir: "site",
+        packageManager: "yarn",
+        openapi: specPath,
+      },
+    ];
+
+    for (const invalidConfig of invalidConfigs) {
+      await fs.writeJson(path.join(root, "doccupine.json"), invalidConfig);
+      await generator.handleDoccupineConfigChange();
+      expect(await fs.readFile(pagePath, "utf8")).toBe(initialPage);
+      expect(await fs.readFile(llmsPath, "utf8")).toBe(initialLlms);
+    }
+    expect(warn).toHaveBeenCalledTimes(invalidConfigs.length);
+
+    await writeSpec("Updated active summary");
+    await generator.handleOpenApiChange();
+    expect(await fs.readFile(pagePath, "utf8")).toContain(
+      "Updated active summary",
+    );
+  });
+
+  it("keeps the restart hint for valid watch and output directory changes", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    await fs.outputFile(path.join(watchDir, "index.mdx"), "# Home\n");
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+    await generator.init();
+    await fs.writeJson(path.join(root, "doccupine.json"), {
+      watchDir: "other-docs",
+      outputDir: "other-site",
+    });
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await generator.handleDoccupineConfigChange();
+
+    expect(log).toHaveBeenCalledWith(
+      expect.stringContaining("watchDir/outputDir changes"),
+    );
+  });
+
+  it("preserves project-owned public aggregate artifacts on every refresh", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    await fs.outputFile(path.join(watchDir, "index.mdx"), "# Home\n");
+    const artifacts = [
+      ["LLMS.TXT", "llms.txt", "USER_LLMS_INDEX\n"],
+      ["Llms-Full.TxT", "llms-full.txt", "USER_LLMS_FULL\n"],
+      ["SKILL.MD", "skill.md", "USER_SKILL\n"],
+      [
+        path.join(".WELL-KNOWN", "MCP.JSON"),
+        path.join(".well-known", "mcp.json"),
+        '{"user":true}\n',
+      ],
+    ] as const;
+    for (const [sourceRelativePath, , content] of artifacts) {
+      await fs.outputFile(
+        path.join(root, "public", sourceRelativePath),
+        content,
+      );
+    }
+
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+    await generator.init();
+    await generator.updateLlmsFiles();
+
+    for (const [, outputRelativePath, content] of artifacts) {
+      expect(
+        await fs.readFile(
+          path.join(outputDir, "public", outputRelativePath),
+          "utf8",
+        ),
+      ).toBe(content);
+    }
+  });
+
+  it("restores mixed-case managed public overrides after watch deletion", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    await fs.outputFile(
+      path.join(watchDir, "guide.mdx"),
+      "---\ntitle: Guide\n---\nGUIDE_BODY\n",
+    );
+    await fs.writeJson(path.join(root, "config.json"), {
+      name: "Test Docs",
+      url: "https://docs.example.com",
+    });
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+    await generator.init();
+    const artifacts = [
+      ["LLMS.TXT", "llms.txt"],
+      ["LLMS-FULL.TXT", "llms-full.txt"],
+      ["SKILL.MD", "skill.md"],
+      ["GUIDE.MD", "guide.md"],
+      [
+        path.join(".WELL-KNOWN", "MCP.JSON"),
+        path.join(".well-known", "mcp.json"),
+      ],
+    ] as const;
+    const generated = new Map<string, string>();
+    for (const [, outputRelativePath] of artifacts) {
+      generated.set(
+        outputRelativePath,
+        await fs.readFile(
+          path.join(outputDir, "public", outputRelativePath),
+          "utf8",
+        ),
+      );
+    }
+
+    for (const [sourceRelativePath, outputRelativePath] of artifacts) {
+      const sourcePath = path.join(root, "public", sourceRelativePath);
+      await fs.outputFile(sourcePath, `USER:${sourceRelativePath}\n`);
+      await generator.handlePublicFileChange(sourcePath);
+      expect(
+        await fs.readFile(
+          path.join(outputDir, "public", outputRelativePath),
+          "utf8",
+        ),
+      ).toBe(`USER:${sourceRelativePath}\n`);
+    }
+    let manifest = await fs.readJson(
+      path.join(outputDir, ".doccupine-artifacts.json"),
+    );
+    expect(manifest.llmsPageFiles).not.toContain("guide.md");
+
+    for (const [sourceRelativePath, outputRelativePath] of artifacts) {
+      const sourcePath = path.join(root, "public", sourceRelativePath);
+      await fs.remove(sourcePath);
+      await generator.handlePublicFileDelete(sourcePath);
+      expect(
+        await fs.readFile(
+          path.join(outputDir, "public", outputRelativePath),
+          "utf8",
+        ),
+      ).toBe(generated.get(outputRelativePath));
+    }
+    manifest = await fs.readJson(
+      path.join(outputDir, ".doccupine-artifacts.json"),
+    );
+    expect(manifest.llmsPageFiles).toContain("guide.md");
+  });
+
+  it("restores generated public artifacts after watch-style overrides are deleted", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    await fs.outputFile(
+      path.join(watchDir, "skill.mdx"),
+      "---\ntitle: Skill Page\n---\nPAGE_SKILL_BODY\n",
+    );
+    await fs.outputFile(
+      path.join(watchDir, "guide.mdx"),
+      "---\ntitle: Guide\n---\nGUIDE_BODY\n",
+    );
+    const configPath = path.join(root, "config.json");
+    await fs.writeJson(configPath, {
+      name: "Test Docs",
+      url: "https://docs.example.com",
+    });
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+    await generator.init();
+
+    const relativePaths = [
+      "llms.txt",
+      "llms-full.txt",
+      "skill.md",
+      "guide.md",
+      path.join(".well-known", "mcp.json"),
+    ];
+    const generated = new Map<string, string>();
+    for (const relativePath of relativePaths) {
+      generated.set(
+        relativePath,
+        await fs.readFile(path.join(outputDir, "public", relativePath), "utf8"),
+      );
+    }
+    expect(generated.get("skill.md")).toContain("## Reading these docs");
+    expect(generated.get("skill.md")).not.toContain("PAGE_SKILL_BODY");
+
+    for (const relativePath of relativePaths) {
+      const sourcePath = path.join(root, "public", relativePath);
+      await fs.outputFile(sourcePath, `USER_OVERRIDE:${relativePath}\n`);
+      await generator.handlePublicFileChange(sourcePath);
+      expect(
+        await fs.readFile(path.join(outputDir, "public", relativePath), "utf8"),
+      ).toBe(`USER_OVERRIDE:${relativePath}\n`);
+    }
+    let manifest = await fs.readJson(
+      path.join(outputDir, ".doccupine-artifacts.json"),
+    );
+    expect(manifest.llmsPageFiles).not.toContain("skill.md");
+    expect(manifest.llmsPageFiles).not.toContain("guide.md");
+
+    for (const relativePath of relativePaths) {
+      const sourcePath = path.join(root, "public", relativePath);
+      await fs.remove(sourcePath);
+      await generator.handlePublicFileDelete(sourcePath);
+      expect(
+        await fs.readFile(path.join(outputDir, "public", relativePath), "utf8"),
+      ).toBe(generated.get(relativePath));
+    }
+
+    manifest = await fs.readJson(
+      path.join(outputDir, ".doccupine-artifacts.json"),
+    );
+    expect(manifest.llmsPageFiles).not.toContain("skill.md");
+    expect(manifest.llmsPageFiles).toContain("guide.md");
+
+    await fs.writeJson(configPath, { name: "Test Docs" });
+    await generator.handleConfigFileChange(configPath);
+    expect(
+      await fs.pathExists(
+        path.join(outputDir, "public", ".well-known", "mcp.json"),
+      ),
+    ).toBe(false);
   });
 
   it("does not overwrite or delete a colliding project public asset", async () => {

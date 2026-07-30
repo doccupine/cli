@@ -1,6 +1,7 @@
 import fs from "fs-extra";
 import path from "node:path";
 
+import { readOutputFileIfPresent, resolveOutputPath } from "./output-safety.js";
 import { writeFileAtomic } from "./utils.js";
 
 export type RouteOwnerKind = "mdx" | "openapi";
@@ -63,6 +64,10 @@ export class GeneratedArtifacts {
 
   constructor(private readonly outputDir: string) {}
 
+  private manifestPath(fileName: string): string {
+    return resolveOutputPath(this.outputDir, fileName);
+  }
+
   private routeKey(kind: RouteOwnerKind, source: string): string {
     return `${kind}:${source.replace(/\\/g, "/")}`;
   }
@@ -71,10 +76,13 @@ export class GeneratedArtifacts {
     this.routes.clear();
     this.llmsFiles.clear();
 
-    const manifestPath = path.join(this.outputDir, MANIFEST_FILE);
-    try {
-      if (await fs.pathExists(manifestPath)) {
-        const parsed = JSON.parse(await fs.readFile(manifestPath, "utf8")) as {
+    const manifestContent = await readOutputFileIfPresent(
+      this.outputDir,
+      MANIFEST_FILE,
+    );
+    if (manifestContent !== null) {
+      try {
+        const parsed = JSON.parse(manifestContent) as {
           routes?: unknown;
           llmsPageFiles?: unknown;
         };
@@ -91,19 +99,20 @@ export class GeneratedArtifacts {
             if (file) this.llmsFiles.add(file);
           }
         }
+      } catch {
+        // A corrupt manifest owns nothing. Generated output is rebuilt safely.
       }
-    } catch {
-      // A corrupt manifest owns nothing. Generated output is rebuilt safely.
     }
 
     // Import only valid paths from the old llms manifest. This preserves stale
     // mirror cleanup across upgrades without trusting its historical contents.
-    const legacyLlmsPath = path.join(this.outputDir, LEGACY_LLMS_MANIFEST);
-    try {
-      if (await fs.pathExists(legacyLlmsPath)) {
-        const parsed = JSON.parse(
-          await fs.readFile(legacyLlmsPath, "utf8"),
-        ) as {
+    const legacyContent = await readOutputFileIfPresent(
+      this.outputDir,
+      LEGACY_LLMS_MANIFEST,
+    );
+    if (legacyContent !== null) {
+      try {
+        const parsed = JSON.parse(legacyContent) as {
           pageFiles?: unknown;
         };
         if (Array.isArray(parsed.pageFiles)) {
@@ -112,14 +121,14 @@ export class GeneratedArtifacts {
             if (file) this.llmsFiles.add(file);
           }
         }
+      } catch {
+        // Ignore corrupt legacy state.
       }
-    } catch {
-      // Ignore corrupt legacy state.
     }
 
     await Promise.all([
-      fs.remove(legacyLlmsPath),
-      fs.remove(path.join(this.outputDir, LEGACY_API_MANIFEST)),
+      fs.remove(this.manifestPath(LEGACY_LLMS_MANIFEST)),
+      fs.remove(this.manifestPath(LEGACY_API_MANIFEST)),
     ]);
   }
 
@@ -174,7 +183,7 @@ export class GeneratedArtifacts {
       llmsPageFiles: [...this.llmsFiles].sort(),
     };
     await writeFileAtomic(
-      path.join(this.outputDir, MANIFEST_FILE),
+      this.manifestPath(MANIFEST_FILE),
       `${JSON.stringify(manifest, null, 2)}\n`,
     );
   }

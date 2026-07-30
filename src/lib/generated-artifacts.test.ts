@@ -15,6 +15,14 @@ async function temporaryDirectory(): Promise<string> {
   return directory;
 }
 
+async function makeDirectoryLink(target: string, linkPath: string) {
+  await fs.symlink(
+    target,
+    linkPath,
+    process.platform === "win32" ? "junction" : "dir",
+  );
+}
+
 afterEach(async () => {
   await Promise.all(
     temporaryDirectories.splice(0).map((dir) => fs.remove(dir)),
@@ -73,5 +81,63 @@ describe("GeneratedArtifacts", () => {
     expect(
       await fs.pathExists(path.join(outputDir, ".doccupine-api-manifest.json")),
     ).toBe(false);
+  });
+
+  it("rejects a symlinked current manifest on load and save", async () => {
+    const parent = await temporaryDirectory();
+    const outputDir = path.join(parent, "output");
+    const external = path.join(parent, "external");
+    await fs.ensureDir(outputDir);
+    await fs.ensureDir(external);
+    await fs.writeFile(path.join(external, "important.txt"), "keep");
+    await makeDirectoryLink(
+      external,
+      path.join(outputDir, ".doccupine-artifacts.json"),
+    );
+
+    const artifacts = new GeneratedArtifacts(outputDir);
+    await expect(artifacts.load()).rejects.toThrow("is a symbolic link");
+    await expect(artifacts.save()).rejects.toThrow("is a symbolic link");
+    await expect(
+      fs.readFile(path.join(external, "important.txt"), "utf8"),
+    ).resolves.toBe("keep");
+  });
+
+  it.each([".doccupine-llms-manifest.json", ".doccupine-api-manifest.json"])(
+    "refuses to remove a symlinked legacy manifest %s",
+    async (fileName) => {
+      const parent = await temporaryDirectory();
+      const outputDir = path.join(parent, "output");
+      const external = path.join(parent, "external");
+      await fs.ensureDir(outputDir);
+      await fs.ensureDir(external);
+      await fs.writeFile(path.join(external, "important.txt"), "keep");
+      await makeDirectoryLink(external, path.join(outputDir, fileName));
+
+      const artifacts = new GeneratedArtifacts(outputDir);
+      await expect(artifacts.load()).rejects.toThrow("is a symbolic link");
+      await expect(
+        fs.readFile(path.join(external, "important.txt"), "utf8"),
+      ).resolves.toBe("keep");
+    },
+  );
+
+  it("rejects an output root replaced with a symlink after construction", async () => {
+    const parent = await temporaryDirectory();
+    const outputDir = path.join(parent, "output");
+    const originalOutput = path.join(parent, "original-output");
+    const external = path.join(parent, "external");
+    await fs.ensureDir(outputDir);
+    await fs.ensureDir(external);
+    const artifacts = new GeneratedArtifacts(outputDir);
+    await fs.rename(outputDir, originalOutput);
+    await makeDirectoryLink(external, outputDir);
+
+    await expect(artifacts.save()).rejects.toThrow(
+      "outputDir is not a real directory",
+    );
+    await expect(
+      fs.pathExists(path.join(external, ".doccupine-artifacts.json")),
+    ).resolves.toBe(false);
   });
 });
