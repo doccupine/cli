@@ -127,7 +127,7 @@ export class ApiReferenceGenerator {
 
   async cleanupStalePages(
     nextRoutes: Map<string, string>,
-    realSlugs: Set<string>,
+    occupiedMdxSlugs: Set<string>,
     removeOwnedRoute: RemoveOwnedRoute,
   ): Promise<void> {
     const nextSlugs = new Set(nextRoutes.values());
@@ -137,7 +137,7 @@ export class ApiReferenceGenerator {
       }
       // A hand-written page may have taken ownership of this route since the
       // previous OpenAPI pass. Never remove an output now claimed by MDX.
-      if (realSlugs.has(previous.slug)) continue;
+      if (occupiedMdxSlugs.has(previous.slug)) continue;
       try {
         await removeOwnedRoute(previous.slug);
       } catch {

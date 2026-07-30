@@ -248,3 +248,186 @@ describe("ConfigManager migration", () => {
     );
   });
 });
+
+describe("ConfigManager symlink safety", () => {
+  let projectDir: string;
+  let externalDir: string;
+  let previousCwd: string;
+
+  const config = {
+    watchDir: "docs",
+    outputDir: "nextjs-app",
+    port: "3000",
+  };
+
+  const createTestSymlink = async (
+    target: string,
+    link: string,
+    type: "file" | "dir" = "file",
+  ): Promise<boolean> => {
+    try {
+      await fs.symlink(
+        target,
+        link,
+        process.platform === "win32" && type === "dir" ? "junction" : type,
+      );
+      return true;
+    } catch (error) {
+      if (
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        (error.code === "EPERM" || error.code === "ENOSYS")
+      ) {
+        return false;
+      }
+      throw error;
+    }
+  };
+
+  beforeEach(async () => {
+    previousCwd = process.cwd();
+    projectDir = await fs.realpath(
+      await fs.mkdtemp(path.join(os.tmpdir(), "doccupine-config-project-")),
+    );
+    externalDir = await fs.realpath(
+      await fs.mkdtemp(path.join(os.tmpdir(), "doccupine-config-external-")),
+    );
+    process.chdir(projectDir);
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(async () => {
+    process.chdir(previousCwd);
+    vi.restoreAllMocks();
+    await fs.remove(projectDir);
+    await fs.remove(externalDir);
+  });
+
+  it("rejects a config file symlink without reading its target", async () => {
+    const externalConfig = path.join(externalDir, "external.json");
+    await fs.writeJSON(externalConfig, config);
+    if (
+      !(await createTestSymlink(
+        externalConfig,
+        path.join(projectDir, "doccupine.json"),
+      ))
+    ) {
+      return;
+    }
+
+    await expect(new ConfigManager().loadConfig()).rejects.toThrow(
+      /is a symbolic link.*Remove or replace the symbolic link first/,
+    );
+  });
+
+  it("rejects a symlinked config ancestor", async () => {
+    await fs.writeJSON(path.join(externalDir, "doccupine.json"), config);
+    if (
+      !(await createTestSymlink(
+        externalDir,
+        path.join(projectDir, "settings"),
+        "dir",
+      ))
+    ) {
+      return;
+    }
+
+    await expect(
+      new ConfigManager("settings/doccupine.json").loadConfig(),
+    ).rejects.toThrow("is a symbolic link");
+  });
+
+  it("rejects a dangling config symlink", async () => {
+    const missingTarget = path.join(externalDir, "missing.json");
+    if (
+      !(await createTestSymlink(
+        missingTarget,
+        path.join(projectDir, "doccupine.json"),
+      ))
+    ) {
+      return;
+    }
+
+    await expect(new ConfigManager().loadConfig()).rejects.toThrow(
+      "is a symbolic link",
+    );
+  });
+
+  it("does not overwrite an external target when saving through a symlink", async () => {
+    const externalConfig = path.join(externalDir, "external.json");
+    const original = '{"outside":true}\n';
+    await fs.writeFile(externalConfig, original, "utf8");
+    const configPath = path.join(projectDir, "doccupine.json");
+    if (!(await createTestSymlink(externalConfig, configPath))) return;
+
+    await expect(new ConfigManager().saveConfig(config)).rejects.toThrow(
+      "symbolic link",
+    );
+
+    expect(await fs.readFile(externalConfig, "utf8")).toBe(original);
+    expect((await fs.lstat(configPath)).isSymbolicLink()).toBe(true);
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining("Error saving config file"),
+      expect.objectContaining({ message: expect.stringContaining("symbolic") }),
+    );
+  });
+
+  it("does not create an external target through a dangling symlink", async () => {
+    const missingTarget = path.join(externalDir, "missing.json");
+    const configPath = path.join(projectDir, "doccupine.json");
+    if (!(await createTestSymlink(missingTarget, configPath))) return;
+
+    await expect(new ConfigManager().saveConfig(config)).rejects.toThrow(
+      "symbolic link",
+    );
+
+    expect(await fs.pathExists(missingTarget)).toBe(false);
+    expect((await fs.lstat(configPath)).isSymbolicLink()).toBe(true);
+  });
+
+  it("does not create a config through a symlinked ancestor", async () => {
+    if (
+      !(await createTestSymlink(
+        externalDir,
+        path.join(projectDir, "settings"),
+        "dir",
+      ))
+    ) {
+      return;
+    }
+    const externalConfig = path.join(externalDir, "doccupine.json");
+
+    await expect(
+      new ConfigManager("settings/doccupine.json").saveConfig(config),
+    ).rejects.toThrow("symbolic link");
+
+    expect(await fs.pathExists(externalConfig)).toBe(false);
+  });
+
+  it("atomically replaces a safe regular config path", async () => {
+    const configPath = path.join(projectDir, "doccupine.json");
+    await fs.writeFile(configPath, '{"old":true}\n', "utf8");
+
+    await new ConfigManager().saveConfig(config);
+
+    expect(await fs.readJSON(configPath)).toEqual(config);
+    expect(
+      (await fs.readdir(projectDir)).filter((name) => name.endsWith(".tmp")),
+    ).toEqual([]);
+  });
+
+  it.skipIf(process.platform === "win32")(
+    "preserves existing config permissions across replacement",
+    async () => {
+      const configPath = path.join(projectDir, "doccupine.json");
+      await fs.writeFile(configPath, '{"old":true}\n');
+      await fs.chmod(configPath, 0o640);
+
+      await new ConfigManager().saveConfig(config);
+
+      expect((await fs.stat(configPath)).mode & 0o777).toBe(0o640);
+    },
+  );
+});

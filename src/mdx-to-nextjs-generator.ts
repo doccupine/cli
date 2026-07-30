@@ -49,6 +49,7 @@ import {
   buildRealPagesMeta as buildRealPageCatalog,
   mergePages as mergePageCatalog,
   parseMdxPageMeta,
+  RouteCollisionError,
 } from "./generator/page-catalog.js";
 import {
   loadSiteMetadata,
@@ -89,7 +90,11 @@ export class MDXToNextJSGenerator {
   private publicAssetManager: PublicAssetManager;
   private watchCoordinator: WatchCoordinator;
   private retainExistingMdxOutput = true;
-  private failedMdxSources = new Set<string>();
+  private mdxSnapshotInitialized = false;
+  private successfulMdxPages = new Map<string, PageMeta>();
+  private successfulMdxContent = new Map<string, string>();
+  private successfulMdxSourcesBySlug = new Map<string, string>();
+  private collisionBlockedMdxSources = new Set<string>();
 
   constructor(
     watchDir: string,
@@ -219,11 +224,6 @@ export class MDXToNextJSGenerator {
           ),
         );
       }
-
-      // Write the endpoint pages + request allowlist before the MDX pass so its
-      // aggregate refresh (nav/sitemap/llms) already sees them on disk and in the
-      // registry.
-      await this.writeApiPages();
 
       await this.processAllMDXFiles();
 
@@ -553,7 +553,9 @@ export class MDXToNextJSGenerator {
   private async buildAllPagesMeta(): Promise<PageMeta[]> {
     const real = await this.buildRealPagesMeta();
     return this.mergeAllPagesMeta(
-      this.selectAggregateRealPages(real),
+      this.mdxSnapshotInitialized
+        ? this.successfulPagesInSourceOrder(real)
+        : real,
       new Set(real.map((page) => page.slug)),
     );
   }
@@ -572,28 +574,114 @@ export class MDXToNextJSGenerator {
     );
   }
 
-  private selectOwnedRealPages(
-    realPages: PageMeta[],
-    emittedSources: Set<string> = new Set(),
-  ): PageMeta[] {
-    return realPages.filter((page) => {
-      const source = page.path.replace(/\\/g, "/");
-      return (
-        page.slug === "" ||
-        emittedSources.has(source) ||
-        (this.retainExistingMdxOutput &&
-          this.generatedRouteManager.routeForMdxSource(source) === page.slug)
+  private successfulPagesInSourceOrder(realPages: PageMeta[]): PageMeta[] {
+    return realPages.flatMap((page) => {
+      const successful = this.successfulMdxPages.get(
+        page.path.replace(/\\/g, "/"),
       );
+      return successful ? [successful] : [];
     });
   }
 
-  private selectAggregateRealPages(
-    realPages: PageMeta[],
-    emittedSources: Set<string> = new Set(),
-  ): PageMeta[] {
-    return this.selectOwnedRealPages(realPages, emittedSources).filter(
-      (page) => !this.failedMdxSources.has(page.path.replace(/\\/g, "/")),
+  private recordSuccessfulMdxPage(page: PageMeta, sourceContent: string): void {
+    const source = page.path.replace(/\\/g, "/");
+    const previous = this.successfulMdxPages.get(source);
+    if (
+      previous &&
+      previous.slug !== page.slug &&
+      this.successfulMdxSourcesBySlug.get(previous.slug) === source
+    ) {
+      this.successfulMdxSourcesBySlug.delete(previous.slug);
+    }
+    const otherSource = this.successfulMdxSourcesBySlug.get(page.slug);
+    if (otherSource && otherSource !== source) {
+      this.removeSuccessfulMdxPage(otherSource);
+    }
+    this.successfulMdxPages.set(source, page);
+    this.successfulMdxContent.set(source, sourceContent);
+    this.successfulMdxSourcesBySlug.set(page.slug, source);
+    this.collisionBlockedMdxSources.delete(source);
+  }
+
+  private removeSuccessfulMdxPage(source: string): void {
+    const successful = this.successfulMdxPages.get(source);
+    if (
+      successful &&
+      this.successfulMdxSourcesBySlug.get(successful.slug) === source
+    ) {
+      this.successfulMdxSourcesBySlug.delete(successful.slug);
+    }
+    this.successfulMdxPages.delete(source);
+    this.successfulMdxContent.delete(source);
+  }
+
+  private dropMissingMdxSnapshots(realPages: PageMeta[]): void {
+    const currentSources = new Set(
+      realPages.map((page) => page.path.replace(/\\/g, "/")),
     );
+    for (const source of this.successfulMdxPages.keys()) {
+      if (currentSources.has(source)) continue;
+      this.removeSuccessfulMdxPage(source);
+      this.collisionBlockedMdxSources.delete(source);
+    }
+  }
+
+  private async commitMdxSnapshot(realPages: PageMeta[]): Promise<PageMeta[]> {
+    this.dropMissingMdxSnapshots(realPages);
+    const successfulPages = this.successfulPagesInSourceOrder(realPages);
+    await this.removeStaleMdxRoutes(successfulPages);
+    await this.generatedRouteManager.replaceMdxRoutes(successfulPages);
+    this.mdxSnapshotInitialized = true;
+    return successfulPages;
+  }
+
+  private async refreshMdxDerivedOutput(
+    realPages: PageMeta[],
+    successfulPages: PageMeta[],
+  ): Promise<void> {
+    if (
+      !this.apiRegistry.isEmpty ||
+      this.artifacts.routesFor("openapi").length > 0
+    ) {
+      await this.writeApiPages(realPages);
+    }
+    const declaredSlugs = new Set(realPages.map((page) => page.slug));
+    const pages = this.mergeAllPagesMeta(successfulPages, declaredSlugs);
+    await this.refreshSiteAggregates(pages, declaredSlugs);
+  }
+
+  private async readAggregateMdxSource(
+    filePath: string,
+  ): Promise<{ content: string }> {
+    const cached = this.successfulMdxContent.get(filePath.replace(/\\/g, "/"));
+    if (this.mdxSnapshotInitialized && cached !== undefined) {
+      return { content: cached };
+    }
+    return this.readMdxSourceFile(filePath);
+  }
+
+  private homepageSource(
+    frontmatter: Record<string, any>,
+    mdxContent: string,
+  ): HomepageSource {
+    return {
+      content: mdxContent,
+      title: frontmatter.title || "Welcome",
+      description: frontmatter.description || "",
+      icon: frontmatter.icon,
+      image: frontmatter.image,
+      name: frontmatter.name,
+      date: typeof frontmatter.date === "string" ? frontmatter.date : undefined,
+      updated:
+        typeof frontmatter.updated === "string"
+          ? frontmatter.updated
+          : undefined,
+      openapi:
+        typeof frontmatter.openapi === "string"
+          ? frontmatter.openapi
+          : undefined,
+      rss: frontmatter.rss === true,
+    };
   }
 
   private async removeOwnedRoute(slug: string): Promise<void> {
@@ -613,7 +701,7 @@ export class MDXToNextJSGenerator {
    * redirects) - the caller batches those so a bulk build runs them once at the
    * end instead of once per file (which is what made large builds O(n²)).
    */
-  private async writePageForFile(filePath: string): Promise<void> {
+  private async writePageForFile(filePath: string): Promise<string> {
     const { content } = await this.readMdxSourceFile(filePath);
     const { data: frontmatter, content: mdxContent } = safeMatter(
       content,
@@ -632,8 +720,14 @@ export class MDXToNextJSGenerator {
 
     if (isIndex) {
       // The homepage is emitted by updatePagesIndex() in the aggregate pass, so
-      // there is no per-file page to write here.
+      // validate it here before its source enters the successful snapshot.
       console.log(chalk.blue("🏠 Updating homepage with index.mdx content"));
+      renderHomepage(
+        this.homepageSource(frontmatter, mdxContent),
+        typeof frontmatter.openapi === "string"
+          ? this.apiRegistry.lookup(frontmatter.openapi)
+          : undefined,
+      );
     } else {
       const mdxFile: MDXFile = {
         path: filePath,
@@ -671,6 +765,8 @@ export class MDXToNextJSGenerator {
         filePath,
       );
     }
+
+    return content;
   }
 
   /**
@@ -695,42 +791,41 @@ export class MDXToNextJSGenerator {
     console.log(chalk.cyan(`📝 File ${action}: ${filePath}`));
 
     await this.readMdxSourceFile(filePath);
+    const normalizedSource = filePath.replace(/\\/g, "/");
+    let pageRendered = false;
 
     try {
       // Validate the complete route set before writing this page so a collision
       // cannot transiently overwrite another route during watch mode.
-      const normalizedSource = filePath.replace(/\\/g, "/");
-      const previousSlug =
-        this.generatedRouteManager.routeForMdxSource(normalizedSource);
       const realPages = await this.buildRealPagesMeta();
       const currentPage = realPages.find(
         (page) => page.path.replace(/\\/g, "/") === normalizedSource,
       );
-      if (previousSlug && previousSlug !== currentPage?.slug)
-        await this.removeStaleMdxRoutes(realPages);
+      if (!currentPage) throw new Error(`Unable to resolve ${filePath}`);
 
-      await this.writePageForFile(filePath);
-      this.failedMdxSources.delete(normalizedSource);
-      const ownedRealPages = this.selectOwnedRealPages(
-        realPages,
-        new Set([normalizedSource]),
-      );
-      await this.generatedRouteManager.replaceMdxRoutes(ownedRealPages);
+      try {
+        const sourceContent = await this.writePageForFile(filePath);
+        this.recordSuccessfulMdxPage(currentPage, sourceContent);
+        pageRendered = true;
+      } catch (error) {
+        if (!this.retainExistingMdxOutput) {
+          this.removeSuccessfulMdxPage(normalizedSource);
+        }
+        const successfulPages = await this.commitMdxSnapshot(realPages);
+        await this.refreshMdxDerivedOutput(realPages, successfulPages);
+        throw error;
+      }
 
-      if (!this.apiRegistry.isEmpty) await this.writeApiPages();
-      const pages = this.mergeAllPagesMeta(
-        this.selectAggregateRealPages(realPages, new Set([normalizedSource])),
-        new Set(realPages.map((page) => page.slug)),
-      );
-      await this.refreshSiteAggregates(
-        pages,
-        new Set(realPages.map((page) => page.slug)),
-      );
+      const successfulPages = await this.commitMdxSnapshot(realPages);
+      await this.refreshMdxDerivedOutput(realPages, successfulPages);
 
       console.log(chalk.green(`✅ Generated page for: ${filePath}`));
 
       await this.maybeUpdateSections();
     } catch (error) {
+      if (!pageRendered && error instanceof RouteCollisionError) {
+        this.collisionBlockedMdxSources.add(normalizedSource);
+      }
       console.error(chalk.red(`❌ Error processing ${filePath}:`), error);
     }
   }
@@ -739,19 +834,33 @@ export class MDXToNextJSGenerator {
     console.log(chalk.red(`🗑️ File deleted: ${filePath}`));
 
     try {
+      const normalizedSource = filePath.replace(/\\/g, "/");
+      this.removeSuccessfulMdxPage(normalizedSource);
+      this.collisionBlockedMdxSources.delete(normalizedSource);
+
       if (filePath === "index.mdx" || filePath === "./index.mdx") {
         console.log(chalk.blue("🏠 Updating homepage - index.mdx deleted"));
-      } else {
-        const normalizedSource = filePath.replace(/\\/g, "/");
-        this.failedMdxSources.delete(normalizedSource);
-        const ownedSlug =
-          this.generatedRouteManager.routeForMdxSource(normalizedSource);
-        if (ownedSlug) await this.removeOwnedRoute(ownedSlug);
-        await this.generatedRouteManager.removeMdxRoute(normalizedSource);
       }
 
-      if (!this.apiRegistry.isEmpty) await this.writeApiPages();
-      await this.refreshSiteAggregates();
+      const realPages = await this.buildRealPagesMeta();
+      for (const page of realPages) {
+        const source = page.path.replace(/\\/g, "/");
+        if (
+          !this.collisionBlockedMdxSources.has(source) &&
+          this.successfulMdxPages.get(source)?.slug === page.slug
+        ) {
+          continue;
+        }
+        try {
+          const sourceContent = await this.writePageForFile(page.path);
+          this.recordSuccessfulMdxPage(page, sourceContent);
+        } catch (error) {
+          console.error(chalk.red(`❌ Error processing ${page.path}:`), error);
+        }
+      }
+
+      const successfulPages = await this.commitMdxSnapshot(realPages);
+      await this.refreshMdxDerivedOutput(realPages, successfulPages);
 
       console.log(chalk.green(`✅ Removed page for: ${filePath}`));
 
@@ -767,40 +876,45 @@ export class MDXToNextJSGenerator {
   async processAllMDXFiles() {
     const files = await this.getAllMDXFiles();
     // Fail before writing any page when two source files resolve to one route.
-    const realPages = await this.buildRealPagesMeta();
-    await this.removeStaleMdxRoutes(realPages);
+    let realPages: PageMeta[];
+    try {
+      realPages = await this.buildRealPagesMeta();
+    } catch (error) {
+      if (error instanceof RouteCollisionError) {
+        for (const source of error.sources) {
+          this.collisionBlockedMdxSources.add(source.replace(/\\/g, "/"));
+        }
+      }
+      throw error;
+    }
 
     // Write each page first (the only genuinely per-file work), then run the
     // site-wide aggregations a single time. Doing the aggregations per file
     // re-scanned and re-parsed every MDX file on each iteration, which made a
     // full build O(n²); batching them makes it O(n). A single bad file is
     // logged and skipped so it never aborts the whole build.
-    const emittedSources = new Set<string>();
+    const pagesBySource = new Map(
+      realPages.map((page) => [page.path.replace(/\\/g, "/"), page]),
+    );
     for (const file of files) {
       console.log(chalk.cyan(`📝 Processing: ${file}`));
+      const normalizedSource = file.replace(/\\/g, "/");
       try {
-        await this.writePageForFile(file);
-        const normalizedSource = file.replace(/\\/g, "/");
-        emittedSources.add(normalizedSource);
-        this.failedMdxSources.delete(normalizedSource);
+        const sourceContent = await this.writePageForFile(file);
+        const page = pagesBySource.get(normalizedSource);
+        if (!page) throw new Error(`Unable to resolve ${file}`);
+        this.recordSuccessfulMdxPage(page, sourceContent);
       } catch (error) {
-        this.failedMdxSources.add(file.replace(/\\/g, "/"));
+        if (!this.retainExistingMdxOutput) {
+          this.removeSuccessfulMdxPage(normalizedSource);
+        }
         console.error(chalk.red(`❌ Error processing ${file}:`), error);
       }
     }
 
-    const ownedRealPages = this.selectOwnedRealPages(realPages, emittedSources);
-    await this.generatedRouteManager.replaceMdxRoutes(ownedRealPages);
+    const successfulPages = await this.commitMdxSnapshot(realPages);
     this.retainExistingMdxOutput = true;
-
-    const pages = this.mergeAllPagesMeta(
-      this.selectAggregateRealPages(realPages, emittedSources),
-      new Set(realPages.map((page) => page.slug)),
-    );
-    await this.refreshSiteAggregates(
-      pages,
-      new Set(realPages.map((page) => page.slug)),
-    );
+    await this.refreshMdxDerivedOutput(realPages, successfulPages);
   }
 
   async getAllMDXFiles(): Promise<string[]> {
@@ -960,16 +1074,25 @@ export default function SectionIndex() {
    * - it still emits an empty allowlist and prunes any previously generated
    * pages (e.g. after the `openapi` config is removed).
    */
-  private async writeApiPages(): Promise<void> {
-    const realPages = await this.buildRealPagesMeta();
+  private async writeApiPages(realPages?: PageMeta[]): Promise<void> {
+    const resolvedRealPages = realPages ?? (await this.buildRealPagesMeta());
+    const blockedRealPages = [...resolvedRealPages];
+    const blockedSlugs = new Set(blockedRealPages.map((page) => page.slug));
+    for (const page of this.successfulMdxPages.values()) {
+      if (blockedSlugs.has(page.slug)) continue;
+      blockedSlugs.add(page.slug);
+      blockedRealPages.push(page);
+    }
+    const occupiedMdxSlugs = new Set(
+      [...this.successfulMdxPages.values()].map((page) => page.slug),
+    );
     return this.apiReferenceGenerator.writePages(
       this.apiRegistry,
       this.apiBaseSlug,
-      realPages,
+      blockedRealPages,
       (mdxFile, options) => this.generatePageFromMDX(mdxFile, options),
       () => this.writeApiAllowlist(),
-      (nextRoutes, realSlugs) =>
-        this.cleanupStaleApiPages(nextRoutes, realSlugs),
+      (nextRoutes) => this.cleanupStaleApiPages(nextRoutes, occupiedMdxSlugs),
     );
   }
 
@@ -981,11 +1104,11 @@ export default function SectionIndex() {
   /** Removes endpoint page directories that are no longer in the spec. */
   private async cleanupStaleApiPages(
     nextRoutes: Map<string, string>,
-    realSlugs: Set<string>,
+    occupiedMdxSlugs: Set<string>,
   ): Promise<void> {
     return this.apiReferenceGenerator.cleanupStalePages(
       nextRoutes,
-      realSlugs,
+      occupiedMdxSlugs,
       (slug) => this.removeOwnedRoute(slug),
     );
   }
@@ -1040,10 +1163,11 @@ export default function SectionIndex() {
     const configPath = path.join(this.rootDir, this.doccupineConfigFile);
     let config: DoccupineConfig;
     try {
-      config = validateConfig(
-        JSON.parse(await fs.readFile(configPath, "utf8")),
-        this.rootDir,
+      const { data } = await this.sourceFs.readProjectSourceFile(
+        configPath,
+        "Doccupine configuration source",
       );
+      config = validateConfig(JSON.parse(data.toString("utf8")), this.rootDir);
     } catch (error) {
       console.warn(
         chalk.yellow(
@@ -1129,31 +1253,15 @@ export default function SectionIndex() {
 
     for (const file of files) {
       if (file === "index.mdx" || file === "./index.mdx") {
-        const { content } = await this.readMdxSourceFile(file);
+        const cached = this.successfulMdxContent.get(file.replace(/\\/g, "/"));
+        if (this.mdxSnapshotInitialized && cached === undefined) break;
+        const content = cached ?? (await this.readMdxSourceFile(file)).content;
         const { data: frontmatter, content: mdxContent } = safeMatter(
           content,
           file,
         );
 
-        indexMDX = {
-          content: mdxContent,
-          title: frontmatter.title || "Welcome",
-          description: frontmatter.description || "",
-          icon: frontmatter.icon,
-          image: frontmatter.image,
-          name: frontmatter.name,
-          date:
-            typeof frontmatter.date === "string" ? frontmatter.date : undefined,
-          updated:
-            typeof frontmatter.updated === "string"
-              ? frontmatter.updated
-              : undefined,
-          openapi:
-            typeof frontmatter.openapi === "string"
-              ? frontmatter.openapi
-              : undefined,
-          rss: frontmatter.rss === true,
-        };
+        indexMDX = this.homepageSource(frontmatter, mdxContent);
         break;
       }
     }
@@ -1251,7 +1359,7 @@ export default function SectionIndex() {
       this.outputDir,
       this.sectionsConfig,
       async () => pages ?? (await this.buildAllPagesMeta()),
-      (filePath) => this.readMdxSourceFile(filePath),
+      (filePath) => this.readAggregateMdxSource(filePath),
       (slug) => this.apiRegistry.bodyForSlug(slug),
       () =>
         loadSiteMetadata(() => this.projectConfigRepository.readConfigFile()),

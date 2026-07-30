@@ -1,4 +1,7 @@
 import fs from "fs-extra";
+import { randomBytes } from "node:crypto";
+import { constants, type Stats } from "node:fs";
+import { open, unlink, type FileHandle } from "node:fs/promises";
 import path from "path";
 import chalk from "chalk";
 import prompts from "prompts";
@@ -8,6 +11,247 @@ import { isPathInside } from "./output-safety.js";
 
 function pathsOverlap(a: string, b: string): boolean {
   return isPathInside(a, b) || isPathInside(b, a);
+}
+
+function errorCode(error: unknown): string | undefined {
+  return error && typeof error === "object" && "code" in error
+    ? String(error.code)
+    : undefined;
+}
+
+function sameFile(left: Stats, right: Stats): boolean {
+  return left.dev === right.dev && left.ino === right.ino;
+}
+
+interface ConfigPathEntry {
+  filePath: string;
+  stat: Stats;
+}
+
+interface InspectedConfigPath {
+  entries: ConfigPathEntry[];
+  finalStat?: Stats;
+}
+
+function configPathError(configPath: string, detail: string): Error {
+  return new Error(`Refusing to use ${configPath}: ${detail}`);
+}
+
+async function inspectConfigPath(
+  projectRoot: string,
+  configPath: string,
+  allowMissingAncestor: boolean,
+): Promise<InspectedConfigPath | null> {
+  if (!isPathInside(projectRoot, configPath)) {
+    throw configPathError(
+      configPath,
+      `the configuration path is outside the project root ${projectRoot}.`,
+    );
+  }
+
+  const relativePath = path.relative(projectRoot, configPath);
+  const paths = [
+    projectRoot,
+    ...relativePath
+      .split(path.sep)
+      .filter(Boolean)
+      .map((_, index, components) =>
+        path.join(projectRoot, ...components.slice(0, index + 1)),
+      ),
+  ];
+  const entries: ConfigPathEntry[] = [];
+
+  for (const [index, currentPath] of paths.entries()) {
+    const isFinal = index === paths.length - 1;
+    let stat: Stats;
+    try {
+      stat = await fs.lstat(currentPath);
+    } catch (error) {
+      if (errorCode(error) === "ENOENT") {
+        if (allowMissingAncestor) return null;
+        if (isFinal) return { entries };
+      }
+      throw error;
+    }
+
+    if (stat.isSymbolicLink()) {
+      throw configPathError(
+        configPath,
+        `${currentPath} is a symbolic link. Replace it with a real file or directory inside the project root.`,
+      );
+    }
+    if (!isFinal && !stat.isDirectory()) {
+      throw configPathError(configPath, `${currentPath} is not a directory.`);
+    }
+
+    entries.push({ filePath: currentPath, stat });
+  }
+
+  return {
+    entries,
+    finalStat: entries.at(-1)?.stat,
+  };
+}
+
+async function assertPathEntriesUnchanged(
+  configPath: string,
+  entries: ConfigPathEntry[],
+): Promise<void> {
+  for (const entry of entries) {
+    let currentStat: Stats;
+    try {
+      currentStat = await fs.lstat(entry.filePath);
+    } catch {
+      throw configPathError(
+        configPath,
+        `${entry.filePath} changed during the configuration operation.`,
+      );
+    }
+    if (currentStat.isSymbolicLink() || !sameFile(entry.stat, currentStat)) {
+      throw configPathError(
+        configPath,
+        `${entry.filePath} changed during the configuration operation.`,
+      );
+    }
+  }
+}
+
+async function readConfigFile(
+  projectRoot: string,
+  configPath: string,
+): Promise<string | null> {
+  const inspected = await inspectConfigPath(projectRoot, configPath, true);
+  if (!inspected) return null;
+  if (!inspected.finalStat?.isFile()) {
+    throw configPathError(configPath, "expected a regular configuration file.");
+  }
+
+  const noFollow =
+    typeof constants.O_NOFOLLOW === "number" ? constants.O_NOFOLLOW : 0;
+  let handle: FileHandle;
+  try {
+    handle = await open(configPath, constants.O_RDONLY | noFollow);
+  } catch (error) {
+    if (errorCode(error) === "ELOOP") {
+      throw configPathError(
+        configPath,
+        "the configuration file became a symbolic link while it was being opened.",
+      );
+    }
+    throw error;
+  }
+
+  try {
+    const beforeRead = await handle.stat();
+    if (!beforeRead.isFile() || !sameFile(inspected.finalStat, beforeRead)) {
+      throw configPathError(
+        configPath,
+        "the configuration file changed while it was being opened.",
+      );
+    }
+    await assertPathEntriesUnchanged(configPath, inspected.entries);
+
+    const content = await handle.readFile("utf8");
+    const afterRead = await handle.stat();
+    if (
+      !sameFile(beforeRead, afterRead) ||
+      beforeRead.size !== afterRead.size ||
+      beforeRead.mtimeMs !== afterRead.mtimeMs ||
+      beforeRead.ctimeMs !== afterRead.ctimeMs
+    ) {
+      throw configPathError(
+        configPath,
+        "the configuration file changed while it was being read.",
+      );
+    }
+    await assertPathEntriesUnchanged(configPath, inspected.entries);
+    return content;
+  } finally {
+    await handle.close();
+  }
+}
+
+async function createConfigTempFile(
+  configPath: string,
+  mode: number,
+): Promise<{ handle: FileHandle; tempPath: string }> {
+  const noFollow =
+    typeof constants.O_NOFOLLOW === "number" ? constants.O_NOFOLLOW : 0;
+  const flags =
+    constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | noFollow;
+
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const tempPath = path.join(
+      path.dirname(configPath),
+      `.doccupine-config-${process.pid}-${randomBytes(16).toString("hex")}.tmp`,
+    );
+    try {
+      return { handle: await open(tempPath, flags, mode), tempPath };
+    } catch (error) {
+      if (errorCode(error) !== "EEXIST") throw error;
+    }
+  }
+
+  throw new Error(`Unable to create a unique temporary file for ${configPath}`);
+}
+
+async function removeConfigTempFile(tempPath: string): Promise<void> {
+  try {
+    await unlink(tempPath);
+  } catch (error) {
+    if (errorCode(error) !== "ENOENT") throw error;
+  }
+}
+
+async function writeConfigFileAtomic(
+  projectRoot: string,
+  configPath: string,
+  content: string,
+): Promise<void> {
+  const inspected = await inspectConfigPath(projectRoot, configPath, false);
+  if (inspected?.finalStat && !inspected.finalStat.isFile()) {
+    throw configPathError(configPath, "expected a regular configuration file.");
+  }
+  const parentEntries =
+    inspected?.entries.filter((entry) => entry.filePath !== configPath) ?? [];
+  const mode = inspected?.finalStat?.isFile()
+    ? inspected.finalStat.mode & 0o777
+    : 0o666;
+
+  let handle: FileHandle | undefined;
+  let tempPath: string | undefined;
+  try {
+    ({ handle, tempPath } = await createConfigTempFile(configPath, mode));
+    if (inspected?.finalStat?.isFile()) await handle.chmod(mode);
+    await assertPathEntriesUnchanged(configPath, parentEntries);
+    await inspectConfigPath(projectRoot, configPath, false);
+
+    await handle.writeFile(content, "utf8");
+    await handle.sync();
+    await handle.close();
+    handle = undefined;
+
+    await assertPathEntriesUnchanged(configPath, parentEntries);
+    await inspectConfigPath(projectRoot, configPath, false);
+    await fs.rename(tempPath, configPath);
+    tempPath = undefined;
+  } catch (error) {
+    if (handle) {
+      try {
+        await handle.close();
+      } catch {
+        // Preserve the original write error.
+      }
+    }
+    if (tempPath) {
+      try {
+        await removeConfigTempFile(tempPath);
+      } catch {
+        // Cleanup is best effort and must not hide the original error.
+      }
+    }
+    throw error;
+  }
 }
 
 function isValidOpenApiConfig(value: unknown): boolean {
@@ -214,43 +458,51 @@ export function normalizeConfigPaths(
 
 export class ConfigManager {
   private configPath: string;
+  private projectRoot: string;
 
   constructor(configPath = "doccupine.json") {
-    this.configPath = path.resolve(process.cwd(), configPath);
+    this.projectRoot = path.resolve(process.cwd());
+    this.configPath = path.resolve(this.projectRoot, configPath);
   }
 
   async loadConfig(): Promise<DoccupineConfig | null> {
     try {
-      if (await fs.pathExists(this.configPath)) {
-        const configContent = await fs.readFile(this.configPath, "utf8");
-        const config = validateConfig(JSON.parse(configContent));
-        console.log(
-          chalk.blue("📄 Using existing configuration from doccupine.json"),
-        );
-        return config;
-      }
+      const configContent = await readConfigFile(
+        this.projectRoot,
+        this.configPath,
+      );
+      if (configContent === null) return null;
+
+      const config = validateConfig(
+        JSON.parse(configContent),
+        this.projectRoot,
+      );
+      console.log(
+        chalk.blue("📄 Using existing configuration from doccupine.json"),
+      );
+      return config;
     } catch (error) {
-      if (await fs.pathExists(this.configPath)) {
-        throw new Error(
-          `Unable to use ${this.configPath}: ${
-            error instanceof Error ? error.message : String(error)
-          }. Run "doccupine config --reset" to repair the configuration.`,
-        );
-      }
+      const message = error instanceof Error ? error.message : String(error);
+      const symlinkRepair = message.includes("symbolic link")
+        ? " Remove or replace the symbolic link first."
+        : "";
+      throw new Error(
+        `Unable to use ${this.configPath}: ${message}.${symlinkRepair} Run "doccupine config --reset" to repair the configuration.`,
+      );
     }
-    return null;
   }
 
   async saveConfig(config: DoccupineConfig): Promise<void> {
     try {
-      await fs.writeFile(
+      await writeConfigFileAtomic(
+        this.projectRoot,
         this.configPath,
         `${JSON.stringify(config, null, 2)}\n`,
-        "utf8",
       );
       console.log(chalk.green("💾 Configuration saved to doccupine.json"));
     } catch (error) {
       console.error(chalk.red("❌ Error saving config file:"), error);
+      throw error;
     }
   }
 

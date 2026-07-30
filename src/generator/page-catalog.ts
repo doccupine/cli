@@ -61,14 +61,23 @@ export async function parseMdxPageMeta(
   };
 }
 
+export class RouteCollisionError extends Error {
+  constructor(
+    slug: string,
+    readonly sources: readonly [string, string],
+  ) {
+    super(
+      `Route collision at "/${slug}": both "${sources[0]}" and "${sources[1]}" generate the same page.`,
+    );
+  }
+}
+
 export function validateRouteCollisions(pages: PageMeta[]): void {
   const bySlug = new Map<string, string>();
   for (const page of pages) {
     const existing = bySlug.get(page.slug);
     if (existing) {
-      throw new Error(
-        `Route collision at "/${page.slug}": both "${existing}" and "${page.path}" generate the same page.`,
-      );
+      throw new RouteCollisionError(page.slug, [existing, page.path]);
     }
     bySlug.set(page.slug, page.path);
   }
