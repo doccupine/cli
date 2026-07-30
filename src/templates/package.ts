@@ -14,7 +14,7 @@ export const packageJsonTemplate =
       },
       dependencies: {
         "@langchain/anthropic": "^1.5.2",
-        "@langchain/core": "^1.2.3",
+        "@langchain/core": "^1.2.4",
         "@langchain/google-genai": "^2.2.0",
         "@langchain/openai": "^1.5.5",
         "@mdx-js/react": "^3.1.1",
