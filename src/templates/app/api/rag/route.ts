@@ -9,16 +9,77 @@ import {
 import { rateLimit } from "@/utils/rateLimit";
 import { config } from "@/utils/config";
 import { isSiteRequestAuthorized } from "@/lib/access";
+import { timingSafeEqual } from "@/lib/siteGate";
 
-const messageSchema = z.object({
-  role: z.enum(["user", "assistant"]),
-  content: z.string().max(4000),
-});
+const MAX_RAG_REQUEST_BYTES = 32 * 1024;
 
-const ragSchema = z.object({
-  question: z.string().min(1).max(2000),
-  history: z.array(messageSchema).max(20).optional(),
-});
+class RequestTooLargeError extends Error {}
+
+const messageSchema = z
+  .object({
+    role: z.enum(["user", "assistant"]),
+    content: z.string().max(4000),
+  })
+  .strict();
+
+const ragSchema = z
+  .object({
+    question: z.string().min(1).max(2000),
+    history: z.array(messageSchema).max(20).optional(),
+  })
+  .strict();
+
+function bearerToken(req: Request): string | null {
+  const authorization = req.headers.get("authorization");
+  return authorization?.startsWith("Bearer ")
+    ? authorization.slice("Bearer ".length)
+    : null;
+}
+
+async function isRagRequestAuthorized(req: Request): Promise<boolean> {
+  const siteAuthorized = await isSiteRequestAuthorized();
+  if (process.env.SITE_PASSWORD && siteAuthorized) return true;
+
+  const apiKey = process.env.RAG_API_KEY;
+  if (apiKey) {
+    const token = bearerToken(req);
+    return token !== null && timingSafeEqual(token, apiKey);
+  }
+  return siteAuthorized;
+}
+
+async function readJsonBody(req: Request): Promise<unknown> {
+  const declaredLength = Number(req.headers.get("content-length"));
+  if (
+    Number.isFinite(declaredLength) &&
+    declaredLength > MAX_RAG_REQUEST_BYTES
+  ) {
+    throw new RequestTooLargeError();
+  }
+  if (!req.body) throw new SyntaxError("Missing body");
+
+  const reader = req.body.getReader();
+  const decoder = new TextDecoder();
+  let size = 0;
+  let text = "";
+  try {
+    while (true) {
+      req.signal.throwIfAborted();
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_RAG_REQUEST_BYTES) {
+        await reader.cancel();
+        throw new RequestTooLargeError();
+      }
+      text += decoder.decode(value, { stream: true });
+    }
+    text += decoder.decode();
+    return JSON.parse(text);
+  } finally {
+    reader.releaseLock();
+  }
+}
 
 const projectName = config.name || "Doccupine";
 
@@ -76,14 +137,11 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
-  if (!(await isSiteRequestAuthorized())) {
+  if (!(await isRagRequestAuthorized(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Rate limit by IP
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  const { allowed, retryAfter } = rateLimit(ip);
+  const { allowed, retryAfter } = rateLimit(req);
   if (!allowed) {
     return NextResponse.json(
       { error: "Too many requests" },
@@ -95,8 +153,14 @@ export async function POST(req: Request) {
   // real status codes before we commit to a 200 streaming response.
   let body: unknown;
   try {
-    body = await req.json();
-  } catch {
+    body = await readJsonBody(req);
+  } catch (error: unknown) {
+    if (error instanceof RequestTooLargeError) {
+      return NextResponse.json(
+        { error: "Request body too large" },
+        { status: 413 },
+      );
+    }
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
@@ -127,6 +191,11 @@ export async function POST(req: Request) {
   const encoder = new TextEncoder();
   let heartbeat: ReturnType<typeof setInterval> | null = null;
   let streamClosed = false;
+  const workController = new AbortController();
+  const abortWork = () => workController.abort(req.signal.reason);
+  req.signal.addEventListener("abort", abortWork, { once: true });
+  if (req.signal.aborted) abortWork();
+  const { signal } = workController;
 
   // Return the streaming response immediately and do ALL slow work (indexing,
   // search, model streaming) inside start(). This flushes headers + a first
@@ -140,6 +209,7 @@ export async function POST(req: Request) {
         } catch {
           // Stream already closed or cancelled - stop emitting.
           streamClosed = true;
+          workController.abort();
           if (heartbeat) clearInterval(heartbeat);
         }
       };
@@ -152,10 +222,12 @@ export async function POST(req: Request) {
         safeEnqueue(\`: connected\\n\\n\`);
 
         // Ensure docs are indexed (loads precomputed embeddings when present).
-        await ensureDocsIndex();
+        await ensureDocsIndex(false, signal);
+        signal.throwIfAborted();
 
         // Use MCP search_docs tool to find relevant documentation
-        const searchResults = await searchDocs(question, 6);
+        const searchResults = await searchDocs(question, 6, signal);
+        signal.throwIfAborted();
 
         // Build context from search results
         const context = searchResults
@@ -206,8 +278,9 @@ export async function POST(req: Request) {
 
         // Create chat model and stream the response.
         const llm = createChatModel(llmConfig);
-        const stream = await llm.stream(prompt);
+        const stream = await llm.stream(prompt, { signal });
         for await (const chunk of stream) {
+          signal.throwIfAborted();
           const content = chunk?.content || "";
           if (content) {
             safeEnqueue(
@@ -216,8 +289,10 @@ export async function POST(req: Request) {
           }
         }
 
+        signal.throwIfAborted();
         safeEnqueue(\`data: \${JSON.stringify({ type: "done" })}\\n\\n\`);
       } catch (error: unknown) {
+        if (signal.aborted) return;
         console.error("[doccupine] RAG stream error:", error);
         safeEnqueue(
           \`data: \${JSON.stringify({ type: "error", data: friendlyLLMError(error) })}\\n\\n\`,
@@ -225,6 +300,7 @@ export async function POST(req: Request) {
       } finally {
         if (heartbeat) clearInterval(heartbeat);
         streamClosed = true;
+        req.signal.removeEventListener("abort", abortWork);
         try {
           controller.close();
         } catch {
@@ -234,6 +310,7 @@ export async function POST(req: Request) {
     },
     cancel() {
       streamClosed = true;
+      workController.abort();
       if (heartbeat) clearInterval(heartbeat);
     },
   });
@@ -246,8 +323,8 @@ export async function POST(req: Request) {
   });
 }
 
-export async function GET() {
-  if (!(await isSiteRequestAuthorized())) {
+export async function GET(req: Request) {
+  if (!(await isRagRequestAuthorized(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

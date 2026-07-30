@@ -9,10 +9,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  // Rate limit password attempts by IP to slow down brute-force guessing.
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  const { allowed, retryAfter } = rateLimit(ip);
+  // Use per-client buckets only for platform-authenticated address headers.
+  const { allowed, retryAfter } = rateLimit(req);
   if (!allowed) {
     return NextResponse.json(
       { ok: false, error: "Too many attempts" },

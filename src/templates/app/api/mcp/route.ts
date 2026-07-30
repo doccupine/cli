@@ -1,114 +1,201 @@
 export const mcpRoutesTemplate = `import { NextResponse } from "next/server";
-import { z } from "zod";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
-import { createMCPServer } from "@/services/mcp/server";
 import {
+  createMCPServer,
   searchDocs,
-  ensureDocsIndex,
   getIndexStatus,
   DOCS_TOOLS,
   listDocs,
   getDoc,
+  MCP_MAX_REQUEST_BYTES,
+  MCP_MAX_TOOL_ARGUMENT_BYTES,
+  searchDocsArgsSchema,
+  getDocArgsSchema,
+  listDocsArgsSchema,
+  serializeMCPResult,
 } from "@/services/mcp";
 import type { MCPToolName } from "@/services/mcp";
 import { rateLimit } from "@/utils/rateLimit";
 import { isMcpRequestAuthorized } from "@/lib/access";
 
-const searchDocsSchema = z.object({
-  query: z.string().min(1).max(2000),
-  limit: z.number().int().min(1).max(50).optional(),
-});
+const MAX_PROTOCOL_MESSAGES = 20;
 
-const getDocSchema = z.object({
-  path: z.string().min(1).max(500),
-});
+class RequestTooLargeError extends Error {}
 
-const listDocsSchema = z.object({
-  directory: z.string().max(500).optional(),
-});
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
-// Create a stateless transport for serverless environment
+function jsonByteLength(value: unknown): number {
+  return new TextEncoder().encode(JSON.stringify(value) ?? "null").byteLength;
+}
+
+async function readJsonBody(req: Request): Promise<unknown> {
+  const declaredLength = Number(req.headers.get("content-length"));
+  if (
+    Number.isFinite(declaredLength) &&
+    declaredLength > MCP_MAX_REQUEST_BYTES
+  ) {
+    throw new RequestTooLargeError();
+  }
+
+  if (!req.body) throw new SyntaxError("Missing body");
+  const reader = req.body.getReader();
+  const decoder = new TextDecoder();
+  let size = 0;
+  let text = "";
+
+  try {
+    while (true) {
+      req.signal.throwIfAborted();
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MCP_MAX_REQUEST_BYTES) {
+        await reader.cancel();
+        throw new RequestTooLargeError();
+      }
+      text += decoder.decode(value, { stream: true });
+    }
+    text += decoder.decode();
+    return JSON.parse(text);
+  } finally {
+    reader.releaseLock();
+  }
+}
+
+function protocolToolCallError(body: unknown): string | null {
+  const messages = Array.isArray(body) ? body : [body];
+  if (messages.length === 0 || messages.length > MAX_PROTOCOL_MESSAGES) {
+    return "Invalid protocol batch";
+  }
+
+  let toolCallCount = 0;
+  for (const message of messages) {
+    if (!isRecord(message) || message.method !== "tools/call") continue;
+    toolCallCount++;
+    if (toolCallCount > 1) {
+      return "Only one tools/call is allowed per request";
+    }
+    if (!isRecord(message.params) || typeof message.params.name !== "string") {
+      return "Invalid tool call";
+    }
+
+    const args = message.params.arguments ?? {};
+    if (jsonByteLength(args) > MCP_MAX_TOOL_ARGUMENT_BYTES) {
+      return "Tool arguments exceed the maximum size";
+    }
+
+    let valid = true;
+    switch (message.params.name) {
+      case "search_docs":
+        valid = searchDocsArgsSchema.safeParse(args).success;
+        break;
+      case "get_doc":
+        valid = getDocArgsSchema.safeParse(args).success;
+        break;
+      case "list_docs":
+        valid = listDocsArgsSchema.safeParse(args).success;
+        break;
+    }
+    if (!valid) return "Invalid tool arguments";
+  }
+  return null;
+}
+
+function protocolError(message: string, status = 400): Response {
+  return Response.json(
+    {
+      jsonrpc: "2.0",
+      error: { code: status === 500 ? -32603 : -32602, message },
+      id: null,
+    },
+    { status },
+  );
+}
+
 function createTransport() {
   return new WebStandardStreamableHTTPServerTransport({
-    sessionIdGenerator: undefined, // Stateless mode for serverless
+    sessionIdGenerator: undefined,
     enableJsonResponse: true,
   });
 }
 
-// Handle MCP protocol requests
-async function handleMCPRequest(req: Request) {
+async function handleMCPRequest(req: Request, parsedBody?: unknown) {
   const transport = createTransport();
   const server = createMCPServer();
+  let closed = false;
+  const close = () => {
+    if (closed) return;
+    closed = true;
+    void Promise.allSettled([transport.close(), server.close()]);
+  };
+  req.signal.addEventListener("abort", close, { once: true });
 
   try {
     await server.connect(transport);
-    const response = await transport.handleRequest(req);
-
-    // Clean up after response is done
-    response
-      .clone()
-      .body?.pipeTo(
-        new WritableStream({
-          close() {
-            transport.close();
-            server.close();
-          },
-        }),
-      )
-      .catch(() => {});
-
-    return response;
-  } catch (error) {
-    console.error("MCP request error:", error);
-    return new Response(
-      JSON.stringify({
-        jsonrpc: "2.0",
-        error: {
-          code: -32603,
-          message: "Internal server error",
-        },
-        id: null,
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      },
+    const response = await transport.handleRequest(
+      req,
+      parsedBody === undefined ? undefined : { parsedBody },
     );
+
+    const body = response.clone().body;
+    if (body) {
+      void body
+        .pipeTo(new WritableStream())
+        .catch(() => {})
+        .finally(close);
+    } else {
+      close();
+    }
+    return response;
+  } catch (error: unknown) {
+    console.error("[doccupine] MCP protocol request failed:", error);
+    close();
+    return protocolError("Internal server error", 500);
   }
 }
 
-// Handle REST API requests (original JSON format)
 interface ToolCallRequest {
   tool: MCPToolName;
-  params: Record<string, unknown>;
+  params: unknown;
 }
 
-async function handleRESTRequest(body: ToolCallRequest) {
+function toolResponse(value: unknown): Response {
+  const result = serializeMCPResult(value);
+  if (result.tooLarge) {
+    return NextResponse.json(
+      { error: "Tool result exceeds the maximum response size" },
+      { status: 413 },
+    );
+  }
+  return new Response(result.text, {
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-store",
+    },
+  });
+}
+
+async function handleRESTRequest(req: Request, body: ToolCallRequest) {
   try {
     const { tool, params } = body;
 
-    if (!tool) {
-      return NextResponse.json(
-        { error: "Missing 'tool' parameter" },
-        { status: 400 },
-      );
-    }
-
     switch (tool) {
       case "search_docs": {
-        const parsed = searchDocsSchema.safeParse(params);
+        const parsed = searchDocsArgsSchema.safeParse(params);
         if (!parsed.success) {
           return NextResponse.json(
-            { error: "Invalid params", details: parsed.error.issues },
+            { error: "Invalid params" },
             { status: 400 },
           );
         }
-        await ensureDocsIndex();
         const results = await searchDocs(
           parsed.data.query,
           parsed.data.limit ?? 6,
+          req.signal,
         );
-        return NextResponse.json({
+        return toolResponse({
           content: results.map(({ chunk, score }) => ({
             path: chunk.path,
             uri: chunk.uri,
@@ -119,52 +206,54 @@ async function handleRESTRequest(body: ToolCallRequest) {
       }
 
       case "get_doc": {
-        const parsed = getDocSchema.safeParse(params);
+        const parsed = getDocArgsSchema.safeParse(params);
         if (!parsed.success) {
           return NextResponse.json(
-            { error: "Invalid params", details: parsed.error.issues },
+            { error: "Invalid params" },
             { status: 400 },
           );
         }
+        req.signal.throwIfAborted();
         const doc = await getDoc({ path: parsed.data.path });
+        req.signal.throwIfAborted();
         if (!doc) {
           return NextResponse.json(
             { error: "Document not found" },
             { status: 404 },
           );
         }
-        return NextResponse.json({ content: doc });
+        return toolResponse({ content: doc });
       }
 
       case "list_docs": {
-        const parsed = listDocsSchema.safeParse(params);
+        const parsed = listDocsArgsSchema.safeParse(params);
         if (!parsed.success) {
           return NextResponse.json(
-            { error: "Invalid params", details: parsed.error.issues },
+            { error: "Invalid params" },
             { status: 400 },
           );
         }
-        const docs = await listDocs({
-          directory: parsed.data.directory,
-        });
-        return NextResponse.json({
-          content: docs.map((d) => ({
-            name: d.name,
-            path: d.path,
-            uri: d.uri,
+        req.signal.throwIfAborted();
+        const docs = await listDocs({ directory: parsed.data.directory });
+        req.signal.throwIfAborted();
+        return toolResponse({
+          content: docs.map((doc) => ({
+            name: doc.name,
+            path: doc.path,
+            uri: doc.uri,
           })),
         });
       }
 
       default:
-        return NextResponse.json(
-          { error: \`Unknown tool: \${tool}\` },
-          { status: 400 },
-        );
+        return NextResponse.json({ error: "Unknown tool" }, { status: 400 });
     }
-  } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
+  } catch (error: unknown) {
+    console.error("[doccupine] MCP REST tool failed:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -173,9 +262,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  const { allowed, retryAfter } = rateLimit(ip);
+  const { allowed, retryAfter } = rateLimit(req);
   if (!allowed) {
     return NextResponse.json(
       { error: "Too many requests" },
@@ -183,32 +270,42 @@ export async function POST(req: Request) {
     );
   }
 
-  // Clone the request to read body twice if needed
-  const clonedReq = req.clone();
-
+  let body: unknown;
   try {
-    const body = await clonedReq.json();
-
-    // Check if this is an MCP protocol request (has jsonrpc field)
-    // or a REST API request (has tool field)
-    if ("jsonrpc" in body) {
-      // MCP protocol request - use the original request
-      return handleMCPRequest(req);
-    } else if ("tool" in body) {
-      // REST API request
-      return handleRESTRequest(body as ToolCallRequest);
-    } else {
+    body = await readJsonBody(req);
+  } catch (error: unknown) {
+    if (error instanceof RequestTooLargeError) {
       return NextResponse.json(
-        {
-          error:
-            "Invalid request format. Expected 'jsonrpc' (MCP) or 'tool' (REST) field.",
-        },
-        { status: 400 },
+        { error: "Request body too large" },
+        { status: 413 },
       );
     }
-  } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
+
+  if (Array.isArray(body) || (isRecord(body) && "jsonrpc" in body)) {
+    const validationError = protocolToolCallError(body);
+    if (validationError) return protocolError(validationError);
+    return handleMCPRequest(req, body);
+  }
+
+  if (isRecord(body) && typeof body.tool === "string") {
+    if (jsonByteLength(body.params ?? {}) > MCP_MAX_TOOL_ARGUMENT_BYTES) {
+      return NextResponse.json(
+        { error: "Tool arguments exceed the maximum size" },
+        { status: 413 },
+      );
+    }
+    return handleRESTRequest(req, {
+      tool: body.tool as MCPToolName,
+      params: body.params ?? {},
+    });
+  }
+
+  return NextResponse.json(
+    { error: "Invalid request format" },
+    { status: 400 },
+  );
 }
 
 export async function GET(req: Request) {
@@ -216,14 +313,10 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // GET always returns REST API format (tools list and index status)
   const status = getIndexStatus();
   return NextResponse.json({
     tools: DOCS_TOOLS,
-    index: {
-      ready: status.ready,
-      chunkCount: status.chunkCount,
-    },
+    index: { ready: status.ready, chunkCount: status.chunkCount },
   });
 }
 
@@ -231,8 +324,6 @@ export async function DELETE(req: Request) {
   if (!(await isMcpRequestAuthorized(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  // DELETE is only used by MCP protocol
   return handleMCPRequest(req);
 }
 `;

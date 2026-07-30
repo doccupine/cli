@@ -9,6 +9,17 @@ export const envExampleTemplate = `# Public Site URL
 # unset (or remove) to keep the site public.
 # SITE_PASSWORD=choose-a-strong-shared-password
 
+# Paid API Access (recommended for public deployments with AI enabled)
+# Public documentation remains intentionally public by default. Set RAG_API_KEY
+# to require Authorization: Bearer <key> for /api/rag and prevent anonymous LLM
+# spend. The browser chat cannot safely hold this server secret; use
+# SITE_PASSWORD instead when authenticated browser chat is required.
+# RAG_API_KEY=generate-a-long-random-secret
+# Set DOCS_API_KEY to require bearer authentication for /api/mcp. If omitted,
+# MCP follows the site access mode and remains public on an intentionally public
+# documentation site.
+# DOCS_API_KEY=generate-another-long-random-secret
+
 # LLM Provider Configuration
 # Choose your preferred LLM provider: openai, anthropic, or google
 LLM_PROVIDER=openai

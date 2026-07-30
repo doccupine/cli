@@ -86,9 +86,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  const { allowed, retryAfter } = rateLimit(ip);
+  const { allowed, retryAfter } = rateLimit(req);
   if (!allowed) {
     return NextResponse.json(
       { error: "Too many requests" },
