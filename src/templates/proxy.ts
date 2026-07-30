@@ -18,8 +18,6 @@ export const proxyTemplate = (
 
   const posthogPageviewFn = hasPostHog
     ? `
-const SKIP_PAGEVIEW_PATTERN = /^\\/(api|ingest|_next)\\//;
-
 /**
  * First-party anonymous id.
  *
@@ -164,7 +162,12 @@ function captureServerPageview(
 ): TrackingIdentity | null {
   const pathname = req.nextUrl.pathname;
 
-  if (SKIP_PAGEVIEW_PATTERN.test(pathname)) return null;
+  if (
+    isPathSegment(pathname, "/api") ||
+    isPathSegment(pathname, "/ingest") ||
+    isPathSegment(pathname, "/_next")
+  )
+    return null;
 
   // A prefetch is the router speculating, not the reader acting: it neither
   // counts as a pageview nor keeps a session alive.
@@ -269,10 +272,14 @@ function applyTracking(res: NextResponse, _tracking: null): NextResponse {
   return `import { NextResponse } from "next/server";
 import type { NextRequest${eventImport} } from "next/server";
 ${gateImport}${posthogImport}${posthogPageviewFn}${applyTrackingFn}
+function isPathSegment(pathname: string, segment: string): boolean {
+  return pathname === segment || pathname.startsWith(segment + "/");
+}
+
 ${fnSignature} {
 ${trackingInit}  const pathname = req.nextUrl.pathname;
   const sitePassword = process.env.SITE_PASSWORD;
-  const isMcpPath = pathname.startsWith("/api/mcp") || pathname === "/mcp";
+  const isMcpPath = isPathSegment(pathname, "/api/mcp") || pathname === "/mcp";
 
   // API key auth for the MCP endpoint when DOCS_API_KEY is configured. Also
   // matches /mcp, the discovery alias that next.config rewrites to /api/mcp
@@ -304,7 +311,7 @@ ${trackingInit}  const pathname = req.nextUrl.pathname;
   // works even though the doc pages render statically: pages can't read the
   // request cookie, but the middleware always can. Skip Next internals so the
   // gate screen's own assets keep loading.
-  if (sitePassword && !isMcpPath && !pathname.startsWith("/_next")) {
+  if (sitePassword && !isMcpPath && !isPathSegment(pathname, "/_next")) {
     // Defer the HMAC until a request actually crosses the site gate. In
     // particular, Next.js assets and API-key-authenticated MCP calls avoid it.
     const gateUnlocked = await isGateUnlocked(
@@ -316,9 +323,9 @@ ${trackingInit}  const pathname = req.nextUrl.pathname;
     // keeps its API-key-or-gate auth above; /api/gate stays open to unlock.
     if (
       !gateUnlocked &&
-      (pathname.startsWith("/api/rag") ||
-        pathname.startsWith("/api/search") ||
-        pathname.startsWith("/api/playground"))
+      (isPathSegment(pathname, "/api/rag") ||
+        isPathSegment(pathname, "/api/search") ||
+        isPathSegment(pathname, "/api/playground"))
     ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -326,7 +333,11 @@ ${trackingInit}  const pathname = req.nextUrl.pathname;
     // Locked visitors see the gate screen. Rewrite (not redirect) so the URL is
     // preserved — after unlocking, a reload lands them back on the page they
     // asked for. API routes are never rewritten to HTML.
-    if (!gateUnlocked && !pathname.startsWith("/api") && pathname !== "/gate") {
+    if (
+      !gateUnlocked &&
+      !isPathSegment(pathname, "/api") &&
+      pathname !== "/gate"
+    ) {
       const res = NextResponse.rewrite(new URL("/gate", req.url));
       res.headers.set("X-Robots-Tag", "noindex, nofollow");
       return applyTracking(res, tracking);
@@ -351,8 +362,8 @@ ${trackingInit}  const pathname = req.nextUrl.pathname;
   if (
     req.method === "GET" &&
     accept.includes("text/markdown") &&
-    !pathname.startsWith("/api") &&
-    !pathname.startsWith("/_next") &&
+    !isPathSegment(pathname, "/api") &&
+    !isPathSegment(pathname, "/_next") &&
     pathname !== "/gate" &&
     pathname !== "/mcp" &&
     !/\\.[a-z0-9]+$/i.test(pathname)

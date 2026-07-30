@@ -50,10 +50,36 @@ describe("generated security boundaries", () => {
     const proxy = proxyTemplate(null);
     expect(proxy).not.toContain("const gateUnlocked = sitePassword");
     expect(proxy).toContain(
-      'if (sitePassword && !isMcpPath && !pathname.startsWith("/_next"))',
+      'if (sitePassword && !isMcpPath && !isPathSegment(pathname, "/_next"))',
     );
-    expect(proxy).toContain('pathname.startsWith("/api/playground")');
+    expect(proxy).toContain('isPathSegment(pathname, "/api/playground")');
     expect(proxy).toContain("!timingSafeEqual(token, apiKey)");
+  });
+
+  it("classifies reserved routes on segment boundaries", () => {
+    const proxy = proxyTemplate(null);
+    const source = generatedFunctionSource(
+      proxy,
+      "function isPathSegment",
+      "export async function proxy",
+    );
+    const isPathSegment = Function(`${source}\nreturn isPathSegment;`)() as (
+      pathname: string,
+      segment: string,
+    ) => boolean;
+
+    expect(isPathSegment("/api", "/api")).toBe(true);
+    expect(isPathSegment("/api/search", "/api")).toBe(true);
+    expect(isPathSegment("/_next/static/app.js", "/_next")).toBe(true);
+    expect(isPathSegment("/api-reference", "/api")).toBe(false);
+    expect(isPathSegment("/apiary", "/api")).toBe(false);
+    expect(isPathSegment("/_next-private", "/_next")).toBe(false);
+    expect(isPathSegment("/api/mcp-private", "/api/mcp")).toBe(false);
+
+    expect(proxy).toContain('!isPathSegment(pathname, "/api")');
+    expect(proxy).toContain('!isPathSegment(pathname, "/_next")');
+    expect(proxy).not.toContain('pathname.startsWith("/api")');
+    expect(proxy).not.toContain('pathname.startsWith("/_next")');
   });
 
   it("runtime-loads the traced docs manifest from one fixed path", () => {
