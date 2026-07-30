@@ -17,7 +17,7 @@
     "dev": "tsc --watch",
     "start": "node dist/index.js",
     "prepare": "node scripts/clean.mjs && tsc",
-    "test": "vitest run",
+    "test": "pnpm build && vitest run",
     "test:package": "node scripts/verify-package.mjs",
     "smoke:generated": "node scripts/smoke-generated-site.mjs",
     "format": "prettier --write .",
