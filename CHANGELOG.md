@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.142
+
+- Restore `next`, `react`, and `react-dom` to the CLI's own dependencies. 0.0.141 dropped them on the grounds that they belong to the generated app's `package.json` rather than the CLI runtime, but hosting platforms decide which framework a project uses by reading the `package.json` at the deployment's root directory, so a repository that deploys from the CLI's own manifest stopped being recognized as a Next.js project and its builds failed with "No Next.js version detected". The three packages return at the versions the generated app already pins - `next` 16.2.12 with `react` and `react-dom` 19.2.8 - so the CLI and the site it produces stay on one Next.js and one React release
+
 ## 0.0.141
 
 - Make generated output safe to update in long-running and automated workflows: Doccupine now claims an output directory before touching it, refuses unrelated non-empty projects and replaced or symlinked roots, validates every generated path stays inside the claimed directory, and writes files through random exclusive temporary files before atomically replacing their destinations. MDX, OpenAPI, and public sources are read through validated no-follow paths, while configuration, font, analytics, and public copies atomically replace their destinations, so symlinks, hard links, path swaps, and escaping sources cannot redirect generated reads or writes outside their intended roots
