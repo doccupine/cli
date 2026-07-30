@@ -72,15 +72,19 @@ Here there is no gap at all below the \`lg\` breakpoint, and a 64px gap from \`l
 
 Add \`$horizontal\` to space things apart along the inline axis instead of the block axis. The size prop then controls width rather than height.
 
+It belongs inside a line of inline content, where a gap along that axis has something to sit between. Dropping one into a button widens the distance between the label and the icon by the size you give it, on top of the spacing the button already applies:
+
 \`\`\`html
-<Button>Get started</Button>
-<Space $size={24} $horizontal />
-<Button variant="secondary">Browse components</Button>
+<Button icon="arrow-right" iconPosition="right">
+  Get started
+  <Space $size={24} $horizontal />
+</Button>
 \`\`\`
 
-<Button>Get started</Button>
-<Space $size={24} $horizontal />
-<Button variant="secondary">Browse components</Button>
+<Button icon="arrow-right" iconPosition="right">
+  Get started
+  <Space $size={24} $horizontal />
+</Button>
 
 ## Properties
 
