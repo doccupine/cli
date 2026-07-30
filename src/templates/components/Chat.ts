@@ -118,7 +118,7 @@ const StyledChat = styled.div<{ theme: Theme; $isVisible: boolean }>\`
       transform: translateX(100%);
       opacity: 0;
       visibility: hidden;
-      transition-delay: 0.3s;
+      transition-delay: 0s, 0s, 0.3s;
     \`}
 
   @media (prefers-reduced-motion: reduce) {

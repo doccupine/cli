@@ -59,6 +59,8 @@ describe("generated accessibility behavior", () => {
     expect(chatTemplate).toContain("distanceFromBottom <=");
     expect(chatTemplate).toContain("cancelAnimationFrame");
     expect(chatTemplate).toContain('"(prefers-reduced-motion: reduce)"');
+    expect(chatTemplate).toContain("transition-delay: 0s, 0s, 0.3s;");
+    expect(chatTemplate).not.toContain("transition-delay: 0.3s;");
   });
 
   it("hides collapsed accordion and sidebar-group descendants", () => {
