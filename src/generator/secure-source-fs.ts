@@ -16,6 +16,13 @@ function sameFileIdentity(left: fs.Stats, right: fs.Stats): boolean {
   return left.dev === right.dev && left.ino === right.ino;
 }
 
+interface PinnedDocumentationRoot {
+  resolvedRoot: string;
+  rootStat: fs.Stats;
+  realRoot: string;
+  realRootStat: fs.Stats;
+}
+
 export class SecureSourceFs {
   private documentationRoot: string;
   private projectRoot: string;
@@ -246,6 +253,44 @@ export class SecureSourceFs {
     );
   }
 
+  private async assertPinnedDocumentationRoot(
+    pinned: PinnedDocumentationRoot,
+  ): Promise<void> {
+    try {
+      const currentRootStat = await fs.lstat(pinned.resolvedRoot);
+      const currentRealRoot = await fs.realpath(pinned.resolvedRoot);
+      const currentRealRootStat = await fs.stat(currentRealRoot);
+      if (
+        currentRealRoot !== pinned.realRoot ||
+        !currentRealRootStat.isDirectory() ||
+        !sameFileIdentity(pinned.rootStat, currentRootStat) ||
+        !sameFileIdentity(pinned.realRootStat, currentRealRootStat)
+      ) {
+        throw new Error("changed");
+      }
+    } catch {
+      throw this.sourcePathError(
+        "documentation source",
+        pinned.resolvedRoot,
+        "the source root changed while starter documents were being created",
+      );
+    }
+  }
+
+  private async pinDocumentationRoot(): Promise<PinnedDocumentationRoot> {
+    const resolvedRoot = path.resolve(this.documentationRoot);
+    const rootStat = await fs.lstat(resolvedRoot);
+    const realRoot = await this.realSourceRoot(
+      resolvedRoot,
+      "documentation source",
+      false,
+    );
+    const realRootStat = await fs.stat(realRoot);
+    const pinned = { resolvedRoot, rootStat, realRoot, realRootStat };
+    await this.assertPinnedDocumentationRoot(pinned);
+    return pinned;
+  }
+
   private async removeCreatedStarterFile(
     targetPath: string,
     openedStat: fs.Stats,
@@ -264,11 +309,13 @@ export class SecureSourceFs {
     }
   }
 
-  async writeStarterFile(
+  private async writeStarterFile(
     relativePath: string,
     content: string | Uint8Array,
+    pinned: PinnedDocumentationRoot,
   ): Promise<void> {
-    const resolvedRoot = path.resolve(this.documentationRoot);
+    await this.assertPinnedDocumentationRoot(pinned);
+    const { resolvedRoot, realRoot } = pinned;
     const targetPath = path.resolve(resolvedRoot, relativePath);
     if (!isPathInside(resolvedRoot, targetPath)) {
       throw this.sourcePathError(
@@ -278,11 +325,6 @@ export class SecureSourceFs {
       );
     }
 
-    const realRoot = await this.realSourceRoot(
-      resolvedRoot,
-      "documentation source",
-      false,
-    );
     const parentRelativePath = path.relative(
       resolvedRoot,
       path.dirname(targetPath),
@@ -406,6 +448,21 @@ export class SecureSourceFs {
       throw error;
     }
     await handle.close();
+  }
+
+  async writeStarterFilesIfEmpty(
+    files:
+      | Iterable<readonly [string, string | Uint8Array]>
+      | AsyncIterable<readonly [string, string | Uint8Array]>,
+  ): Promise<void> {
+    const pinned = await this.pinDocumentationRoot();
+    const existingFiles = await this.getAllMdxFiles();
+    await this.assertPinnedDocumentationRoot(pinned);
+    if (existingFiles.length > 0) return;
+
+    for await (const [relativePath, content] of files) {
+      await this.writeStarterFile(relativePath, content, pinned);
+    }
   }
 
   async pathState(filePath: string, hashContents = false): Promise<string> {

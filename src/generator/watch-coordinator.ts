@@ -149,8 +149,21 @@ export class WatchCoordinator {
     };
   }
 
-  async establishSourceSnapshot(): Promise<void> {
-    this.sourceSnapshot = await this.captureSourceSnapshot();
+  async establishSourceSnapshot(
+    projectSourceStates: Readonly<Record<string, string>> = {},
+  ): Promise<void> {
+    const snapshot = await this.captureSourceSnapshot();
+    for (const fileName of this.options.configFiles) {
+      if (projectSourceStates[fileName] !== undefined) {
+        snapshot.configs[fileName] = projectSourceStates[fileName];
+      }
+    }
+    snapshot.font =
+      projectSourceStates[this.options.fontConfigFile] ?? snapshot.font;
+    snapshot.analytics =
+      projectSourceStates[this.options.analyticsConfigFile] ??
+      snapshot.analytics;
+    this.sourceSnapshot = snapshot;
   }
 
   private async reconcileWatchedSources(

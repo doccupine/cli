@@ -88,6 +88,8 @@ export class MDXToNextJSGenerator {
   private projectConfigRepository: ProjectConfigRepository;
   private publicAssetManager: PublicAssetManager;
   private watchCoordinator: WatchCoordinator;
+  private retainExistingMdxOutput = true;
+  private failedMdxSources = new Set<string>();
 
   constructor(
     watchDir: string,
@@ -168,71 +170,78 @@ export class MDXToNextJSGenerator {
     return this.sourceFs.readMdxSourceFile(filePath);
   }
 
-  private async writeStarterFile(
-    relativePath: string,
-    content: string | Uint8Array,
+  private async writeStarterFilesIfEmpty(
+    files: Iterable<readonly [string, string | Uint8Array]>,
   ): Promise<void> {
-    return this.sourceFs.writeStarterFile(relativePath, content);
+    return this.sourceFs.writeStarterFilesIfEmpty(files);
   }
 
   async init() {
     console.log(chalk.blue("🚀 Initializing MDX to Next.js generator..."));
 
-    await fs.ensureDir(this.watchDir);
-    await claimOutputDirectory(this.outputDir);
-    await this.artifacts.load();
+    await this.projectConfigRepository.preflightSourceFiles();
+    try {
+      await fs.ensureDir(this.watchDir);
+      await claimOutputDirectory(this.outputDir);
+      await this.artifacts.load();
 
-    this.sectionsConfig = await this.resolveSections();
-    this.analyticsConfig = await this.loadAnalyticsConfig();
+      this.sectionsConfig = await this.resolveSections();
+      this.analyticsConfig = await this.loadAnalyticsConfig();
 
-    if (this.analyticsConfig) {
-      console.log(
-        chalk.blue(`📊 Analytics enabled: ${this.analyticsConfig.provider}`),
+      if (this.analyticsConfig) {
+        console.log(
+          chalk.blue(`📊 Analytics enabled: ${this.analyticsConfig.provider}`),
+        );
+      }
+
+      // Parse OpenAPI spec(s) before generating structure so the synthetic
+      // endpoint pages flow into the very first layout/sitemap/llms pass.
+      await this.loadOpenApiRegistry();
+
+      this.retainExistingMdxOutput = false;
+      await this.createNextJSStructure();
+      await this.createStartingDocs();
+      await this.copyCustomConfigFiles();
+      await this.copyFontConfig();
+      await this.copyAnalyticsConfig();
+      await this.copyPublicFiles();
+
+      // createStartingDocs() may have written the sample docs - which carry
+      // section frontmatter - after the initial resolveSections() ran against an
+      // empty watch dir. Re-resolve now that every MDX file is on disk so the
+      // build applies the correct sections in a single O(n) pass, instead of
+      // rediscovering them per file (the old O(n²) behavior).
+      this.sectionsConfig = await this.resolveSections();
+      if (this.sectionsConfig) {
+        console.log(
+          chalk.blue(
+            `📑 Found ${this.sectionsConfig.length} section(s): ${this.sectionsConfig.map((s) => s.label).join(", ")}`,
+          ),
+        );
+      }
+
+      // Write the endpoint pages + request allowlist before the MDX pass so its
+      // aggregate refresh (nav/sitemap/llms) already sees them on disk and in the
+      // registry.
+      await this.writeApiPages();
+
+      await this.processAllMDXFiles();
+
+      await this.watchCoordinator.establishSourceSnapshot(
+        this.projectConfigRepository.sourceSnapshotStates(),
       );
-    }
 
-    // Parse OpenAPI spec(s) before generating structure so the synthetic
-    // endpoint pages flow into the very first layout/sitemap/llms pass.
-    await this.loadOpenApiRegistry();
-
-    await this.createNextJSStructure();
-    await this.createStartingDocs();
-    await this.copyCustomConfigFiles();
-    await this.copyFontConfig();
-    await this.copyAnalyticsConfig();
-    await this.copyPublicFiles();
-
-    // createStartingDocs() may have written the sample docs - which carry
-    // section frontmatter - after the initial resolveSections() ran against an
-    // empty watch dir. Re-resolve now that every MDX file is on disk so the
-    // build applies the correct sections in a single O(n) pass, instead of
-    // rediscovering them per file (the old O(n²) behavior).
-    this.sectionsConfig = await this.resolveSections();
-    if (this.sectionsConfig) {
+      console.log(chalk.green("✅ Initial setup complete!"));
+      console.log(chalk.cyan("💡 To start the Next.js dev server:"));
       console.log(
-        chalk.blue(
-          `📑 Found ${this.sectionsConfig.length} section(s): ${this.sectionsConfig.map((s) => s.label).join(", ")}`,
-        ),
+        chalk.white(`   cd ${path.relative(process.cwd(), this.outputDir)}`),
       );
+      console.log(
+        chalk.white("   install dependencies, then run the dev script"),
+      );
+    } finally {
+      this.projectConfigRepository.clearSourceSnapshot();
     }
-
-    // Write the endpoint pages + request allowlist before the MDX pass so its
-    // aggregate refresh (nav/sitemap/llms) already sees them on disk and in the
-    // registry.
-    await this.writeApiPages();
-
-    await this.processAllMDXFiles();
-
-    await this.watchCoordinator.establishSourceSnapshot();
-
-    console.log(chalk.green("✅ Initial setup complete!"));
-    console.log(chalk.cyan("💡 To start the Next.js dev server:"));
-    console.log(
-      chalk.white(`   cd ${path.relative(process.cwd(), this.outputDir)}`),
-    );
-    console.log(
-      chalk.white("   install dependencies, then run the dev script"),
-    );
   }
 
   async createNextJSStructure() {
@@ -246,9 +255,7 @@ export class MDXToNextJSGenerator {
 
   async createStartingDocs() {
     return this.appScaffolder.createStartingDocs({
-      getAllMdxFiles: () => this.getAllMDXFiles(),
-      writeStarterFile: (filePath, content) =>
-        this.writeStarterFile(filePath, content),
+      writeStarterFilesIfEmpty: (files) => this.writeStarterFilesIfEmpty(files),
     });
   }
 
@@ -545,9 +552,47 @@ export class MDXToNextJSGenerator {
 
   private async buildAllPagesMeta(): Promise<PageMeta[]> {
     const real = await this.buildRealPagesMeta();
+    return this.mergeAllPagesMeta(
+      this.selectAggregateRealPages(real),
+      new Set(real.map((page) => page.slug)),
+    );
+  }
+
+  private mergeAllPagesMeta(
+    real: PageMeta[],
+    declaredRealSlugs: Set<string> = new Set(real.map((page) => page.slug)),
+  ): PageMeta[] {
     return mergePageCatalog(
       real,
-      this.apiRegistry.isEmpty ? [] : this.apiRegistry.syntheticPages(),
+      this.apiRegistry.isEmpty
+        ? []
+        : this.apiRegistry
+            .syntheticPages()
+            .filter((page) => !declaredRealSlugs.has(page.slug)),
+    );
+  }
+
+  private selectOwnedRealPages(
+    realPages: PageMeta[],
+    emittedSources: Set<string> = new Set(),
+  ): PageMeta[] {
+    return realPages.filter((page) => {
+      const source = page.path.replace(/\\/g, "/");
+      return (
+        page.slug === "" ||
+        emittedSources.has(source) ||
+        (this.retainExistingMdxOutput &&
+          this.generatedRouteManager.routeForMdxSource(source) === page.slug)
+      );
+    });
+  }
+
+  private selectAggregateRealPages(
+    realPages: PageMeta[],
+    emittedSources: Set<string> = new Set(),
+  ): PageMeta[] {
+    return this.selectOwnedRealPages(realPages, emittedSources).filter(
+      (page) => !this.failedMdxSources.has(page.path.replace(/\\/g, "/")),
     );
   }
 
@@ -636,13 +681,14 @@ export class MDXToNextJSGenerator {
    */
   private async refreshSiteAggregates(
     resolvedPages?: PageMeta[],
+    declaredSlugs?: Set<string>,
   ): Promise<void> {
     const pages = resolvedPages ?? (await this.buildAllPagesMeta());
     await this.updatePagesIndex();
     await this.updateRootLayout(pages);
     await this.updateSitemap(pages);
     await this.updateLlmsFiles(pages);
-    await this.generateSectionIndexPages(pages);
+    await this.generateSectionIndexPages(pages, declaredSlugs);
   }
 
   async handleFileChange(action: string, filePath: string) {
@@ -664,11 +710,22 @@ export class MDXToNextJSGenerator {
         await this.removeStaleMdxRoutes(realPages);
 
       await this.writePageForFile(filePath);
-      await this.generatedRouteManager.replaceMdxRoutes(realPages);
+      this.failedMdxSources.delete(normalizedSource);
+      const ownedRealPages = this.selectOwnedRealPages(
+        realPages,
+        new Set([normalizedSource]),
+      );
+      await this.generatedRouteManager.replaceMdxRoutes(ownedRealPages);
 
       if (!this.apiRegistry.isEmpty) await this.writeApiPages();
-      const pages = await this.buildAllPagesMeta();
-      await this.refreshSiteAggregates(pages);
+      const pages = this.mergeAllPagesMeta(
+        this.selectAggregateRealPages(realPages, new Set([normalizedSource])),
+        new Set(realPages.map((page) => page.slug)),
+      );
+      await this.refreshSiteAggregates(
+        pages,
+        new Set(realPages.map((page) => page.slug)),
+      );
 
       console.log(chalk.green(`✅ Generated page for: ${filePath}`));
 
@@ -686,6 +743,7 @@ export class MDXToNextJSGenerator {
         console.log(chalk.blue("🏠 Updating homepage - index.mdx deleted"));
       } else {
         const normalizedSource = filePath.replace(/\\/g, "/");
+        this.failedMdxSources.delete(normalizedSource);
         const ownedSlug =
           this.generatedRouteManager.routeForMdxSource(normalizedSource);
         if (ownedSlug) await this.removeOwnedRoute(ownedSlug);
@@ -717,19 +775,32 @@ export class MDXToNextJSGenerator {
     // re-scanned and re-parsed every MDX file on each iteration, which made a
     // full build O(n²); batching them makes it O(n). A single bad file is
     // logged and skipped so it never aborts the whole build.
+    const emittedSources = new Set<string>();
     for (const file of files) {
       console.log(chalk.cyan(`📝 Processing: ${file}`));
       try {
         await this.writePageForFile(file);
+        const normalizedSource = file.replace(/\\/g, "/");
+        emittedSources.add(normalizedSource);
+        this.failedMdxSources.delete(normalizedSource);
       } catch (error) {
+        this.failedMdxSources.add(file.replace(/\\/g, "/"));
         console.error(chalk.red(`❌ Error processing ${file}:`), error);
       }
     }
 
-    await this.generatedRouteManager.replaceMdxRoutes(realPages);
+    const ownedRealPages = this.selectOwnedRealPages(realPages, emittedSources);
+    await this.generatedRouteManager.replaceMdxRoutes(ownedRealPages);
+    this.retainExistingMdxOutput = true;
 
-    const pages = await this.buildAllPagesMeta();
-    await this.refreshSiteAggregates(pages);
+    const pages = this.mergeAllPagesMeta(
+      this.selectAggregateRealPages(realPages, emittedSources),
+      new Set(realPages.map((page) => page.slug)),
+    );
+    await this.refreshSiteAggregates(
+      pages,
+      new Set(realPages.map((page) => page.slug)),
+    );
   }
 
   async getAllMDXFiles(): Promise<string[]> {
@@ -747,17 +818,22 @@ export class MDXToNextJSGenerator {
     return siteLayoutTemplate(resolvedPages, this.sectionsConfig);
   }
 
-  async generateSectionIndexPages(pages?: PageMeta[]) {
+  async generateSectionIndexPages(
+    pages?: PageMeta[],
+    declaredSlugs?: Set<string>,
+  ) {
     const nextSlugs = new Set<string>();
     const resolvedPages = pages ?? (await this.buildAllPagesMeta());
     const occupiedSlugs = new Set(resolvedPages.map((page) => page.slug));
+    const resolvedDeclaredSlugs = new Set(occupiedSlugs);
+    for (const slug of declaredSlugs ?? []) resolvedDeclaredSlugs.add(slug);
 
     if (this.sectionsConfig && this.sectionsConfig.length > 0) {
       for (const section of this.sectionsConfig) {
         if (section.slug === "") continue;
 
         // Check if a page already exists at the section root
-        const hasIndex = resolvedPages.some((p) => p.slug === section.slug);
+        const hasIndex = resolvedDeclaredSlugs.has(section.slug);
         if (hasIndex) continue;
 
         // Find the first page in this section

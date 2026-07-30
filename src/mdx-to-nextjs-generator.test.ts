@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { SecureSourceFs } from "./generator/secure-source-fs.js";
 import { MDXToNextJSGenerator } from "./mdx-to-nextjs-generator.js";
 
 const temporaryDirectories: string[] = [];
@@ -65,13 +66,19 @@ describe.sequential("MDXToNextJSGenerator ownership", () => {
     expect(await fs.pathExists(path.join(outputDir, "app"))).toBe(false);
   });
 
-  it("does not emit metadata read through a symlinked config source", async () => {
+  it("rejects a symlinked config before mutating output or source files", async () => {
     const { root } = await fixture();
     const projectRoot = path.join(root, "project");
     const watchDir = path.join(projectRoot, "docs");
     const outputDir = path.join(projectRoot, "site");
     const externalConfig = path.join(root, "external-config.json");
-    await fs.outputFile(path.join(watchDir, "index.mdx"), "# Home\n");
+    const existingPage = path.join(outputDir, "app", "existing", "page.tsx");
+    await fs.ensureDir(watchDir);
+    await fs.outputJson(path.join(outputDir, ".doccupine-generated.json"), {
+      generator: "doccupine",
+      schemaVersion: 1,
+    });
+    await fs.outputFile(existingPage, "EXISTING_PAGE\n");
     await fs.writeJson(externalConfig, {
       name: "EXTERNAL_SECRET_MARKER",
       description: "LEAKED_DESCRIPTION",
@@ -89,12 +96,8 @@ describe.sequential("MDXToNextJSGenerator ownership", () => {
       /config source.*config\.json.*symbolic link/i,
     );
 
-    const llms = await fs.readFile(
-      path.join(outputDir, "public", "llms.txt"),
-      "utf8",
-    );
-    expect(llms).not.toContain("EXTERNAL_SECRET_MARKER");
-    expect(llms).not.toContain("LEAKED_DESCRIPTION");
+    expect(await fs.readFile(existingPage, "utf8")).toBe("EXISTING_PAGE\n");
+    expect(await fs.readdir(watchDir)).toEqual([]);
   });
 
   it("does not load sections through a symlinked source", async () => {
@@ -160,6 +163,30 @@ describe.sequential("MDXToNextJSGenerator ownership", () => {
     expect(await fs.pathExists(path.join(realWatchDir, "index.mdx"))).toBe(
       true,
     );
+  });
+
+  it("pins the documentation root across every starter write", async () => {
+    const { root, watchDir } = await fixture();
+    const originalDocs = path.join(root, "docs-original");
+    const victimDir = path.join(root, "victim");
+    await fs.ensureDir(victimDir);
+    const sourceFs = new SecureSourceFs(watchDir, root);
+
+    async function* starterFiles() {
+      yield ["first.mdx", "FIRST\n"] as const;
+      await fs.rename(watchDir, originalDocs);
+      await fs.symlink(victimDir, watchDir, "dir");
+      yield ["second.mdx", "SECOND\n"] as const;
+    }
+
+    await expect(
+      sourceFs.writeStarterFilesIfEmpty(starterFiles()),
+    ).rejects.toThrow(/source root changed.*starter documents/i);
+
+    expect(
+      await fs.readFile(path.join(originalDocs, "first.mdx"), "utf8"),
+    ).toBe("FIRST\n");
+    expect(await fs.pathExists(path.join(victimDir, "second.mdx"))).toBe(false);
   });
 
   it.skipIf(process.platform === "win32")(
@@ -324,6 +351,109 @@ describe.sequential("MDXToNextJSGenerator ownership", () => {
     expect(page).toContain("function SectionIndex() {}");
   });
 
+  it("does not preserve a section redirect for a page that failed to render", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    await fs.outputFile(
+      path.join(watchDir, "guides", "intro.mdx"),
+      "---\ntitle: Intro\n---\nIntro\n",
+    );
+    await fs.writeJson(path.join(root, "sections.json"), [
+      { label: "Guides", slug: "guides", directory: "guides" },
+    ]);
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+    await generator.init();
+    await fs.outputFile(
+      path.join(watchDir, "guides", "index.mdx"),
+      "---\ntitle: Guides\nimage: &self [*self]\n---\nGuides\n",
+    );
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await generator.processAllMDXFiles();
+
+    expect(
+      await fs.pathExists(
+        path.join(outputDir, "app", "(site)", "guides", "page.tsx"),
+      ),
+    ).toBe(false);
+    const manifest = await fs.readJson(
+      path.join(outputDir, ".doccupine-artifacts.json"),
+    );
+    expect(manifest.routes).not.toContainEqual(
+      expect.objectContaining({ kind: "mdx", source: "guides/index.mdx" }),
+    );
+
+    await fs.writeFile(
+      path.join(watchDir, "guides", "intro.mdx"),
+      "---\ntitle: Updated Intro\n---\nUpdated intro\n",
+    );
+    await generator.handleFileChange("changed", "guides/intro.mdx");
+
+    expect(
+      await fs.pathExists(
+        path.join(outputDir, "app", "(site)", "guides", "page.tsx"),
+      ),
+    ).toBe(false);
+    const updatedManifest = await fs.readJson(
+      path.join(outputDir, ".doccupine-artifacts.json"),
+    );
+    expect(updatedManifest.routes).not.toContainEqual(
+      expect.objectContaining({ kind: "mdx", source: "guides/index.mdx" }),
+    );
+  });
+
+  it("retains the last successful page when bulk regeneration fails", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const sourcePath = path.join(watchDir, "guide.mdx");
+    const pagePath = path.join(outputDir, "app", "(site)", "guide", "page.tsx");
+    await fs.writeFile(sourcePath, "---\ntitle: Guide\n---\nOriginal\n");
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+    await generator.init();
+    const originalPage = await fs.readFile(pagePath, "utf8");
+    await fs.writeFile(
+      sourcePath,
+      "---\ntitle: Guide\nimage: &self [*self]\n---\nBroken\n",
+    );
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await generator.processAllMDXFiles();
+
+    expect(await fs.readFile(pagePath, "utf8")).toBe(originalPage);
+    const manifest = await fs.readJson(
+      path.join(outputDir, ".doccupine-artifacts.json"),
+    );
+    expect(manifest.routes).toContainEqual(
+      expect.objectContaining({
+        kind: "mdx",
+        source: "guide.mdx",
+        slug: "guide",
+      }),
+    );
+  });
+
+  it("does not retain historical ownership after startup clears page output", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const sourcePath = path.join(watchDir, "guide.mdx");
+    const pagePath = path.join(outputDir, "app", "(site)", "guide", "page.tsx");
+    await fs.writeFile(sourcePath, "---\ntitle: Guide\n---\nOriginal\n");
+    await new MDXToNextJSGenerator(watchDir, outputDir, [], root).init();
+    expect(await fs.pathExists(pagePath)).toBe(true);
+    await fs.writeFile(
+      sourcePath,
+      "---\ntitle: Guide\nimage: &self [*self]\n---\nBroken\n",
+    );
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await new MDXToNextJSGenerator(watchDir, outputDir, [], root).init();
+
+    expect(await fs.pathExists(pagePath)).toBe(false);
+    const manifest = await fs.readJson(
+      path.join(outputDir, ".doccupine-artifacts.json"),
+    );
+    expect(manifest.routes).not.toContainEqual(
+      expect.objectContaining({ kind: "mdx", source: "guide.mdx" }),
+    );
+  });
+
   it("deletes the recorded frontmatter route and preserves nested pages", async () => {
     const { watchDir, outputDir } = await fixture();
     await fs.outputFile(
@@ -429,6 +559,106 @@ describe.sequential("MDXToNextJSGenerator ownership", () => {
     expect(await fs.readFile(pagePath, "utf8")).toContain(
       "HAND_WRITTEN_SENTINEL",
     );
+  });
+
+  it("hands a removed MDX route back to OpenAPI across a restart", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const specPath = path.join(root, "openapi.json");
+    await fs.writeJson(specPath, {
+      openapi: "3.0.0",
+      info: { title: "Test", version: "1.0.0" },
+      paths: {
+        "/users": {
+          get: {
+            operationId: "listUsers",
+            summary: "Generated operation",
+            tags: ["users"],
+            responses: { "200": { description: "OK" } },
+          },
+        },
+      },
+    });
+    await fs.outputFile(path.join(watchDir, "index.mdx"), "# Home\n");
+    const handwrittenSource = path.join(
+      watchDir,
+      "api-reference",
+      "users",
+      "listusers.mdx",
+    );
+    await fs.outputFile(
+      handwrittenSource,
+      "---\ntitle: Hand Written\n---\nHAND_WRITTEN_SENTINEL\n",
+    );
+    const specs = [{ name: "Test", file: specPath }];
+    const pagePath = path.join(
+      outputDir,
+      "app",
+      "(site)",
+      "api-reference",
+      "users",
+      "listusers",
+      "page.tsx",
+    );
+
+    await new MDXToNextJSGenerator(watchDir, outputDir, specs, root).init();
+    await fs.remove(handwrittenSource);
+    await new MDXToNextJSGenerator(watchDir, outputDir, specs, root).init();
+
+    expect(await fs.readFile(pagePath, "utf8")).toContain(
+      "Generated operation",
+    );
+  });
+
+  it("does not publish OpenAPI metadata for a route blocked by broken MDX", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const specPath = path.join(root, "openapi.json");
+    await fs.writeJson(specPath, {
+      openapi: "3.0.0",
+      info: { title: "Test", version: "1.0.0" },
+      paths: {
+        "/users": {
+          get: {
+            operationId: "listUsers",
+            summary: "Generated operation",
+            tags: ["users"],
+            responses: { "200": { description: "OK" } },
+          },
+        },
+      },
+    });
+    await fs.outputFile(path.join(watchDir, "index.mdx"), "# Home\n");
+    await fs.outputFile(
+      path.join(watchDir, "api-reference", "users", "listusers.mdx"),
+      "---\ntitle: Broken\nimage: &self [*self]\n---\nBroken\n",
+    );
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const generator = new MDXToNextJSGenerator(
+      watchDir,
+      outputDir,
+      [{ name: "Test", file: specPath }],
+      root,
+    );
+
+    await generator.init();
+
+    expect(
+      await fs.pathExists(
+        path.join(
+          outputDir,
+          "app",
+          "(site)",
+          "api-reference",
+          "users",
+          "listusers",
+          "page.tsx",
+        ),
+      ),
+    ).toBe(false);
+    const layout = await fs.readFile(
+      path.join(outputDir, "app", "(site)", "layout.tsx"),
+      "utf8",
+    );
+    expect(layout).not.toContain('slug: "api-reference/users/listusers"');
   });
 
   it("keeps the active OpenAPI config and watcher target after an invalid replacement", async () => {

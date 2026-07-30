@@ -22,10 +22,8 @@ interface AppStructureCallbacks {
 }
 
 interface StarterDocumentCallbacks {
-  getAllMdxFiles(): Promise<string[]>;
-  writeStarterFile(
-    relativePath: string,
-    content: string | Uint8Array,
+  writeStarterFilesIfEmpty(
+    files: Iterable<readonly [string, string | Uint8Array]>,
   ): Promise<void>;
 }
 
@@ -75,10 +73,8 @@ export class AppScaffolder {
   }
 
   async createStartingDocs(callbacks: StarterDocumentCallbacks): Promise<void> {
-    if ((await callbacks.getAllMdxFiles()).length > 0) return;
-
-    for (const [filePath, content] of Object.entries(startingDocsStructure)) {
-      await callbacks.writeStarterFile(filePath, String(content));
-    }
+    await callbacks.writeStarterFilesIfEmpty(
+      Object.entries(startingDocsStructure),
+    );
   }
 }

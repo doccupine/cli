@@ -58,10 +58,14 @@ export class GeneratedRouteManager {
         .map((page) => [page.path.replace(/\\/g, "/"), page.slug]),
     );
     const nextSlugs = new Set(nextBySource.values());
+    const openApiSlugs = new Set(
+      this.artifacts.routesFor("openapi").map((route) => route.slug),
+    );
 
     for (const previous of this.artifacts.routesFor("mdx")) {
       if (nextBySource.get(previous.source) === previous.slug) continue;
       if (nextSlugs.has(previous.slug)) continue;
+      if (openApiSlugs.has(previous.slug)) continue;
       await removeOwnedRoute(previous.slug);
     }
   }
