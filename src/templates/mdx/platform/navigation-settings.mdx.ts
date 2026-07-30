@@ -2,6 +2,7 @@ export const platformNavigationSettingsMdxTemplate = `---
 title: "Navigation Settings"
 description: "Define the sidebar structure for your documentation site using the drag-and-drop Navigation Builder."
 date: "2026-07-06"
+updated: "2026-07-30"
 category: "Configuration"
 categoryOrder: 2
 order: 2
@@ -33,13 +34,23 @@ You can reorder items at every level by dragging their handles:
 - Click the **edit** button on a section header to open its edit modal, where you can update the label, slug, and directory.
 - Delete a section from its edit modal using the delete button. The root section cannot be deleted.
 
+### Slug rules
+
+A section slug becomes a URL segment, so it has to look like one: lowercase letters, numbers, and dashes, with no slashes and no spaces. "API Reference" is a fine section **label**, but its slug is \`api-reference\`. Each label and each slug must also be unique across your sections.
+
+Doccupine refuses to save a section list that breaks these rules, and tells you which entry is wrong. It is worth being strict about: the site build does not repair an invalid \`sections.json\`, it ignores the file completely, which would quietly collapse every section on your deployed site into one.
+
 ### The default section
 
-One section should have an empty slug (\`""\`). This is the default/root section that serves pages at the root URL. Pages not assigned to any other section belong here.
+One section should have an empty slug (\`""\`). This is the default/root section that serves pages at the root URL. Pages not assigned to any other section belong here. Only one section can use it.
 
 ### Frontmatter-based sections
 
 You can also define sections purely through page frontmatter without using the Navigation Builder. Add a \`section\` field to your MDX frontmatter and Doccupine will create sections automatically. See the [Sections documentation](/sections) for details.
+
+<Callout type="note">
+  Frontmatter section names turn into slugs the same way, so two names that differ only in spelling or capitalization - "API Reference" and "api-reference" - collide on one URL and stop the build. Use one spelling across your pages, or define the sections explicitly here.
+</Callout>
 
 ## Managing categories
 

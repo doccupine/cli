@@ -2,6 +2,7 @@ export const platformPublishingMdxTemplate = `---
 title: "Publishing Changes"
 description: "Commit your edits to GitHub and deploy your documentation site with one click."
 date: "2026-02-19"
+updated: "2026-07-30"
 category: "Editing"
 categoryOrder: 1
 order: 1
@@ -14,10 +15,10 @@ When you edit files in Doccupine, your changes are staged as pending. Nothing go
 ## The publish workflow
 
 1. Make edits to your files using the file editor.
-2. Click the **Publish** button in the project header. A badge shows the number of pending changes.
-3. Review the list of modified, deleted, and new files in the publish modal.
-4. Optionally write a custom commit message (defaults to "Update docs via Doccupine").
-5. Click **Publish Changes**.
+2. Click the **Publish** button in the project header. It appears as soon as anything is staged, with a badge showing the number of pending changes.
+3. Review the change set in the publish modal. Each file expands into a diff of what you actually changed, line by line, against what is currently in your repository.
+4. Optionally tick **Custom commit message** and write your own. Without one, the message is built from the files you are committing, like \`Update docs/guide.mdx\`.
+5. Click **Deploy**.
 
 Doccupine then:
 
@@ -26,20 +27,52 @@ Doccupine then:
 - Clears all pending changes from the staging area
 
 <Callout type="note">
-  The deployment status badge in the project header updates as your site builds. It cycles through **queued**, **building**, and **ready** (or **error** if something went wrong).
+  The deployment status badge next to the project name updates as your site builds. It cycles through **Queued**, **Building**, and **Ready** (or **Error** if something went wrong).
+</Callout>
+
+## Checks before a publish
+
+A few kinds of mistake do not break one page, they stop the whole site from building. Doccupine checks for those before committing anything and refuses the publish with a message naming the file to fix, so you find out in the publish modal instead of in a failed deploy.
+
+### A spec file that will not be there
+
+If your \`doccupine.json\` names an OpenAPI spec in its \`openapi\` field, that spec has to exist in the repository after the publish. The usual way to get this wrong is to publish the config change while leaving the spec file behind in your pending changes - publish both together, or remove the \`openapi\` field.
+
+### Two pages on the same URL
+
+Two files that resolve to the same route - \`guide.mdx\` and \`guide/index.mdx\`, for instance - are a duplicate page, and the build stops rather than guessing which one you meant. Rename or delete one of them.
+
+### Section names that become the same URL
+
+Section URLs come from section names, so "API Reference" and "api-reference" both become \`/api-reference\`. Pick one spelling and use it in the \`section\` field of both pages.
+
+<Callout type="note">
+  These checks look at the repository as it will be **after** your publish, so a file you are deleting in the same change set counts as gone. If a check cannot run - GitHub is unreachable, say - the publish goes ahead and the build remains the backstop.
 </Callout>
 
 ## Discarding changes
 
-If you want to undo your pending edits, click **Discard All Changes** in the publish modal. This removes all staged changes without committing anything.
+You can throw away as much or as little as you like:
+
+- **A single line** - **Discard this line** on that line of the diff. The rest of the file stays staged. Line numbers do not drift as you go, so you can pick off several in a row. A deleted file has no lines to pick from, and a diff too large to show in full does not offer the control.
+- **A whole file** - **Discard this file's change** on its row in the change set returns the file to whatever is in your repository.
+- **Everything** - **Discard all**, above the change set, clears the staging area without committing anything.
+
+If discarding leaves a file identical to what is already committed, it drops out of the change set on its own.
+
+<Callout type="note">
+  Discarding a line here counts as a hand edit, exactly like editing the page in the editor would. That matters if the page is tracked by [Agent Sync](/platform/self-updating-docs): a page you have touched by hand is always routed to review rather than being rewritten automatically.
+</Callout>
 
 ## File status badges
 
-In the publish modal, each file shows a badge indicating what changed:
+In the publish modal, every row in the change set carries a badge for what happened to the file, alongside a count of the lines added and removed:
 
-- **mod** - the file was modified
-- **del** - the file was deleted
-- **bin** - the file is a binary asset (image, font, etc.)
+- **created** - the file is new
+- **updated** - the file already exists and was edited
+- **deleted** - the file is being removed
+
+If the diffs cannot be loaded, the modal falls back to a plain file list whose badges read **mod**, **del**, or **bin** - the last for a binary asset such as an image or a font, which has no text diff to show.
 
 ## Auto-deploy from GitHub
 

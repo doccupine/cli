@@ -65,7 +65,7 @@ A full import can take a few minutes, so you don't have to sit and watch it. Doc
 - A **multi-page MDX site** with sections, categories, and navigation already filled in
 - Pages written from your real source files, not boilerplate
 - A **live deployment** you can visit immediately
-- Every page **linked back to the code it came from**, so [Self-updating Docs](/platform/self-updating-docs) can keep it current from day one
+- Every page **linked back to the code it came from**, so [Agent Sync](/platform/self-updating-docs) can keep it current from day one
 
 <Callout type="success">
   Nothing about an imported site is locked down. Open any page in the [file editor](/platform/file-editor), change whatever you like, and [publish](/platform/publishing) as usual.
@@ -86,6 +86,6 @@ Doccupine reads a bounded number of files and writes a bounded number of pages, 
     Rewrite, restructure, and add pages in the browser-based editor.
   </Card>
   <Card title="Keep them current" icon="refresh-cw" href="/platform/self-updating-docs">
-    Let the agent rewrite pages when the code they document changes.
+    Agent Sync rewrites pages when the code they document changes.
   </Card>
 </Columns>`;
