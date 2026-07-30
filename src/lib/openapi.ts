@@ -280,8 +280,9 @@ function firstLine(text: unknown): string {
  * synthetic sidebar/sitemap `PageMeta` objects, per-endpoint markdown bodies
  * (for llms output), and the request-execution allowlist.
  *
- * `load()` never throws: a spec that fails to parse is logged and skipped so one
- * malformed file cannot abort a build or crash a watcher.
+ * `load()` is transactional: every configured spec must parse and process
+ * successfully before the current registry is replaced. A failed reload throws
+ * and leaves the last-known-good state available to callers.
  */
 export class OpenApiRegistry {
   private operations: OperationDescriptor[] = [];
@@ -304,13 +305,7 @@ export class OpenApiRegistry {
     rootDir: string,
     apiBaseSlug: string = DEFAULT_API_BASE_SLUG,
   ): Promise<void> {
-    this.operations = [];
-    this.byOperationId.clear();
-    this.byMethodPath.clear();
-    this.pages = [];
-    this.bodies.clear();
-    this.allowlistEntries = [];
-
+    const next = new OpenApiRegistry();
     const multi = specs.length > 1;
     const usedSlugs = new Set<string>();
     const allowlistKeys = new Set<string>();
@@ -321,28 +316,27 @@ export class OpenApiRegistry {
       try {
         doc = await dereference(absolute);
       } catch (error) {
-        console.error(
-          chalk.red(`❌ Failed to parse OpenAPI spec "${spec.file}":`),
-          error instanceof Error ? error.message : error,
+        throw new Error(
+          `Failed to parse OpenAPI spec "${spec.file}": ${error instanceof Error ? error.message : String(error)}`,
+          { cause: error },
         );
-        continue;
       }
       try {
-        this.ingest(doc, spec, multi, apiBaseSlug, usedSlugs, allowlistKeys);
+        next.ingest(doc, spec, multi, apiBaseSlug, usedSlugs, allowlistKeys);
       } catch (error) {
-        console.error(
-          chalk.red(`❌ Failed to process OpenAPI spec "${spec.file}":`),
-          error instanceof Error ? error.message : error,
+        throw new Error(
+          `Failed to process OpenAPI spec "${spec.file}": ${error instanceof Error ? error.message : String(error)}`,
+          { cause: error },
         );
       }
     }
 
-    if (this.operations.length > 0) {
-      const body = buildApiIndexBody(this.operations);
-      this.pages.unshift({
+    if (next.operations.length > 0) {
+      const body = buildApiIndexBody(next.operations);
+      next.pages.unshift({
         slug: apiBaseSlug,
         title: "API Reference",
-        description: `Browse all ${this.operations.length} API endpoints.`,
+        description: `Browse all ${next.operations.length} API endpoints.`,
         date: null,
         category: "Overview",
         path: "@openapi/index",
@@ -350,8 +344,15 @@ export class OpenApiRegistry {
         order: -1,
         section: apiBaseSlug,
       });
-      this.bodies.set(apiBaseSlug, body);
+      next.bodies.set(apiBaseSlug, body);
     }
+
+    this.operations = next.operations;
+    this.byOperationId = next.byOperationId;
+    this.byMethodPath = next.byMethodPath;
+    this.pages = next.pages;
+    this.bodies = next.bodies;
+    this.allowlistEntries = next.allowlistEntries;
   }
 
   /** Fresh copies of the synthetic pages (caller may mutate/spread safely). */

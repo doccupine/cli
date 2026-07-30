@@ -164,16 +164,33 @@ export function escapeTemplateContent(content: string): string {
 }
 
 /**
- * gray-matter that never throws: malformed YAML frontmatter is reported as a
- * warning and the file is treated as having no frontmatter, so one typo in a
- * `---` block can't abort a whole build or site-wide aggregation pass. The
- * broken block is stripped from the body best-effort; an unterminated block
- * passes through as-is and the generated app's MDX error panel absorbs it.
+ * YAML-only gray-matter that never throws: unsupported tagged engines and
+ * malformed YAML frontmatter are reported as warnings and treated as having no
+ * frontmatter. The broken block is stripped from the body best-effort; an
+ * unterminated block passes through as-is and the generated app's MDX error
+ * panel absorbs it.
  */
 export function safeMatter(
   raw: string,
   label?: string,
 ): { data: { [key: string]: any }; content: string } {
+  const taggedDelimiter = raw.match(/^\uFEFF?---[^\r\n]+(?:\r?\n|$)/);
+  if (taggedDelimiter) {
+    const where = label ? ` in ${label}` : "";
+    console.warn(
+      chalk.yellow(
+        `⚠️  Unsupported tagged frontmatter${where}; only YAML frontmatter is allowed.`,
+      ),
+    );
+    return {
+      data: {},
+      content: raw.replace(
+        /^\uFEFF?---[^\r\n]+\r?\n[\s\S]*?\r?\n---\r?\n?/,
+        "",
+      ),
+    };
+  }
+
   try {
     const { data, content } = matter(raw);
     return { data, content };

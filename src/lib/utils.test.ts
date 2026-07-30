@@ -3,13 +3,36 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { writeFileAtomic } from "./utils.js";
+import { safeMatter, writeFileAtomic } from "./utils.js";
 
 const tempDirs: string[] = [];
+const executionProbe = "DOCCUPINE_SAFE_MATTER_EXECUTED";
 
 afterEach(async () => {
   vi.restoreAllMocks();
+  delete process.env[executionProbe];
   await Promise.all(tempDirs.splice(0).map((dir) => fs.remove(dir)));
+});
+
+describe("safeMatter", () => {
+  it("rejects language-tagged frontmatter without executing it", () => {
+    const warning = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    for (const prefix of ["", "\uFEFF"]) {
+      const { data, content } = safeMatter(
+        `${prefix}---javascript\nprocess.env.${executionProbe} = "yes"\n---\n\nBody.\n`,
+        "unsafe.mdx",
+      );
+
+      expect(process.env[executionProbe]).toBeUndefined();
+      expect(data).toEqual({});
+      expect(content.trim()).toBe("Body.");
+    }
+    expect(warning).toHaveBeenCalledTimes(2);
+    expect(warning).toHaveBeenCalledWith(
+      expect.stringContaining("only YAML frontmatter is allowed"),
+    );
+  });
 });
 
 describe("writeFileAtomic", () => {
