@@ -13,7 +13,9 @@ Connect your documentation to AI tools with a hosted MCP server.
 Doccupine automatically generates a Model Context Protocol (MCP) server from your documentation, making your content accessible to AI applications like Claude, Cursor, VS Code, and other MCP-compatible tools. Your MCP server exposes semantic search capabilities, allowing AI tools to query your documentation directly and provide accurate, context-aware answers.
 
 <Callout type="warning">
-  The MCP server requires the [AI Assistant](/ai-assistant) to be configured. Make sure you have set up your LLM provider and API keys before using the MCP server.
+  Semantic \`search_docs\` requires the [AI Assistant](/ai-assistant) embedding
+  provider to be configured. \`get_doc\` and \`list_docs\` can retrieve the generated
+  content manifest without an embedding provider.
 </Callout>
 
 ## About MCP servers
@@ -62,14 +64,16 @@ Authorization: Bearer your-secret-key
 Requests without a valid token receive a \`401 Unauthorized\` response. When \`DOCS_API_KEY\` is not set, the MCP server follows the site's access mode: it is public on a public site and requires the normal gate session when \`SITE_PASSWORD\` is configured.
 
 <Callout type="note">
-  \`DOCS_API_KEY\` only applies to \`/api/mcp\`; it does not grant access to the chat, search, or playground APIs. To gate the entire site behind a shared password, see the [Authentication](/authentication) documentation.
+  \`DOCS_API_KEY\` applies to \`/api/mcp\` and its \`/mcp\` discovery alias; it does not grant access to the chat, search, or playground APIs. To gate the entire site behind a shared password, see the [Authentication](/authentication) documentation.
 </Callout>
 
 ### Rate limiting
 
-Tool calls to \`POST /api/mcp\` are rate limited per client IP address. When a client exceeds the limit, the server responds with \`429 Too Many Requests\` and a \`Retry-After\` header indicating how many seconds to wait before retrying.
+Tool calls to \`POST /api/mcp\` are rate limited per client IP when the generated app runs on a recognized platform that supplies a trusted client-address header. Unknown or self-hosted proxy setups use one conservative shared bucket instead of trusting spoofable forwarding headers. When the limit is exceeded, the server responds with \`429 Too Many Requests\` and a \`Retry-After\` header indicating how many seconds to wait before retrying.
 
-The included limiter is intentionally lightweight and scoped to each running server instance. For a globally consistent limit across multiple serverless instances or regions, configure rate limiting at your hosting edge or use a shared external rate-limit store.
+The included limiter is intentionally lightweight and scoped to each running server instance. For a globally consistent limit across multiple serverless instances or regions, or accurate per-client limits behind a custom reverse proxy, configure rate limiting at your trusted hosting edge or use a shared external rate-limit store.
+
+Requests are bounded before tool execution: request bodies, protocol batches, tool arguments, search result counts, and serialized responses all have fixed limits. A protocol body may contain at most one \`tools/call\` message, so one rate-limited request cannot execute multiple paid tools; batches containing only non-tool protocol messages remain compatible. Internal provider errors are logged on the server and returned to clients as generic failures so deployment details are not exposed.
 
 ### API Endpoints
 
@@ -318,7 +322,8 @@ To use the MCP server, you need to have the AI Assistant configured. The MCP ser
 | \`DOCS_API_KEY\` | No       | When set, requires Bearer token authentication on \`/api/mcp\` |
 
 <Callout type="warning">
-  The MCP server requires an LLM provider to be configured for generating embeddings. Make sure you have set up your AI Assistant with a valid API key before using the MCP server.
+  The \`search_docs\` tool requires an LLM provider for query embeddings. Configure
+  the AI Assistant with a valid API key before using semantic search.
 </Callout>
 
 See the [AI Assistant documentation](/ai-assistant) for configuration details.

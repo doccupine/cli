@@ -37,6 +37,9 @@ OPENAI_API_KEY=your_openai_api_key_here
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
 GOOGLE_API_KEY=your_google_api_key_here
 
+# Optional: Require a bearer token for direct /api/rag requests on a public site
+# RAG_API_KEY=generate-a-long-random-secret
+
 # Optional: Override default chat model (see your provider's docs for available models)
 # LLM_CHAT_MODEL=your-model-id
 
@@ -75,7 +78,20 @@ You need to set the API key that matches your chosen provider:
 </Callout>
 
 <Callout type="note">
-  Doccupine automatically adds \`.env\` to your \`.gitignore\` file.
+  Doccupine ignores every \`.env*\` variant except the non-secret
+  \`.env.example\`, helping prevent development, test, and production credentials
+  from being committed accidentally.
+</Callout>
+
+## Protecting model spend
+
+Public documentation intentionally leaves the browser assistant available by default. For a public deployment where only server-to-server clients should call the paid RAG endpoint, set \`RAG_API_KEY\` and require \`Authorization: Bearer <key>\` on \`/api/rag\`.
+
+<Callout type="warning">
+  The built-in browser assistant cannot safely store a server API key. Setting
+  \`RAG_API_KEY\` on an otherwise public site disables anonymous browser chat. Use
+  \`SITE_PASSWORD\` instead when signed-in browser visitors should keep using the
+  assistant, or leave \`RAG_API_KEY\` unset when public chat is intentional.
 </Callout>
 
 ## Using Anthropic with OpenAI

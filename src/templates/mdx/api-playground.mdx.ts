@@ -133,7 +133,9 @@ Requests run one of two ways, and readers can switch between them:
 **Proxy (default).** The request is forwarded server-side, so it works even when the target API blocks cross-origin browser calls. **Direct.** The browser calls the API itself - useful when the API allows CORS and you want requests to never leave the reader's machine.
 </Callout>
 
-The proxy is deliberately locked down. It only forwards to servers declared in your OpenAPI document and refuses private, internal, metadata, and reserved network addresses. An explicitly declared loopback server such as \`http://localhost:4000\` is allowed for local development; it does not enable any other private target. Request URLs, headers, and bodies are never logged, so API keys a reader enters are not written anywhere. On a [password-protected site](/authentication), the proxy also requires the visitor's unlocked session, so it cannot be called anonymously.
+The proxy is deliberately locked down. It only forwards to servers declared in your OpenAPI document and refuses private, internal, metadata, and reserved network addresses, including IPv4 destinations represented through IPv6 translation ranges. An explicitly declared loopback server such as \`http://localhost:4000\` is available only outside production for local development and tests; production always blocks loopback and every other private target even when the spec declares one. Request URLs, headers, and bodies are never logged, so API keys a reader enters are not written anywhere. On a [password-protected site](/authentication), the proxy also requires the visitor's unlocked session, so it cannot be called anonymously.
+
+Proxy requests are rate limited per trusted client address on recognized hosting platforms. Unknown and self-hosted proxy setups share one fallback bucket rather than trusting spoofable forwarding headers; use your trusted edge or a shared rate-limit store when those deployments need accurate per-client limits.
 
 <Callout type="warning">
 Keys and tokens a reader types are used only to make the request. Turn on "Show secrets" to reveal them in the generated code snippets; they are redacted by default.

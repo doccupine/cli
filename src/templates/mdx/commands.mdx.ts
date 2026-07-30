@@ -38,6 +38,10 @@ This will start the development server on port 3000. Open your browser and navig
   The watch and output directories must not overlap. The output directory must be empty, contain only local metadata such as \`.DS_Store\` or \`.env.local\`, or already be owned by Doccupine. This prevents the generator from overwriting another project. If an older \`doccupine.json\` no longer validates, run \`doccupine config --reset\`. Generation also reports a validation error, instead of letting one page overwrite another, when two source files resolve to the same route.
 </Callout>
 
+Starter documentation is created only when the selected source directory contains no MDX files. Existing pages are never replaced just because \`index.mdx\` is missing. Frontmatter must use the normal YAML \`---\` delimiter; language-tagged executable frontmatter is rejected.
+
+Doccupine records generated route and Markdown-mirror ownership in \`.doccupine-artifacts.json\` inside the generated app. Watch-mode renames and deletes use that registry rather than guessing routes from filenames, so section moves remove only files owned by the changed source.
+
 ## Dependency installation
 
 The first run installs the generated app's dependencies. After that, Doccupine records a fingerprint of the generated \`package.json\` and the package manager in \`.doccupine-install\` and reinstalls only when that fingerprint changes or \`node_modules\` is missing - later runs start the dev server straight away. Pass \`--skip-install\` to skip the check entirely, for example when you manage dependencies yourself.

@@ -36,6 +36,8 @@ While a password is set, protection is enforced across three layers:
   The [MCP server](/model-context-protocol) uses \`DOCS_API_KEY\` bearer authentication when that variable is set. Otherwise, a password-protected site requires the normal gate session for MCP too, so the endpoint cannot bypass \`SITE_PASSWORD\`.
 </Callout>
 
+The AI endpoint also supports \`RAG_API_KEY\` for authenticated server-to-server access on public sites. Because the browser cannot safely hold that secret, use \`SITE_PASSWORD\` rather than \`RAG_API_KEY\` when authenticated browser visitors should use the built-in assistant.
+
 ## How it works
 
 When a visitor submits the correct password, Doccupine sets a signed, \`httpOnly\` cookie that unlocks the site for 30 days. The cookie never stores the password itself - it holds an HMAC derived from it - and it is checked in constant time to avoid leaking information through timing.
@@ -46,7 +48,7 @@ Because the check reads \`SITE_PASSWORD\` at request time, you can turn protecti
 
 - **Use a strong password.** It is shared by everyone with access, so treat it like any other shared secret and rotate it when needed.
 - **Serve over HTTPS in production.** The session cookie is marked \`secure\` in production, so it is only sent over encrypted connections.
-- **Brute-force protection.** Password attempts are rate limited by IP address to slow down guessing.
+- **Brute-force protection.** On recognized hosting platforms, password attempts are rate limited by the platform's trusted client address. Unknown and self-hosted proxy setups use one shared fallback bucket rather than trusting a spoofable forwarding header; configure a trusted edge limiter for accurate per-client limits there.
 - **Rotating the password.** Changing \`SITE_PASSWORD\` invalidates every existing session immediately - visitors will need to enter the new password.
 
 <Callout type="warning">
