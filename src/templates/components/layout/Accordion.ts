@@ -1,7 +1,7 @@
 export const accordionTemplate = `"use client";
 import { useId, useState } from "react";
 import styled, { css } from "styled-components";
-import { Button, resetButton, styledText } from "cherry-styled-components";
+import { styledText } from "cherry-styled-components";
 import { Theme } from "@/app/theme";
 import { Icon } from "@/components/layout/Icon";
 
@@ -15,11 +15,10 @@ const StyledAccordion = styled.div<{ theme: Theme }>\`
   width: 100%;
 \`;
 
-const StyledAccordionTitle = styled(Button)<{
+const StyledAccordionTitle = styled.button<{
   theme: Theme;
   $isOpen: boolean;
 }>\`
-  \${resetButton};
   appearance: none;
   display: block;
   width: 100%;
