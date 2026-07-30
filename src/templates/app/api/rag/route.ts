@@ -10,10 +10,9 @@ import { rateLimit } from "@/utils/rateLimit";
 import { config } from "@/utils/config";
 import { isSiteRequestAuthorized } from "@/lib/access";
 import { timingSafeEqual } from "@/lib/siteGate";
+import { readJsonBody, RequestTooLargeError } from "@/utils/requestBody";
 
 const MAX_RAG_REQUEST_BYTES = 32 * 1024;
-
-class RequestTooLargeError extends Error {}
 
 const messageSchema = z
   .object({
@@ -46,39 +45,6 @@ async function isRagRequestAuthorized(req: Request): Promise<boolean> {
     return token !== null && timingSafeEqual(token, apiKey);
   }
   return siteAuthorized;
-}
-
-async function readJsonBody(req: Request): Promise<unknown> {
-  const declaredLength = Number(req.headers.get("content-length"));
-  if (
-    Number.isFinite(declaredLength) &&
-    declaredLength > MAX_RAG_REQUEST_BYTES
-  ) {
-    throw new RequestTooLargeError();
-  }
-  if (!req.body) throw new SyntaxError("Missing body");
-
-  const reader = req.body.getReader();
-  const decoder = new TextDecoder();
-  let size = 0;
-  let text = "";
-  try {
-    while (true) {
-      req.signal.throwIfAborted();
-      const { done, value } = await reader.read();
-      if (done) break;
-      size += value.byteLength;
-      if (size > MAX_RAG_REQUEST_BYTES) {
-        await reader.cancel();
-        throw new RequestTooLargeError();
-      }
-      text += decoder.decode(value, { stream: true });
-    }
-    text += decoder.decode();
-    return JSON.parse(text);
-  } finally {
-    reader.releaseLock();
-  }
 }
 
 const projectName = config.name || "Doccupine";
@@ -153,8 +119,9 @@ export async function POST(req: Request) {
   // real status codes before we commit to a 200 streaming response.
   let body: unknown;
   try {
-    body = await readJsonBody(req);
+    body = await readJsonBody(req, MAX_RAG_REQUEST_BYTES);
   } catch (error: unknown) {
+    if (req.signal.aborted) throw error;
     if (error instanceof RequestTooLargeError) {
       return NextResponse.json(
         { error: "Request body too large" },

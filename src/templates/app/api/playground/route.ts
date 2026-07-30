@@ -4,6 +4,7 @@ import { rateLimit } from "@/utils/rateLimit";
 import { matchAllowlist } from "@/utils/playgroundAllowlist";
 import { guardedFetch, BlockedError } from "@/utils/ssrfGuard";
 import { isSiteRequestAuthorized } from "@/lib/access";
+import { readJsonBody, RequestTooLargeError } from "@/utils/requestBody";
 
 // The playground proxy runs server-side so it can call APIs that block
 // cross-origin browser requests. It is NOT an open forward proxy: every target
@@ -12,7 +13,8 @@ import { isSiteRequestAuthorized } from "@/lib/access";
 export const runtime = "nodejs";
 export const maxDuration = 40;
 
-const MAX_REQUEST_BYTES = 1_000_000;
+const MAX_ENVELOPE_BYTES = 1_500_000;
+const MAX_REQUEST_BODY_BYTES = 1_000_000;
 const MAX_RESPONSE_BYTES = 5_000_000;
 const TIMEOUT_MS = 30_000;
 
@@ -20,7 +22,7 @@ const envelopeSchema = z.object({
   targetUrl: z.string().url().max(4096),
   method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]),
   headers: z.record(z.string().max(256), z.string().max(8192)).optional(),
-  body: z.string().max(MAX_REQUEST_BYTES).optional(),
+  body: z.string().optional(),
   bodyEncoding: z.enum(["utf8", "base64"]).optional(),
 });
 
@@ -68,6 +70,17 @@ function hasControlChars(value: string): boolean {
   );
 }
 
+function decodePlaygroundBody(
+  body: string,
+  encoding: "utf8" | "base64" | undefined,
+): Buffer {
+  const decoded = Buffer.from(body, encoding === "base64" ? "base64" : "utf8");
+  if (decoded.byteLength > MAX_REQUEST_BODY_BYTES) {
+    throw new RequestTooLargeError();
+  }
+  return decoded;
+}
+
 function isTextContentType(contentType: string | null): boolean {
   if (!contentType) return false;
   const t = contentType.toLowerCase();
@@ -96,8 +109,15 @@ export async function POST(req: Request) {
 
   let raw: unknown;
   try {
-    raw = await req.json();
-  } catch {
+    raw = await readJsonBody(req, MAX_ENVELOPE_BYTES);
+  } catch (error: unknown) {
+    if (req.signal.aborted) throw error;
+    if (error instanceof RequestTooLargeError) {
+      return NextResponse.json(
+        { error: "Request body too large" },
+        { status: 413 },
+      );
+    }
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
@@ -136,13 +156,22 @@ export async function POST(req: Request) {
   // Ask for an unencoded body so the response byte cap is measured accurately.
   outboundHeaders["accept-encoding"] = "identity";
 
-  let bodyBuffer: Buffer | undefined;
-  if (body !== undefined && method !== "GET" && method !== "HEAD") {
-    bodyBuffer = Buffer.from(
-      body,
-      bodyEncoding === "base64" ? "base64" : "utf8",
-    );
+  let decodedBody: Buffer | undefined;
+  try {
+    if (body !== undefined) {
+      decodedBody = decodePlaygroundBody(body, bodyEncoding);
+    }
+  } catch (error: unknown) {
+    if (error instanceof RequestTooLargeError) {
+      return NextResponse.json(
+        { error: "Request payload too large" },
+        { status: 413 },
+      );
+    }
+    throw error;
   }
+  const bodyBuffer =
+    method !== "GET" && method !== "HEAD" ? decodedBody : undefined;
 
   try {
     const result = await guardedFetch(targetUrl, entry, {

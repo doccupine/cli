@@ -1,8 +1,13 @@
 import fs from "fs-extra";
+import { randomBytes } from "node:crypto";
+import { constants } from "node:fs";
+import { open, unlink, type FileHandle } from "node:fs/promises";
 import path from "path";
 import { execSync } from "child_process";
 import chalk from "chalk";
 import matter from "gray-matter";
+
+import { assertClaimedOutputPath } from "./output-safety.js";
 
 export type PackageManagerName = "pnpm" | "npm";
 
@@ -14,7 +19,44 @@ export interface ResolvedPackageManager {
   bin: string;
 }
 
-let atomicWriteCounter = 0;
+async function createAtomicTempFile(
+  filePath: string,
+): Promise<{ handle: FileHandle; tempPath: string }> {
+  const noFollow =
+    typeof constants.O_NOFOLLOW === "number" ? constants.O_NOFOLLOW : 0;
+  const flags =
+    constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | noFollow;
+
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const tempPath = path.join(
+      path.dirname(filePath),
+      `.doccupine-${process.pid}-${randomBytes(16).toString("hex")}.tmp`,
+    );
+    try {
+      return { handle: await open(tempPath, flags, 0o666), tempPath };
+    } catch (error) {
+      const code =
+        error && typeof error === "object" && "code" in error
+          ? String(error.code)
+          : "";
+      if (code !== "EEXIST") throw error;
+    }
+  }
+
+  throw new Error(`Unable to create a unique temporary file for ${filePath}`);
+}
+
+async function removeAtomicTempFile(tempPath: string): Promise<void> {
+  try {
+    await unlink(tempPath);
+  } catch (error) {
+    const code =
+      error && typeof error === "object" && "code" in error
+        ? String(error.code)
+        : "";
+    if (code !== "ENOENT") throw error;
+  }
+}
 
 /**
  * Writes a generated file without exposing a partially-written version to the
@@ -22,12 +64,24 @@ let atomicWriteCounter = 0;
  */
 export async function writeFileAtomic(
   filePath: string,
-  content: string,
+  content: string | Uint8Array,
 ): Promise<void> {
+  assertClaimedOutputPath(filePath);
   await fs.ensureDir(path.dirname(filePath));
-  const tempPath = `${filePath}.${process.pid}.${atomicWriteCounter++}.tmp`;
+  assertClaimedOutputPath(filePath);
+
+  let handle: FileHandle | undefined;
+  let tempPath: string | undefined;
   try {
-    await fs.writeFile(tempPath, content, "utf8");
+    ({ handle, tempPath } = await createAtomicTempFile(filePath));
+    if (typeof content === "string") {
+      await handle.writeFile(content, "utf8");
+    } else {
+      await handle.writeFile(content);
+    }
+    await handle.close();
+    handle = undefined;
+    assertClaimedOutputPath(filePath);
     try {
       // Atomic replacement on POSIX: the destination is never absent or
       // partially written, so dev-server watchers see one coherent change.
@@ -47,7 +101,20 @@ export async function writeFileAtomic(
       return;
     }
   } catch (error) {
-    await fs.remove(tempPath);
+    if (handle) {
+      try {
+        await handle.close();
+      } catch {
+        // Preserve the original write/open error.
+      }
+    }
+    if (tempPath) {
+      try {
+        await removeAtomicTempFile(tempPath);
+      } catch {
+        // Preserve the original error; cleanup is best effort.
+      }
+    }
     throw error;
   }
 }

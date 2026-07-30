@@ -1,5 +1,7 @@
 import chokidar, { FSWatcher } from "chokidar";
 import fs from "fs-extra";
+import { constants } from "node:fs";
+import { open, type FileHandle } from "node:fs/promises";
 import path from "path";
 
 import chalk from "chalk";
@@ -17,6 +19,7 @@ import {
 import { GeneratedArtifacts } from "./lib/generated-artifacts.js";
 import {
   claimOutputDirectory,
+  isPathInside,
   resolveOutputPath,
   resolveWithin,
 } from "./lib/output-safety.js";
@@ -84,6 +87,16 @@ function isManagedPublicArtifact(relativePath: string): boolean {
   return PUBLIC_AGGREGATE_PATHS.has(normalized) || normalized.endsWith(".md");
 }
 
+function errorCode(error: unknown): string | undefined {
+  return error && typeof error === "object" && "code" in error
+    ? String(error.code)
+    : undefined;
+}
+
+function sameFileIdentity(left: fs.Stats, right: fs.Stats): boolean {
+  return left.dev === right.dev && left.ino === right.ino;
+}
+
 export class MDXToNextJSGenerator {
   private watchDir: string;
   private outputDir: string;
@@ -135,6 +148,306 @@ export class MDXToNextJSGenerator {
 
   private outputPath(...segments: string[]): string {
     return resolveOutputPath(this.outputDir, ...segments);
+  }
+
+  private publicOutputFilePath(relativePath: string): string {
+    const parent = path.dirname(relativePath);
+    const outputParent =
+      parent === "."
+        ? this.outputPath("public")
+        : this.outputPath("public", parent);
+    return resolveWithin(outputParent, path.basename(relativePath));
+  }
+
+  private sourcePathError(label: string, sourcePath: string, detail: string) {
+    return new Error(
+      `Refusing to use ${label} at ${sourcePath}: ${detail}. Replace it with a real file or directory inside the source root.`,
+    );
+  }
+
+  private async realSourceRoot(
+    root: string,
+    label: string,
+    rejectRootSymlink: boolean,
+  ): Promise<string> {
+    let rootStat: fs.Stats;
+    try {
+      rootStat = await fs.lstat(root);
+    } catch (error) {
+      if (errorCode(error) === "ENOENT") {
+        throw this.sourcePathError(
+          label,
+          root,
+          "the source root does not exist",
+        );
+      }
+      throw error;
+    }
+    if (rootStat.isSymbolicLink() && rejectRootSymlink) {
+      throw this.sourcePathError(
+        label,
+        root,
+        "the source root is a symbolic link",
+      );
+    }
+
+    const realRoot = await fs.realpath(root);
+    if (!(await fs.stat(realRoot)).isDirectory()) {
+      throw this.sourcePathError(
+        label,
+        root,
+        "the source root is not a directory",
+      );
+    }
+    return realRoot;
+  }
+
+  private async readSafeSourceFile(
+    root: string,
+    sourcePath: string,
+    label: string,
+    rejectRootSymlink: boolean,
+  ): Promise<{ data: Buffer; stat: fs.Stats }> {
+    const resolvedRoot = path.resolve(root);
+    const resolvedSource = path.resolve(sourcePath);
+    if (!isPathInside(resolvedRoot, resolvedSource)) {
+      throw this.sourcePathError(
+        label,
+        resolvedSource,
+        `the path is outside ${resolvedRoot}`,
+      );
+    }
+
+    const realRoot = await this.realSourceRoot(
+      resolvedRoot,
+      label,
+      rejectRootSymlink,
+    );
+    const relativePath = path.relative(resolvedRoot, resolvedSource);
+    const components = relativePath.split(path.sep).filter(Boolean);
+    let currentPath = resolvedRoot;
+    for (const [index, component] of components.entries()) {
+      currentPath = path.join(currentPath, component);
+      let stat: fs.Stats;
+      try {
+        stat = await fs.lstat(currentPath);
+      } catch (error) {
+        if (errorCode(error) === "ENOENT") {
+          throw this.sourcePathError(
+            label,
+            currentPath,
+            "the path does not exist",
+          );
+        }
+        throw error;
+      }
+      if (stat.isSymbolicLink()) {
+        throw this.sourcePathError(
+          label,
+          currentPath,
+          "the path is a symbolic link",
+        );
+      }
+      if (index < components.length - 1 && !stat.isDirectory()) {
+        throw this.sourcePathError(
+          label,
+          currentPath,
+          "a path component is not a directory",
+        );
+      }
+    }
+
+    const sourceStat = await fs.lstat(resolvedSource);
+    if (!sourceStat.isFile()) {
+      throw this.sourcePathError(
+        label,
+        resolvedSource,
+        "expected a regular file",
+      );
+    }
+    const realSource = await fs.realpath(resolvedSource);
+    if (!isPathInside(realRoot, realSource)) {
+      throw this.sourcePathError(
+        label,
+        resolvedSource,
+        `the real path ${realSource} is outside ${realRoot}`,
+      );
+    }
+
+    const noFollow =
+      typeof constants.O_NOFOLLOW === "number" ? constants.O_NOFOLLOW : 0;
+    let handle: FileHandle;
+    try {
+      handle = await open(resolvedSource, constants.O_RDONLY | noFollow);
+    } catch (error) {
+      if (errorCode(error) === "ELOOP") {
+        throw this.sourcePathError(
+          label,
+          resolvedSource,
+          "the final path became a symbolic link while it was being opened",
+        );
+      }
+      throw error;
+    }
+
+    try {
+      const openedStat = await handle.stat();
+      if (!openedStat.isFile()) {
+        throw this.sourcePathError(
+          label,
+          resolvedSource,
+          "the opened source is not a regular file",
+        );
+      }
+
+      let currentStat: fs.Stats;
+      let currentRealSource: string;
+      let currentRealStat: fs.Stats;
+      try {
+        currentStat = await fs.lstat(resolvedSource);
+        currentRealSource = await fs.realpath(resolvedSource);
+        currentRealStat = await fs.lstat(currentRealSource);
+      } catch {
+        throw this.sourcePathError(
+          label,
+          resolvedSource,
+          "the path changed while it was being opened",
+        );
+      }
+
+      if (!isPathInside(realRoot, currentRealSource)) {
+        throw this.sourcePathError(
+          label,
+          resolvedSource,
+          `the real path ${currentRealSource} is outside ${realRoot}`,
+        );
+      }
+      if (
+        currentStat.isSymbolicLink() ||
+        !currentStat.isFile() ||
+        !currentRealStat.isFile() ||
+        !sameFileIdentity(sourceStat, openedStat) ||
+        !sameFileIdentity(openedStat, currentStat) ||
+        !sameFileIdentity(openedStat, currentRealStat)
+      ) {
+        throw this.sourcePathError(
+          label,
+          resolvedSource,
+          "the source identity changed while it was being opened",
+        );
+      }
+
+      return { data: await handle.readFile(), stat: openedStat };
+    } finally {
+      await handle.close();
+    }
+  }
+
+  private async readMdxSourceFile(
+    filePath: string,
+  ): Promise<{ content: string; stat: fs.Stats }> {
+    if (!filePath.toLowerCase().endsWith(".mdx")) {
+      throw this.sourcePathError(
+        "documentation source",
+        filePath,
+        "expected an .mdx file",
+      );
+    }
+    const { data, stat } = await this.readSafeSourceFile(
+      this.watchDir,
+      path.resolve(this.watchDir, filePath),
+      "documentation source",
+      false,
+    );
+    return { content: data.toString("utf8"), stat };
+  }
+
+  private async ensureSafeStarterPath(relativePath: string): Promise<string> {
+    const resolvedRoot = path.resolve(this.watchDir);
+    const targetPath = path.resolve(resolvedRoot, relativePath);
+    if (!isPathInside(resolvedRoot, targetPath)) {
+      throw this.sourcePathError(
+        "documentation source",
+        targetPath,
+        `the starter path is outside ${resolvedRoot}`,
+      );
+    }
+
+    const realRoot = await this.realSourceRoot(
+      resolvedRoot,
+      "documentation source",
+      false,
+    );
+    const parentRelativePath = path.relative(
+      resolvedRoot,
+      path.dirname(targetPath),
+    );
+    let currentPath = resolvedRoot;
+    for (const component of parentRelativePath
+      .split(path.sep)
+      .filter(Boolean)) {
+      currentPath = path.join(currentPath, component);
+      try {
+        await fs.mkdir(currentPath);
+      } catch (error) {
+        if (errorCode(error) !== "EEXIST") throw error;
+      }
+      const stat = await fs.lstat(currentPath);
+      if (stat.isSymbolicLink() || !stat.isDirectory()) {
+        throw this.sourcePathError(
+          "documentation source",
+          currentPath,
+          "a starter directory component is not a real directory",
+        );
+      }
+      const realPath = await fs.realpath(currentPath);
+      if (!isPathInside(realRoot, realPath)) {
+        throw this.sourcePathError(
+          "documentation source",
+          currentPath,
+          `the real path ${realPath} is outside ${realRoot}`,
+        );
+      }
+    }
+
+    try {
+      const stat = await fs.lstat(targetPath);
+      const detail = stat.isSymbolicLink()
+        ? "the starter file is a symbolic link"
+        : "the starter file appeared after the empty-source check";
+      throw this.sourcePathError("documentation source", targetPath, detail);
+    } catch (error) {
+      if (errorCode(error) !== "ENOENT") throw error;
+    }
+    return targetPath;
+  }
+
+  private async copyRegularPublicFile(
+    publicDir: string,
+    sourcePath: string,
+    destPath: string,
+  ): Promise<void> {
+    const { data } = await this.readSafeSourceFile(
+      publicDir,
+      sourcePath,
+      "public source",
+      true,
+    );
+    await writeFileAtomic(destPath, data);
+  }
+
+  private async copyRootSourceFile(
+    sourcePath: string,
+    destPath: string,
+    label: string,
+  ): Promise<void> {
+    const { data } = await this.readSafeSourceFile(
+      this.rootDir,
+      sourcePath,
+      label,
+      false,
+    );
+    await writeFileAtomic(destPath, data);
   }
 
   private enqueueMutation(label: string, task: () => Promise<void>): void {
@@ -248,8 +561,7 @@ export class MDXToNextJSGenerator {
     if ((await this.getAllMDXFiles()).length > 0) return;
 
     for (const [filePath, content] of Object.entries(startingDocsStructure)) {
-      const fullPath = path.join(this.watchDir, filePath);
-      await fs.ensureDir(path.dirname(fullPath));
+      const fullPath = await this.ensureSafeStarterPath(filePath);
       await writeFileAtomic(fullPath, String(content));
     }
   }
@@ -264,7 +576,7 @@ export class MDXToNextJSGenerator {
       console.log(chalk.gray(`  Checking ${configFile}...`));
 
       if (await fs.pathExists(sourcePath)) {
-        await fs.copy(sourcePath, destPath);
+        await this.copyRootSourceFile(sourcePath, destPath, "config source");
         console.log(chalk.green(`  ✓ Copied ${configFile} to Next.js app`));
       } else {
         console.log(chalk.gray(`  ✗ ${configFile} not found, skipping`));
@@ -279,7 +591,7 @@ export class MDXToNextJSGenerator {
     const destPath = this.outputPath(this.fontConfigFile);
 
     if (await fs.pathExists(sourcePath)) {
-      await fs.copy(sourcePath, destPath);
+      await this.copyRootSourceFile(sourcePath, destPath, "font source");
       console.log(
         chalk.green(`  ✓ Copied ${this.fontConfigFile} to Next.js app`),
       );
@@ -334,7 +646,7 @@ export class MDXToNextJSGenerator {
     const destPath = this.outputPath(this.analyticsConfigFile);
 
     if (await fs.pathExists(sourcePath)) {
-      await fs.copy(sourcePath, destPath);
+      await this.copyRootSourceFile(sourcePath, destPath, "analytics source");
       console.log(
         chalk.green(`  ✓ Copied ${this.analyticsConfigFile} to Next.js app`),
       );
@@ -434,8 +746,7 @@ export class MDXToNextJSGenerator {
     let defaultSectionLabel = "Docs";
 
     for (const file of files) {
-      const fullPath = path.join(this.watchDir, file);
-      const content = await fs.readFile(fullPath, "utf8");
+      const { content } = await this.readMdxSourceFile(file);
       const { data: frontmatter } = safeMatter(content, file);
 
       if (
@@ -630,7 +941,7 @@ export class MDXToNextJSGenerator {
       const destPath = this.outputPath(fileName);
 
       try {
-        await fs.copy(sourcePath, destPath);
+        await this.copyRootSourceFile(sourcePath, destPath, "config source");
         console.log(chalk.green(`📋 Updated ${fileName} in Next.js app`));
 
         if (fileName === "sections.json") {
@@ -690,7 +1001,7 @@ export class MDXToNextJSGenerator {
     const destPath = this.outputPath(this.fontConfigFile);
 
     try {
-      await fs.copy(sourcePath, destPath);
+      await this.copyRootSourceFile(sourcePath, destPath, "font source");
       console.log(
         chalk.green(`📋 Updated ${this.fontConfigFile} in Next.js app`),
       );
@@ -731,7 +1042,7 @@ export class MDXToNextJSGenerator {
     const destPath = this.outputPath(this.analyticsConfigFile);
 
     try {
-      await fs.copy(sourcePath, destPath);
+      await this.copyRootSourceFile(sourcePath, destPath, "analytics source");
       console.log(
         chalk.green(`📋 Updated ${this.analyticsConfigFile} in Next.js app`),
       );
@@ -796,16 +1107,75 @@ export class MDXToNextJSGenerator {
 
   async copyPublicFiles() {
     const publicDir = path.join(this.rootDir, "public");
-    const destDir = this.outputPath("public");
 
     console.log(chalk.blue(`🔍 Checking for public directory...`));
 
-    if (await fs.pathExists(publicDir)) {
-      await fs.copy(publicDir, destDir);
-      console.log(chalk.green(`  ✓ Copied public directory to Next.js app`));
-    } else {
+    let publicStat: fs.Stats;
+    try {
+      publicStat = await fs.lstat(publicDir);
+    } catch (error) {
+      if (errorCode(error) !== "ENOENT") throw error;
       console.log(chalk.gray(`  ✗ public directory not found, skipping`));
+      return;
     }
+    if (publicStat.isSymbolicLink() || !publicStat.isDirectory()) {
+      throw this.sourcePathError(
+        "public source",
+        publicDir,
+        "the public source root must be a real directory",
+      );
+    }
+
+    const realPublicDir = await this.realSourceRoot(
+      publicDir,
+      "public source",
+      true,
+    );
+    const files: string[] = [];
+    const scanDir = async (directory: string, relativePath = "") => {
+      const entries = await fs.readdir(directory, { withFileTypes: true });
+      for (const entry of entries) {
+        const sourcePath = path.join(directory, entry.name);
+        const entryRelativePath = path.join(relativePath, entry.name);
+        const stat = await fs.lstat(sourcePath);
+        if (stat.isSymbolicLink()) {
+          throw this.sourcePathError(
+            "public source",
+            sourcePath,
+            "the path is a symbolic link",
+          );
+        }
+        const realPath = await fs.realpath(sourcePath);
+        if (!isPathInside(realPublicDir, realPath)) {
+          throw this.sourcePathError(
+            "public source",
+            sourcePath,
+            `the real path ${realPath} is outside ${realPublicDir}`,
+          );
+        }
+        if (stat.isDirectory()) {
+          await scanDir(sourcePath, entryRelativePath);
+        } else if (stat.isFile()) {
+          files.push(entryRelativePath);
+        } else {
+          throw this.sourcePathError(
+            "public source",
+            sourcePath,
+            "expected a regular file or directory",
+          );
+        }
+      }
+    };
+
+    await scanDir(publicDir);
+    for (const relativePath of files) {
+      await this.copyRegularPublicFile(
+        publicDir,
+        path.join(publicDir, relativePath),
+        this.publicOutputFilePath(relativePath),
+      );
+    }
+    console.log(chalk.green(`  ✓ Copied public directory to Next.js app`));
   }
 
   async handlePublicFileChange(filePath: string) {
@@ -814,11 +1184,10 @@ export class MDXToNextJSGenerator {
     const destRelativePath = isPublicAggregate(relativePath)
       ? normalizePublicArtifactPath(relativePath)
       : relativePath;
-    const destPath = this.outputPath("public", destRelativePath);
+    const destPath = this.publicOutputFilePath(destRelativePath);
 
     try {
-      await fs.ensureDir(path.dirname(destPath));
-      await fs.copy(filePath, destPath);
+      await this.copyRegularPublicFile(publicDir, filePath, destPath);
       console.log(
         chalk.green(`📋 Updated public/${relativePath} in Next.js app`),
       );
@@ -830,6 +1199,7 @@ export class MDXToNextJSGenerator {
         chalk.red(`❌ Error copying public/${relativePath}:`),
         error,
       );
+      throw error;
     }
   }
 
@@ -871,6 +1241,7 @@ export class MDXToNextJSGenerator {
     this.watcher = chokidar.watch(this.watchDir, {
       persistent: true,
       ignoreInitial: true,
+      followSymlinks: false,
       ignored: (filePath: string, stats?: fs.Stats) => {
         const isFile = stats?.isFile() ?? path.extname(filePath) !== "";
         const fileName = path.basename(filePath);
@@ -1078,6 +1449,7 @@ export class MDXToNextJSGenerator {
     this.publicWatcher = chokidar.watch(publicDir, {
       persistent: true,
       ignoreInitial: true,
+      followSymlinks: false,
     });
 
     this.publicWatcher
@@ -1117,8 +1489,7 @@ export class MDXToNextJSGenerator {
   }
 
   private async parseMDXFile(file: string): Promise<PageMeta> {
-    const fullPath = path.join(this.watchDir, file);
-    const content = await fs.readFile(fullPath, "utf8");
+    const { content, stat } = await this.readMdxSourceFile(file);
     const { data: frontmatter } = safeMatter(content, file);
 
     const { sectionSlug, pageSlug } = this.determineSectionForFile(
@@ -1136,12 +1507,7 @@ export class MDXToNextJSGenerator {
       }
     }
     if (!lastModified) {
-      try {
-        const stats = await fs.stat(fullPath);
-        lastModified = stats.mtime.toISOString();
-      } catch {
-        // ignore
-      }
+      lastModified = stat.mtime.toISOString();
     }
 
     // A hand-written page that embeds an endpoint via `openapi:` frontmatter
@@ -1248,8 +1614,7 @@ export class MDXToNextJSGenerator {
    * end instead of once per file (which is what made large builds O(n²)).
    */
   private async writePageForFile(filePath: string): Promise<void> {
-    const fullPath = path.join(this.watchDir, filePath);
-    const content = await fs.readFile(fullPath, "utf8");
+    const { content } = await this.readMdxSourceFile(filePath);
     const { data: frontmatter, content: mdxContent } = safeMatter(
       content,
       filePath,
@@ -1327,6 +1692,8 @@ export class MDXToNextJSGenerator {
 
   async handleFileChange(action: string, filePath: string) {
     console.log(chalk.cyan(`📝 File ${action}: ${filePath}`));
+
+    await this.readMdxSourceFile(filePath);
 
     try {
       // Validate the complete route set before writing this page so a collision
@@ -1423,21 +1790,58 @@ export class MDXToNextJSGenerator {
 
   async getAllMDXFiles(): Promise<string[]> {
     const files: string[] = [];
+    const realWatchDir = await this.realSourceRoot(
+      this.watchDir,
+      "documentation source",
+      false,
+    );
 
-    async function scanDir(dir: string, relativePath = "") {
+    const scanDir = async (dir: string, relativePath = "") => {
       const entries = await fs.readdir(dir, { withFileTypes: true });
 
       for (const entry of entries) {
         const fullPath = path.join(dir, entry.name);
         const relPath = path.join(relativePath, entry.name);
+        const stat = await fs.lstat(fullPath);
 
-        if (entry.isDirectory()) {
+        if (stat.isSymbolicLink()) {
+          let linksToDirectory = false;
+          try {
+            linksToDirectory = (await fs.stat(fullPath)).isDirectory();
+          } catch (error) {
+            if (errorCode(error) !== "ENOENT") throw error;
+          }
+          if (entry.name.endsWith(".mdx") || linksToDirectory) {
+            throw this.sourcePathError(
+              "documentation source",
+              fullPath,
+              "the path is a symbolic link",
+            );
+          }
+          continue;
+        }
+        const realPath = await fs.realpath(fullPath);
+        if (!isPathInside(realWatchDir, realPath)) {
+          throw this.sourcePathError(
+            "documentation source",
+            fullPath,
+            `the real path ${realPath} is outside ${realWatchDir}`,
+          );
+        }
+
+        if (stat.isDirectory()) {
           await scanDir(fullPath, relPath);
-        } else if (entry.name.endsWith(".mdx")) {
+        } else if (stat.isFile() && entry.name.endsWith(".mdx")) {
           files.push(relPath);
+        } else if (!stat.isFile() && entry.name.endsWith(".mdx")) {
+          throw this.sourcePathError(
+            "documentation source",
+            fullPath,
+            "expected a regular .mdx file",
+          );
         }
       }
-    }
+    };
 
     await scanDir(this.watchDir);
     return files;
@@ -2038,8 +2442,7 @@ export default function Page() {
 
     for (const file of files) {
       if (file === "index.mdx" || file === "./index.mdx") {
-        const fullPath = path.join(this.watchDir, file);
-        const content = await fs.readFile(fullPath, "utf8");
+        const { content } = await this.readMdxSourceFile(file);
         const { data: frontmatter, content: mdxContent } = safeMatter(
           content,
           file,
@@ -2427,8 +2830,7 @@ export default function Page() {
     if (!page.path.endsWith(".mdx")) {
       return { ...page, body: this.apiRegistry.bodyForSlug(page.slug) ?? "" };
     }
-    const fullPath = path.join(this.watchDir, page.path);
-    const raw = await fs.readFile(fullPath, "utf8");
+    const { content: raw } = await this.readMdxSourceFile(page.path);
     const { content: body } = safeMatter(raw, page.path);
     return { ...page, body };
   }
@@ -2438,22 +2840,62 @@ export default function Page() {
   ): Promise<string | null> {
     const sourcePublicDir = path.join(this.rootDir, "public");
     const normalized = relativePath.replace(/\\/g, "/");
-    const exactPath = resolveWithin(sourcePublicDir, normalized);
-    if (await fs.pathExists(exactPath)) return exactPath;
+    resolveWithin(sourcePublicDir, normalized);
+
+    let rootStat: fs.Stats;
+    try {
+      rootStat = await fs.lstat(sourcePublicDir);
+    } catch (error) {
+      if (errorCode(error) === "ENOENT") return null;
+      throw error;
+    }
+    if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) {
+      throw this.sourcePathError(
+        "public source",
+        sourcePublicDir,
+        "the public source root must be a real directory",
+      );
+    }
+    const realPublicDir = await this.realSourceRoot(
+      sourcePublicDir,
+      "public source",
+      true,
+    );
 
     let currentPath = sourcePublicDir;
-    for (const part of normalized.split("/")) {
+    const parts = normalized.split("/").filter(Boolean);
+    for (const [index, part] of parts.entries()) {
       let entries: string[];
       try {
         entries = await fs.readdir(currentPath);
       } catch {
         return null;
       }
-      const actualName = entries.find(
-        (entry) => entry.toLowerCase() === part.toLowerCase(),
-      );
+      const actualName =
+        entries.find((entry) => entry === part) ??
+        entries.find((entry) => entry.toLowerCase() === part.toLowerCase());
       if (!actualName) return null;
       currentPath = path.join(currentPath, actualName);
+      const stat = await fs.lstat(currentPath);
+      if (stat.isSymbolicLink()) {
+        throw this.sourcePathError(
+          "public source",
+          currentPath,
+          "the path is a symbolic link",
+        );
+      }
+      if (index < parts.length - 1 && !stat.isDirectory()) return null;
+    }
+
+    const stat = await fs.lstat(currentPath);
+    if (!stat.isFile()) return null;
+    const realPath = await fs.realpath(currentPath);
+    if (!isPathInside(realPublicDir, realPath)) {
+      throw this.sourcePathError(
+        "public source",
+        currentPath,
+        `the real path ${realPath} is outside ${realPublicDir}`,
+      );
     }
     return currentPath;
   }
@@ -2463,15 +2905,18 @@ export default function Page() {
     content: string,
   ): Promise<void> {
     const sourcePath = await this.findSourcePublicAsset(relativePath);
-    const targetPath = this.outputPath("public", relativePath);
+    const targetPath = this.publicOutputFilePath(relativePath);
     if (sourcePath) {
       console.warn(
         chalk.yellow(
           `⚠️ Skipping generated public/${relativePath}; a project public asset owns that path`,
         ),
       );
-      await fs.ensureDir(path.dirname(targetPath));
-      await fs.copy(sourcePath, targetPath);
+      await this.copyRegularPublicFile(
+        path.join(this.rootDir, "public"),
+        sourcePath,
+        targetPath,
+      );
       return;
     }
 
@@ -2535,7 +2980,7 @@ export default function Page() {
     // MCP discovery manifest. Needs an absolute URL, so it only exists when
     // config.json declares the site url; it is pruned if the url is removed.
     const mcpRelativePath = ".well-known/mcp.json";
-    const mcpJsonPath = resolveOutputPath(publicDir, mcpRelativePath);
+    const mcpJsonPath = this.publicOutputFilePath(mcpRelativePath);
     const sourceMcpJsonPath = await this.findSourcePublicAsset(mcpRelativePath);
     if (sourceMcpJsonPath) {
       console.warn(
@@ -2543,8 +2988,11 @@ export default function Page() {
           `⚠️ Skipping generated public/${mcpRelativePath}; a project public asset owns that path`,
         ),
       );
-      await fs.ensureDir(path.dirname(mcpJsonPath));
-      await fs.copy(sourceMcpJsonPath, mcpJsonPath);
+      await this.copyRegularPublicFile(
+        path.join(this.rootDir, "public"),
+        sourceMcpJsonPath,
+        mcpJsonPath,
+      );
     } else if (baseUrl) {
       const mcpJson =
         JSON.stringify(
@@ -2577,12 +3025,15 @@ export default function Page() {
               `⚠️ Skipping generated public/${relPath}; a project public asset owns that path`,
             ),
           );
-          const targetPath = resolveOutputPath(publicDir, relPath);
-          await fs.ensureDir(path.dirname(targetPath));
-          await fs.copy(sourceAssetPath, targetPath);
+          const targetPath = this.publicOutputFilePath(relPath);
+          await this.copyRegularPublicFile(
+            path.join(this.rootDir, "public"),
+            sourceAssetPath,
+            targetPath,
+          );
           return;
         }
-        const targetPath = resolveOutputPath(publicDir, relPath);
+        const targetPath = this.publicOutputFilePath(relPath);
         await fs.ensureDir(path.dirname(targetPath));
         await writeFileAtomic(targetPath, llmsPageTemplate(page, baseUrl));
         nextRelativePaths.add(relPath);

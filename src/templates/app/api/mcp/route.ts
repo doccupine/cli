@@ -17,10 +17,9 @@ import {
 import type { MCPToolName } from "@/services/mcp";
 import { rateLimit } from "@/utils/rateLimit";
 import { isMcpRequestAuthorized } from "@/lib/access";
+import { readJsonBody, RequestTooLargeError } from "@/utils/requestBody";
 
 const MAX_PROTOCOL_MESSAGES = 20;
-
-class RequestTooLargeError extends Error {}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -28,40 +27,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function jsonByteLength(value: unknown): number {
   return new TextEncoder().encode(JSON.stringify(value) ?? "null").byteLength;
-}
-
-async function readJsonBody(req: Request): Promise<unknown> {
-  const declaredLength = Number(req.headers.get("content-length"));
-  if (
-    Number.isFinite(declaredLength) &&
-    declaredLength > MCP_MAX_REQUEST_BYTES
-  ) {
-    throw new RequestTooLargeError();
-  }
-
-  if (!req.body) throw new SyntaxError("Missing body");
-  const reader = req.body.getReader();
-  const decoder = new TextDecoder();
-  let size = 0;
-  let text = "";
-
-  try {
-    while (true) {
-      req.signal.throwIfAborted();
-      const { done, value } = await reader.read();
-      if (done) break;
-      size += value.byteLength;
-      if (size > MCP_MAX_REQUEST_BYTES) {
-        await reader.cancel();
-        throw new RequestTooLargeError();
-      }
-      text += decoder.decode(value, { stream: true });
-    }
-    text += decoder.decode();
-    return JSON.parse(text);
-  } finally {
-    reader.releaseLock();
-  }
 }
 
 function protocolToolCallError(body: unknown): string | null {
@@ -272,8 +237,9 @@ export async function POST(req: Request) {
 
   let body: unknown;
   try {
-    body = await readJsonBody(req);
+    body = await readJsonBody(req, MCP_MAX_REQUEST_BYTES);
   } catch (error: unknown) {
+    if (req.signal.aborted) throw error;
     if (error instanceof RequestTooLargeError) {
       return NextResponse.json(
         { error: "Request body too large" },

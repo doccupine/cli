@@ -170,15 +170,15 @@ describe("OpenAPI safety", () => {
     }
   });
 
-  it("allows recursive same-directory local JSON and YAML references", async () => {
+  it("allows recursive nested local JSON and YAML references", async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "doccupine-openapi-"));
     tempDirs.push(root);
-    await fs.writeJson(path.join(root, "common.json"), {
+    await fs.outputJson(path.join(root, "schemas", "common", "types.json"), {
       Identifier: { type: "string" },
     });
-    await fs.writeFile(
-      path.join(root, "schemas.yaml"),
-      "schemas:\n  Item:\n    type: object\n    properties:\n      id:\n        $ref: './common.json#/Identifier'\n",
+    await fs.outputFile(
+      path.join(root, "schemas", "models", "item.yaml"),
+      "schemas:\n  Item:\n    type: object\n    properties:\n      id:\n        $ref: '../common/types.json#/Identifier'\n",
     );
     await fs.writeJson(path.join(root, "openapi.json"), {
       openapi: "3.1.0",
@@ -191,7 +191,7 @@ describe("OpenAPI safety", () => {
               {
                 name: "item",
                 in: "query",
-                schema: { $ref: "./schemas.yaml#/schemas/Item" },
+                schema: { $ref: "./schemas/models/item.yaml#/schemas/Item" },
               },
             ],
             responses: { 200: { description: "OK" } },
@@ -211,6 +211,50 @@ describe("OpenAPI safety", () => {
       properties: { id: { type: "string" } },
     });
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("allows an explicitly configured root spec regardless of its filename", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "doccupine-openapi-"));
+    tempDirs.push(root);
+    await fs.writeJson(path.join(root, ".configured-openapi"), {
+      openapi: "3.1.0",
+      info: { title: "Configured root", version: "1" },
+      paths: {},
+    });
+
+    await expect(
+      new OpenApiRegistry().load(
+        [{ name: "configured", file: ".configured-openapi" }],
+        root,
+      ),
+    ).resolves.toBeUndefined();
+  });
+
+  it.each([
+    [".env", "dotfile"],
+    [".schema.yaml", "dotfile"],
+    [".schemas/item.yaml", "dot-directory"],
+    ["schema.txt", ".json, .yaml, or .yml"],
+  ])("rejects restricted external reference %s", async (reference, reason) => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "doccupine-openapi-"));
+    tempDirs.push(root);
+    await fs.outputFile(
+      path.join(root, reference),
+      "SECRET_VALUE=do-not-parse",
+    );
+    await fs.writeJson(path.join(root, "openapi.json"), {
+      openapi: "3.1.0",
+      info: { title: "Restricted ref", version: "1" },
+      components: { schemas: { Restricted: { $ref: `./${reference}` } } },
+      paths: {},
+    });
+
+    await expect(
+      new OpenApiRegistry().load(
+        [{ name: "restricted", file: "openapi.json" }],
+        root,
+      ),
+    ).rejects.toThrow(reason);
   });
 
   it("rejects root specs and references that escape rootDir", async () => {
@@ -235,24 +279,43 @@ describe("OpenAPI safety", () => {
     const registry = new OpenApiRegistry();
     await expect(
       registry.load([{ name: "escape", file: "openapi.json" }], root),
-    ).rejects.toThrow("resolves outside rootDir");
+    ).rejects.toThrow("configured root spec directory");
     await expect(
       registry.load([{ name: "escape", file: "../outside.json" }], root),
     ).rejects.toThrow("resolves outside rootDir");
   });
 
+  it("rejects parent-directory sibling references inside rootDir", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "doccupine-openapi-"));
+    tempDirs.push(root);
+    const specDir = path.join(root, "api");
+    await fs.ensureDir(specDir);
+    await fs.writeJson(path.join(root, "shared.json"), { type: "string" });
+    await fs.writeJson(path.join(specDir, "openapi.json"), {
+      openapi: "3.1.0",
+      info: { title: "Sibling ref", version: "1" },
+      components: { schemas: { Shared: { $ref: "../shared.json" } } },
+      paths: {},
+    });
+
+    await expect(
+      new OpenApiRegistry().load(
+        [{ name: "sibling", file: "api/openapi.json" }],
+        root,
+      ),
+    ).rejects.toThrow("must stay within the configured root spec directory");
+  });
+
   it("rejects external-reference symlink escapes where supported", async () => {
-    const parent = await fs.mkdtemp(
-      path.join(os.tmpdir(), "doccupine-openapi-parent-"),
-    );
-    tempDirs.push(parent);
-    const root = path.join(parent, "docs");
-    await fs.ensureDir(root);
-    await fs.writeJson(path.join(parent, "outside.json"), { type: "string" });
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "doccupine-openapi-"));
+    tempDirs.push(root);
+    const specDir = path.join(root, "api");
+    await fs.ensureDir(specDir);
+    await fs.writeJson(path.join(root, "outside.json"), { type: "string" });
     try {
       await fs.symlink(
-        path.join(parent, "outside.json"),
-        path.join(root, "linked.json"),
+        path.join(root, "outside.json"),
+        path.join(specDir, "linked.json"),
       );
     } catch (error) {
       if (
@@ -265,7 +328,7 @@ describe("OpenAPI safety", () => {
       }
       throw error;
     }
-    await fs.writeJson(path.join(root, "openapi.json"), {
+    await fs.writeJson(path.join(specDir, "openapi.json"), {
       openapi: "3.1.0",
       info: { title: "Symlink ref", version: "1" },
       components: { schemas: { Outside: { $ref: "./linked.json" } } },
@@ -274,10 +337,10 @@ describe("OpenAPI safety", () => {
 
     await expect(
       new OpenApiRegistry().load(
-        [{ name: "symlink", file: "openapi.json" }],
+        [{ name: "symlink", file: "api/openapi.json" }],
         root,
       ),
-    ).rejects.toThrow("resolves outside rootDir");
+    ).rejects.toThrow("resolves outside the configured root spec directory");
   });
 
   it.each(["file:///tmp/secret.yaml", "https://example.com/schema.yaml"])(

@@ -40,6 +40,52 @@ describe.sequential("MDXToNextJSGenerator ownership", () => {
     expect(await fs.pathExists(path.join(watchDir, "index.mdx"))).toBe(false);
   });
 
+  it("rejects external MDX symlinks during scans and watch-style changes", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const sensitivePath = path.join(root, "sensitive.mdx");
+    const linkedPath = path.join(watchDir, "leaked.mdx");
+    await fs.writeFile(sensitivePath, "SENSITIVE_SOURCE_CONTENT\n");
+    await fs.symlink(sensitivePath, linkedPath, "file");
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir);
+
+    await expect(generator.getAllMDXFiles()).rejects.toThrow(
+      /documentation source.*leaked\.mdx.*symbolic link/i,
+    );
+    await expect(
+      generator.handleFileChange("added", "leaked.mdx"),
+    ).rejects.toThrow(/documentation source.*leaked\.mdx.*symbolic link/i);
+    expect(await fs.pathExists(path.join(outputDir, "app"))).toBe(false);
+  });
+
+  it("ignores non-MDX file symlinks during documentation scans", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const linkedTarget = path.join(root, "notes.txt");
+    await fs.writeFile(linkedTarget, "not documentation\n");
+    await fs.symlink(linkedTarget, path.join(watchDir, "notes.txt"), "file");
+    await fs.writeFile(path.join(watchDir, "guide.mdx"), "# Guide\n");
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir);
+
+    await expect(generator.getAllMDXFiles()).resolves.toEqual(["guide.mdx"]);
+  });
+
+  it("does not write starter docs through a symlinked source directory", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const victimDir = path.join(root, "victim");
+    await fs.ensureDir(victimDir);
+    await fs.writeFile(path.join(victimDir, "keep.txt"), "UNCHANGED\n");
+    await fs.symlink(victimDir, path.join(watchDir, "platform"), "dir");
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir);
+
+    await expect(generator.createStartingDocs()).rejects.toThrow(
+      /documentation source.*platform.*symbolic link/i,
+    );
+    expect(await fs.readdir(victimDir)).toEqual(["keep.txt"]);
+    expect(await fs.readFile(path.join(victimDir, "keep.txt"), "utf8")).toBe(
+      "UNCHANGED\n",
+    );
+    expect(await fs.pathExists(path.join(watchDir, "index.mdx"))).toBe(false);
+  });
+
   it("restores required JSON modules when project config is deleted", async () => {
     const { watchDir, outputDir } = await fixture();
     await Promise.all([
@@ -60,6 +106,27 @@ describe.sequential("MDXToNextJSGenerator ownership", () => {
         expected,
       );
     }
+  });
+
+  it("atomically replaces a hard-linked config destination", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const sourcePath = path.join(root, "config.json");
+    const destPath = path.join(outputDir, "config.json");
+    const externalPeer = path.join(root, "external-config.json");
+    await fs.writeFile(sourcePath, '{"name":"safe"}\n');
+    await fs.writeFile(externalPeer, '{"name":"keep"}\n');
+    await fs.ensureDir(outputDir);
+    await fs.link(externalPeer, destPath);
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+
+    await generator.copyCustomConfigFiles();
+
+    await expect(fs.readFile(destPath, "utf8")).resolves.toBe(
+      '{"name":"safe"}\n',
+    );
+    await expect(fs.readFile(externalPeer, "utf8")).resolves.toBe(
+      '{"name":"keep"}\n',
+    );
   });
 
   it("restores sections.json and rebuilds routes after deletion", async () => {
@@ -482,6 +549,154 @@ describe.sequential("MDXToNextJSGenerator ownership", () => {
       ).toBe(content);
     }
   });
+
+  it("rejects public symlinks during the initial public copy", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const sensitivePath = path.join(root, "sensitive.txt");
+    const publicPath = path.join(root, "public", "leaked.txt");
+    await fs.writeFile(sensitivePath, "SENSITIVE_PUBLIC_CONTENT\n");
+    await fs.ensureDir(path.dirname(publicPath));
+    await fs.symlink(sensitivePath, publicPath, "file");
+    await fs.ensureDir(outputDir);
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+
+    await expect(generator.copyPublicFiles()).rejects.toThrow(
+      /public source.*leaked\.txt.*symbolic link/i,
+    );
+    expect(
+      await fs.pathExists(path.join(outputDir, "public", "leaked.txt")),
+    ).toBe(false);
+  });
+
+  it("rejects public symlinks during watch-style copies", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const sensitivePath = path.join(root, "sensitive.txt");
+    const publicPath = path.join(root, "public", "leaked.txt");
+    await fs.writeFile(sensitivePath, "SENSITIVE_PUBLIC_CONTENT\n");
+    await fs.ensureDir(path.dirname(publicPath));
+    await fs.symlink(sensitivePath, publicPath, "file");
+    await fs.ensureDir(outputDir);
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await expect(generator.handlePublicFileChange(publicPath)).rejects.toThrow(
+      /public source.*leaked\.txt.*symbolic link/i,
+    );
+    expect(
+      await fs.pathExists(path.join(outputDir, "public", "leaked.txt")),
+    ).toBe(false);
+  });
+
+  it("atomically replaces a hard-linked public destination", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const sourcePath = path.join(root, "public", "asset.bin");
+    const destPath = path.join(outputDir, "public", "asset.bin");
+    const externalPeer = path.join(root, "external-peer.bin");
+    await fs.outputFile(sourcePath, Buffer.from([0, 1, 2, 255]));
+    await fs.outputFile(externalPeer, "keep");
+    await fs.ensureDir(path.dirname(destPath));
+    await fs.link(externalPeer, destPath);
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+
+    await generator.handlePublicFileChange(sourcePath);
+
+    await expect(fs.readFile(destPath)).resolves.toEqual(
+      Buffer.from([0, 1, 2, 255]),
+    );
+    await expect(fs.readFile(externalPeer, "utf8")).resolves.toBe("keep");
+  });
+
+  it.skipIf(process.platform === "win32")(
+    "atomically replaces a symlinked public destination",
+    async () => {
+      const { root, watchDir, outputDir } = await fixture();
+      const sourcePath = path.join(root, "public", "asset.txt");
+      const destPath = path.join(outputDir, "public", "asset.txt");
+      const externalTarget = path.join(root, "external-target.txt");
+      await fs.outputFile(sourcePath, "new");
+      await fs.outputFile(externalTarget, "keep");
+      await fs.ensureDir(path.dirname(destPath));
+      await fs.symlink(externalTarget, destPath, "file");
+      const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+
+      await generator.handlePublicFileChange(sourcePath);
+
+      await expect(fs.readFile(destPath, "utf8")).resolves.toBe("new");
+      await expect(fs.readFile(externalTarget, "utf8")).resolves.toBe("keep");
+      expect((await fs.lstat(destPath)).isSymbolicLink()).toBe(false);
+    },
+  );
+
+  it.skipIf(process.platform === "win32")(
+    "rejects a source parent swapped before the source is opened",
+    async () => {
+      const { root, watchDir, outputDir } = await fixture();
+      const publicDir = path.join(root, "public");
+      const sourceParent = path.join(publicDir, "assets");
+      const displacedParent = path.join(publicDir, "assets-original");
+      const externalParent = path.join(root, "external-assets");
+      const sourcePath = path.join(sourceParent, "asset.txt");
+      await fs.outputFile(sourcePath, "safe");
+      await fs.outputFile(path.join(externalParent, "asset.txt"), "secret");
+      await fs.ensureDir(outputDir);
+      const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+      const realpath = fs.realpath.bind(fs);
+      let sourceResolutions = 0;
+      vi.spyOn(fs, "realpath").mockImplementation(async (candidate: string) => {
+        const resolved = await realpath(candidate);
+        if (
+          path.resolve(candidate) === sourcePath &&
+          sourceResolutions++ === 0
+        ) {
+          await fs.rename(sourceParent, displacedParent);
+          await fs.symlink(externalParent, sourceParent, "dir");
+        }
+        return resolved;
+      });
+      vi.spyOn(console, "error").mockImplementation(() => {});
+
+      await expect(
+        generator.handlePublicFileChange(sourcePath),
+      ).rejects.toThrow(/real path.*outside/i);
+      await expect(
+        fs.pathExists(path.join(outputDir, "public", "assets", "asset.txt")),
+      ).resolves.toBe(false);
+    },
+  );
+
+  it.skipIf(process.platform === "win32")(
+    "keeps reading the opened source if its parent is swapped afterward",
+    async () => {
+      const { root, watchDir, outputDir } = await fixture();
+      const publicDir = path.join(root, "public");
+      const sourceParent = path.join(publicDir, "assets");
+      const displacedParent = path.join(publicDir, "assets-original");
+      const externalParent = path.join(root, "external-assets");
+      const sourcePath = path.join(sourceParent, "asset.txt");
+      const destPath = path.join(outputDir, "public", "assets", "asset.txt");
+      await fs.outputFile(sourcePath, "safe");
+      await fs.outputFile(path.join(externalParent, "asset.txt"), "secret");
+      await fs.ensureDir(outputDir);
+      const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+      const lstat = fs.lstat.bind(fs);
+      let sourceStats = 0;
+      vi.spyOn(fs, "lstat").mockImplementation(async (candidate: string) => {
+        const stat = await lstat(candidate);
+        if (path.resolve(candidate) === sourcePath && ++sourceStats === 4) {
+          await fs.rename(sourceParent, displacedParent);
+          await fs.symlink(externalParent, sourceParent, "dir");
+        }
+        return stat;
+      });
+
+      await generator.handlePublicFileChange(sourcePath);
+
+      await expect(fs.readFile(destPath, "utf8")).resolves.toBe("safe");
+      await expect(
+        fs.readFile(path.join(externalParent, "asset.txt"), "utf8"),
+      ).resolves.toBe("secret");
+    },
+  );
 
   it("restores mixed-case managed public overrides after watch deletion", async () => {
     const { root, watchDir, outputDir } = await fixture();

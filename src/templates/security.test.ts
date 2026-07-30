@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import net from "node:net";
 
+import { appStructure } from "../lib/structures.js";
 import { accessControlTemplate } from "./lib/access.js";
 import { gateRoutesTemplate } from "./app/api/gate/route.js";
 import { mcpRoutesTemplate } from "./app/api/mcp/route.js";
@@ -17,6 +18,48 @@ import { prettierignoreTemplate } from "./prettierignore.js";
 import { rateLimitTemplate } from "./utils/rateLimit.js";
 import { ssrfGuardTemplate } from "./utils/ssrfGuard.js";
 import { playgroundAllowlistTemplate } from "./utils/playgroundAllowlist.js";
+import { requestBodyTemplate } from "./utils/requestBody.js";
+
+interface GeneratedRequestBodyModule {
+  RequestTooLargeError: new () => Error;
+  readJsonBody: (req: Request, maxBytes: number) => Promise<unknown>;
+}
+
+function generatedRequestBodyModule(): GeneratedRequestBodyModule {
+  const source = requestBodyTemplate
+    .replace(/\bexport /g, "")
+    .replace(
+      "  req: Request,\n  maxBytes: number,\n): Promise<unknown>",
+      "  req,\n  maxBytes,\n)",
+    )
+    .replace("const chunks: Uint8Array[]", "const chunks");
+  return Function(
+    `${source}\nreturn { RequestTooLargeError, readJsonBody };`,
+  )() as GeneratedRequestBodyModule;
+}
+
+function streamedRequest(
+  chunks: Uint8Array[],
+  options: { headers?: HeadersInit; signal?: AbortSignal } = {},
+): Request {
+  let index = 0;
+  const body = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      if (index < chunks.length) {
+        controller.enqueue(chunks[index++]);
+      } else {
+        controller.close();
+      }
+    },
+  });
+  return new Request("https://docs.example/api", {
+    method: "POST",
+    body,
+    headers: options.headers,
+    signal: options.signal,
+    duplex: "half",
+  } as RequestInit & { duplex: "half" });
+}
 
 function generatedFunctionSource(
   source: string,
@@ -38,6 +81,157 @@ function generatedFunctionSource(
 }
 
 describe("generated security boundaries", () => {
+  it("registers one bounded JSON reader for generated API routes", () => {
+    expect(appStructure["utils/requestBody.ts"]).toBe(requestBodyTemplate);
+    for (const route of [
+      gateRoutesTemplate,
+      playgroundRoutesTemplate,
+      ragRoutesTemplate,
+      mcpRoutesTemplate,
+    ]) {
+      expect(route).toContain('from "@/utils/requestBody"');
+      expect(route).toContain("readJsonBody(req,");
+      expect(route).not.toContain("req.json()");
+    }
+
+    expect(gateRoutesTemplate).toContain(
+      "const MAX_GATE_ENVELOPE_BYTES = 8 * 1024",
+    );
+    expect(playgroundRoutesTemplate).toContain(
+      "const MAX_ENVELOPE_BYTES = 1_500_000",
+    );
+    expect(playgroundRoutesTemplate).toContain("{ status: 413 }");
+    expect(gateRoutesTemplate).toContain("{ status: 413 }");
+  });
+
+  it("rejects oversized declared request envelopes before reading", async () => {
+    const { readJsonBody, RequestTooLargeError } = generatedRequestBodyModule();
+    const request = streamedRequest([new TextEncoder().encode("{}")], {
+      headers: { "Content-Length": "11" },
+    });
+
+    await expect(readJsonBody(request, 10)).rejects.toBeInstanceOf(
+      RequestTooLargeError,
+    );
+  });
+
+  it("rejects oversized streamed request envelopes without a declaration", async () => {
+    const { readJsonBody, RequestTooLargeError } = generatedRequestBodyModule();
+    const request = streamedRequest([
+      new TextEncoder().encode('{"value":"'),
+      new TextEncoder().encode('too large"}'),
+    ]);
+
+    expect(request.headers.has("content-length")).toBe(false);
+    await expect(readJsonBody(request, 16)).rejects.toBeInstanceOf(
+      RequestTooLargeError,
+    );
+  });
+
+  it("measures multibyte JSON envelopes as bytes, not characters", async () => {
+    const { readJsonBody, RequestTooLargeError } = generatedRequestBodyModule();
+    const text = JSON.stringify({ value: "é".repeat(8) });
+    const bytes = new TextEncoder().encode(text);
+    expect(bytes.byteLength).toBeGreaterThan(text.length);
+
+    await expect(
+      readJsonBody(streamedRequest([bytes]), text.length),
+    ).rejects.toBeInstanceOf(RequestTooLargeError);
+  });
+
+  it("rejects malformed JSON after the bounded byte read", async () => {
+    const { readJsonBody } = generatedRequestBodyModule();
+    const request = streamedRequest([new TextEncoder().encode('{"value":')]);
+
+    await expect(readJsonBody(request, 1024)).rejects.toBeInstanceOf(
+      SyntaxError,
+    );
+  });
+
+  it("cancels a pending body read when the request is aborted", async () => {
+    const { readJsonBody } = generatedRequestBodyModule();
+    const abortController = new AbortController();
+    let bodyCancelled = false;
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode('{"value":'));
+      },
+      cancel() {
+        bodyCancelled = true;
+      },
+    });
+    const request = new Request("https://docs.example/api", {
+      method: "POST",
+      body,
+      signal: abortController.signal,
+      duplex: "half",
+    } as RequestInit & { duplex: "half" });
+
+    const result = readJsonBody(request, 1024);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    abortController.abort();
+
+    await expect(result).rejects.toMatchObject({ name: "AbortError" });
+    expect(bodyCancelled).toBe(true);
+  });
+
+  it("caps decoded UTF-8 and base64 playground bodies by bytes", () => {
+    const start = playgroundRoutesTemplate.indexOf(
+      "function decodePlaygroundBody",
+    );
+    const end = playgroundRoutesTemplate.indexOf(
+      "function isTextContentType",
+      start,
+    );
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+    const decodeSource = playgroundRoutesTemplate.slice(start, end);
+    const executableDecodeSource = decodeSource.replace(
+      '  body: string,\n  encoding: "utf8" | "base64" | undefined,\n): Buffer',
+      "  body,\n  encoding,\n)",
+    );
+    const generated = Function(
+      "Buffer",
+      `class RequestTooLargeError extends Error {}
+       const MAX_REQUEST_BODY_BYTES = 1_000_000;
+       ${executableDecodeSource}
+       return { decodePlaygroundBody, RequestTooLargeError };`,
+    )(Buffer) as {
+      decodePlaygroundBody: (
+        body: string,
+        encoding: "utf8" | "base64" | undefined,
+      ) => Buffer;
+      RequestTooLargeError: new () => Error;
+    };
+
+    expect(() =>
+      generated.decodePlaygroundBody("é".repeat(500_001), "utf8"),
+    ).toThrow(generated.RequestTooLargeError);
+    expect(() =>
+      generated.decodePlaygroundBody(
+        Buffer.alloc(1_000_001).toString("base64"),
+        "base64",
+      ),
+    ).toThrow(generated.RequestTooLargeError);
+    expect(playgroundRoutesTemplate).toContain("body: z.string().optional()");
+  });
+
+  it("keeps authorization and rate limiting ahead of envelope reads", () => {
+    const playgroundAuthorization = playgroundRoutesTemplate.indexOf(
+      "isSiteRequestAuthorized()",
+    );
+    const playgroundRateLimit =
+      playgroundRoutesTemplate.indexOf("rateLimit(req)");
+    const playgroundRead = playgroundRoutesTemplate.indexOf(
+      "readJsonBody(req, MAX_ENVELOPE_BYTES)",
+    );
+    expect(playgroundAuthorization).toBeLessThan(playgroundRateLimit);
+    expect(playgroundRateLimit).toBeLessThan(playgroundRead);
+    expect(gateRoutesTemplate.indexOf("rateLimit(req)")).toBeLessThan(
+      gateRoutesTemplate.indexOf("readJsonBody(req, MAX_GATE_ENVELOPE_BYTES)"),
+    );
+  });
+
   it("protects every content-bearing API inside the route handler", () => {
     expect(mcpRoutesTemplate).toContain("isMcpRequestAuthorized(req)");
     expect(playgroundRoutesTemplate).toContain("isSiteRequestAuthorized()");
@@ -176,7 +370,7 @@ describe("generated security boundaries", () => {
     expect(mcpServerTemplate).toContain(
       "export const MCP_MAX_RESULT_BYTES = 256 * 1024",
     );
-    expect(mcpRoutesTemplate).toContain("await reader.cancel()");
+    expect(requestBodyTemplate).toContain("await reader.cancel()");
     expect(mcpRoutesTemplate).toContain("MAX_PROTOCOL_MESSAGES");
     expect(mcpRoutesTemplate).toContain("protocolToolCallError(body)");
     expect(mcpRoutesTemplate).toContain("{ parsedBody }");
@@ -200,7 +394,7 @@ describe("generated security boundaries", () => {
     const helpers = generatedFunctionSource(
       mcpRoutesTemplate,
       "function isRecord",
-      "async function readJsonBody",
+      "function protocolToolCallError",
     );
     const validator = generatedFunctionSource(
       mcpRoutesTemplate,

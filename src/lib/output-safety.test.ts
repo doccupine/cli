@@ -10,6 +10,7 @@ import {
   resolveOutputPath,
   resolveWithin,
 } from "./output-safety.js";
+import { writeFileAtomic } from "./utils.js";
 
 const tempDirs: string[] = [];
 
@@ -245,6 +246,66 @@ describe("output safety", () => {
     await expect(
       fs.readFile(path.join(external, "important.txt"), "utf8"),
     ).resolves.toBe("keep");
+  });
+
+  it("rejects generated removal after the claimed output root is replaced", async () => {
+    const parent = await makeTempDir();
+    const watchDir = path.join(parent, "docs");
+    const output = path.join(parent, "output");
+    const originalOutput = path.join(parent, "original-output");
+    await fs.outputFile(path.join(watchDir, "index.mdx"), "# Home\n");
+
+    const generator = new MDXToNextJSGenerator(watchDir, output, [], parent);
+    await generator.init();
+    await fs.rename(output, originalOutput);
+    await fs.outputFile(path.join(output, "app", "important.txt"), "keep");
+
+    await expect(generator.createNextJSStructure()).rejects.toThrow(
+      "claimed outputDir was replaced",
+    );
+    await expect(
+      fs.readFile(path.join(output, "app", "important.txt"), "utf8"),
+    ).resolves.toBe("keep");
+  });
+
+  it("rejects an atomic write through a path resolved before root replacement", async () => {
+    const parent = await makeTempDir();
+    const output = path.join(parent, "output");
+    const originalOutput = path.join(parent, "original-output");
+    await claimOutputDirectory(output);
+    const target = resolveOutputPath(output, "config.json");
+
+    await fs.rename(output, originalOutput);
+    await fs.outputFile(target, "victim");
+
+    await expect(writeFileAtomic(target, "generated")).rejects.toThrow(
+      "claimed outputDir was replaced",
+    );
+    await expect(fs.readFile(target, "utf8")).resolves.toBe("victim");
+  });
+
+  it("rejects an intermediate symlink added after destination resolution", async () => {
+    const parent = await makeTempDir();
+    const output = path.join(parent, "output");
+    const external = path.join(parent, "external");
+    const displaced = path.join(parent, "displaced");
+    await claimOutputDirectory(output);
+    await fs.ensureDir(path.join(output, "app", "nested"));
+    await fs.ensureDir(external);
+    const target = resolveOutputPath(output, "app", "nested", "page.tsx");
+
+    await fs.rename(path.join(output, "app", "nested"), displaced);
+    await makeDirectoryLink(external, path.join(output, "app", "nested"));
+
+    await expect(writeFileAtomic(target, "generated")).rejects.toThrow(
+      "is a symbolic link",
+    );
+    await expect(fs.pathExists(path.join(external, "page.tsx"))).resolves.toBe(
+      false,
+    );
+    expect(
+      (await fs.readdir(external)).filter((name) => name.endsWith(".tmp")),
+    ).toEqual([]);
   });
 
   it("refuses links inside generated paths even when their target is internal", async () => {

@@ -99,6 +99,7 @@ import { configTemplate } from "../templates/utils/config.js";
 import { playgroundAllowlistTemplate } from "../templates/utils/playgroundAllowlist.js";
 import { ssrfGuardTemplate } from "../templates/utils/ssrfGuard.js";
 import { apiSnippetsTemplate } from "../templates/utils/apiSnippets.js";
+import { requestBodyTemplate } from "../templates/utils/requestBody.js";
 import { playgroundRoutesTemplate } from "../templates/app/api/playground/route.js";
 import { playgroundAllowlistStubTemplate } from "../templates/services/openapi/playgroundAllowlistStub.js";
 import { copyButtonTemplate } from "../templates/components/layout/CopyButton.js";
@@ -221,6 +222,7 @@ export const appStructure: Record<string, string> = {
   "utils/playgroundAllowlist.ts": playgroundAllowlistTemplate,
   "utils/ssrfGuard.ts": ssrfGuardTemplate,
   "utils/apiSnippets.ts": apiSnippetsTemplate,
+  "utils/requestBody.ts": requestBodyTemplate,
 
   "components/Chat.tsx": chatTemplate,
   "components/LockBodyScroll.ts": lockBodyScrollTemplate,

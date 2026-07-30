@@ -2,6 +2,9 @@ export const gateRoutesTemplate = `import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { GATE_COOKIE_NAME, gateToken, timingSafeEqual } from "@/lib/siteGate";
 import { rateLimit } from "@/utils/rateLimit";
+import { readJsonBody, RequestTooLargeError } from "@/utils/requestBody";
+
+const MAX_GATE_ENVELOPE_BYTES = 8 * 1024;
 
 export async function POST(req: Request) {
   const password = process.env.SITE_PASSWORD;
@@ -20,8 +23,19 @@ export async function POST(req: Request) {
 
   let submitted: unknown;
   try {
-    submitted = (await req.json())?.password;
-  } catch {
+    const body = await readJsonBody(req, MAX_GATE_ENVELOPE_BYTES);
+    submitted =
+      typeof body === "object" && body !== null && !Array.isArray(body)
+        ? (body as Record<string, unknown>).password
+        : undefined;
+  } catch (error: unknown) {
+    if (req.signal.aborted) throw error;
+    if (error instanceof RequestTooLargeError) {
+      return NextResponse.json(
+        { ok: false, error: "Request body too large" },
+        { status: 413 },
+      );
+    }
     return NextResponse.json(
       { ok: false, error: "Bad Request" },
       { status: 400 },

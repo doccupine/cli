@@ -36,6 +36,15 @@ const GENERATED_TOP_LEVEL_FILES = new Set([
   "tsconfig.json",
 ]);
 
+interface ClaimedOutputIdentity {
+  lexicalRoot: string;
+  realRoot: string;
+  dev: number;
+  ino: number;
+}
+
+const claimedOutputRoots = new Map<string, ClaimedOutputIdentity>();
+
 const LEGACY_FILE_FINGERPRINTS = [
   {
     path: "components/Docs.tsx",
@@ -88,12 +97,105 @@ export function resolveWithin(root: string, ...segments: string[]): string {
   return candidate;
 }
 
+function identityFrom(
+  lexicalRoot: string,
+  realRoot: string,
+  stat: Stats,
+): ClaimedOutputIdentity {
+  return {
+    lexicalRoot,
+    realRoot,
+    dev: stat.dev,
+    ino: stat.ino,
+  };
+}
+
+function assertClaimedIdentity(identity: ClaimedOutputIdentity): void {
+  let lexicalStat: Stats;
+  let realRoot: string;
+  let realStat: Stats;
+  try {
+    lexicalStat = fs.lstatSync(identity.lexicalRoot);
+    realRoot = fs.realpathSync(identity.lexicalRoot);
+    realStat = fs.lstatSync(realRoot);
+  } catch {
+    throw new Error(
+      `Refusing generated operation in ${identity.lexicalRoot}: the claimed outputDir no longer exists or cannot be resolved.`,
+    );
+  }
+
+  if (
+    lexicalStat.isSymbolicLink() ||
+    !lexicalStat.isDirectory() ||
+    realRoot !== identity.realRoot ||
+    lexicalStat.dev !== identity.dev ||
+    lexicalStat.ino !== identity.ino ||
+    !sameFile(lexicalStat, realStat)
+  ) {
+    throw new Error(
+      `Refusing generated operation in ${identity.lexicalRoot}: the claimed outputDir was replaced or its physical identity changed.`,
+    );
+  }
+}
+
+function enclosingClaims(filePath: string): ClaimedOutputIdentity[] {
+  const resolvedPath = path.resolve(filePath);
+  return [...claimedOutputRoots.values()].filter(
+    (identity) =>
+      isPathInside(identity.lexicalRoot, resolvedPath) ||
+      isPathInside(identity.realRoot, resolvedPath),
+  );
+}
+
+function assertNoClaimedChildSymlinks(
+  identity: ClaimedOutputIdentity,
+  filePath: string,
+): void {
+  const resolvedPath = path.resolve(filePath);
+  const root = isPathInside(identity.realRoot, resolvedPath)
+    ? identity.realRoot
+    : identity.lexicalRoot;
+  const relativeParent = path.relative(root, path.dirname(resolvedPath));
+  if (
+    relativeParent === "" ||
+    relativeParent === ".." ||
+    relativeParent.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relativeParent)
+  ) {
+    return;
+  }
+
+  let current = root;
+  for (const component of relativeParent.split(path.sep).filter(Boolean)) {
+    current = path.join(current, component);
+    try {
+      if (fs.lstatSync(current).isSymbolicLink()) {
+        throw new Error(
+          `Refusing generated operation at ${resolvedPath}: ${current} is a symbolic link. Replace it with a real path inside outputDir.`,
+        );
+      }
+    } catch (error) {
+      if (errorCode(error) === "ENOENT") return;
+      throw error;
+    }
+  }
+}
+
+/** Revalidates the claimed output root containing a previously resolved path. */
+export function assertClaimedOutputPath(filePath: string): void {
+  for (const identity of enclosingClaims(filePath)) {
+    assertClaimedIdentity(identity);
+    assertNoClaimedChildSymlinks(identity, filePath);
+  }
+}
+
 /**
  * Resolves a generated destination and rejects any existing symlink component.
  * This is synchronous so callers can validate immediately before an fs call.
  */
 export function resolveOutputPath(root: string, ...segments: string[]): string {
   const resolvedRoot = path.resolve(root);
+  assertClaimedOutputPath(resolvedRoot);
   const lexicalCandidate = resolveWithin(resolvedRoot, ...segments);
   const rootStat = fs.lstatSync(resolvedRoot);
   if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) {
@@ -385,6 +487,9 @@ async function looksLikeLegacyGeneratedApp(
  * Doccupine versions, and refuses to overwrite arbitrary existing projects.
  */
 export async function claimOutputDirectory(outputDir: string): Promise<void> {
+  const lexicalOutputDir = path.resolve(outputDir);
+  assertClaimedOutputPath(lexicalOutputDir);
+
   const existingRoot = await lstatIfPresent(outputDir);
   if (existingRoot?.isSymbolicLink()) {
     throw symlinkError(
@@ -420,6 +525,11 @@ export async function claimOutputDirectory(outputDir: string): Promise<void> {
       `Refusing to use ${outputDir}: outputDir changed while its physical path was being resolved.`,
     );
   }
+  const claimedIdentity = identityFrom(
+    lexicalOutputDir,
+    realOutputDir,
+    verifiedRoot,
+  );
 
   // Validate links before reading ownership or allowing callers to remove app/.
   // Installed dependencies are outside the generated subtrees and are not
@@ -440,15 +550,22 @@ export async function claimOutputDirectory(outputDir: string): Promise<void> {
       markerPath,
       markerStat,
     );
+    let marker: { generator?: unknown };
     try {
-      const marker = JSON.parse(markerContent) as { generator?: unknown };
-      if (marker.generator === "doccupine") return;
+      marker = JSON.parse(markerContent) as { generator?: unknown };
     } catch {
-      // Fall through to the refusal below: a corrupt marker proves no ownership.
+      throw new Error(
+        `Refusing to use ${outputDir}: ${MARKER_FILE} is invalid. Restore or remove the directory manually.`,
+      );
     }
-    throw new Error(
-      `Refusing to use ${outputDir}: ${MARKER_FILE} is invalid. Restore or remove the directory manually.`,
-    );
+    if (marker.generator !== "doccupine") {
+      throw new Error(
+        `Refusing to use ${outputDir}: ${MARKER_FILE} is invalid. Restore or remove the directory manually.`,
+      );
+    }
+    assertClaimedIdentity(claimedIdentity);
+    claimedOutputRoots.set(lexicalOutputDir, claimedIdentity);
+    return;
   }
 
   const entries = await fs.readdir(realOutputDir);
@@ -475,4 +592,7 @@ export async function claimOutputDirectory(outputDir: string): Promise<void> {
     }
     throw error;
   }
+
+  assertClaimedIdentity(claimedIdentity);
+  claimedOutputRoots.set(lexicalOutputDir, claimedIdentity);
 }

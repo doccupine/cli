@@ -53,4 +53,46 @@ describe("writeFileAtomic", () => {
       (await fs.readdir(directory)).filter((name) => name.endsWith(".tmp")),
     ).toEqual([]);
   });
+
+  it.skipIf(process.platform === "win32")(
+    "replaces a destination symlink without modifying its target",
+    async () => {
+      const directory = await fs.mkdtemp(
+        path.join(os.tmpdir(), "doccupine-atomic-link-"),
+      );
+      tempDirs.push(directory);
+      const target = path.join(directory, "page.tsx");
+      const victim = path.join(directory, "victim.txt");
+      await fs.writeFile(victim, "keep");
+      await fs.symlink(victim, target, "file");
+
+      await writeFileAtomic(target, Buffer.from("new"));
+
+      await expect(fs.readFile(target, "utf8")).resolves.toBe("new");
+      await expect(fs.readFile(victim, "utf8")).resolves.toBe("keep");
+      expect((await fs.lstat(target)).isSymbolicLink()).toBe(false);
+      expect(
+        (await fs.readdir(directory)).filter((name) => name.endsWith(".tmp")),
+      ).toEqual([]);
+    },
+  );
+
+  it("replaces a destination hard link without modifying its peer", async () => {
+    const directory = await fs.mkdtemp(
+      path.join(os.tmpdir(), "doccupine-atomic-hardlink-"),
+    );
+    tempDirs.push(directory);
+    const target = path.join(directory, "page.tsx");
+    const peer = path.join(directory, "peer.txt");
+    await fs.writeFile(peer, "keep");
+    await fs.link(peer, target);
+
+    await writeFileAtomic(target, "new");
+
+    await expect(fs.readFile(target, "utf8")).resolves.toBe("new");
+    await expect(fs.readFile(peer, "utf8")).resolves.toBe("keep");
+    expect(
+      (await fs.readdir(directory)).filter((name) => name.endsWith(".tmp")),
+    ).toEqual([]);
+  });
 });

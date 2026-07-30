@@ -36,6 +36,7 @@ const HTTP_METHODS: HttpMethod[] = [
 ];
 
 const MAX_SERIALIZE_DEPTH = 20;
+const OPENAPI_REFERENCE_EXTENSIONS = new Set([".json", ".yaml", ".yml"]);
 
 /**
  * Slugifies a single route/anchor segment: lowercase, collapse any run of
@@ -293,9 +294,10 @@ export function isLocalOpenApiPath(reference: string): boolean {
 }
 
 async function resolveLocalOpenApiFile(
-  rootRealPath: string,
+  boundaryRealPath: string,
   candidate: string,
   reference: string,
+  boundaryName: string,
 ): Promise<string> {
   let realPath: string;
   try {
@@ -305,10 +307,41 @@ async function resolveLocalOpenApiFile(
       cause: error,
     });
   }
-  if (!isWithinDirectory(rootRealPath, realPath)) {
-    throw new Error(`OpenAPI file "${reference}" resolves outside rootDir`);
+  if (!isWithinDirectory(boundaryRealPath, realPath)) {
+    throw new Error(
+      `OpenAPI file "${reference}" resolves outside ${boundaryName}`,
+    );
   }
   return realPath;
+}
+
+function assertAllowedOpenApiReference(
+  referenceRootRealPath: string,
+  candidate: string,
+  reference: string,
+): void {
+  if (!isWithinDirectory(referenceRootRealPath, candidate)) {
+    throw new Error(
+      `OpenAPI external reference "${reference}" must stay within the configured root spec directory`,
+    );
+  }
+
+  const relativeParts = path
+    .relative(referenceRootRealPath, candidate)
+    .split(path.sep)
+    .filter(Boolean);
+  if (relativeParts.some((part) => part.startsWith("."))) {
+    throw new Error(
+      `OpenAPI external reference "${reference}" must not target a dotfile or a file inside a dot-directory`,
+    );
+  }
+
+  const extension = path.extname(candidate).toLowerCase();
+  if (!OPENAPI_REFERENCE_EXTENSIONS.has(extension)) {
+    throw new Error(
+      `OpenAPI external reference "${reference}" must use a .json, .yaml, or .yml file`,
+    );
+  }
 }
 
 interface ResolverFile {
@@ -328,7 +361,7 @@ function parserFileResolver(resolver: OpenApiFileResolver): boolean {
 }
 
 async function readOpenApiSnapshot(
-  rootRealPath: string,
+  referenceRootRealPath: string,
   realPath: string,
   reference: string,
 ): Promise<Buffer> {
@@ -349,9 +382,11 @@ async function readOpenApiSnapshot(
     ]);
     if (
       !openedStat.isFile() ||
-      !isWithinDirectory(rootRealPath, confirmedRealPath)
+      !isWithinDirectory(referenceRootRealPath, confirmedRealPath)
     ) {
-      throw new Error(`OpenAPI file "${reference}" resolves outside rootDir`);
+      throw new Error(
+        `OpenAPI file "${reference}" resolves outside the configured root spec directory`,
+      );
     }
     const currentStat = await fs.stat(confirmedRealPath);
     if (
@@ -401,26 +436,38 @@ function resolveOpenApiReference(filePath: string, reference: string): string {
  * in-memory snapshot URLs. No parser phase after this function reads disk.
  */
 async function snapshotOpenApiDocuments(
-  rootRealPath: string,
   rootFile: string,
 ): Promise<{ rootDocument: any; snapshots: Map<string, any> }> {
+  const referenceRootRealPath = path.dirname(rootFile);
   const byRealPath = new Map<string, { document: any; url: string }>();
   const snapshots = new Map<string, any>();
 
   const visit = async (
     candidate: string,
     reference: string,
+    configuredRoot = false,
   ): Promise<string> => {
+    if (!configuredRoot) {
+      assertAllowedOpenApiReference(
+        referenceRootRealPath,
+        candidate,
+        reference,
+      );
+    }
     const realPath = await resolveLocalOpenApiFile(
-      rootRealPath,
+      referenceRootRealPath,
       candidate,
       reference,
+      "the configured root spec directory",
     );
+    if (!configuredRoot) {
+      assertAllowedOpenApiReference(referenceRootRealPath, realPath, reference);
+    }
     const existing = byRealPath.get(realPath);
     if (existing) return existing.url;
 
     const contents = await readOpenApiSnapshot(
-      rootRealPath,
+      referenceRootRealPath,
       realPath,
       reference,
     );
@@ -460,7 +507,7 @@ async function snapshotOpenApiDocuments(
     return snapshotUrl;
   };
 
-  const rootUrl = await visit(rootFile, rootFile);
+  const rootUrl = await visit(rootFile, rootFile, true);
   return { rootDocument: snapshots.get(rootUrl), snapshots };
 }
 
@@ -540,11 +587,10 @@ export class OpenApiRegistry {
           rootRealPath,
           configuredPath,
           spec.file,
+          "rootDir",
         );
-        const { rootDocument, snapshots } = await snapshotOpenApiDocuments(
-          rootRealPath,
-          absolute,
-        );
+        const { rootDocument, snapshots } =
+          await snapshotOpenApiDocuments(absolute);
         doc = await dereferenceOpenApiSnapshots(rootDocument, snapshots);
       } catch (error) {
         throw new Error(

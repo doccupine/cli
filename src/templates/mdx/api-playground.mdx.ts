@@ -35,7 +35,7 @@ Press **Try it** below to open the playground, tweak the request body, and send 
 \`\`\`
   </Step>
   <Step title="Run Doccupine.">
-    On the next build (or live, while watching) Doccupine parses the document, resolves every \`$ref\`, and writes an endpoint page for each operation.
+    On the next build (or live, while watching) Doccupine parses the document and writes an endpoint page for each operation. Local \`$ref\` files must stay inside the configured spec's directory, use \`.json\`, \`.yaml\`, or \`.yml\`, and cannot be dotfiles or live inside dot-directories.
   </Step>
   <Step title="Open the API Reference section.">
     Endpoints appear in the sidebar grouped by their OpenAPI tag. Editing the spec regenerates the pages automatically.
