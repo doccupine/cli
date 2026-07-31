@@ -15,6 +15,14 @@ import type {
 } from "../lib/types.js";
 import { SecureSourceFs } from "./secure-source-fs.js";
 
+class OpenApiRestoreError extends AggregateError {}
+
+class OpenApiWatcherRestoreNeededError extends Error {
+  constructor(readonly originalError: unknown) {
+    super("OpenAPI watcher synchronization required verified restoration");
+  }
+}
+
 export interface ApiPageWriteOptions {
   writtenRoutes?: Map<string, string>;
   additionalPreviousRoutes?: Iterable<RouteArtifact>;
@@ -93,21 +101,93 @@ export class OpenApiRefreshCoordinator {
   private async applyStableRefresh(
     specs: NormalizedOpenApiSpec[],
   ): Promise<void> {
-    let candidate = await this.loadStableRegistry(specs);
-    await this.applyRefresh(candidate.registry, specs);
+    const previousRegistry = this.options.getRegistry();
+    const previousSpecs = this.options.getSpecs();
+    let successfulApplications = 0;
 
-    // Recheck after watcher readiness so changes in the retargeting window are
-    // replayed explicitly instead of being missed by ignoreInitial watchers.
-    for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      let candidate = await this.loadStableRegistry(specs);
+      await this.applyRefresh(candidate.registry, specs);
+      successfulApplications += 1;
+
+      // Recheck after watcher readiness so changes in the retargeting window are
+      // replayed explicitly instead of being missed by ignoreInitial watchers.
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        if (
+          (await this.sourceState(candidate.registry)) === candidate.sourceState
+        ) {
+          return;
+        }
+        candidate = await this.loadStableRegistry(specs);
+        await this.applyRefresh(candidate.registry, specs);
+        successfulApplications += 1;
+      }
       if (
         (await this.sourceState(candidate.registry)) === candidate.sourceState
       ) {
         return;
       }
-      candidate = await this.loadStableRegistry(specs);
-      await this.applyRefresh(candidate.registry, specs);
+      throw new Error(
+        "OpenAPI sources changed repeatedly while being generated",
+      );
+    } catch (error) {
+      const watcherRestoreNeeded =
+        error instanceof OpenApiWatcherRestoreNeededError;
+      if (
+        successfulApplications === 0 &&
+        !(error instanceof OpenApiRestoreError) &&
+        !watcherRestoreNeeded
+      ) {
+        throw error;
+      }
+
+      try {
+        await this.restorePreviousRefresh(
+          previousRegistry,
+          previousSpecs,
+          previousSpecs !== specs || watcherRestoreNeeded,
+        );
+      } catch (rollbackError) {
+        throw new AggregateError(
+          [error, rollbackError],
+          "Unable to refresh or restore the previous OpenAPI reference",
+        );
+      }
+      throw watcherRestoreNeeded ? error.originalError : error;
     }
-    throw new Error("OpenAPI sources changed repeatedly while being generated");
+  }
+
+  private async restorePreviousRefresh(
+    fallbackRegistry: OpenApiRegistry,
+    specs: NormalizedOpenApiSpec[],
+    verifySources: boolean,
+  ): Promise<void> {
+    if (!verifySources || specs.length === 0) {
+      await this.applyRefresh(fallbackRegistry, specs);
+      return;
+    }
+
+    let candidate: { registry: OpenApiRegistry; sourceState: string };
+    try {
+      candidate = await this.loadStableRegistry(specs);
+    } catch {
+      // Invalid previous sources still retain their last successful output.
+      await this.applyRefresh(fallbackRegistry, specs);
+      return;
+    }
+
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      await this.applyRefresh(candidate.registry, specs);
+      if (
+        (await this.sourceState(candidate.registry)) === candidate.sourceState
+      ) {
+        return;
+      }
+      if (attempt < 3) candidate = await this.loadStableRegistry(specs);
+    }
+    throw new Error(
+      "Previous OpenAPI sources changed repeatedly while being restored",
+    );
   }
 
   private async applyRefresh(
@@ -168,10 +248,13 @@ export class OpenApiRefreshCoordinator {
       }
 
       if (rollbackErrors.length > 0) {
-        throw new AggregateError(
+        throw new OpenApiRestoreError(
           [error, ...rollbackErrors],
           "Unable to apply or restore the OpenAPI reference",
         );
+      }
+      if (watcherSyncAttempted) {
+        throw new OpenApiWatcherRestoreNeededError(error);
       }
       throw error;
     }

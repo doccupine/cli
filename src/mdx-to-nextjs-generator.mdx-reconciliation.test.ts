@@ -1194,6 +1194,65 @@ describe.sequential("MDXToNextJSGenerator MDX reconciliation", () => {
     ).toContain("LATER_BODY");
   });
 
+  it("keeps the successful MDX state when delete snapshot capture fails", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const sourcePath = path.join(watchDir, "guide.mdx");
+    await fs.writeFile(sourcePath, "---\ntitle: Guide\n---\nLAST_GOOD_BODY\n");
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+    await generator.init();
+    type GeneratorInternals = {
+      mdxPassBuilder: { capture(): Promise<unknown> };
+      successfulMdxPages: Map<string, unknown>;
+      successfulMdxContent: Map<string, string>;
+    };
+    const internals = generator as unknown as GeneratorInternals;
+    vi.spyOn(internals.mdxPassBuilder, "capture").mockRejectedValueOnce(
+      new Error("Injected snapshot failure"),
+    );
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    await fs.remove(sourcePath);
+
+    await generator.handleFileDelete("guide.mdx");
+
+    expect(internals.successfulMdxPages.has("guide.mdx")).toBe(true);
+    expect(internals.successfulMdxContent.get("guide.mdx")).toContain(
+      "LAST_GOOD_BODY",
+    );
+    expect(
+      await fs.readFile(
+        path.join(outputDir, "app", "(site)", "guide", "page.tsx"),
+        "utf8",
+      ),
+    ).toContain("LAST_GOOD_BODY");
+  });
+
+  it("keeps the active sections when a changed source disappears from its snapshot", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    await fs.writeFile(
+      path.join(watchDir, "guide.mdx"),
+      "---\ntitle: Guide\nsection: Guides\n---\nGUIDE_BODY\n",
+    );
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+    await generator.init();
+    type GeneratorInternals = {
+      mdxPassBuilder: { capture(): Promise<unknown> };
+      sectionsConfig: Array<{ label: string; slug: string }> | null;
+    };
+    const internals = generator as unknown as GeneratorInternals;
+    const previousSections = internals.sectionsConfig;
+    vi.spyOn(internals.mdxPassBuilder, "capture").mockResolvedValueOnce({
+      files: [],
+      pages: [],
+      sources: new Map(),
+      sections: [{ label: "Candidate", slug: "candidate" }],
+    });
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await generator.handleFileChange("changed", "guide.mdx");
+
+    expect(internals.sectionsConfig).toEqual(previousSections);
+  });
+
   it("refreshes inferred sections before validating changed routes", async () => {
     const { root, watchDir, outputDir } = await fixture();
     const movingSource = path.join(watchDir, "nested.mdx");

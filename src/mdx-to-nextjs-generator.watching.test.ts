@@ -142,6 +142,133 @@ describe.sequential("MDXToNextJSGenerator watching", () => {
     expect(coordinator.rootDirWatcher).toBeNull();
   });
 
+  it("handles an early readiness rejection while OpenAPI watching starts", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const specPath = path.join(root, "openapi.json");
+    await fs.writeJson(specPath, {
+      openapi: "3.0.0",
+      info: { title: "Test", version: "1.0.0" },
+      paths: {},
+    });
+    const generator = new MDXToNextJSGenerator(
+      watchDir,
+      outputDir,
+      [{ name: "Test", file: specPath }],
+      root,
+    );
+    type Watcher = { close(): Promise<void> };
+    type WatchCoordinatorInternals = {
+      waitForWatcherReady(watcher: Watcher): Promise<void>;
+    };
+    type GeneratorInternals = {
+      watchCoordinator: WatchCoordinatorInternals;
+    };
+    const coordinator = (generator as unknown as GeneratorInternals)
+      .watchCoordinator;
+    let readinessCalls = 0;
+    vi.spyOn(coordinator, "waitForWatcherReady").mockImplementation(
+      async () => {
+        readinessCalls += 1;
+        if (readinessCalls === 1) {
+          throw new Error("Injected early readiness failure");
+        }
+        if (readinessCalls === 5) {
+          await new Promise((resolve) => setTimeout(resolve, 20));
+        }
+      },
+    );
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await expect(generator.startWatching()).rejects.toThrow(
+      "Injected early readiness failure",
+    );
+
+    expect(readinessCalls).toBe(7);
+  });
+
+  it("retries public watcher startup after a readiness failure", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    await fs.writeFile(path.join(watchDir, "index.mdx"), "# Home\n");
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+    await generator.init();
+    await generator.startWatching();
+    type Watcher = { close(): Promise<void> };
+    type WatchCoordinatorInternals = {
+      publicWatcher: Watcher | null;
+      publicWatcherStarting: boolean;
+      rootDirWatcher: { emit(event: string, filePath: string): boolean } | null;
+      waitForWatcherReady(watcher: Watcher): Promise<void>;
+    };
+    type GeneratorInternals = {
+      watchCoordinator: WatchCoordinatorInternals;
+    };
+    const coordinator = (generator as unknown as GeneratorInternals)
+      .watchCoordinator;
+    const waitForReady = coordinator.waitForWatcherReady.bind(coordinator);
+    let publicReadinessAttempts = 0;
+    vi.spyOn(coordinator, "waitForWatcherReady").mockImplementation(
+      async (watcher) => {
+        if (coordinator.publicWatcher === watcher) {
+          publicReadinessAttempts += 1;
+          if (publicReadinessAttempts === 1) {
+            vi.spyOn(watcher, "close").mockRejectedValueOnce(
+              new Error("Injected public close failure"),
+            );
+            throw new Error("Injected public readiness failure");
+          }
+        }
+        await waitForReady(watcher);
+      },
+    );
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const publicDir = path.join(root, "public");
+    await fs.ensureDir(publicDir);
+    coordinator.rootDirWatcher?.emit("addDir", publicDir);
+    await waitUntil(async () => publicReadinessAttempts >= 1);
+    await waitUntil(async () => !coordinator.publicWatcherStarting);
+    const secondFile = path.join(publicDir, "second.txt");
+    await fs.outputFile(secondFile, "second\n");
+    coordinator.rootDirWatcher?.emit("add", secondFile);
+
+    await waitUntil(() =>
+      fs.pathExists(path.join(outputDir, "public", "second.txt")),
+    );
+    expect(publicReadinessAttempts).toBeGreaterThanOrEqual(2);
+    await generator.stop();
+  });
+
+  it("closes remaining watchers when one close throws synchronously", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+    type Watcher = { close(): Promise<void> };
+    type WatchCoordinatorInternals = {
+      watcher: Watcher | null;
+      configWatcher: Watcher | null;
+    };
+    type GeneratorInternals = {
+      watchCoordinator: WatchCoordinatorInternals;
+    };
+    const coordinator = (generator as unknown as GeneratorInternals)
+      .watchCoordinator;
+    const firstClose = vi
+      .fn<() => Promise<void>>()
+      .mockImplementationOnce(() => {
+        throw new Error("Injected synchronous close failure");
+      })
+      .mockResolvedValue(undefined);
+    const secondClose = vi.fn<() => Promise<void>>().mockResolvedValue();
+    coordinator.watcher = { close: firstClose };
+    coordinator.configWatcher = { close: secondClose };
+
+    await generator.stop();
+
+    expect(firstClose).toHaveBeenCalledTimes(2);
+    expect(secondClose).toHaveBeenCalledOnce();
+    expect(coordinator.watcher).toBeNull();
+    expect(coordinator.configWatcher).toBeNull();
+  });
+
   it("retries an OpenAPI watcher close that fails during retargeting", async () => {
     const { root, watchDir, outputDir } = await fixture();
     const specPath = path.join(root, "openapi.json");

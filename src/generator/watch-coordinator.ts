@@ -63,6 +63,7 @@ export class WatchCoordinator {
   private pendingWatcherClosures = new Set<FSWatcher>();
   private sourceSnapshot: WatchSourceSnapshot | null = null;
   private publicWatcherStarting = false;
+  private publicWatcherRestartRequested = false;
 
   constructor(private readonly options: WatchCoordinatorOptions) {}
 
@@ -106,6 +107,41 @@ export class WatchCoordinator {
       watcher.once("ready", onReady);
       watcher.once("error", onError);
     });
+  }
+
+  private trackWatcherReady(
+    ready: Promise<void>[],
+    promise: Promise<void>,
+  ): void {
+    // Startup performs other async work before awaiting the full ready set.
+    // Attach a handler now so an early watcher error is never unhandled.
+    void promise.catch(() => {});
+    ready.push(promise);
+  }
+
+  private async waitForPublicWatcherReady(): Promise<void> {
+    const watcher = this.setupPublicWatcher();
+    try {
+      await this.waitForWatcherReady(watcher);
+    } catch (error) {
+      watcher.removeAllListeners();
+      watcher.on("error", (watcherError: unknown) => {
+        console.error(
+          chalk.red("❌ Detached public watcher error:"),
+          watcherError,
+        );
+      });
+      if (this.publicWatcher === watcher) this.publicWatcher = null;
+      try {
+        await this.closeDetachedWatcher(watcher);
+      } catch (closeError) {
+        throw new AggregateError(
+          [error, closeError],
+          "Public watcher startup failed and cleanup was incomplete",
+        );
+      }
+      throw error;
+    }
   }
 
   private async captureSourceSnapshot(): Promise<WatchSourceSnapshot> {
@@ -247,7 +283,7 @@ export class WatchCoordinator {
         !this.publicWatcher &&
         (await fs.pathExists(publicDir))
       ) {
-        await this.waitForWatcherReady(this.setupPublicWatcher());
+        await this.waitForPublicWatcherReady();
         if (this.stopping) return;
       }
       await callbacks.copyPublicFiles();
@@ -294,6 +330,7 @@ export class WatchCoordinator {
       watchDir,
     } = this.options;
     this.stopping = false;
+    this.publicWatcherRestartRequested = false;
     console.log(chalk.yellow(`👀 Watching for changes in: ${watchDir}`));
     const ready: Promise<void>[] = [];
 
@@ -315,7 +352,7 @@ export class WatchCoordinator {
         return false;
       },
     });
-    ready.push(this.waitForWatcherReady(this.watcher));
+    this.trackWatcherReady(ready, this.waitForWatcherReady(this.watcher));
 
     this.watcher
       .on("add", (filePath: string) => {
@@ -350,7 +387,7 @@ export class WatchCoordinator {
       persistent: true,
       ignoreInitial: true,
     });
-    ready.push(this.waitForWatcherReady(this.configWatcher));
+    this.trackWatcherReady(ready, this.waitForWatcherReady(this.configWatcher));
 
     this.configWatcher
       .on("add", (filePath: string) => {
@@ -386,7 +423,7 @@ export class WatchCoordinator {
       persistent: true,
       ignoreInitial: true,
     });
-    ready.push(this.waitForWatcherReady(this.fontWatcher));
+    this.trackWatcherReady(ready, this.waitForWatcherReady(this.fontWatcher));
 
     this.fontWatcher
       .on("add", () => {
@@ -414,7 +451,10 @@ export class WatchCoordinator {
       persistent: true,
       ignoreInitial: true,
     });
-    ready.push(this.waitForWatcherReady(this.analyticsWatcher));
+    this.trackWatcherReady(
+      ready,
+      this.waitForWatcherReady(this.analyticsWatcher),
+    );
 
     this.analyticsWatcher
       .on("add", () => {
@@ -445,7 +485,10 @@ export class WatchCoordinator {
       persistent: true,
       ignoreInitial: true,
     });
-    ready.push(this.waitForWatcherReady(this.doccupineConfigWatcher));
+    this.trackWatcherReady(
+      ready,
+      this.waitForWatcherReady(this.doccupineConfigWatcher),
+    );
 
     this.doccupineConfigWatcher
       .on("add", () =>
@@ -465,7 +508,7 @@ export class WatchCoordinator {
     const publicDir = path.join(rootDir, "public");
     if (await fs.pathExists(publicDir)) {
       if (this.stopping) return;
-      ready.push(this.waitForWatcherReady(this.setupPublicWatcher()));
+      this.trackWatcherReady(ready, this.waitForPublicWatcherReady());
     }
     if (this.stopping) return;
 
@@ -474,22 +517,32 @@ export class WatchCoordinator {
       ignoreInitial: true,
       depth: 1,
     });
-    ready.push(this.waitForWatcherReady(this.rootDirWatcher));
+    this.trackWatcherReady(
+      ready,
+      this.waitForWatcherReady(this.rootDirWatcher),
+    );
 
     const queuePublicWatcherStart = () => {
-      if (this.stopping || this.publicWatcher || this.publicWatcherStarting) {
+      if (this.stopping) return;
+      if (this.publicWatcherStarting) {
+        this.publicWatcherRestartRequested = true;
         return;
       }
+      if (this.publicWatcher) return;
       this.publicWatcherStarting = true;
       this.enqueueMutation("Error initializing public directory", async () => {
         try {
           if (this.stopping) return;
           console.log(chalk.cyan("📁 Public directory created"));
-          await this.waitForWatcherReady(this.setupPublicWatcher());
+          await this.waitForPublicWatcherReady();
           if (this.stopping) return;
           await callbacks.copyPublicFiles();
         } finally {
           this.publicWatcherStarting = false;
+          if (this.publicWatcherRestartRequested) {
+            this.publicWatcherRestartRequested = false;
+            queuePublicWatcherStart();
+          }
         }
       });
     };
@@ -697,7 +750,9 @@ export class WatchCoordinator {
 
     const uniqueWatchers = [...new Set(watchers)];
     const results = await Promise.allSettled(
-      uniqueWatchers.map((watcher) => watcher.close()),
+      uniqueWatchers.map((watcher) =>
+        Promise.resolve().then(() => watcher.close()),
+      ),
     );
     const errors: unknown[] = [];
     results.forEach((result, index) => {

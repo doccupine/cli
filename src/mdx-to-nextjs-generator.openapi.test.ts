@@ -636,6 +636,177 @@ describe.sequential("MDXToNextJSGenerator OpenAPI", () => {
     await generator.stop();
   });
 
+  it("rechecks OpenAPI sources after watcher synchronization rollback", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const specPath = path.join(root, "openapi.json");
+    const writeSpec = (summary: string) =>
+      fs.writeJson(specPath, {
+        openapi: "3.0.0",
+        info: { title: "Test", version: "1.0.0" },
+        paths: {
+          "/users": {
+            get: {
+              operationId: "listUsers",
+              summary,
+              tags: ["users"],
+              responses: { "200": { description: "OK" } },
+            },
+          },
+        },
+      });
+    await writeSpec("Last good users");
+    await fs.outputFile(path.join(watchDir, "index.mdx"), "# Home\n");
+    const generator = new MDXToNextJSGenerator(
+      watchDir,
+      outputDir,
+      [{ name: "Test", file: specPath }],
+      root,
+    );
+    await generator.init();
+    type GeneratorInternals = {
+      syncOpenApiSpecWatcher(): Promise<void>;
+    };
+    const internals = generator as unknown as GeneratorInternals;
+    const syncWatcher = internals.syncOpenApiSpecWatcher.bind(generator);
+    let syncCalls = 0;
+    vi.spyOn(internals, "syncOpenApiSpecWatcher").mockImplementation(
+      async () => {
+        syncCalls += 1;
+        if (syncCalls === 1) {
+          throw new Error("Injected watcher synchronization failure");
+        }
+        if (syncCalls === 2) {
+          await writeSpec("Users changed during watcher rollback");
+        }
+        await syncWatcher();
+      },
+    );
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    await writeSpec("Candidate users");
+
+    await generator.handleOpenApiChange();
+
+    expect(syncCalls).toBe(3);
+    expect(
+      await fs.readFile(
+        path.join(
+          outputDir,
+          "app",
+          "(site)",
+          "api-reference",
+          "users",
+          "listusers",
+          "page.tsx",
+        ),
+        "utf8",
+      ),
+    ).toContain("Users changed during watcher rollback");
+    await generator.stop();
+  });
+
+  it("restores the previous OpenAPI reference when watcher-window retries are exhausted", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const oldSpecPath = path.join(root, "old-openapi.json");
+    const candidateSpecPath = path.join(root, "candidate-openapi.json");
+    const writeSpec = (specPath: string, resource: string, summary: string) =>
+      fs.writeJson(specPath, {
+        openapi: "3.0.0",
+        info: { title: "Test", version: "1.0.0" },
+        paths: {
+          [`/${resource}`]: {
+            get: {
+              operationId: `list${resource}`,
+              summary,
+              tags: [resource],
+              responses: { "200": { description: "OK" } },
+            },
+          },
+        },
+      });
+    await writeSpec(oldSpecPath, "users", "Last good users");
+    await writeSpec(candidateSpecPath, "pets", "Candidate pets 0");
+    await fs.outputFile(path.join(watchDir, "index.mdx"), "# Home\n");
+    const generator = new MDXToNextJSGenerator(
+      watchDir,
+      outputDir,
+      [{ name: "Old", file: oldSpecPath }],
+      root,
+    );
+    await generator.init();
+    type GeneratorInternals = {
+      openApiSpecs: Array<{ name: string; file: string }>;
+      syncOpenApiSpecWatcher(): Promise<void>;
+    };
+    const internals = generator as unknown as GeneratorInternals;
+    let candidateSyncs = 0;
+    let previousChangedDuringRollback = false;
+    vi.spyOn(internals, "syncOpenApiSpecWatcher").mockImplementation(
+      async () => {
+        if (
+          internals.openApiSpecs.some(
+            (spec) => path.resolve(root, spec.file) === candidateSpecPath,
+          )
+        ) {
+          candidateSyncs += 1;
+          await writeSpec(
+            candidateSpecPath,
+            "pets",
+            `Candidate pets ${candidateSyncs}`,
+          );
+        } else if (!previousChangedDuringRollback) {
+          previousChangedDuringRollback = true;
+          await writeSpec(
+            oldSpecPath,
+            "users",
+            "Users changed during rollback",
+          );
+        }
+      },
+    );
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    await fs.writeJson(path.join(root, "doccupine.json"), {
+      watchDir: "docs",
+      outputDir: "site",
+      openapi: [{ name: "Candidate", file: "candidate-openapi.json" }],
+    });
+
+    await generator.handleDoccupineConfigChange();
+
+    expect(candidateSyncs).toBe(4);
+    expect(previousChangedDuringRollback).toBe(true);
+    expect(internals.openApiSpecs).toEqual([
+      { name: "Old", file: oldSpecPath },
+    ]);
+    expect(
+      await fs.readFile(
+        path.join(
+          outputDir,
+          "app",
+          "(site)",
+          "api-reference",
+          "users",
+          "listusers",
+          "page.tsx",
+        ),
+        "utf8",
+      ),
+    ).toContain("Users changed during rollback");
+    expect(
+      await fs.pathExists(
+        path.join(
+          outputDir,
+          "app",
+          "(site)",
+          "api-reference",
+          "pets",
+          "listpets",
+          "page.tsx",
+        ),
+      ),
+    ).toBe(false);
+    await generator.stop();
+  });
+
   it("keeps the last successful OpenAPI page when one candidate page fails", async () => {
     const { root, watchDir, outputDir } = await fixture();
     const specPath = path.join(root, "openapi.json");

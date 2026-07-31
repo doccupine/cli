@@ -1051,12 +1051,12 @@ export class MDXToNextJSGenerator {
         new Map([[normalizedSource, changedSource]]),
         true,
       );
-      this.sectionsConfig = snapshot.sections;
       const realPages = snapshot.pages;
       const currentPage = realPages.find(
         (page) => page.path.replace(/\\/g, "/") === normalizedSource,
       );
       if (!currentPage) throw new Error(`Unable to resolve ${filePath}`);
+      this.sectionsConfig = snapshot.sections;
 
       try {
         pageCommits.push(
@@ -1120,14 +1120,14 @@ export class MDXToNextJSGenerator {
     const pageCommits: GeneratedPageCommit[] = [];
     try {
       const normalizedSource = filePath.replace(/\\/g, "/");
-      this.removeSuccessfulMdxPage(normalizedSource);
-      this.collisionBlockedMdxSources.delete(normalizedSource);
 
       if (filePath === "index.mdx" || filePath === "./index.mdx") {
         console.log(chalk.blue("🏠 Updating homepage - index.mdx deleted"));
       }
 
       const snapshot = await this.captureMdxPass(undefined, undefined, true);
+      this.removeSuccessfulMdxPage(normalizedSource);
+      this.collisionBlockedMdxSources.delete(normalizedSource);
       this.sectionsConfig = snapshot.sections;
       const realPages = snapshot.pages;
       await this.retryMdxPages(
