@@ -15,7 +15,6 @@ import {
 } from "./lib/generated-artifacts.js";
 import {
   claimOutputDirectory,
-  readOutputFileIfPresent,
   resolveOutputPath,
 } from "./lib/output-safety.js";
 import { OpenApiRegistry, DEFAULT_API_BASE_SLUG } from "./lib/openapi.js";
@@ -23,7 +22,6 @@ import { getFullSlug, safeMatter, writeFileAtomic } from "./lib/utils.js";
 import { nextConfigTemplate } from "./templates/next.config.js";
 import { proxyTemplate } from "./templates/proxy.js";
 import type {
-  DoccupineConfig,
   MDXFile,
   PageMeta,
   SectionConfig,
@@ -35,10 +33,21 @@ import type { OperationDescriptor } from "./lib/openapi-types.js";
 import { SecureSourceFs } from "./generator/secure-source-fs.js";
 import { AppScaffolder } from "./generator/app-scaffolder.js";
 import { ApiReferenceGenerator } from "./generator/api-reference-generator.js";
+import { GeneratedPagePublisher } from "./generator/generated-page-publisher.js";
 import { GeneratedRouteManager } from "./generator/generated-route-manager.js";
+import {
+  MdxPassBuilder,
+  type MdxPassSnapshot,
+  type MdxSourceSnapshot,
+} from "./generator/mdx-pass-builder.js";
 import { ProjectConfigRepository } from "./generator/project-config-repository.js";
 import { PublicAssetManager } from "./generator/public-asset-manager.js";
 import { WatchCoordinator } from "./generator/watch-coordinator.js";
+import { SectionIndexGenerator } from "./generator/section-index-generator.js";
+import {
+  OpenApiRefreshCoordinator,
+  type ApiPageWriteOptions,
+} from "./generator/openapi-refresh-coordinator.js";
 import {
   addApiReferenceSection,
   determineSectionRoute,
@@ -46,15 +55,10 @@ import {
 } from "./generator/section-resolver.js";
 import {
   renderHomepage,
-  renderMdxPage,
-  renderSectionPage,
   type HomepageSource,
-  type RenderedPage,
 } from "./generator/page-renderer.js";
 import {
-  buildRealPagesMeta as buildRealPageCatalog,
   mergePages as mergePageCatalog,
-  parseMdxPageMeta,
   RouteCollisionError,
 } from "./generator/page-catalog.js";
 import {
@@ -64,18 +68,6 @@ import {
   writeRobots,
   writeSitemap,
 } from "./generator/site-artifacts.js";
-
-interface MdxSourceSnapshot {
-  content: string;
-  stat: fs.Stats;
-}
-
-interface MdxPassSnapshot {
-  files: string[];
-  pages: PageMeta[];
-  sources: ReadonlyMap<string, MdxSourceSnapshot>;
-  sections: SectionConfig[] | null;
-}
 
 interface SuccessfulMdxState {
   pages: Map<string, PageMeta>;
@@ -89,11 +81,6 @@ interface SuccessfulMdxState {
 
 interface GeneratedPageCommit {
   rollback(): Promise<void>;
-}
-
-interface ApiPageWriteOptions {
-  writtenRoutes?: Map<string, string>;
-  additionalPreviousRoutes?: Iterable<RouteArtifact>;
 }
 
 export class MDXToNextJSGenerator {
@@ -122,7 +109,11 @@ export class MDXToNextJSGenerator {
   private sourceFs: SecureSourceFs;
   private appScaffolder: AppScaffolder;
   private apiReferenceGenerator: ApiReferenceGenerator;
+  private generatedPagePublisher: GeneratedPagePublisher;
   private generatedRouteManager: GeneratedRouteManager;
+  private mdxPassBuilder: MdxPassBuilder;
+  private openApiRefreshCoordinator: OpenApiRefreshCoordinator;
+  private sectionIndexGenerator: SectionIndexGenerator;
   private projectConfigRepository: ProjectConfigRepository;
   private publicAssetManager: PublicAssetManager;
   private watchCoordinator: WatchCoordinator;
@@ -154,6 +145,26 @@ export class MDXToNextJSGenerator {
       this.outputDir,
       this.artifacts,
     );
+    this.generatedPagePublisher = new GeneratedPagePublisher(
+      this.outputDir,
+      this.generatedRouteManager,
+    );
+    this.sectionIndexGenerator = new SectionIndexGenerator(
+      this.outputDir,
+      this.generatedRouteManager,
+    );
+    this.mdxPassBuilder = new MdxPassBuilder({
+      sourceFs: this.sourceFs,
+      getAllMdxFiles: () => this.getAllMDXFiles(),
+      getSections: () => this.sectionsConfig,
+      loadSectionsConfig: () => this.loadSectionsConfig(),
+      withApiReferenceSection: (sections) =>
+        this.withApiReferenceSection(sections),
+      determineSectionForFile: (filePath, frontmatter, sections) =>
+        this.determineSectionForFile(filePath, frontmatter, sections),
+      resolveHttpMethod: (reference) =>
+        this.apiRegistry.lookup(reference)?.method,
+    });
     this.projectConfigRepository = new ProjectConfigRepository(
       this.rootDir,
       this.outputDir,
@@ -200,6 +211,34 @@ export class MDXToNextJSGenerator {
           this.handlePublicFileDelete(filePath),
         processAllMDXFiles: () => this.reconcileMdxSources(),
       },
+    });
+    this.openApiRefreshCoordinator = new OpenApiRefreshCoordinator({
+      rootDir: this.rootDir,
+      watchDir: this.watchDir,
+      outputDir: this.outputDir,
+      configFile: this.doccupineConfigFile,
+      apiBaseSlug: this.apiBaseSlug,
+      sourceFs: this.sourceFs,
+      getRegistry: () => this.apiRegistry,
+      setRegistry: (registry) => {
+        this.apiRegistry = registry;
+      },
+      getSpecs: () => this.openApiSpecs,
+      setSpecs: (specs) => {
+        this.openApiSpecs = specs;
+      },
+      getSections: () => this.sectionsConfig,
+      setSections: (sections) => {
+        this.sectionsConfig = sections;
+      },
+      getOpenApiRoutes: () => this.artifacts.routesFor("openapi"),
+      getSuccessfulMdxPages: () => [...this.successfulMdxPages.values()],
+      resolveSections: () => this.resolveSections(),
+      writeApiPages: (realPages, options) =>
+        this.writeApiPages(realPages, options),
+      refreshSiteAggregates: () => this.refreshSiteAggregates(),
+      syncWatcher: () => this.syncOpenApiSpecWatcher(),
+      removeOwnedRoute: (slug) => this.removeOwnedRoute(slug),
     });
   }
 
@@ -592,60 +631,12 @@ export class MDXToNextJSGenerator {
     return this.watchCoordinator.startWatching();
   }
 
-  private async parseMDXFile(
-    file: string,
-    source?: MdxSourceSnapshot,
-    sections: SectionConfig[] | null = this.sectionsConfig,
-  ): Promise<PageMeta> {
-    return parseMdxPageMeta(
-      file,
-      source
-        ? async () => source
-        : (filePath) => this.readMdxSourceFile(filePath),
-      (filePath, frontmatter) =>
-        this.determineSectionForFile(filePath, frontmatter, sections),
-      (reference) => this.apiRegistry.lookup(reference)?.method,
-    );
-  }
-
   private async captureMdxPass(
     files?: string[],
     seededSources: ReadonlyMap<string, MdxSourceSnapshot> = new Map(),
     refreshSections = false,
   ): Promise<MdxPassSnapshot> {
-    const resolvedFiles = files ?? (await this.getAllMDXFiles());
-    const sources = new Map(seededSources);
-    await Promise.all(
-      resolvedFiles.map(async (file) => {
-        const source = file.replace(/\\/g, "/");
-        if (!sources.has(source)) {
-          sources.set(source, await this.readMdxSourceFile(file));
-        }
-      }),
-    );
-    let sections = this.sectionsConfig;
-    if (refreshSections) {
-      const configuredSections = await this.loadSectionsConfig();
-      if (configuredSections !== null) {
-        sections = this.withApiReferenceSection(configuredSections);
-      } else {
-        const documents = resolvedFiles.map((filePath) => {
-          const source = sources.get(filePath.replace(/\\/g, "/"));
-          if (!source) throw new Error(`Unable to snapshot ${filePath}`);
-          return {
-            filePath,
-            frontmatter: safeMatter(source.content, filePath).data,
-          };
-        });
-        sections = this.withApiReferenceSection(discoverSections(documents));
-      }
-    }
-    const pages = await buildRealPageCatalog(resolvedFiles, (file) => {
-      const source = sources.get(file.replace(/\\/g, "/"));
-      if (!source) throw new Error(`Unable to snapshot ${file}`);
-      return this.parseMDXFile(file, source, sections);
-    });
-    return { files: resolvedFiles, pages, sources, sections };
+    return this.mdxPassBuilder.capture(files, seededSources, refreshSections);
   }
 
   private async buildRealPagesMeta(): Promise<PageMeta[]> {
@@ -1260,76 +1251,12 @@ export class MDXToNextJSGenerator {
     declaredSlugs?: Set<string>,
   ) {
     const resolvedPages = pages ?? (await this.buildAllPagesMeta());
-    const occupiedSlugs = new Set(resolvedPages.map((page) => page.slug));
-    const resolvedDeclaredSlugs = new Set(occupiedSlugs);
-    for (const slug of declaredSlugs ?? []) resolvedDeclaredSlugs.add(slug);
-    const redirects = new Map<string, string>();
-
-    if (this.sectionsConfig && this.sectionsConfig.length > 0) {
-      for (const section of this.sectionsConfig) {
-        if (section.slug === "") continue;
-
-        // Check if a page already exists at the section root
-        const hasIndex = resolvedDeclaredSlugs.has(section.slug);
-        if (hasIndex) continue;
-
-        // Find the first page in this section
-        const sectionPages = resolvedPages
-          .filter((p) => p.section === section.slug)
-          .sort((a, b) => {
-            if (a.categoryOrder !== b.categoryOrder)
-              return a.categoryOrder - b.categoryOrder;
-            return a.order - b.order;
-          });
-
-        if (sectionPages.length === 0) continue;
-
-        const firstPage = sectionPages[0];
-        redirects.set(section.slug, firstPage.slug);
-      }
-    }
-
-    const previousSlugs = this.generatedRouteManager.sectionIndexSlugs();
-    const touchedSlugs = new Set([...previousSlugs, ...redirects.keys()]);
-    const previousFiles = new Map<string, string | null>();
-    for (const slug of touchedSlugs) {
-      previousFiles.set(
-        slug,
-        await this.readGeneratedFile(
-          this.outputPath("app", "(site)", slug, "page.tsx"),
-        ),
-      );
-    }
-
-    try {
-      for (const [slug, target] of redirects) {
-        await this.writeSectionIndexRedirect(slug, target);
-      }
-      await this.cleanupStaleSectionIndexPages(
-        new Set(redirects.keys()),
-        occupiedSlugs,
-      );
-    } catch (error) {
-      const rollbackErrors: unknown[] = [];
-      this.generatedRouteManager.replaceSectionIndexSlugs(previousSlugs);
-      for (const [slug, content] of previousFiles) {
-        try {
-          await this.restoreGeneratedFile(
-            this.outputPath("app", "(site)", slug, "page.tsx"),
-            content,
-          );
-        } catch (rollbackError) {
-          rollbackErrors.push(rollbackError);
-        }
-      }
-      if (rollbackErrors.length > 0) {
-        throw new AggregateError(
-          [error, ...rollbackErrors],
-          "Unable to generate or restore section index redirects",
-        );
-      }
-      throw error;
-    }
+    return this.sectionIndexGenerator.generate(
+      resolvedPages,
+      this.sectionsConfig,
+      declaredSlugs,
+      (slug, target) => this.writeSectionIndexRedirect(slug, target),
+    );
   }
 
   private async writeSectionIndexRedirect(
@@ -1351,173 +1278,16 @@ export default function SectionIndex() {
     );
   }
 
-  /**
-   * Removes section index redirects written earlier in this session whose
-   * section has since disappeared (e.g. the API Reference section after the
-   * `openapi` config is removed mid-watch). Slugs now occupied by real pages
-   * are preserved. Fresh processes start clean anyway - init() wipes app/ -
-   * so in-session tracking is enough.
-   */
-  private async cleanupStaleSectionIndexPages(
-    nextSlugs: Set<string>,
-    occupiedSlugs: Set<string>,
-  ): Promise<void> {
-    return this.generatedRouteManager.cleanupStaleSectionIndexPages(
-      nextSlugs,
-      occupiedSlugs,
-      (dir, stopDir) => this.removeEmptyDirsUpTo(dir, stopDir),
-    );
-  }
-
-  /** Best-effort removal of now-empty directories up to (not incl.) stopDir. */
-  private async removeEmptyDirsUpTo(
-    dir: string,
-    stopDir: string,
-  ): Promise<void> {
-    return this.generatedRouteManager.removeEmptyDirsUpTo(dir, stopDir);
-  }
-
-  private generatedFileSegments(filePath: string): string[] {
-    return path
-      .relative(fs.realpathSync(this.outputDir), filePath)
-      .split(path.sep)
-      .filter(Boolean);
-  }
-
-  private async readGeneratedFile(filePath: string): Promise<string | null> {
-    return readOutputFileIfPresent(
-      this.outputDir,
-      ...this.generatedFileSegments(filePath),
-    );
-  }
-
-  private async restoreGeneratedFile(
-    filePath: string,
-    content: string | null,
-  ): Promise<void> {
-    const target = this.outputPath(...this.generatedFileSegments(filePath));
-    if (content === null) {
-      await fs.remove(target);
-    } else {
-      await writeFileAtomic(target, content);
-    }
-  }
-
-  private async commitRenderedPage(
-    pagePath: string,
-    rendered: RenderedPage,
-  ): Promise<GeneratedPageCommit> {
-    if (rendered.rssRoute.action === "preserve") {
-      const previousPage = await this.readGeneratedFile(pagePath);
-      await writeFileAtomic(pagePath, rendered.pageContent);
-      return {
-        rollback: () => this.restoreGeneratedFile(pagePath, previousPage),
-      };
-    }
-
-    const rssDir = resolveOutputPath(path.dirname(pagePath), "rss.xml");
-    const rssPath = resolveOutputPath(
-      path.dirname(pagePath),
-      "rss.xml",
-      "route.ts",
-    );
-    const [previousPage, previousRss] = await Promise.all([
-      this.readGeneratedFile(pagePath),
-      this.readGeneratedFile(rssPath),
-    ]);
-    let pageChanged = false;
-    let rssChanged = false;
-
-    try {
-      if (rendered.rssRoute.action === "write") {
-        await writeFileAtomic(rssPath, rendered.rssRoute.content);
-        rssChanged = true;
-        await writeFileAtomic(pagePath, rendered.pageContent);
-        pageChanged = true;
-      } else {
-        await writeFileAtomic(pagePath, rendered.pageContent);
-        pageChanged = true;
-        await fs.remove(rssPath);
-        rssChanged = true;
-        await this.removeEmptyDirsUpTo(rssDir, path.dirname(pagePath));
-      }
-    } catch (error) {
-      const rollbackErrors: unknown[] = [];
-      if (rssChanged) {
-        try {
-          await this.restoreGeneratedFile(rssPath, previousRss);
-        } catch (rollbackError) {
-          rollbackErrors.push(rollbackError);
-        }
-      }
-      if (pageChanged) {
-        try {
-          await this.restoreGeneratedFile(pagePath, previousPage);
-        } catch (rollbackError) {
-          rollbackErrors.push(rollbackError);
-        }
-      }
-      if (rollbackErrors.length > 0) {
-        throw new AggregateError(
-          [error, ...rollbackErrors],
-          `Unable to publish or restore generated page ${pagePath}`,
-        );
-      }
-      throw error;
-    }
-
-    return {
-      rollback: async () => {
-        const rollbackErrors: unknown[] = [];
-        try {
-          await this.restoreGeneratedFile(rssPath, previousRss);
-        } catch (error) {
-          rollbackErrors.push(error);
-        }
-        try {
-          await this.restoreGeneratedFile(pagePath, previousPage);
-        } catch (error) {
-          rollbackErrors.push(error);
-        }
-        if (rollbackErrors.length > 0) {
-          throw new AggregateError(
-            rollbackErrors,
-            `Unable to restore generated page ${pagePath}`,
-          );
-        }
-      },
-    };
-  }
-
   async generatePageFromMDX(
     mdxFile: MDXFile,
     options?: { apiOperation?: OperationDescriptor },
-  ) {
-    const rendered = renderMdxPage(mdxFile, options);
-    const pagePath = resolveOutputPath(
-      this.outputDir,
-      "app",
-      "(site)",
-      mdxFile.slug,
-      "page.tsx",
-    );
-    await fs.ensureDir(path.dirname(pagePath));
-    return this.commitRenderedPage(pagePath, rendered);
+  ): Promise<GeneratedPageCommit> {
+    return this.generatedPagePublisher.generatePageFromMdx(mdxFile, options);
   }
 
   /** Parses the configured OpenAPI spec(s) into the shared registry. */
   private async loadOpenApiRegistry(): Promise<void> {
-    if (this.openApiSpecs.length === 0) return;
-    this.apiRegistry = (
-      await this.loadStableOpenApiRegistry(this.openApiSpecs)
-    ).registry;
-    if (!this.apiRegistry.isEmpty) {
-      console.log(
-        chalk.blue(
-          `📘 Loaded ${this.apiRegistry.all.length} API endpoint(s) from ${this.openApiSpecs.length} spec(s)`,
-        ),
-      );
-    }
+    return this.openApiRefreshCoordinator.loadInitialRegistry();
   }
 
   /**
@@ -1591,133 +1361,9 @@ export default function SectionIndex() {
     );
   }
 
-  private async openApiSourceState(registry: OpenApiRegistry): Promise<string> {
-    return (
-      await Promise.all(
-        registry.sourceFiles.map(async (sourcePath) => {
-          return `${sourcePath}:${await this.sourceFs.pathState(sourcePath, true)}`;
-        }),
-      )
-    ).join("\n");
-  }
-
-  private async loadStableOpenApiRegistry(
-    specs: NormalizedOpenApiSpec[],
-  ): Promise<{ registry: OpenApiRegistry; sourceState: string }> {
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      const registry = new OpenApiRegistry();
-      await registry.load(specs, this.rootDir, this.apiBaseSlug);
-      const current = await this.openApiSourceState(registry);
-      if (registry.sourceFingerprint === current) {
-        return { registry, sourceState: current };
-      }
-    }
-    throw new Error("OpenAPI sources changed repeatedly while being loaded");
-  }
-
-  private async applyStableOpenApiRefresh(
-    specs: NormalizedOpenApiSpec[],
-  ): Promise<void> {
-    let candidate = await this.loadStableOpenApiRegistry(specs);
-    await this.applyOpenApiRefresh(candidate.registry, specs);
-
-    // Once the new watcher is ready, compare its source against the exact
-    // version rendered above. A change in the retargeting window is replayed
-    // explicitly because ignoreInitial watchers cannot report it.
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      if (
-        (await this.openApiSourceState(candidate.registry)) ===
-        candidate.sourceState
-      ) {
-        return;
-      }
-      candidate = await this.loadStableOpenApiRegistry(specs);
-      await this.applyOpenApiRefresh(candidate.registry, specs);
-    }
-    throw new Error("OpenAPI sources changed repeatedly while being generated");
-  }
-
-  /**
-   * Reparses the spec(s) and rewrites everything derived from them: the
-   * endpoint pages and allowlist, the sections (the "API Reference" section
-   * appears and disappears with the registry), and the site aggregates.
-   */
-  private async applyOpenApiRefresh(
-    nextRegistry: OpenApiRegistry,
-    nextSpecs: NormalizedOpenApiSpec[],
-  ): Promise<void> {
-    const previousRegistry = this.apiRegistry;
-    const previousSpecs = this.openApiSpecs;
-    const previousSections = this.sectionsConfig;
-    const previousRoutes = this.artifacts.routesFor("openapi");
-    const candidateRoutes = new Map<string, string>();
-    let watcherSyncAttempted = false;
-
-    try {
-      this.apiRegistry = nextRegistry;
-      this.openApiSpecs = nextSpecs;
-      this.sectionsConfig = await this.resolveSections();
-      await this.writeApiPages(undefined, { writtenRoutes: candidateRoutes });
-      await this.refreshSiteAggregates();
-      watcherSyncAttempted = true;
-      await this.syncOpenApiSpecWatcher();
-    } catch (error) {
-      this.apiRegistry = previousRegistry;
-      this.openApiSpecs = previousSpecs;
-      this.sectionsConfig = previousSections;
-      const rollbackErrors: unknown[] = [];
-
-      if (watcherSyncAttempted) {
-        try {
-          await this.syncOpenApiSpecWatcher();
-        } catch (rollbackError) {
-          rollbackErrors.push(rollbackError);
-        }
-      }
-      const previousSlugs = new Set(previousRoutes.map((route) => route.slug));
-      const occupiedMdxSlugs = new Set(
-        [...this.successfulMdxPages.values()].map((page) => page.slug),
-      );
-      for (const slug of new Set(candidateRoutes.values())) {
-        if (previousSlugs.has(slug) || occupiedMdxSlugs.has(slug)) continue;
-        try {
-          await this.removeOwnedRoute(slug);
-        } catch (rollbackError) {
-          rollbackErrors.push(rollbackError);
-        }
-      }
-      try {
-        await this.writeApiPages(undefined, {
-          additionalPreviousRoutes: [...candidateRoutes].map(
-            ([source, slug]) => ({ kind: "openapi", source, slug }),
-          ),
-        });
-        await this.refreshSiteAggregates();
-      } catch (rollbackError) {
-        rollbackErrors.push(rollbackError);
-      }
-
-      if (rollbackErrors.length > 0) {
-        throw new AggregateError(
-          [error, ...rollbackErrors],
-          "Unable to apply or restore the OpenAPI reference",
-        );
-      }
-      throw error;
-    }
-  }
-
   /** Reparses the spec(s) and regenerates the API reference on a watch event. */
   async handleOpenApiChange() {
-    console.log(
-      chalk.cyan("📘 OpenAPI spec changed - regenerating API reference"),
-    );
-    try {
-      await this.applyStableOpenApiRefresh(this.openApiSpecs);
-      console.log(chalk.green("✅ API reference updated"));
-    } catch (error) {
-      console.error(chalk.red("❌ Error updating API reference:"), error);
-    }
+    return this.openApiRefreshCoordinator.handleOpenApiChange();
   }
 
   /**
@@ -1729,54 +1375,7 @@ export default function SectionIndex() {
    * half-written editor save) keeps the current configuration.
    */
   async handleDoccupineConfigChange() {
-    const configPath = path.join(this.rootDir, this.doccupineConfigFile);
-    let config: DoccupineConfig;
-    try {
-      const { data } = await this.sourceFs.readProjectSourceFile(
-        configPath,
-        "Doccupine configuration source",
-      );
-      config = validateConfig(JSON.parse(data.toString("utf8")), this.rootDir);
-    } catch (error) {
-      console.warn(
-        chalk.yellow(
-          "⚠️ doccupine.json is missing or invalid - keeping the current configuration",
-        ),
-        error instanceof Error ? error.message : error,
-      );
-      return;
-    }
-
-    if (
-      (config.watchDir &&
-        path.resolve(this.rootDir, config.watchDir) !== this.watchDir) ||
-      (config.outputDir &&
-        path.resolve(this.rootDir, config.outputDir) !== this.outputDir)
-    ) {
-      console.log(
-        chalk.yellow(
-          "⚠️ watchDir/outputDir changes in doccupine.json need a restart to apply",
-        ),
-      );
-    }
-
-    const nextSpecs = normalizeOpenApiConfig(config.openapi);
-    if (JSON.stringify(nextSpecs) === JSON.stringify(this.openApiSpecs)) {
-      return;
-    }
-
-    console.log(
-      chalk.cyan("📘 OpenAPI configuration changed - updating API reference"),
-    );
-    try {
-      // Validate the complete candidate before changing the active spec list or
-      // its watcher. A half-written/invalid replacement keeps both the current
-      // generated reference and its live watcher intact.
-      await this.applyStableOpenApiRefresh(nextSpecs);
-      console.log(chalk.green("✅ API reference updated"));
-    } catch (error) {
-      console.error(chalk.red("❌ Error updating API reference:"), error);
-    }
+    return this.openApiRefreshCoordinator.handleConfigChange();
   }
 
   async updatePagesIndex(pages?: readonly PageMeta[]) {
@@ -1815,11 +1414,7 @@ export default function SectionIndex() {
         );
       }
     }
-    const rendered = renderHomepage(indexMDX, apiOperation);
-
-    const homePath = this.outputPath("app", "(site)", "page.tsx");
-    await fs.ensureDir(path.dirname(homePath));
-    await this.commitRenderedPage(homePath, rendered);
+    await this.generatedPagePublisher.updateHomepage(indexMDX, apiOperation);
   }
 
   async updateSectionIndex(
@@ -1827,23 +1422,13 @@ export default function SectionIndex() {
     frontmatter: Record<string, any>,
     mdxContent: string,
     sourcePath?: string,
-  ) {
-    const rendered = renderSectionPage(
+  ): Promise<GeneratedPageCommit> {
+    return this.generatedPagePublisher.updateSectionIndex(
       sectionSlug,
       frontmatter,
       mdxContent,
       sourcePath,
     );
-
-    const pagePath = resolveOutputPath(
-      this.outputDir,
-      "app",
-      "(site)",
-      sectionSlug,
-      "page.tsx",
-    );
-    await fs.ensureDir(path.dirname(pagePath));
-    return this.commitRenderedPage(pagePath, rendered);
   }
 
   async updateRootLayout(pages?: PageMeta[]) {
