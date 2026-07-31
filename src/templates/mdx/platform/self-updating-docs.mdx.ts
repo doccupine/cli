@@ -2,7 +2,7 @@ export const platformSelfUpdatingDocsMdxTemplate = `---
 title: "Agent Sync"
 description: "Agent Sync links documentation pages to the code they describe and rewrites them when that code changes, keeping your docs self-updating."
 date: "2026-07-24"
-updated: "2026-07-30"
+updated: "2026-08-01"
 category: "Editing"
 categoryOrder: 1
 order: 2
@@ -18,7 +18,7 @@ You'll find it under **Agent Sync** in the project sidebar.
 
 | View      | What it's for                                                                 |
 | --------- | ----------------------------------------------------------------------------- |
-| **Agent** | Ask the agent to write or update documentation, and read its replies           |
+| **Agent** | Ask questions about your code, or ask the agent to write and update pages      |
 | **Map**   | Each page beside the sources it came from, with its sync state                 |
 | **Table** | The same information as a dense, sortable list                                 |
 | **Drift** | The queue of pages whose sources have changed                                  |
@@ -27,15 +27,23 @@ A badge on the sidebar link counts the pages currently waiting for attention.
 
 ## Asking the agent for docs
 
-The **Agent** view is a chat. Describe what you want documented, choose a **source repository** and a **scope** - the whole repo, a folder, or a single file - and the agent researches the code, plans the pages, and writes them.
+The **Agent** view is a chat. Choose a **source repository** and a **scope** - the whole repo, a folder, or a single file - then either ask a question or ask for a change.
 
-Replies are threaded, so a follow-up builds on what came before:
+**Questions are answered in the chat.** Ask what a module does, which pages cover a feature, or whether a guide still matches the code, and the agent reads the source and replies without touching your documentation:
+
+> Which pages would break if we renamed the refresh-token endpoint?
+
+**Asking for a change starts a run.** The agent researches the code, plans the pages, and writes them:
 
 > Document the auth module - cover sessions, refresh tokens and the error codes.
 
+> Update the buttons page so it matches the current component.
+
+Replies are threaded, so a follow-up builds on what came before - and agreeing to something the agent suggested is enough to start the work, without repeating yourself:
+
 > Now do the same for the CLI.
 
-Each turn shows the steps the agent took, the pages it changed, the sources it read, and what the run cost. You can switch between conversations, rename them, or start a fresh one.
+A turn that changes documentation shows the steps the agent took, the pages it changed, the sources it read, and what the run cost. You can switch between conversations, rename them, or start a fresh one.
 
 <Callout type="note">
   An empty result is a valid answer. If the docs already describe the code accurately, the agent will say so rather than rewriting pages for the sake of it.
