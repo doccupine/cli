@@ -229,7 +229,7 @@ try {
     [
       "--input-type=module",
       "--eval",
-      `await import(${JSON.stringify(packageJson.name)})`,
+      `const packageModule = await import(${JSON.stringify(packageJson.name)}); if (typeof packageModule.MDXToNextJSGenerator !== "function") throw new Error("Missing MDXToNextJSGenerator export")`,
     ],
     projectDir,
   );
