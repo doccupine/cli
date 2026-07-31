@@ -68,26 +68,36 @@ function fontImportLine(fontConfig: FontConfig | null): string {
 }
 
 function fontDeclLine(fontConfig: FontConfig | null): string {
-  return isGoogleFont(fontConfig)
-    ? `const font = ${fontConfig.googleFont.fontName}({ ${[
-        fontConfig.googleFont.subsets?.length
-          ? `subsets: ${JSON.stringify(fontConfig.googleFont.subsets)}`
-          : "",
-        fontConfig.googleFont.weight?.length
-          ? `weight: ${
-              Array.isArray(fontConfig.googleFont.weight)
-                ? JSON.stringify(fontConfig.googleFont.weight)
-                : JSON.stringify(fontConfig.googleFont.weight)
-            }`
-          : "",
-      ]
-        .filter(Boolean)
-        .join(", ")} });`
-    : isLocalFont(fontConfig)
-      ? `const font = localFont({
+  if (isGoogleFont(fontConfig)) {
+    const options = [
+      fontConfig.googleFont.subsets?.length
+        ? `subsets: [${fontConfig.googleFont.subsets
+            .map((subset) => JSON.stringify(subset))
+            .join(", ")}]`
+        : "",
+      fontConfig.googleFont.weight?.length
+        ? `weight: ${
+            Array.isArray(fontConfig.googleFont.weight)
+              ? `[${fontConfig.googleFont.weight
+                  .map((weight) => JSON.stringify(weight))
+                  .join(", ")}]`
+              : JSON.stringify(fontConfig.googleFont.weight)
+          }`
+        : "",
+    ].filter(Boolean);
+
+    return options.length
+      ? `const font = ${fontConfig.googleFont.fontName}({
+  ${options.join(",\n  ")},
+});`
+      : `const font = ${fontConfig.googleFont.fontName}({});`;
+  }
+
+  return isLocalFont(fontConfig)
+    ? `const font = localFont({
   src: ${getLocalFontSrc(fontConfig!)},
 });`
-      : 'const font = Inter({ subsets: ["latin"] });';
+    : 'const font = Inter({ subsets: ["latin"] });';
 }
 
 // The inline blocking script that resolves dark mode before the first paint.

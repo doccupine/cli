@@ -294,6 +294,17 @@ describe.skipIf(!fs.pathExistsSync(distEntry))(
           path.join(projectDir, "openapi.json"),
           openApiFixture,
         );
+        await fs.writeFile(
+          path.join(projectDir, "fonts.json"),
+          `{
+  "googleFont": {
+    "fontName": "Geist",
+    "subsets": ["latin"],
+    "weight": ["400", "500", "600", "700", "800", "900"]
+  }
+}
+`,
+        );
 
         await execFileAsync(process.execPath, [distEntry, "build"], {
           cwd: projectDir,
@@ -327,6 +338,12 @@ describe.skipIf(!fs.pathExistsSync(distEntry))(
         expect(apiIndex).not.toContain("redirect(");
         expect(apiIndex).toContain('href={"/api-reference/admin/getworkbyid"}');
         expect(apiIndex).toContain('href={"/api-reference/notes/createnote"}');
+        await expect(
+          fs.readFile(path.join(outDir, "app", "layout.tsx"), "utf8"),
+        ).resolves.toContain(`const font = Geist({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+});`);
         // The starting docs ship an <Update> page with `rss: true`, so the
         // format check also covers the generated feed route and the RSS-button
         // page shape.

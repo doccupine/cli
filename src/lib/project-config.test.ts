@@ -67,6 +67,21 @@ describe("project configuration", () => {
     expect(invalid).not.toContain("process.exit");
   });
 
+  it("emits format-stable Google font options", () => {
+    const layout = rootLayoutTemplate({
+      googleFont: {
+        fontName: "Geist",
+        subsets: ["latin"],
+        weight: ["400", "500", "600", "700", "800", "900"],
+      },
+    });
+
+    expect(layout).toContain(`const font = Geist({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+});`);
+  });
+
   it("validates and normalizes PostHog configuration", () => {
     expect(
       validateAnalyticsConfig({
