@@ -6,7 +6,7 @@ import { writeFileAtomic } from "./utils.js";
 
 export type RouteOwnerKind = "mdx" | "openapi";
 
-interface RouteArtifact {
+export interface RouteArtifact {
   kind: RouteOwnerKind;
   source: string;
   slug: string;
@@ -154,24 +154,52 @@ export class GeneratedArtifacts {
     return [...this.routes.values()].filter((route) => route.kind === kind);
   }
 
-  replaceRoutes(
+  private routesWithReplacement(
     kind: RouteOwnerKind,
     routes: Iterable<{ source: string; slug: string }>,
-  ): void {
-    for (const [key, route] of this.routes) {
-      if (route.kind === kind) this.routes.delete(key);
+  ): Map<string, RouteArtifact> {
+    const next = new Map(this.routes);
+    for (const [key, route] of next) {
+      if (route.kind === kind) next.delete(key);
     }
     for (const value of routes) {
       const route = normalizeRoute({ kind, ...value });
       if (!route) {
         throw new Error(`Refusing to record unsafe ${kind} route ownership`);
       }
-      this.routes.set(this.routeKey(kind, route.source), route);
+      next.set(this.routeKey(kind, route.source), route);
     }
+    return next;
+  }
+
+  replaceRoutes(
+    kind: RouteOwnerKind,
+    routes: Iterable<{ source: string; slug: string }>,
+  ): void {
+    this.routes = this.routesWithReplacement(kind, routes);
+  }
+
+  async replaceRoutesAndSave(
+    kind: RouteOwnerKind,
+    routes: Iterable<{ source: string; slug: string }>,
+  ): Promise<void> {
+    const next = this.routesWithReplacement(kind, routes);
+    await this.writeManifest(next);
+    this.routes = next;
   }
 
   removeRoute(kind: RouteOwnerKind, source: string): void {
     this.routes.delete(this.routeKey(kind, source));
+  }
+
+  async removeRouteAndSave(
+    kind: RouteOwnerKind,
+    source: string,
+  ): Promise<void> {
+    const next = new Map(this.routes);
+    next.delete(this.routeKey(kind, source));
+    await this.writeManifest(next);
+    this.routes = next;
   }
 
   llmsPageFiles(): Set<string> {
@@ -202,10 +230,12 @@ export class GeneratedArtifacts {
     this.publicFilePaths = next;
   }
 
-  async save(): Promise<void> {
+  private async writeManifest(
+    routes: ReadonlyMap<string, RouteArtifact>,
+  ): Promise<void> {
     const manifest: ArtifactManifest = {
       schemaVersion: 2,
-      routes: [...this.routes.values()].sort((a, b) =>
+      routes: [...routes.values()].sort((a, b) =>
         `${a.kind}:${a.source}`.localeCompare(`${b.kind}:${b.source}`),
       ),
       llmsPageFiles: [...this.llmsFiles].sort(),
@@ -215,5 +245,9 @@ export class GeneratedArtifacts {
       this.manifestPath(MANIFEST_FILE),
       `${JSON.stringify(manifest, null, 2)}\n`,
     );
+  }
+
+  async save(): Promise<void> {
+    await this.writeManifest(this.routes);
   }
 }

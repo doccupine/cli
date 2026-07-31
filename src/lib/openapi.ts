@@ -1,5 +1,6 @@
 import path from "path";
 import net from "node:net";
+import { createHash } from "node:crypto";
 import { constants } from "node:fs";
 import fs from "node:fs/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -364,7 +365,7 @@ async function readOpenApiSnapshot(
   referenceRootRealPath: string,
   realPath: string,
   reference: string,
-): Promise<Buffer> {
+): Promise<{ contents: Buffer; state: string }> {
   let handle: Awaited<ReturnType<typeof fs.open>>;
   try {
     const noFollow = process.platform === "win32" ? 0 : constants.O_NOFOLLOW;
@@ -395,7 +396,20 @@ async function readOpenApiSnapshot(
     ) {
       throw new Error(`OpenAPI file "${reference}" changed while being read`);
     }
-    return await handle.readFile();
+    const contents = await handle.readFile();
+    const afterRead = await handle.stat();
+    if (
+      openedStat.size !== afterRead.size ||
+      openedStat.mtimeMs !== afterRead.mtimeMs ||
+      openedStat.ctimeMs !== afterRead.ctimeMs
+    ) {
+      throw new Error(`OpenAPI file "${reference}" changed while being read`);
+    }
+    const hash = createHash("sha256").update(contents).digest("hex");
+    return {
+      contents,
+      state: `file:${openedStat.size}:${openedStat.mtimeMs}:${openedStat.dev}:${openedStat.ino}:${hash}`,
+    };
   } finally {
     await handle.close();
   }
@@ -435,12 +449,15 @@ function resolveOpenApiReference(filePath: string, reference: string): string {
  * Captures every allowed file once and rewrites external refs to closed,
  * in-memory snapshot URLs. No parser phase after this function reads disk.
  */
-async function snapshotOpenApiDocuments(
-  rootFile: string,
-): Promise<{ rootDocument: any; snapshots: Map<string, any> }> {
+async function snapshotOpenApiDocuments(rootFile: string): Promise<{
+  rootDocument: any;
+  snapshots: Map<string, any>;
+  sourceStates: Map<string, string>;
+}> {
   const referenceRootRealPath = path.dirname(rootFile);
   const byRealPath = new Map<string, { document: any; url: string }>();
   const snapshots = new Map<string, any>();
+  const sourceStates = new Map<string, string>();
 
   const visit = async (
     candidate: string,
@@ -466,11 +483,12 @@ async function snapshotOpenApiDocuments(
     const existing = byRealPath.get(realPath);
     if (existing) return existing.url;
 
-    const contents = await readOpenApiSnapshot(
+    const { contents, state } = await readOpenApiSnapshot(
       referenceRootRealPath,
       realPath,
       reference,
     );
+    sourceStates.set(realPath, state);
     const document: any = await parseOpenApiSnapshot(realPath, contents);
     const snapshotUrl = `file:///__doccupine_openapi_snapshot__/${byRealPath.size}.json`;
     byRealPath.set(realPath, { document, url: snapshotUrl });
@@ -508,7 +526,7 @@ async function snapshotOpenApiDocuments(
   };
 
   const rootUrl = await visit(rootFile, rootFile, true);
-  return { rootDocument: snapshots.get(rootUrl), snapshots };
+  return { rootDocument: snapshots.get(rootUrl), snapshots, sourceStates };
 }
 
 async function dereferenceOpenApiSnapshots(
@@ -549,6 +567,8 @@ export class OpenApiRegistry {
   private pages: PageMeta[] = [];
   private bodies = new Map<string, string>();
   private allowlistEntries: AllowlistEntry[] = [];
+  private sourceFilePaths: string[] = [];
+  private sourceFingerprintValue = "";
 
   get all(): OperationDescriptor[] {
     return this.operations;
@@ -556,6 +576,14 @@ export class OpenApiRegistry {
 
   get isEmpty(): boolean {
     return this.operations.length === 0;
+  }
+
+  get sourceFiles(): readonly string[] {
+    return this.sourceFilePaths;
+  }
+
+  get sourceFingerprint(): string {
+    return this.sourceFingerprintValue;
   }
 
   async load(
@@ -567,6 +595,7 @@ export class OpenApiRegistry {
     const multi = specs.length > 1;
     const usedSlugs = new Set<string>();
     const allowlistKeys = new Set<string>();
+    const sourceStates = new Map<string, string>();
 
     const rootRealPath =
       specs.length > 0 ? await fs.realpath(rootDir) : path.resolve(rootDir);
@@ -589,8 +618,14 @@ export class OpenApiRegistry {
           spec.file,
           "rootDir",
         );
-        const { rootDocument, snapshots } =
-          await snapshotOpenApiDocuments(absolute);
+        const {
+          rootDocument,
+          snapshots,
+          sourceStates: capturedSourceStates,
+        } = await snapshotOpenApiDocuments(absolute);
+        for (const [sourcePath, state] of capturedSourceStates) {
+          sourceStates.set(sourcePath, state);
+        }
         doc = await dereferenceOpenApiSnapshots(rootDocument, snapshots);
       } catch (error) {
         throw new Error(
@@ -607,6 +642,11 @@ export class OpenApiRegistry {
         );
       }
     }
+
+    next.sourceFilePaths = [...sourceStates.keys()].sort();
+    next.sourceFingerprintValue = next.sourceFilePaths
+      .map((sourcePath) => `${sourcePath}:${sourceStates.get(sourcePath)}`)
+      .join("\n");
 
     if (next.operations.length > 0) {
       const body = buildApiIndexBody(next.operations);
@@ -630,6 +670,8 @@ export class OpenApiRegistry {
     this.pages = next.pages;
     this.bodies = next.bodies;
     this.allowlistEntries = next.allowlistEntries;
+    this.sourceFilePaths = next.sourceFilePaths;
+    this.sourceFingerprintValue = next.sourceFingerprintValue;
   }
 
   /** Fresh copies of the synthetic pages (caller may mutate/spread safely). */

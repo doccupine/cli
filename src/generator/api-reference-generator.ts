@@ -3,6 +3,7 @@ import fs from "fs-extra";
 import path from "node:path";
 
 import { GeneratedArtifacts } from "../lib/generated-artifacts.js";
+import type { RouteArtifact } from "../lib/generated-artifacts.js";
 import { buildEndpointDoc, OpenApiRegistry } from "../lib/openapi.js";
 import type { OperationDescriptor } from "../lib/openapi-types.js";
 import { resolveOutputPath } from "../lib/output-safety.js";
@@ -25,6 +26,8 @@ type CleanupStalePages = (
 ) => Promise<void>;
 
 export class ApiReferenceGenerator {
+  private pendingStaleRoutes = new Map<string, RouteArtifact>();
+
   constructor(
     private readonly outputDir: string,
     private readonly artifacts: GeneratedArtifacts,
@@ -44,31 +47,25 @@ export class ApiReferenceGenerator {
     generatePage: GeneratePage,
     writeAllowlist: WriteAllowlist,
     cleanupStalePages: CleanupStalePages,
-  ): Promise<void> {
+    writtenRoutes: Map<string, string> = new Map(),
+  ): Promise<Map<string, string>> {
     const realSlugs = new Set(realPages.map((page) => page.slug));
-    const nextRoutes = new Map<string, string>();
+    const nextRoutes = writtenRoutes;
 
     const indexPage = registry
       .syntheticPages()
       .find((page) => page.slug === apiBaseSlug);
     if (indexPage && !realSlugs.has(indexPage.slug)) {
-      try {
-        await generatePage({
-          path: indexPage.path,
-          content: registry.bodyForSlug(indexPage.slug) ?? "",
-          frontmatter: {
-            title: indexPage.title,
-            description: indexPage.description,
-          },
-          slug: indexPage.slug,
-        });
-        nextRoutes.set(`@openapi/${indexPage.slug}`, indexPage.slug);
-      } catch (error) {
-        console.error(
-          chalk.red(`❌ Error generating API index ${indexPage.slug}:`),
-          error,
-        );
-      }
+      await generatePage({
+        path: indexPage.path,
+        content: registry.bodyForSlug(indexPage.slug) ?? "",
+        frontmatter: {
+          title: indexPage.title,
+          description: indexPage.description,
+        },
+        slug: indexPage.slug,
+      });
+      nextRoutes.set(`@openapi/${indexPage.slug}`, indexPage.slug);
     }
 
     for (const op of registry.all) {
@@ -90,15 +87,8 @@ export class ApiReferenceGenerator {
         );
         continue;
       }
-      try {
-        await generatePage(mdxFile, { apiOperation: op });
-        nextRoutes.set(`@openapi/${op.slug}`, op.slug);
-      } catch (error) {
-        console.error(
-          chalk.red(`❌ Error generating API page ${op.slug}:`),
-          error,
-        );
-      }
+      await generatePage(mdxFile, { apiOperation: op });
+      nextRoutes.set(`@openapi/${op.slug}`, op.slug);
     }
 
     await writeAllowlist();
@@ -109,6 +99,7 @@ export class ApiReferenceGenerator {
         chalk.green(`🧩 Generated ${nextRoutes.size} API reference page(s)`),
       );
     }
+    return nextRoutes;
   }
 
   async writeAllowlist(registry: OpenApiRegistry): Promise<void> {
@@ -129,26 +120,39 @@ export class ApiReferenceGenerator {
     nextRoutes: Map<string, string>,
     occupiedMdxSlugs: Set<string>,
     removeOwnedRoute: RemoveOwnedRoute,
+    additionalPreviousRoutes: Iterable<RouteArtifact> = [],
   ): Promise<void> {
+    const previousRoutes = new Map(
+      [
+        ...this.artifacts.routesFor("openapi"),
+        ...additionalPreviousRoutes,
+        ...this.pendingStaleRoutes.values(),
+      ].map((route) => [route.source, route]),
+    );
+    await this.artifacts.replaceRoutesAndSave(
+      "openapi",
+      [...nextRoutes].map(([source, slug]) => ({ source, slug })),
+    );
+
     const nextSlugs = new Set(nextRoutes.values());
-    for (const previous of this.artifacts.routesFor("openapi")) {
+    for (const previous of previousRoutes.values()) {
       if (nextRoutes.has(previous.source) || nextSlugs.has(previous.slug)) {
+        this.pendingStaleRoutes.delete(previous.source);
         continue;
       }
       // A hand-written page may have taken ownership of this route since the
       // previous OpenAPI pass. Never remove an output now claimed by MDX.
-      if (occupiedMdxSlugs.has(previous.slug)) continue;
+      if (occupiedMdxSlugs.has(previous.slug)) {
+        this.pendingStaleRoutes.delete(previous.source);
+        continue;
+      }
+      this.pendingStaleRoutes.set(previous.source, previous);
       try {
         await removeOwnedRoute(previous.slug);
-      } catch {
-        // ignore
+        this.pendingStaleRoutes.delete(previous.source);
+      } catch (error) {
+        throw error;
       }
     }
-
-    this.artifacts.replaceRoutes(
-      "openapi",
-      [...nextRoutes].map(([source, slug]) => ({ source, slug })),
-    );
-    await this.artifacts.save();
   }
 }

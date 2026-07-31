@@ -2,12 +2,16 @@ import chalk from "chalk";
 import fs from "fs-extra";
 import path from "node:path";
 
-import { GeneratedArtifacts } from "../lib/generated-artifacts.js";
+import {
+  GeneratedArtifacts,
+  type RouteArtifact,
+} from "../lib/generated-artifacts.js";
 import { resolveOutputPath } from "../lib/output-safety.js";
 import type { PageMeta } from "../lib/types.js";
 
 export class GeneratedRouteManager {
   private generatedSectionIndexSlugs = new Set<string>();
+  private pendingStaleMdxRoutes = new Map<string, RouteArtifact>();
 
   constructor(
     private readonly outputDir: string,
@@ -23,18 +27,16 @@ export class GeneratedRouteManager {
   }
 
   async replaceMdxRoutes(realPages: PageMeta[]): Promise<void> {
-    this.artifacts.replaceRoutes(
+    await this.artifacts.replaceRoutesAndSave(
       "mdx",
       realPages
         .filter((page) => page.slug !== "")
         .map((page) => ({ source: page.path, slug: page.slug })),
     );
-    await this.artifacts.save();
   }
 
   async removeMdxRoute(source: string): Promise<void> {
-    this.artifacts.removeRoute("mdx", source);
-    await this.artifacts.save();
+    await this.artifacts.removeRouteAndSave("mdx", source);
   }
 
   async removeOwnedRoute(slug: string): Promise<void> {
@@ -51,6 +53,7 @@ export class GeneratedRouteManager {
   async removeStaleMdxRoutes(
     realPages: PageMeta[],
     removeOwnedRoute: (slug: string) => Promise<void>,
+    previousRoutes: readonly RouteArtifact[] = this.artifacts.routesFor("mdx"),
   ): Promise<void> {
     const nextBySource = new Map(
       realPages
@@ -62,11 +65,34 @@ export class GeneratedRouteManager {
       this.artifacts.routesFor("openapi").map((route) => route.slug),
     );
 
-    for (const previous of this.artifacts.routesFor("mdx")) {
+    for (const previous of previousRoutes) {
       if (nextBySource.get(previous.source) === previous.slug) continue;
       if (nextSlugs.has(previous.slug)) continue;
       if (openApiSlugs.has(previous.slug)) continue;
-      await removeOwnedRoute(previous.slug);
+      this.pendingStaleMdxRoutes.set(previous.slug, previous);
+    }
+
+    const errors: unknown[] = [];
+    for (const [slug] of this.pendingStaleMdxRoutes) {
+      if (nextSlugs.has(slug)) {
+        this.pendingStaleMdxRoutes.delete(slug);
+        continue;
+      }
+      try {
+        if (openApiSlugs.has(slug)) {
+          await fs.remove(
+            resolveOutputPath(this.outputDir, "app", "(site)", slug, "rss.xml"),
+          );
+        } else {
+          await removeOwnedRoute(slug);
+        }
+        this.pendingStaleMdxRoutes.delete(slug);
+      } catch (error) {
+        errors.push(error);
+      }
+    }
+    if (errors.length > 0) {
+      throw new AggregateError(errors, "Unable to remove stale MDX routes");
     }
   }
 

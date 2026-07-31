@@ -1,7 +1,7 @@
 import fs from "fs-extra";
 import os from "node:os";
 import path from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { GeneratedArtifacts } from "./generated-artifacts.js";
 
@@ -46,6 +46,33 @@ describe("GeneratedArtifacts", () => {
     expect(reloaded.routeFor("mdx", "guide.mdx")).toBe("api/guide");
     expect(reloaded.llmsPageFiles()).toEqual(new Set(["api/guide.md"]));
     expect(reloaded.publicFiles()).toEqual(new Set(["images/logo.png"]));
+  });
+
+  it("keeps live route ownership unchanged when persistence fails", async () => {
+    const outputDir = await temporaryDirectory();
+    const artifacts = new GeneratedArtifacts(outputDir);
+    artifacts.replaceRoutes("mdx", [
+      { source: "guide.mdx", slug: "guides/guide" },
+    ]);
+    await artifacts.save();
+    type ArtifactInternals = {
+      writeManifest(routes: ReadonlyMap<string, unknown>): Promise<void>;
+    };
+    vi.spyOn(
+      artifacts as unknown as ArtifactInternals,
+      "writeManifest",
+    ).mockRejectedValueOnce(new Error("Injected manifest failure"));
+
+    await expect(
+      artifacts.replaceRoutesAndSave("mdx", [
+        { source: "guide.mdx", slug: "tutorials/guide" },
+      ]),
+    ).rejects.toThrow("Injected manifest failure");
+
+    expect(artifacts.routeFor("mdx", "guide.mdx")).toBe("guides/guide");
+    const reloaded = new GeneratedArtifacts(outputDir);
+    await reloaded.load();
+    expect(reloaded.routeFor("mdx", "guide.mdx")).toBe("guides/guide");
   });
 
   it("rejects unsafe paths written through its API", async () => {

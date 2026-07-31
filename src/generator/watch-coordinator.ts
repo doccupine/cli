@@ -44,6 +44,7 @@ interface WatchCoordinatorOptions {
   doccupineConfigFile: string;
   sourceFs: SecureSourceFs;
   getOpenApiSpecs(): readonly NormalizedOpenApiSpec[];
+  getOpenApiSourceFiles(): readonly string[];
   callbacks: WatchCoordinatorCallbacks;
 }
 
@@ -104,6 +105,7 @@ export class WatchCoordinator {
       doccupineConfigFile,
       fontConfigFile,
       getOpenApiSpecs,
+      getOpenApiSourceFiles,
       rootDir,
       sourceFs,
       watchDir,
@@ -116,11 +118,14 @@ export class WatchCoordinator {
         ]),
       ),
     );
+    const openApiSourceFiles = getOpenApiSourceFiles();
     const openapi = (
       await Promise.all(
-        getOpenApiSpecs().map(async (spec) => {
-          const specPath = path.resolve(rootDir, spec.file);
-          return `${specPath}:${await sourceFs.pathState(specPath, true)}`;
+        (openApiSourceFiles.length > 0
+          ? openApiSourceFiles
+          : getOpenApiSpecs().map((spec) => path.resolve(rootDir, spec.file))
+        ).map(async (sourcePath) => {
+          return `${sourcePath}:${await sourceFs.pathState(sourcePath, true)}`;
         }),
       )
     ).join("\n");
@@ -151,6 +156,8 @@ export class WatchCoordinator {
 
   async establishSourceSnapshot(
     projectSourceStates: Readonly<Record<string, string>> = {},
+    openApiSourceState?: string,
+    doccupineSourceState?: string,
   ): Promise<void> {
     const snapshot = await this.captureSourceSnapshot();
     for (const fileName of this.options.configFiles) {
@@ -163,6 +170,8 @@ export class WatchCoordinator {
     snapshot.analytics =
       projectSourceStates[this.options.analyticsConfigFile] ??
       snapshot.analytics;
+    snapshot.openapi = openApiSourceState ?? snapshot.openapi;
+    snapshot.doccupine = doccupineSourceState ?? snapshot.doccupine;
     this.sourceSnapshot = snapshot;
   }
 
@@ -235,7 +244,6 @@ export class WatchCoordinator {
     }
 
     if (
-      !doccupineChanged &&
       getOpenApiSpecs().length > 0 &&
       (previous === null || previous.openapi !== current.openapi)
     ) {
@@ -495,7 +503,7 @@ export class WatchCoordinator {
     this.enqueueMutation("Error reconciling watched sources", async () => {
       const current = await this.captureSourceSnapshot();
       await this.reconcileWatchedSources(this.sourceSnapshot, current);
-      this.sourceSnapshot = await this.captureSourceSnapshot();
+      this.sourceSnapshot = current;
     });
     await this.mutationQueue;
   }
@@ -564,6 +572,7 @@ export class WatchCoordinator {
 
   async syncOpenApiSpecWatcher(
     specs: readonly NormalizedOpenApiSpec[],
+    sourceFiles: readonly string[] = [],
   ): Promise<void> {
     const previousWatcher = this.openApiWatcher;
     this.openApiWatcher = null;
@@ -571,7 +580,13 @@ export class WatchCoordinator {
     if (this.stopping || specs.length === 0) return;
 
     const { callbacks, rootDir } = this.options;
-    const specPaths = specs.map((spec) => path.resolve(rootDir, spec.file));
+    const specPaths = [
+      ...new Set(
+        sourceFiles.length > 0
+          ? sourceFiles
+          : specs.map((spec) => path.resolve(rootDir, spec.file)),
+      ),
+    ];
     const watcher = chokidar.watch(specPaths, {
       persistent: true,
       ignoreInitial: true,
