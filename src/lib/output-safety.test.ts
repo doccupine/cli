@@ -93,6 +93,72 @@ describe("output safety", () => {
     ).resolves.toBe("SECRET=preserved");
   });
 
+  it("claims an output containing only restored build caches", async () => {
+    const output = await makeTempDir();
+    await fs.outputFile(
+      path.join(output, "node_modules", "package", "index.js"),
+      "module.exports = {};\n",
+    );
+    await fs.outputFile(
+      path.join(output, ".next", "cache", "webpack", "cache.bin"),
+      "cache",
+    );
+
+    await expect(claimOutputDirectory(output)).resolves.toBeUndefined();
+    await expect(
+      fs.readJson(path.join(output, ".doccupine-generated.json")),
+    ).resolves.toMatchObject({ generator: "doccupine" });
+  });
+
+  it("refuses restored build caches alongside unrelated content", async () => {
+    const output = await makeTempDir();
+    await fs.ensureDir(path.join(output, "node_modules"));
+    await fs.ensureDir(path.join(output, ".next", "cache"));
+    await fs.writeFile(path.join(output, "important.txt"), "keep");
+
+    await expect(claimOutputDirectory(output)).rejects.toThrow(
+      "Refusing to overwrite non-empty directory",
+    );
+    await expect(
+      fs.readFile(path.join(output, "important.txt"), "utf8"),
+    ).resolves.toBe("keep");
+    await expect(
+      fs.pathExists(path.join(output, ".doccupine-generated.json")),
+    ).resolves.toBe(false);
+  });
+
+  it.each(["node_modules", ".next"])(
+    "refuses a non-directory restored cache at %s",
+    async (cacheName) => {
+      const output = await makeTempDir();
+      await fs.writeFile(path.join(output, cacheName), "not a directory");
+
+      await expect(claimOutputDirectory(output)).rejects.toThrow(
+        "Refusing to overwrite non-empty directory",
+      );
+    },
+  );
+
+  it.each(["node_modules", ".next"])(
+    "refuses a restored cache symlink at %s",
+    async (cacheName) => {
+      const parent = await makeTempDir();
+      const output = path.join(parent, "output");
+      const external = path.join(parent, "external");
+      await fs.ensureDir(output);
+      await fs.ensureDir(external);
+      await fs.writeFile(path.join(external, "important.txt"), "keep");
+      await makeDirectoryLink(external, path.join(output, cacheName));
+
+      await expect(claimOutputDirectory(output)).rejects.toThrow(
+        "Refusing to overwrite non-empty directory",
+      );
+      await expect(
+        fs.readFile(path.join(external, "important.txt"), "utf8"),
+      ).resolves.toBe("keep");
+    },
+  );
+
   it("refuses an unrelated non-empty directory", async () => {
     const output = await makeTempDir();
     await fs.writeFile(path.join(output, "important.txt"), "keep");

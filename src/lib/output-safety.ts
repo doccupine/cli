@@ -5,6 +5,7 @@ import path from "node:path";
 
 const MARKER_FILE = ".doccupine-generated.json";
 const SAFE_UNOWNED_FILES = new Set([".DS_Store", ".gitkeep", ".env"]);
+const SAFE_UNOWNED_CACHE_DIRECTORIES = new Set([".next", "node_modules"]);
 const GENERATED_SUBTREES = new Set([
   "app",
   "components",
@@ -72,8 +73,15 @@ const LEGACY_FILE_FINGERPRINTS = [
   },
 ] as const;
 
-function isSafeUnownedEntry(name: string): boolean {
-  return SAFE_UNOWNED_FILES.has(name) || name.startsWith(".env.");
+async function isSafeUnownedEntry(
+  outputDir: string,
+  name: string,
+): Promise<boolean> {
+  if (SAFE_UNOWNED_FILES.has(name) || name.startsWith(".env.")) return true;
+  if (!SAFE_UNOWNED_CACHE_DIRECTORIES.has(name)) return false;
+
+  const stat = await lstatIfPresent(path.join(outputDir, name));
+  return stat?.isDirectory() === true;
 }
 
 export function isPathInside(parent: string, candidate: string): boolean {
@@ -569,8 +577,11 @@ export async function claimOutputDirectory(outputDir: string): Promise<void> {
   }
 
   const entries = await fs.readdir(realOutputDir);
+  const safeUnownedEntries = await Promise.all(
+    entries.map((name) => isSafeUnownedEntry(realOutputDir, name)),
+  );
   const canClaim =
-    entries.every(isSafeUnownedEntry) ||
+    safeUnownedEntries.every(Boolean) ||
     (await looksLikeLegacyGeneratedApp(realOutputDir));
   if (!canClaim) {
     throw new Error(
