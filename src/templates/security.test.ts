@@ -18,8 +18,10 @@ import { prettierignoreTemplate } from "./prettierignore.js";
 import { rateLimitTemplate } from "./utils/rateLimit.js";
 import { ssrfGuardTemplate } from "./utils/ssrfGuard.js";
 import { playgroundAllowlistTemplate } from "./utils/playgroundAllowlist.js";
+import { apiPlaygroundUtilsTemplate } from "./utils/apiPlayground.js";
 import { requestBodyTemplate } from "./utils/requestBody.js";
 import { chatTemplate } from "./components/Chat.js";
+import { apiPlaygroundTemplate } from "./components/layout/ApiPlayground.js";
 
 interface GeneratedRequestBodyModule {
   RequestTooLargeError: new () => Error;
@@ -82,6 +84,13 @@ function generatedFunctionSource(
 }
 
 describe("generated security boundaries", () => {
+  it("registers and imports the API Playground runtime helpers", () => {
+    expect(appStructure["utils/apiPlayground.ts"]).toBe(
+      apiPlaygroundUtilsTemplate,
+    );
+    expect(apiPlaygroundTemplate).toContain('from "@/utils/apiPlayground";');
+  });
+
   it("registers one bounded JSON reader for generated API routes", () => {
     expect(appStructure["utils/requestBody.ts"]).toBe(requestBodyTemplate);
     for (const route of [
