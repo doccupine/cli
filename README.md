@@ -1,12 +1,12 @@
 <p align="center">
-  <img alt="header" src="https://shieldcn.dev/header/graph.svg?subtitle=Documentation+made+simple.+Open+source.+AI-ready.&amp;logo=https%3A%2F%2Ffiles.riangle.com%2Fdoccupine%2Fpictogram.png&amp;mode=dark&amp;image=http%3A%2F%2Ffiles.riangle.com%2Fdoccupine%2Fcover.png&amp;overlay=0" />
+  <a href="https://docs.doccupine.com/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/header/graph.svg?subtitle=Documentation+made+simple.+Open+source.+AI-ready.&amp;logo=https%3A%2F%2Ffiles.riangle.com%2Fdoccupine%2Fpictogram.png&amp;size=wide&amp;mode=dark&amp;font=geist&amp;image=http%3A%2F%2Ffiles.riangle.com%2Fdoccupine%2Fcover.png&amp;overlay=0" /><img alt="Doccupine" src="https://shieldcn.dev/header/graph.svg?subtitle=Documentation+made+simple.+Open+source.+AI-ready.&amp;logo=https%3A%2F%2Ffiles.riangle.com%2Fdoccupine%2Fpictogram.png&amp;size=wide&amp;mode=light&amp;font=geist&amp;image=http%3A%2F%2Ffiles.riangle.com%2Fdoccupine%2Fcover.png&amp;overlay=0" /></picture></a>
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/doccupine"><img alt="badge" src="https://shieldcn.dev/npm/doccupine.svg" /></a>
-  <a href="https://github.com/doccupine/cli"><img alt="badge" src="https://shieldcn.dev/github/doccupine/cli/stars.svg" /></a>
-  <a href="https://docs.doccupine.com/"><img alt="badge" src="https://shieldcn.dev/badge/Docs.svg" /></a>
-  <a href="https://doccupine.com/"><img alt="badge" src="https://shieldcn.dev/badge/Website.svg" /></a>
+  <a href="https://www.npmjs.com/package/doccupine"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/npm/doccupine.svg" /><img alt="badge" src="https://shieldcn.dev/npm/doccupine.svg?mode=light" /></picture></a>
+  <a href="https://github.com/doccupine/cli"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/doccupine/cli/stars.svg" /><img alt="badge" src="https://shieldcn.dev/github/doccupine/cli/stars.svg?mode=light" /></picture></a>
+  <a href="https://docs.doccupine.com/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/Docs.svg" /><img alt="badge" src="https://shieldcn.dev/badge/Docs.svg?mode=light" /></picture></a>
+  <a href="https://doccupine.com/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/Website.svg" /><img alt="badge" src="https://shieldcn.dev/badge/Website.svg?mode=light" /></picture></a>
 </p>
 
 # Doccupine
