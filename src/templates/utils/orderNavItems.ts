@@ -59,7 +59,7 @@ function transformPagesToGroupedStructure(pages: PagesProps[]) {
   return Object.entries(grouped)
     .sort(([, a], [, b]) => a.categoryOrder - b.categoryOrder)
     .map(([categoryName, categoryData], index) => ({
-      slug: index === 0 ? "" : categoryName.toLowerCase().replace(/s+/g, "-"),
+      slug: index === 0 ? "" : categoryName.toLowerCase().replace(/\\s+/g, "-"),
       label: categoryName,
       icon: categoryData.icon,
       links: categoryData.pages.sort((a, b) => a.order - b.order),
