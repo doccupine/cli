@@ -1,6 +1,6 @@
 {
   "name": "doccupine",
-  "version": "0.0.144",
+  "version": "0.0.145",
   "description": "Free and open-source documentation platform. Write MDX, get a production-ready site with AI chat, built-in components, and an MCP server - in one command.",
   "main": "dist/index.js",
   "bin": {
@@ -42,7 +42,7 @@
   "author": "Luan Gjokaj",
   "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
-    "@readme/openapi-parser": "^6.3.0",
+    "@readme/openapi-parser": "^6.3.1",
     "chalk": "^6.0.0",
     "chokidar": "^5.0.0",
     "commander": "^15.0.0",
