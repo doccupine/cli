@@ -2,6 +2,7 @@ export const apiPlaygroundMdxTemplate = `---
 title: "API Playground"
 description: "Turn an OpenAPI document into an interactive API reference where readers send real requests and see live responses, right inside your docs."
 date: "2026-07-25"
+updated: "2026-07-31"
 category: "Components"
 categoryOrder: 1
 order: 20
@@ -35,12 +36,16 @@ Press **Try it** below to open the playground, tweak the request body, and send 
 \`\`\`
   </Step>
   <Step title="Run Doccupine.">
-    On the next build (or live, while watching) Doccupine parses the document and writes an endpoint page for each operation. Local \`$ref\` files must stay inside the configured spec's directory, use \`.json\`, \`.yaml\`, or \`.yml\`, and cannot be dotfiles or live inside dot-directories.
+    Doccupine reads the root document and its recursive local \`$ref\` dependencies as one stable snapshot, then writes an endpoint page for each operation. The root must resolve inside the project, while referenced files must stay beneath the root spec's directory, use \`.json\`, \`.yaml\`, or \`.yml\`, and cannot be dotfiles or live inside dot-directories. Remote references and symlink escapes are rejected.
   </Step>
   <Step title="Open the API Reference section.">
-    Endpoints appear in the sidebar grouped by their OpenAPI tag. Editing the spec regenerates the pages automatically.
+    Endpoints appear in the sidebar grouped by their OpenAPI tag. In watch mode, editing the root spec or any discovered local \`$ref\` file regenerates the reference automatically. Adding or retargeting a reference updates the watched dependency set after the refresh succeeds.
   </Step>
 </Steps>
+
+<Callout type="info">
+  OpenAPI refreshes preserve the last successful reference. A malformed or partially saved spec, a missing reference, or a generation failure does not replace the active pages, request allowlist, navigation, MCP content, or watcher.
+</Callout>
 
 ## Example spec
 
@@ -92,6 +97,10 @@ Each part maps to something in the playground: \`servers\` sets the request targ
 ## What gets generated
 
 The generated \`/api-reference\` index lists every operation with a direct link, grouped by API and tag. Each operation also gets its own page under \`/api-reference/{tag}/{operation}\`, showing:
+
+<Callout type="note">
+  A hand-written MDX page takes precedence when it resolves to the same route as a generated OpenAPI page. Moving or deleting that MDX source returns the route to OpenAPI on the next successful refresh.
+</Callout>
 
 <Field value="Parameters" type="path, query, header, cookie">
 Each parameter is rendered with its name, type, and whether it is required, grouped into a collapsible section with an input to fill in.

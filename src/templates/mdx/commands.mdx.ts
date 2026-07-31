@@ -2,6 +2,7 @@ export const commandsMdxTemplate = `---
 title: "Commands"
 description: "In this page, you can find all the commands available in Doccupine CLI."
 date: "2026-02-19"
+updated: "2026-07-31"
 category: "Getting Started"
 categoryOrder: 0
 order: 2
@@ -40,7 +41,31 @@ This will start the development server on port 3000. Open your browser and navig
 
 Starter documentation is created only when the selected source directory contains no MDX files. Existing pages are never replaced just because \`index.mdx\` is missing. Frontmatter must use the normal YAML \`---\` delimiter; language-tagged executable frontmatter is rejected.
 
-Doccupine records generated route and Markdown-mirror ownership in \`.doccupine-artifacts.json\` inside the generated app. Watch-mode renames and deletes use that registry rather than guessing routes from filenames, so section moves remove only files owned by the changed source.
+Doccupine marks its output directory with \`.doccupine-generated.json\` and records generated route, Markdown-mirror, and copied public-file ownership in \`.doccupine-artifacts.json\`. Treat both files as internal generator state. A fresh run recreates \`app\`, and later refreshes may rewrite other registered template paths, so keep durable changes in source MDX, project-root JSON files, and \`public\`.
+
+## Watch mode
+
+The default command watches MDX files, supported project-root JSON configuration, \`fonts.json\`, \`analytics.json\`, \`doccupine.json\`, public assets, and configured OpenAPI documents with their discovered local \`$ref\` files. Changes are processed serially. Once every watcher is ready, Doccupine compares the current sources with the versions used during initial generation and reconciles edits made while startup was still running.
+
+## Route collisions and recovery
+
+Two MDX sources cannot generate the same route. For example, \`guide.mdx\` and \`guide/index.mdx\` both resolve to \`/guide\`. A one-time build stops before either source can overwrite the other.
+
+During watch mode, a collision keeps the last successfully generated page and site metadata in place. After you move, rename, or delete one of the colliding sources, Doccupine retries the blocked sources and any other MDX changes that could not be applied while the collision existed. A restart or manual resave is not required.
+
+<Callout type="info">
+  Failed watch refreshes keep or restore the last successful pages, route ownership, inferred sections, sitemap, and LLMS/MCP content. A new page with no successful version stays absent until it can be generated safely.
+</Callout>
+
+## Reloading doccupine.json
+
+Changing the \`openapi\` field is applied live after the complete candidate reference validates and generates successfully. Invalid JSON, invalid configuration, a missing spec, or a failed generation keeps the current OpenAPI reference and watcher active. Changes to \`watchDir\`, \`outputDir\`, \`port\`, or \`packageManager\` require restarting Doccupine.
+
+## File-system safety
+
+Doccupine does not follow symlinked MDX files or nested directories beneath \`watchDir\`. Project-root configuration and public assets must also use real files and directories, and the \`public\` root cannot be a symlink. A stable symlink used as the \`watchDir\` root is supported, but links inside it are rejected.
+
+The output directory must be a real directory, and generated paths cannot contain symlinks. OpenAPI root specs must resolve inside the project, while local references must remain inside the root spec's directory. These checks prevent generated reads, writes, and removals from being redirected elsewhere.
 
 ## Dependency installation
 

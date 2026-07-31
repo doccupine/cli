@@ -2,6 +2,7 @@ export const whatIsDoccupineMdxTemplate = `---
 title: "What is Doccupine"
 description: "Doccupine is a CLI that turns a directory of MDX files into a complete, production-ready documentation website - no frontend work required."
 date: "2026-02-19"
+updated: "2026-07-31"
 category: "Getting Started"
 categoryOrder: 0
 order: 1
@@ -30,13 +31,17 @@ Everything you expect from a great docs site works the moment you run the comman
   Every element on this page - this callout, the cards below, the code block above - is a live example of what your docs get out of the box, with zero setup.
 </Callout>
 
-## You own the output
+## You control the output
 
-Doccupine generates a real Next.js 16 app inside your project, not a hosted black box. Every page, layout, and API route is written to disk where you can read it, extend it, or deploy it anywhere Next.js runs. Doccupine scaffolds the site; you stay in control of it.
+Doccupine generates a real Next.js 16 app that you can inspect, deploy anywhere, or fork into a separately maintained application. While you continue using Doccupine, its registered output paths remain generator-managed: every fresh run recreates \`app\` and may rewrite generated components, services, configuration, and manifests.
+
+Keep durable customizations in MDX, project-root JSON configuration, and \`public\`. If you want to modify the generated implementation directly, fork the app or stop regenerating it first.
 
 ## Instant feedback
 
-Run \`npx doccupine\` and it watches your files. Every time you save an MDX file, change a config value, or drop in a new font, the site regenerates and the dev server reloads. Your docs are always one save away from being live.
+Run \`npx doccupine\` to watch MDX, supported project-root configuration, public assets, and configured OpenAPI sources. Doccupine reconciles edits made during startup and keeps the last successful site when a watch refresh fails.
+
+Files such as \`theme.json\`, \`navigation.json\`, \`sections.json\`, \`fonts.json\`, and \`analytics.json\` update live. Within \`doccupine.json\`, the \`openapi\` field updates live, while \`watchDir\`, \`outputDir\`, \`port\`, and \`packageManager\` require a restart.
 
 ## AI-native
 

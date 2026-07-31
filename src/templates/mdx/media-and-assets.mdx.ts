@@ -2,6 +2,7 @@ export const mediaAndAssetsMdxTemplate = `---
 title: "Media and assets"
 description: "Serve static files like images, favicons, fonts, and Open Graph previews from the public directory."
 date: "2026-02-19"
+updated: "2026-07-31"
 category: "Configuration"
 categoryOrder: 2
 order: 7
@@ -77,6 +78,10 @@ Any image or file you want to reference in your MDX pages can live in \`public\`
 
 <Callout type="info">
   Doccupine watches the \`public\` directory for changes while running. When you add, update, or remove a file, the generated site is updated automatically.
+</Callout>
+
+<Callout type="warning">
+  The \`public\` directory and everything beneath it must use real files and directories. Doccupine rejects symlinks instead of following or copying them, including links whose targets are inside the project.
 </Callout>
 
 ## Tips

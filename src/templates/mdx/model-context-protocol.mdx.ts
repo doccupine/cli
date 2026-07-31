@@ -2,6 +2,7 @@ export const mcpMdxTemplate = `---
 title: "Model Context Protocol"
 description: "Connect your Doccupine documentation to AI tools with an MCP server for enhanced AI-powered documentation search."
 date: "2026-02-19"
+updated: "2026-07-31"
 category: "AI & Integrations"
 categoryOrder: 3
 order: 2
@@ -332,7 +333,7 @@ See the [AI Assistant documentation](/ai-assistant) for configuration details.
 
 Doccupine builds a \`services/mcp/docs-content.json\` manifest from your source MDX and generated API-reference pages. The deployed MCP and RAG routes load that traced data file at runtime, so the documentation corpus is not inlined into the server function's JavaScript bundle and the server never scans user-controlled paths.
 
-The manifest is refreshed whenever the CLI generates the site. In watch mode, saved MDX and OpenAPI changes become available to MCP automatically. For a one-time workflow, run \`doccupine build\` or \`doccupine generate\` before building and deploying the generated Next.js app.
+The manifest is refreshed after each successful generation. In watch mode, successful MDX and OpenAPI refreshes, including changes to watched local \`$ref\` files, become available to MCP automatically. If a refresh fails, the manifest continues to contain the last successfully generated corpus. For a one-time workflow, run \`doccupine build\` or \`doccupine generate\` before building and deploying the generated Next.js app.
 
 ## Troubleshooting
 

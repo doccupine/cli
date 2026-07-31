@@ -2,7 +2,7 @@ export const platformApiPlaygroundMdxTemplate = `---
 title: "API Playground"
 description: "Register an OpenAPI spec and turn it into an interactive API reference with a live request playground."
 date: "2026-07-26"
-updated: "2026-07-30"
+updated: "2026-07-31"
 category: "AI & Integrations"
 categoryOrder: 3
 order: 2
@@ -27,7 +27,7 @@ Press **Save Configuration**, then commit the change. Both YAML and JSON specs (
 > For multiple specs, edit the \`openapi\` array in \`doccupine.json\` directly - the settings page manages a single spec.
 
 <Callout type="warning">
-  The spec has to be in the repository for the site to build - a configured \`openapi\` path that resolves to nothing stops the whole build, not just the API pages. Publish the config change and the spec file together, and if you later move or delete a spec, update \`doccupine.json\` in the same change set. Doccupine [checks this before publishing](/platform/publishing) rather than letting the deploy fail.
+  The root spec and every local \`$ref\` dependency must exist in the repository after publishing. References must stay beneath the directory containing the root spec, use \`.json\`, \`.yaml\`, or \`.yml\`, and cannot target remote URLs, dotfiles, or dot-directories. Publish the configuration, root spec, and all referenced files together. Doccupine [checks this before publishing](/platform/publishing) rather than letting the deploy fail.
 </Callout>
 
 ## Embedding a playground on a page

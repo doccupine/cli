@@ -2,7 +2,7 @@ export const platformPublishingMdxTemplate = `---
 title: "Publishing Changes"
 description: "Commit your edits to GitHub and deploy your documentation site with one click."
 date: "2026-02-19"
-updated: "2026-07-30"
+updated: "2026-07-31"
 category: "Editing"
 categoryOrder: 1
 order: 1
@@ -34,9 +34,9 @@ Doccupine then:
 
 A few kinds of mistake do not break one page, they stop the whole site from building. Doccupine checks for those before committing anything and refuses the publish with a message naming the file to fix, so you find out in the publish modal instead of in a failed deploy.
 
-### A spec file that will not be there
+### An OpenAPI source that will not be there
 
-If your \`doccupine.json\` names an OpenAPI spec in its \`openapi\` field, that spec has to exist in the repository after the publish. The usual way to get this wrong is to publish the config change while leaving the spec file behind in your pending changes - publish both together, or remove the \`openapi\` field.
+If \`doccupine.json\` names an OpenAPI spec, the root document and every recursively referenced local file must exist after the publish. Publish all of those files with the configuration change. Moving or deleting any document in the reference graph requires updating the relevant \`$ref\` or \`openapi\` path in the same change set.
 
 ### Two pages on the same URL
 
