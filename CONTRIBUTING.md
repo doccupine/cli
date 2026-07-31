@@ -29,7 +29,7 @@ node /path/to/cli/dist/index.js watch
 
 ## Project Structure
 
-The CLI entry point and generator orchestration live in `src/index.ts`. Reusable generator logic is under `src/lib/`, while template files under `src/templates/` are string constants written into the generated Next.js app. The output layout is registered centrally in `src/lib/structures.ts`.
+`src/index.ts` is the bin entry point and public export surface; the CLI commands live in `src/cli.ts`. Generation is driven by the `MDXToNextJSGenerator` facade in `src/mdx-to-nextjs-generator.ts`, which delegates to focused services under `src/generator/` (secure source reads, app scaffolding, project configuration, sections, the page catalog and renderer, generated routes, the API reference, public assets, site artifacts, and watch coordination). Stateless helpers live under `src/lib/`, while template files under `src/templates/` are string constants written into the generated Next.js app. The output layout is registered centrally in `src/lib/structures.ts`.
 
 When adding a new template:
 
