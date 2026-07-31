@@ -74,6 +74,7 @@ interface MdxPassSnapshot {
   files: string[];
   pages: PageMeta[];
   sources: ReadonlyMap<string, MdxSourceSnapshot>;
+  sections: SectionConfig[] | null;
 }
 
 interface SuccessfulMdxState {
@@ -415,8 +416,9 @@ export class MDXToNextJSGenerator {
   private determineSectionForFile(
     filePath: string,
     frontmatter: Record<string, any>,
+    sections: SectionConfig[] | null = this.sectionsConfig,
   ): { sectionSlug: string; pageSlug: string } {
-    return determineSectionRoute(filePath, frontmatter, this.sectionsConfig);
+    return determineSectionRoute(filePath, frontmatter, sections);
   }
 
   async handleConfigFileChange(filePath: string) {
@@ -593,6 +595,7 @@ export class MDXToNextJSGenerator {
   private async parseMDXFile(
     file: string,
     source?: MdxSourceSnapshot,
+    sections: SectionConfig[] | null = this.sectionsConfig,
   ): Promise<PageMeta> {
     return parseMdxPageMeta(
       file,
@@ -600,7 +603,7 @@ export class MDXToNextJSGenerator {
         ? async () => source
         : (filePath) => this.readMdxSourceFile(filePath),
       (filePath, frontmatter) =>
-        this.determineSectionForFile(filePath, frontmatter),
+        this.determineSectionForFile(filePath, frontmatter, sections),
       (reference) => this.apiRegistry.lookup(reference)?.method,
     );
   }
@@ -620,10 +623,11 @@ export class MDXToNextJSGenerator {
         }
       }),
     );
+    let sections = this.sectionsConfig;
     if (refreshSections) {
       const configuredSections = await this.loadSectionsConfig();
       if (configuredSections !== null) {
-        this.sectionsConfig = this.withApiReferenceSection(configuredSections);
+        sections = this.withApiReferenceSection(configuredSections);
       } else {
         const documents = resolvedFiles.map((filePath) => {
           const source = sources.get(filePath.replace(/\\/g, "/"));
@@ -633,17 +637,15 @@ export class MDXToNextJSGenerator {
             frontmatter: safeMatter(source.content, filePath).data,
           };
         });
-        this.sectionsConfig = this.withApiReferenceSection(
-          discoverSections(documents),
-        );
+        sections = this.withApiReferenceSection(discoverSections(documents));
       }
     }
     const pages = await buildRealPageCatalog(resolvedFiles, (file) => {
       const source = sources.get(file.replace(/\\/g, "/"));
       if (!source) throw new Error(`Unable to snapshot ${file}`);
-      return this.parseMDXFile(file, source);
+      return this.parseMDXFile(file, source, sections);
     });
-    return { files: resolvedFiles, pages, sources };
+    return { files: resolvedFiles, pages, sources, sections };
   }
 
   private async buildRealPagesMeta(): Promise<PageMeta[]> {
@@ -652,11 +654,12 @@ export class MDXToNextJSGenerator {
 
   private async buildAllPagesMeta(): Promise<PageMeta[]> {
     const real = await this.buildRealPagesMeta();
+    const successful = this.mdxSnapshotInitialized
+      ? this.successfulPagesInSourceOrder(real)
+      : real;
     return this.mergeAllPagesMeta(
-      this.mdxSnapshotInitialized
-        ? this.successfulPagesInSourceOrder(real)
-        : real,
-      new Set(real.map((page) => page.slug)),
+      successful,
+      new Set([...real, ...successful].map((page) => page.slug)),
     );
   }
 
@@ -675,12 +678,19 @@ export class MDXToNextJSGenerator {
   }
 
   private successfulPagesInSourceOrder(realPages: PageMeta[]): PageMeta[] {
-    return realPages.flatMap((page) => {
+    const currentSources = new Set(
+      realPages.map((page) => page.path.replace(/\\/g, "/")),
+    );
+    const ordered = realPages.flatMap((page) => {
       const successful = this.successfulMdxPages.get(
         page.path.replace(/\\/g, "/"),
       );
       return successful ? [successful] : [];
     });
+    for (const [source, page] of this.successfulMdxPages) {
+      if (!currentSources.has(source)) ordered.push(page);
+    }
+    return ordered;
   }
 
   private recordSuccessfulMdxPage(page: PageMeta, sourceContent: string): void {
@@ -1026,7 +1036,7 @@ export class MDXToNextJSGenerator {
     declaredSlugs?: Set<string>,
   ): Promise<void> {
     const pages = resolvedPages ?? (await this.buildAllPagesMeta());
-    await this.updatePagesIndex();
+    await this.updatePagesIndex(pages);
     await this.updateRootLayout(pages);
     await this.updateSitemap(pages);
     await this.updateLlmsFiles(pages);
@@ -1050,6 +1060,7 @@ export class MDXToNextJSGenerator {
         new Map([[normalizedSource, changedSource]]),
         true,
       );
+      this.sectionsConfig = snapshot.sections;
       const realPages = snapshot.pages;
       const currentPage = realPages.find(
         (page) => page.path.replace(/\\/g, "/") === normalizedSource,
@@ -1126,6 +1137,7 @@ export class MDXToNextJSGenerator {
       }
 
       const snapshot = await this.captureMdxPass(undefined, undefined, true);
+      this.sectionsConfig = snapshot.sections;
       const realPages = snapshot.pages;
       await this.retryMdxPages(
         snapshot,
@@ -1183,6 +1195,7 @@ export class MDXToNextJSGenerator {
       }
       throw error;
     }
+    this.sectionsConfig = snapshot.sections;
     const realPages = snapshot.pages;
 
     // Write each page first (the only genuinely per-file work), then run the
@@ -1246,11 +1259,11 @@ export class MDXToNextJSGenerator {
     pages?: PageMeta[],
     declaredSlugs?: Set<string>,
   ) {
-    const nextSlugs = new Set<string>();
     const resolvedPages = pages ?? (await this.buildAllPagesMeta());
     const occupiedSlugs = new Set(resolvedPages.map((page) => page.slug));
     const resolvedDeclaredSlugs = new Set(occupiedSlugs);
     for (const slug of declaredSlugs ?? []) resolvedDeclaredSlugs.add(slug);
+    const redirects = new Map<string, string>();
 
     if (this.sectionsConfig && this.sectionsConfig.length > 0) {
       for (const section of this.sectionsConfig) {
@@ -1272,32 +1285,70 @@ export class MDXToNextJSGenerator {
         if (sectionPages.length === 0) continue;
 
         const firstPage = sectionPages[0];
-        const redirectContent = `import { redirect } from "next/navigation";
-
-export default function SectionIndex() {
-  redirect("/${firstPage.slug}");
-}
-`;
-
-        const pagePath = resolveOutputPath(
-          this.outputDir,
-          "app",
-          "(site)",
-          section.slug,
-          "page.tsx",
-        );
-        await fs.ensureDir(path.dirname(pagePath));
-        await writeFileAtomic(pagePath, redirectContent);
-        nextSlugs.add(section.slug);
-        console.log(
-          chalk.blue(
-            `🔀 Generated section index redirect: /${section.slug} -> /${firstPage.slug}`,
-          ),
-        );
+        redirects.set(section.slug, firstPage.slug);
       }
     }
 
-    await this.cleanupStaleSectionIndexPages(nextSlugs, occupiedSlugs);
+    const previousSlugs = this.generatedRouteManager.sectionIndexSlugs();
+    const touchedSlugs = new Set([...previousSlugs, ...redirects.keys()]);
+    const previousFiles = new Map<string, string | null>();
+    for (const slug of touchedSlugs) {
+      previousFiles.set(
+        slug,
+        await this.readGeneratedFile(
+          this.outputPath("app", "(site)", slug, "page.tsx"),
+        ),
+      );
+    }
+
+    try {
+      for (const [slug, target] of redirects) {
+        await this.writeSectionIndexRedirect(slug, target);
+      }
+      await this.cleanupStaleSectionIndexPages(
+        new Set(redirects.keys()),
+        occupiedSlugs,
+      );
+    } catch (error) {
+      const rollbackErrors: unknown[] = [];
+      this.generatedRouteManager.replaceSectionIndexSlugs(previousSlugs);
+      for (const [slug, content] of previousFiles) {
+        try {
+          await this.restoreGeneratedFile(
+            this.outputPath("app", "(site)", slug, "page.tsx"),
+            content,
+          );
+        } catch (rollbackError) {
+          rollbackErrors.push(rollbackError);
+        }
+      }
+      if (rollbackErrors.length > 0) {
+        throw new AggregateError(
+          [error, ...rollbackErrors],
+          "Unable to generate or restore section index redirects",
+        );
+      }
+      throw error;
+    }
+  }
+
+  private async writeSectionIndexRedirect(
+    slug: string,
+    target: string,
+  ): Promise<void> {
+    const content = `import { redirect } from "next/navigation";
+
+export default function SectionIndex() {
+  redirect("/${target}");
+}
+`;
+    await writeFileAtomic(
+      this.outputPath("app", "(site)", slug, "page.tsx"),
+      content,
+    );
+    console.log(
+      chalk.blue(`🔀 Generated section index redirect: /${slug} -> /${target}`),
+    );
   }
 
   /**
@@ -1566,10 +1617,9 @@ export default function SectionIndex() {
 
   private async applyStableOpenApiRefresh(
     specs: NormalizedOpenApiSpec[],
-    syncWatcher: boolean,
   ): Promise<void> {
     let candidate = await this.loadStableOpenApiRegistry(specs);
-    await this.applyOpenApiRefresh(candidate.registry, specs, syncWatcher);
+    await this.applyOpenApiRefresh(candidate.registry, specs);
 
     // Once the new watcher is ready, compare its source against the exact
     // version rendered above. A change in the retargeting window is replayed
@@ -1582,7 +1632,7 @@ export default function SectionIndex() {
         return;
       }
       candidate = await this.loadStableOpenApiRegistry(specs);
-      await this.applyOpenApiRefresh(candidate.registry, specs, false);
+      await this.applyOpenApiRefresh(candidate.registry, specs);
     }
     throw new Error("OpenAPI sources changed repeatedly while being generated");
   }
@@ -1595,7 +1645,6 @@ export default function SectionIndex() {
   private async applyOpenApiRefresh(
     nextRegistry: OpenApiRegistry,
     nextSpecs: NormalizedOpenApiSpec[],
-    syncWatcher: boolean,
   ): Promise<void> {
     const previousRegistry = this.apiRegistry;
     const previousSpecs = this.openApiSpecs;
@@ -1610,10 +1659,8 @@ export default function SectionIndex() {
       this.sectionsConfig = await this.resolveSections();
       await this.writeApiPages(undefined, { writtenRoutes: candidateRoutes });
       await this.refreshSiteAggregates();
-      if (syncWatcher) {
-        watcherSyncAttempted = true;
-        await this.syncOpenApiSpecWatcher();
-      }
+      watcherSyncAttempted = true;
+      await this.syncOpenApiSpecWatcher();
     } catch (error) {
       this.apiRegistry = previousRegistry;
       this.openApiSpecs = previousSpecs;
@@ -1666,7 +1713,7 @@ export default function SectionIndex() {
       chalk.cyan("📘 OpenAPI spec changed - regenerating API reference"),
     );
     try {
-      await this.applyStableOpenApiRefresh(this.openApiSpecs, true);
+      await this.applyStableOpenApiRefresh(this.openApiSpecs);
       console.log(chalk.green("✅ API reference updated"));
     } catch (error) {
       console.error(chalk.red("❌ Error updating API reference:"), error);
@@ -1725,15 +1772,19 @@ export default function SectionIndex() {
       // Validate the complete candidate before changing the active spec list or
       // its watcher. A half-written/invalid replacement keeps both the current
       // generated reference and its live watcher intact.
-      await this.applyStableOpenApiRefresh(nextSpecs, true);
+      await this.applyStableOpenApiRefresh(nextSpecs);
       console.log(chalk.green("✅ API reference updated"));
     } catch (error) {
       console.error(chalk.red("❌ Error updating API reference:"), error);
     }
   }
 
-  async updatePagesIndex() {
-    const files = await this.getAllMDXFiles();
+  async updatePagesIndex(pages?: readonly PageMeta[]) {
+    const files = pages
+      ? pages
+          .map((page) => page.path)
+          .filter((file) => file === "index.mdx" || file === "./index.mdx")
+      : await this.getAllMDXFiles();
     let indexMDX: HomepageSource | null = null;
 
     for (const file of files) {

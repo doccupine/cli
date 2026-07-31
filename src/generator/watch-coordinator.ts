@@ -60,6 +60,7 @@ export class WatchCoordinator {
   private mutationQueue: Promise<void> = Promise.resolve();
   private stopping = false;
   private readyCancellations = new Set<() => void>();
+  private pendingWatcherClosures = new Set<FSWatcher>();
   private sourceSnapshot: WatchSourceSnapshot | null = null;
   private publicWatcherStarting = false;
 
@@ -69,6 +70,15 @@ export class WatchCoordinator {
     this.mutationQueue = this.mutationQueue.then(task).catch((error) => {
       console.error(chalk.red(`❌ ${label}:`), error);
     });
+  }
+
+  private async closeDetachedWatcher(watcher: FSWatcher): Promise<void> {
+    try {
+      await watcher.close();
+    } catch (error) {
+      this.pendingWatcherClosures.add(watcher);
+      throw error;
+    }
   }
 
   private waitForWatcherReady(watcher: FSWatcher): Promise<void> {
@@ -258,6 +268,22 @@ export class WatchCoordinator {
   }
 
   async startWatching(): Promise<void> {
+    try {
+      await this.startWatchers();
+    } catch (error) {
+      try {
+        await this.stop();
+      } catch (cleanupError) {
+        throw new AggregateError(
+          [error, cleanupError],
+          "Watcher startup failed and cleanup was incomplete",
+        );
+      }
+      throw error;
+    }
+  }
+
+  private async startWatchers(): Promise<void> {
     const {
       analyticsConfigFile,
       callbacks,
@@ -489,7 +515,11 @@ export class WatchCoordinator {
         }
         const watcher = this.publicWatcher;
         this.publicWatcher = null;
-        void watcher?.close();
+        if (watcher) {
+          void this.closeDetachedWatcher(watcher).catch((error) => {
+            console.error(chalk.red("❌ Public watcher close error:"), error);
+          });
+        }
         this.enqueueMutation("Error removing public directory", () =>
           callbacks.copyPublicFiles(),
         );
@@ -559,7 +589,11 @@ export class WatchCoordinator {
         if (path.resolve(dirPath) !== path.resolve(publicDir)) return;
         const watcher = this.publicWatcher;
         this.publicWatcher = null;
-        void watcher?.close();
+        if (watcher) {
+          void this.closeDetachedWatcher(watcher).catch((error) => {
+            console.error(chalk.red("❌ Public watcher close error:"), error);
+          });
+        }
         this.enqueueMutation("Error removing public directory", () =>
           callbacks.copyPublicFiles(),
         );
@@ -576,7 +610,7 @@ export class WatchCoordinator {
   ): Promise<void> {
     const previousWatcher = this.openApiWatcher;
     this.openApiWatcher = null;
-    if (previousWatcher) await previousWatcher.close();
+    if (previousWatcher) await this.closeDetachedWatcher(previousWatcher);
     if (this.stopping || specs.length === 0) return;
 
     const { callbacks, rootDir } = this.options;
@@ -622,51 +656,55 @@ export class WatchCoordinator {
   async stop(): Promise<void> {
     this.stopping = true;
     for (const cancel of [...this.readyCancellations]) cancel();
-    if (this.watcher) {
-      await this.watcher.close();
-      console.log(chalk.yellow("👋 Stopped watching for MDX changes"));
+    await this.closeCurrentWatchers();
+    await this.drainMutationQueue();
+    const errors = await this.closeCurrentWatchers();
+    await this.drainMutationQueue();
+    if (errors.length > 0) {
+      throw new AggregateError(errors, "Unable to close all source watchers");
     }
-    if (this.configWatcher) {
-      await this.configWatcher.close();
-      console.log(chalk.yellow("👋 Stopped watching for config changes"));
+  }
+
+  private async drainMutationQueue(): Promise<void> {
+    while (true) {
+      const queue = this.mutationQueue;
+      await queue;
+      if (queue === this.mutationQueue) return;
     }
-    if (this.fontWatcher) {
-      await this.fontWatcher.close();
-      console.log(chalk.yellow("👋 Stopped watching for font config changes"));
-    }
-    if (this.analyticsWatcher) {
-      await this.analyticsWatcher.close();
-      console.log(
-        chalk.yellow("👋 Stopped watching for analytics config changes"),
-      );
-    }
-    if (this.openApiWatcher) {
-      await this.openApiWatcher.close();
-      console.log(chalk.yellow("👋 Stopped watching for OpenAPI spec changes"));
-    }
-    if (this.doccupineConfigWatcher) {
-      await this.doccupineConfigWatcher.close();
-      console.log(
-        chalk.yellow("👋 Stopped watching for doccupine.json changes"),
-      );
-    }
-    if (this.publicWatcher) {
-      await this.publicWatcher.close();
-      console.log(
-        chalk.yellow("👋 Stopped watching for public directory changes"),
-      );
-    }
-    if (this.rootDirWatcher) {
-      await this.rootDirWatcher.close();
-    }
-    await this.mutationQueue;
-    if (this.openApiWatcher) {
-      await this.openApiWatcher.close();
-      this.openApiWatcher = null;
-    }
-    if (this.publicWatcher) {
-      await this.publicWatcher.close();
-      this.publicWatcher = null;
-    }
+  }
+
+  private async closeCurrentWatchers(): Promise<unknown[]> {
+    const watchers = [
+      ...this.pendingWatcherClosures,
+      this.watcher,
+      this.configWatcher,
+      this.fontWatcher,
+      this.analyticsWatcher,
+      this.openApiWatcher,
+      this.doccupineConfigWatcher,
+      this.publicWatcher,
+      this.rootDirWatcher,
+    ].filter((watcher): watcher is FSWatcher => watcher !== null);
+    this.pendingWatcherClosures.clear();
+    this.watcher = null;
+    this.configWatcher = null;
+    this.fontWatcher = null;
+    this.analyticsWatcher = null;
+    this.openApiWatcher = null;
+    this.doccupineConfigWatcher = null;
+    this.publicWatcher = null;
+    this.rootDirWatcher = null;
+
+    const uniqueWatchers = [...new Set(watchers)];
+    const results = await Promise.allSettled(
+      uniqueWatchers.map((watcher) => watcher.close()),
+    );
+    const errors: unknown[] = [];
+    results.forEach((result, index) => {
+      if (result.status === "fulfilled") return;
+      this.pendingWatcherClosures.add(uniqueWatchers[index]);
+      errors.push(result.reason);
+    });
+    return errors;
   }
 }

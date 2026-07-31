@@ -401,6 +401,118 @@ describe.sequential("MDXToNextJSGenerator ownership", () => {
     );
   });
 
+  it("rolls back section redirects when a later redirect fails", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    await fs.writeFile(path.join(watchDir, "index.mdx"), "# Home\n");
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+    await generator.init();
+    await fs.writeFile(
+      path.join(watchDir, "alpha.mdx"),
+      "---\ntitle: Alpha\nsection: Alpha\n---\nAlpha\n",
+    );
+    await fs.writeFile(
+      path.join(watchDir, "beta.mdx"),
+      "---\ntitle: Beta\nsection: Beta\n---\nBeta\n",
+    );
+    type GeneratorInternals = {
+      writeSectionIndexRedirect(slug: string, target: string): Promise<void>;
+      generatedRouteManager: { sectionIndexSlugs(): Set<string> };
+    };
+    const internals = generator as unknown as GeneratorInternals;
+    const writeRedirect = internals.writeSectionIndexRedirect.bind(generator);
+    let writes = 0;
+    vi.spyOn(internals, "writeSectionIndexRedirect").mockImplementation(
+      async (slug, target) => {
+        writes += 1;
+        if (writes === 2) throw new Error("Injected redirect failure");
+        await writeRedirect(slug, target);
+      },
+    );
+
+    await expect(generator.processAllMDXFiles()).rejects.toThrow(
+      "Injected redirect failure",
+    );
+
+    expect(
+      await fs.pathExists(
+        path.join(outputDir, "app", "(site)", "alpha", "page.tsx"),
+      ),
+    ).toBe(false);
+    expect(
+      await fs.pathExists(
+        path.join(outputDir, "app", "(site)", "beta", "page.tsx"),
+      ),
+    ).toBe(false);
+    expect(internals.generatedRouteManager.sectionIndexSlugs()).toEqual(
+      new Set(),
+    );
+  });
+
+  it("restores section redirects when stale cleanup fails", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    await fs.writeFile(path.join(watchDir, "index.mdx"), "# Home\n");
+    const alphaSource = path.join(watchDir, "alpha.mdx");
+    const betaSource = path.join(watchDir, "beta.mdx");
+    await fs.writeFile(
+      alphaSource,
+      "---\ntitle: Alpha\nsection: Alpha\n---\nAlpha\n",
+    );
+    await fs.writeFile(
+      betaSource,
+      "---\ntitle: Beta\nsection: Beta\n---\nBeta\n",
+    );
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+    await generator.init();
+    const alphaRedirect = path.join(
+      outputDir,
+      "app",
+      "(site)",
+      "alpha",
+      "page.tsx",
+    );
+    const betaRedirect = path.join(
+      outputDir,
+      "app",
+      "(site)",
+      "beta",
+      "page.tsx",
+    );
+    const previousAlpha = await fs.readFile(alphaRedirect, "utf8");
+    const previousBeta = await fs.readFile(betaRedirect, "utf8");
+    await Promise.all([fs.remove(alphaSource), fs.remove(betaSource)]);
+    type RouteManagerInternals = {
+      removeSectionIndexPage(
+        slug: string,
+        removeEmptyDirs: (dir: string, stopDir: string) => Promise<void>,
+      ): Promise<void>;
+    };
+    type GeneratorInternals = {
+      generatedRouteManager: RouteManagerInternals;
+    };
+    const routeManager = (generator as unknown as GeneratorInternals)
+      .generatedRouteManager;
+    const removeSectionIndexPage =
+      routeManager.removeSectionIndexPage.bind(routeManager);
+    let cleanupCalls = 0;
+    vi.spyOn(routeManager, "removeSectionIndexPage").mockImplementation(
+      async (slug, removeEmptyDirs) => {
+        cleanupCalls += 1;
+        if (cleanupCalls === 2) {
+          throw new Error("Injected stale redirect cleanup failure");
+        }
+        await removeSectionIndexPage(slug, removeEmptyDirs);
+      },
+    );
+
+    await expect(generator.processAllMDXFiles()).rejects.toThrow(
+      "Unable to remove stale section index redirects",
+    );
+
+    expect(cleanupCalls).toBeGreaterThanOrEqual(2);
+    expect(await fs.readFile(alphaRedirect, "utf8")).toBe(previousAlpha);
+    expect(await fs.readFile(betaRedirect, "utf8")).toBe(previousBeta);
+  });
+
   it("retains the last successful page when bulk regeneration fails", async () => {
     const { root, watchDir, outputDir } = await fixture();
     const sourcePath = path.join(watchDir, "guide.mdx");
@@ -863,6 +975,50 @@ describe.sequential("MDXToNextJSGenerator ownership", () => {
     );
   });
 
+  it("keeps a rolled-back deletion in later aggregate refreshes", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const sourcePath = path.join(watchDir, "index.mdx");
+    const pagePath = path.join(outputDir, "app", "(site)", "page.tsx");
+    await fs.writeFile(
+      sourcePath,
+      "---\ntitle: Retained Home\n---\nRETAINED_BODY\n",
+    );
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+    await generator.init();
+    const previousPage = await fs.readFile(pagePath, "utf8");
+    const sitemapPath = path.join(outputDir, "app", "sitemap.ts");
+    const previousSitemap = await fs.readFile(sitemapPath, "utf8");
+    await fs.remove(sourcePath);
+    vi.spyOn(generator, "updateLlmsFiles").mockRejectedValueOnce(
+      new Error("Injected aggregate failure"),
+    );
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await generator.handleFileDelete("index.mdx");
+    type GeneratorInternals = {
+      refreshSiteAggregates(): Promise<void>;
+    };
+    await (generator as unknown as GeneratorInternals).refreshSiteAggregates();
+
+    expect(await fs.readFile(pagePath, "utf8")).toBe(previousPage);
+    expect(await fs.readFile(sitemapPath, "utf8")).toBe(previousSitemap);
+    expect(
+      await fs.readFile(
+        path.join(outputDir, "app", "(site)", "layout.tsx"),
+        "utf8",
+      ),
+    ).toContain("Retained Home");
+    const docsContent = await fs.readJson(
+      path.join(outputDir, "services", "mcp", "docs-content.json"),
+    );
+    expect(docsContent).toContainEqual(
+      expect.objectContaining({
+        uri: "docs:///",
+        content: "RETAINED_BODY\n",
+      }),
+    );
+  });
+
   it("deletes the recorded frontmatter route and preserves nested pages", async () => {
     const { watchDir, outputDir } = await fixture();
     await fs.outputFile(
@@ -951,6 +1107,49 @@ describe.sequential("MDXToNextJSGenerator ownership", () => {
         slug: "guide",
       }),
     );
+  });
+
+  it("does not commit inferred sections from a colliding pass", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const sourcePath = path.join(watchDir, "guide.mdx");
+    const collidingPath = path.join(watchDir, "tutorials", "guide.mdx");
+    await fs.writeFile(
+      sourcePath,
+      "---\ntitle: Guide\nsection: Guides\n---\nGUIDE_BODY\n",
+    );
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+    await generator.init();
+    type GeneratorInternals = {
+      sectionsConfig: Array<{ label: string; slug: string }> | null;
+    };
+    const internals = generator as unknown as GeneratorInternals;
+    await fs.writeFile(
+      sourcePath,
+      "---\ntitle: Guide\nsection: Tutorials\n---\nMOVED_BODY\n",
+    );
+    await fs.outputFile(
+      collidingPath,
+      "---\ntitle: Collision\nsection: Tutorials\n---\nCOLLISION_BODY\n",
+    );
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await generator.handleFileChange("changed", "guide.mdx");
+
+    expect(internals.sectionsConfig).toEqual([
+      { label: "Guides", slug: "guides" },
+    ]);
+    expect(
+      await fs.readFile(
+        path.join(outputDir, "app", "(site)", "layout.tsx"),
+        "utf8",
+      ),
+    ).toContain('label: "Guides"');
+
+    await fs.remove(collidingPath);
+    await generator.handleFileDelete("tutorials/guide.mdx");
+    expect(internals.sectionsConfig).toEqual([
+      { label: "Tutorials", slug: "tutorials" },
+    ]);
   });
 
   it("generates a blocked collision source when its owner moves routes", async () => {
@@ -1757,7 +1956,17 @@ describe.sequential("MDXToNextJSGenerator ownership", () => {
     const { root, watchDir, outputDir } = await fixture();
     const oldSpecPath = path.join(root, "old-openapi.json");
     const candidateSpecPath = path.join(root, "candidate-openapi.json");
-    const writeSpec = (specPath: string, resource: string, summary: string) =>
+    const schemaPath = path.join(root, "schemas", "pet.json");
+    const writeSchema = (property: string) =>
+      fs.outputJson(schemaPath, {
+        type: "object",
+        properties: { [property]: { type: "string" } },
+      });
+    const writeSpec = (
+      specPath: string,
+      resource: string,
+      schema: Record<string, unknown>,
+    ) =>
       fs.writeJson(specPath, {
         openapi: "3.0.0",
         info: { title: "Test", version: "1.0.0" },
@@ -1765,15 +1974,26 @@ describe.sequential("MDXToNextJSGenerator ownership", () => {
           [`/${resource}`]: {
             get: {
               operationId: `list${resource}`,
-              summary,
               tags: [resource],
-              responses: { "200": { description: "OK" } },
+              responses: {
+                "200": {
+                  description: "OK",
+                  content: { "application/json": { schema } },
+                },
+              },
             },
           },
         },
       });
-    await writeSpec(oldSpecPath, "users", "Old users");
-    await writeSpec(candidateSpecPath, "pets", "Initial pets");
+    await writeSpec(oldSpecPath, "users", {
+      type: "object",
+      properties: { OLD_USER: { type: "string" } },
+    });
+    await writeSpec(candidateSpecPath, "pets", {
+      type: "object",
+      properties: { INITIAL_PET: { type: "string" } },
+    });
+    await writeSchema("REFERENCED_PET");
     await fs.outputFile(path.join(watchDir, "index.mdx"), "# Home\n");
     const generator = new MDXToNextJSGenerator(
       watchDir,
@@ -1798,7 +2018,9 @@ describe.sequential("MDXToNextJSGenerator ownership", () => {
           )
         ) {
           changedDuringSync = true;
-          await writeSpec(candidateSpecPath, "pets", "Latest pets");
+          await writeSpec(candidateSpecPath, "pets", {
+            $ref: "./schemas/pet.json",
+          });
         }
         await syncWatcher();
       },
@@ -1812,20 +2034,21 @@ describe.sequential("MDXToNextJSGenerator ownership", () => {
     await generator.handleDoccupineConfigChange();
 
     expect(changedDuringSync).toBe(true);
-    expect(
-      await fs.readFile(
-        path.join(
-          outputDir,
-          "app",
-          "(site)",
-          "api-reference",
-          "pets",
-          "listpets",
-          "page.tsx",
-        ),
-        "utf8",
-      ),
-    ).toContain("Latest pets");
+    const pagePath = path.join(
+      outputDir,
+      "app",
+      "(site)",
+      "api-reference",
+      "pets",
+      "listpets",
+      "page.tsx",
+    );
+    expect(await fs.readFile(pagePath, "utf8")).toContain("REFERENCED_PET");
+
+    await writeSchema("UPDATED_PET");
+    await waitUntil(async () =>
+      (await fs.readFile(pagePath, "utf8")).includes("UPDATED_PET"),
+    );
     await generator.stop();
   });
 
@@ -2486,6 +2709,107 @@ describe.sequential("MDXToNextJSGenerator ownership", () => {
       ),
     ).toContain("New API summary");
     await generator.stop();
+  });
+
+  it("closes every watcher when watcher startup fails", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+    type Watcher = { close(): Promise<void> };
+    type WatchCoordinatorInternals = {
+      waitForWatcherReady(watcher: Watcher): Promise<void>;
+      watcher: Watcher | null;
+      configWatcher: Watcher | null;
+      fontWatcher: Watcher | null;
+      analyticsWatcher: Watcher | null;
+      openApiWatcher: Watcher | null;
+      doccupineConfigWatcher: Watcher | null;
+      publicWatcher: Watcher | null;
+      rootDirWatcher: Watcher | null;
+    };
+    type GeneratorInternals = {
+      watchCoordinator: WatchCoordinatorInternals;
+    };
+    const coordinator = (generator as unknown as GeneratorInternals)
+      .watchCoordinator;
+    const closeSpies: Array<ReturnType<typeof vi.spyOn>> = [];
+    let readinessCalls = 0;
+    vi.spyOn(coordinator, "waitForWatcherReady").mockImplementation(
+      async (watcher) => {
+        readinessCalls += 1;
+        const close = vi.spyOn(watcher, "close");
+        if (readinessCalls === 1) {
+          close.mockRejectedValueOnce(new Error("Injected close failure"));
+        }
+        closeSpies.push(close);
+        if (readinessCalls === 6) {
+          throw new Error("Injected watcher readiness failure");
+        }
+      },
+    );
+
+    await expect(generator.startWatching()).rejects.toThrow(
+      "Injected watcher readiness failure",
+    );
+
+    expect(readinessCalls).toBe(6);
+    expect(closeSpies[0]).toHaveBeenCalledTimes(2);
+    for (const close of closeSpies.slice(1)) {
+      expect(close).toHaveBeenCalledOnce();
+    }
+    expect(coordinator.watcher).toBeNull();
+    expect(coordinator.configWatcher).toBeNull();
+    expect(coordinator.fontWatcher).toBeNull();
+    expect(coordinator.analyticsWatcher).toBeNull();
+    expect(coordinator.openApiWatcher).toBeNull();
+    expect(coordinator.doccupineConfigWatcher).toBeNull();
+    expect(coordinator.publicWatcher).toBeNull();
+    expect(coordinator.rootDirWatcher).toBeNull();
+  });
+
+  it("retries an OpenAPI watcher close that fails during retargeting", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const specPath = path.join(root, "openapi.json");
+    await fs.writeJson(specPath, {
+      openapi: "3.0.0",
+      info: { title: "Test", version: "1.0.0" },
+      paths: {},
+    });
+    await fs.writeFile(path.join(watchDir, "index.mdx"), "# Home\n");
+    const specs = [{ name: "Test", file: specPath }];
+    const generator = new MDXToNextJSGenerator(
+      watchDir,
+      outputDir,
+      specs,
+      root,
+    );
+    await generator.init();
+    await generator.startWatching();
+    type Watcher = { close(): Promise<void> };
+    type WatchCoordinatorInternals = {
+      openApiWatcher: Watcher | null;
+      syncOpenApiSpecWatcher(
+        specs: Array<{ name: string; file: string }>,
+        sourceFiles: string[],
+      ): Promise<void>;
+    };
+    type GeneratorInternals = {
+      watchCoordinator: WatchCoordinatorInternals;
+    };
+    const coordinator = (generator as unknown as GeneratorInternals)
+      .watchCoordinator;
+    const watcher = coordinator.openApiWatcher;
+    if (!watcher) throw new Error("Expected an OpenAPI watcher");
+    const close = vi
+      .spyOn(watcher, "close")
+      .mockRejectedValueOnce(new Error("Injected retarget close failure"));
+
+    await expect(
+      coordinator.syncOpenApiSpecWatcher(specs, [specPath]),
+    ).rejects.toThrow("Injected retarget close failure");
+    await generator.stop();
+
+    expect(close).toHaveBeenCalledTimes(2);
+    expect(coordinator.openApiWatcher).toBeNull();
   });
 
   it("reconciles source changes that predate watcher readiness", async () => {

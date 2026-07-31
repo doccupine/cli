@@ -26,6 +26,14 @@ export class GeneratedRouteManager {
     return this.artifacts.routeFor("mdx", source);
   }
 
+  sectionIndexSlugs(): Set<string> {
+    return new Set(this.generatedSectionIndexSlugs);
+  }
+
+  replaceSectionIndexSlugs(slugs: Iterable<string>): void {
+    this.generatedSectionIndexSlugs = new Set(slugs);
+  }
+
   async replaceMdxRoutes(realPages: PageMeta[]): Promise<void> {
     await this.artifacts.replaceRoutesAndSave(
       "mdx",
@@ -101,31 +109,45 @@ export class GeneratedRouteManager {
     occupiedSlugs: Set<string>,
     removeEmptyDirs: (dir: string, stopDir: string) => Promise<void>,
   ): Promise<void> {
+    const errors: unknown[] = [];
     for (const stale of this.generatedSectionIndexSlugs) {
       if (nextSlugs.has(stale)) continue;
       if (occupiedSlugs.has(stale)) continue;
-      const pagePath = resolveOutputPath(
-        this.outputDir,
-        "app",
-        "(site)",
-        stale,
-        "page.tsx",
-      );
       try {
-        if (!(await fs.pathExists(pagePath))) continue;
-        await fs.remove(pagePath);
-        await removeEmptyDirs(
-          path.dirname(pagePath),
-          this.outputPath("app", "(site)"),
-        );
-        console.log(
-          chalk.blue(`🧹 Removed stale section index redirect: /${stale}`),
-        );
-      } catch {
-        // ignore
+        await this.removeSectionIndexPage(stale, removeEmptyDirs);
+      } catch (error) {
+        errors.push(error);
       }
     }
+    if (errors.length > 0) {
+      throw new AggregateError(
+        errors,
+        "Unable to remove stale section index redirects",
+      );
+    }
     this.generatedSectionIndexSlugs = nextSlugs;
+  }
+
+  private async removeSectionIndexPage(
+    slug: string,
+    removeEmptyDirs: (dir: string, stopDir: string) => Promise<void>,
+  ): Promise<void> {
+    const pagePath = resolveOutputPath(
+      this.outputDir,
+      "app",
+      "(site)",
+      slug,
+      "page.tsx",
+    );
+    if (!(await fs.pathExists(pagePath))) return;
+    await fs.remove(pagePath);
+    await removeEmptyDirs(
+      path.dirname(pagePath),
+      this.outputPath("app", "(site)"),
+    );
+    console.log(
+      chalk.blue(`🧹 Removed stale section index redirect: /${slug}`),
+    );
   }
 
   /** Best-effort removal of now-empty directories up to (not incl.) stopDir. */
