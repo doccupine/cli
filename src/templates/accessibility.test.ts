@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import { siteLayoutTemplate } from "../lib/layout.js";
+import { appStructure } from "../lib/structures.js";
 import { chatTemplate } from "./components/Chat.js";
+import { chatStylesTemplate } from "./components/ChatStyles.js";
 import { searchDocsTemplate } from "./components/SearchDocs.js";
 import { searchModalContentTemplate } from "./components/SearchModalContent.js";
 import { sideBarTemplate } from "./components/SideBar.js";
@@ -94,8 +96,13 @@ describe("generated accessibility behavior", () => {
     expect(chatTemplate).toContain("distanceFromBottom <=");
     expect(chatTemplate).toContain("cancelAnimationFrame");
     expect(chatTemplate).toContain('"(prefers-reduced-motion: reduce)"');
-    expect(chatTemplate).toContain("transition-delay: 0s, 0s, 0.3s;");
-    expect(chatTemplate).not.toContain("transition-delay: 0.3s;");
+    expect(chatStylesTemplate).toContain("transition-delay: 0s, 0s, 0.3s;");
+    expect(chatStylesTemplate).not.toContain("transition-delay: 0.3s;");
+  });
+
+  it("registers and imports the split chat styles", () => {
+    expect(appStructure["components/ChatStyles.ts"]).toBe(chatStylesTemplate);
+    expect(chatTemplate).toContain('from "@/components/ChatStyles";');
   });
 
   it("hides collapsed accordion and sidebar-group descendants", () => {
