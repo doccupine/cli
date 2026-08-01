@@ -20,6 +20,11 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      # Match the npm the release workflow publishes with, so a change in npm's
+      # behaviour fails here rather than half way through a release.
+      - name: Update npm
+        run: npm install --global npm@latest
+
       - run: pnpm install --frozen-lockfile
       - run: pnpm format:check
       - run: pnpm test

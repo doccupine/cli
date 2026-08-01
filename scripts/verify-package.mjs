@@ -142,17 +142,25 @@ try {
     temporaryRoot,
   );
 
-  let packResult;
+  let packOutput;
   try {
-    [packResult] = JSON.parse(packed.stdout);
+    packOutput = JSON.parse(packed.stdout);
   } catch (error) {
     throw new Error(`Could not parse npm pack output:\n${packed.stdout}`, {
       cause: error,
     });
   }
 
+  // npm 11 and earlier report an array of packed tarballs; npm 12 reports an
+  // object keyed by package name. The entries themselves are identical.
+  const [packResult] = Array.isArray(packOutput)
+    ? packOutput
+    : Object.values(packOutput ?? {});
+
   if (!packResult?.filename || !Array.isArray(packResult.files)) {
-    throw new Error("npm pack did not report a tarball and its contents");
+    throw new Error(
+      `npm pack did not report a tarball and its contents:\n${packed.stdout}`,
+    );
   }
 
   const packedFiles = new Set(
