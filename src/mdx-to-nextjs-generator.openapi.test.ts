@@ -58,6 +58,46 @@ describe.sequential("MDXToNextJSGenerator OpenAPI route ownership", () => {
     );
   });
 
+  it("emits the homepage playground operation as a Prettier-stable literal", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    const specPath = path.join(root, "openapi.json");
+    await fs.writeJson(specPath, {
+      openapi: "3.0.0",
+      info: { title: "Test", version: "1.0.0" },
+      paths: {
+        "/users": {
+          get: {
+            operationId: "listUsers",
+            summary: "List users",
+            tags: ["users"],
+            responses: { "200": { description: "OK" } },
+          },
+        },
+      },
+    });
+    await fs.outputFile(
+      path.join(watchDir, "index.mdx"),
+      "---\ntitle: Home\nopenapi: listUsers\n---\n# Home\n",
+    );
+
+    await new MDXToNextJSGenerator(
+      watchDir,
+      outputDir,
+      [{ name: "Test", file: specPath }],
+      root,
+    ).init();
+
+    const page = await fs.readFile(
+      path.join(outputDir, "app", "(site)", "page.tsx"),
+      "utf8",
+    );
+    // JSON is full of double quotes, so Prettier picks the single-quoted form
+    // and breaks after the operator once the declaration exceeds 80 columns.
+    expect(page).toContain("const operation = JSON.parse(\n  '");
+    expect(page).not.toContain('JSON.parse("{\\"');
+    expect(page).toContain("<ApiPlayground operation={operation} />");
+  });
+
   it("includes the API Reference section in the initial generated layout", async () => {
     const { root, watchDir, outputDir } = await fixture();
     const specPath = path.join(root, "openapi.json");

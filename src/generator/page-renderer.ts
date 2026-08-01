@@ -32,6 +32,25 @@ export interface HomepageSource {
   rss?: boolean;
 }
 
+/**
+ * The `const operation = JSON.parse(...)` declaration that carries an endpoint
+ * descriptor into a generated page. `toJsStringLiteral` picks the quote
+ * Prettier would, and the width check reproduces its break-after-operator
+ * choice, so the emitted file is already formatted.
+ */
+function apiOperationDeclaration(
+  apiOperation: OperationDescriptor | undefined,
+): string {
+  if (!apiOperation) return "";
+  const arg = toJsStringLiteral(JSON.stringify(apiOperation));
+  const inline = `const operation = JSON.parse(${arg});`;
+  const decl =
+    inline.length <= 80
+      ? inline
+      : `const operation = JSON.parse(\n  ${arg},\n);`;
+  return `\n${decl}\n`;
+}
+
 export function renderMdxPage(
   mdxFile: MDXFile,
   options?: { apiOperation?: OperationDescriptor },
@@ -73,17 +92,7 @@ export function renderMdxPage(
   const apiImport = apiOperation
     ? `\nimport { ApiPlayground } from "@/components/layout/ApiPlayground";`
     : "";
-  const apiConst = apiOperation
-    ? (() => {
-        const arg = toJsStringLiteral(JSON.stringify(apiOperation));
-        const inline = `const operation = JSON.parse(${arg});`;
-        const decl =
-          inline.length <= 80
-            ? inline
-            : `const operation = JSON.parse(\n  ${arg},\n);`;
-        return `\n${decl}\n`;
-      })()
-    : "";
+  const apiConst = apiOperationDeclaration(apiOperation);
   const sourcePathLiteral = JSON.stringify(mdxFile.path);
   const showRssButton = hasFeed && fm.rss === true && !apiOperation;
   const docsAttrs = [
@@ -183,11 +192,7 @@ export function renderHomepage(
   const apiImport = apiOperation
     ? `\nimport { ApiPlayground } from "@/components/layout/ApiPlayground";`
     : "";
-  const apiConst = apiOperation
-    ? `\nconst operation = JSON.parse(${JSON.stringify(
-        JSON.stringify(apiOperation),
-      )});\n`
-    : "";
+  const apiConst = apiOperationDeclaration(apiOperation);
   const showRssButton = hasFeed && indexMDX?.rss === true && !apiOperation;
   const docsElement = apiOperation
     ? `<Docs content={content} sourcePath="index.mdx">

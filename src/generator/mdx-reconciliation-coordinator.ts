@@ -12,7 +12,7 @@ import {
   type MdxSourceSnapshot,
 } from "./mdx-pass-builder.js";
 import { mergePages, RouteCollisionError } from "./page-catalog.js";
-import { renderHomepage, type HomepageSource } from "./page-renderer.js";
+import { type HomepageSource } from "./page-renderer.js";
 import { SecureSourceFs } from "./secure-source-fs.js";
 
 interface SuccessfulMdxState {
@@ -419,13 +419,9 @@ export class MdxReconciliationCoordinator {
 
     try {
       if (isIndex) {
+        // The homepage is emitted by updatePagesIndex() in the aggregate pass,
+        // so there is no per-file page to write here.
         console.log(chalk.blue("🏠 Updating homepage with index.mdx content"));
-        renderHomepage(
-          this.homepageSource(frontmatter, mdxContent),
-          typeof frontmatter.openapi === "string"
-            ? this.options.lookupOpenApi(frontmatter.openapi)
-            : undefined,
-        );
       } else {
         const mdxFile: MDXFile = {
           path: filePath,
