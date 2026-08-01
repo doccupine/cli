@@ -10,6 +10,7 @@ export const packageJsonTemplate =
         start: "next start",
         lint: "eslint .",
         format: "prettier --write .",
+        "format:check": "prettier --check .",
         "type-check": "tsgo --noEmit",
       },
       dependencies: {

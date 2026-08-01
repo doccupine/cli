@@ -111,6 +111,9 @@ try {
   await run(packageManager, ["install", "--frozen-lockfile=false"], siteDir);
   await run(packageManager, ["run", "type-check"], siteDir);
   await run(packageManager, ["run", "lint", "--max-warnings=0"], siteDir);
+  // The generator emits Prettier-canonical output rather than shelling out to
+  // a formatter, so this is what keeps that invariant honest.
+  await run(packageManager, ["run", "format:check"], siteDir);
   await run(packageManager, ["run", "build"], siteDir);
 
   // A prop-mapping wrapper fails silently: a name that never reaches Cherry
