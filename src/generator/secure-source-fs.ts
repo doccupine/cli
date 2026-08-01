@@ -5,6 +5,7 @@ import { open, type FileHandle } from "node:fs/promises";
 import path from "node:path";
 
 import { isPathInside, resolveWithin } from "../lib/output-safety.js";
+import { isMdxPath } from "../lib/utils.js";
 
 function errorCode(error: unknown): string | undefined {
   return error && typeof error === "object" && "code" in error
@@ -219,7 +220,7 @@ export class SecureSourceFs {
   async readMdxSourceFile(
     filePath: string,
   ): Promise<{ content: string; stat: fs.Stats }> {
-    if (!filePath.toLowerCase().endsWith(".mdx")) {
+    if (!isMdxPath(filePath)) {
       throw this.sourcePathError(
         "documentation source",
         filePath,
@@ -600,7 +601,7 @@ export class SecureSourceFs {
           } catch (error) {
             if (errorCode(error) !== "ENOENT") throw error;
           }
-          if (entry.name.endsWith(".mdx") || linksToDirectory) {
+          if (isMdxPath(entry.name) || linksToDirectory) {
             throw this.sourcePathError(
               "documentation source",
               fullPath,
@@ -620,9 +621,9 @@ export class SecureSourceFs {
 
         if (stat.isDirectory()) {
           await scanDir(fullPath, relPath);
-        } else if (stat.isFile() && entry.name.endsWith(".mdx")) {
+        } else if (stat.isFile() && isMdxPath(entry.name)) {
           files.push(relPath);
-        } else if (!stat.isFile() && entry.name.endsWith(".mdx")) {
+        } else if (!stat.isFile() && isMdxPath(entry.name)) {
           throw this.sourcePathError(
             "documentation source",
             fullPath,

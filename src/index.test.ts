@@ -44,6 +44,11 @@ describe("generateSlug", () => {
     expect(generateSlug("getting-started.mdx")).toBe("getting-started");
   });
 
+  it("strips the extension whatever its casing", () => {
+    expect(generateSlug("getting-started.MDX")).toBe("getting-started");
+    expect(generateSlug("guides/Setup.Mdx")).toBe("guides/setup");
+  });
+
   it("lowercases the slug", () => {
     expect(generateSlug("MyPage.mdx")).toBe("mypage");
   });

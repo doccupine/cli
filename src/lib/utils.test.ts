@@ -3,7 +3,14 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { safeMatter, writeFileAtomic } from "./utils.js";
+import net from "node:net";
+
+import {
+  findAvailablePort,
+  isMdxPath,
+  safeMatter,
+  writeFileAtomic,
+} from "./utils.js";
 
 const tempDirs: string[] = [];
 const executionProbe = "DOCCUPINE_SAFE_MATTER_EXECUTED";
@@ -32,6 +39,47 @@ describe("safeMatter", () => {
     expect(warning).toHaveBeenCalledWith(
       expect.stringContaining("only YAML frontmatter is allowed"),
     );
+  });
+});
+
+describe("isMdxPath", () => {
+  it("accepts every casing of the extension", () => {
+    for (const name of ["a.mdx", "a.MDX", "a.Mdx", "docs/Guide.mDx"]) {
+      expect(isMdxPath(name)).toBe(true);
+    }
+  });
+
+  it("rejects non-MDX paths", () => {
+    for (const name of ["a.md", "a.mdxx", "mdx", "a.mdx.bak"]) {
+      expect(isMdxPath(name)).toBe(false);
+    }
+  });
+});
+
+describe("findAvailablePort", () => {
+  it("skips a port that is already in use", async () => {
+    const blocker = net.createServer();
+    await new Promise<void>((resolve) => blocker.listen(0, resolve));
+    const taken = (blocker.address() as net.AddressInfo).port;
+
+    try {
+      expect(await findAvailablePort(taken)).toBeGreaterThan(taken);
+    } finally {
+      await new Promise<void>((resolve) => blocker.close(() => resolve()));
+    }
+  });
+
+  it("explains the failure instead of scanning past the last valid port", async () => {
+    const blocker = net.createServer();
+    await new Promise<void>((resolve) => blocker.listen(65535, resolve));
+
+    try {
+      await expect(findAvailablePort(65535)).rejects.toThrow(
+        /No free port available from 65535 to 65535/,
+      );
+    } finally {
+      await new Promise<void>((resolve) => blocker.close(() => resolve()));
+    }
   });
 });
 

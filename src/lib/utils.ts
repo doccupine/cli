@@ -2,6 +2,7 @@ import fs from "fs-extra";
 import { randomBytes } from "node:crypto";
 import { constants } from "node:fs";
 import { open, unlink, type FileHandle } from "node:fs/promises";
+import net from "node:net";
 import path from "path";
 import { execSync } from "child_process";
 import chalk from "chalk";
@@ -184,18 +185,42 @@ export function resolvePackageManager(
   return { name: "npm", bin: "npm" };
 }
 
-export async function findAvailablePort(startPort: number): Promise<number> {
-  const net = await import("net");
+const MAX_PORT = 65535;
 
+function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
     const server = net.createServer();
-    server.listen(startPort, () => {
-      server.close(() => resolve(startPort));
+    server.listen(port, () => {
+      server.close(() => resolve(true));
     });
-    server.on("error", () => {
-      resolve(findAvailablePort(startPort + 1));
-    });
+    server.on("error", () => resolve(false));
   });
+}
+
+/**
+ * Finds the first free port at or above `startPort`. Scanning stops at the
+ * last valid TCP port rather than recursing past it: `listen(65536)` is a
+ * RangeError, and surfacing that instead of an explanation tells the user
+ * nothing about what to do next.
+ */
+export async function findAvailablePort(startPort: number): Promise<number> {
+  for (let port = startPort; port <= MAX_PORT; port += 1) {
+    if (await isPortAvailable(port)) return port;
+  }
+  throw new Error(
+    `No free port available from ${startPort} to ${MAX_PORT}. Free a port or set a lower "port" in doccupine.json.`,
+  );
+}
+
+/**
+ * Whether a path names an MDX source document. Case-insensitive so a file
+ * saved as "Guide.MDX" is treated the same everywhere - source discovery, the
+ * watcher's filter, the restart fingerprint, and the llms body reader all
+ * route through here, and a split between them makes a file invisible to
+ * generation while still triggering work.
+ */
+export function isMdxPath(filePath: string): boolean {
+  return filePath.toLowerCase().endsWith(".mdx");
 }
 
 export function generateSlug(filePath: string): string {
@@ -204,7 +229,7 @@ export function generateSlug(filePath: string): string {
   }
 
   const normalized = filePath
-    .replace(/\.mdx$/, "")
+    .replace(/\.mdx$/i, "")
     .replace(/\\/g, "/")
     .replace(/[^a-zA-Z0-9\/\-_]/g, "-")
     .toLowerCase();

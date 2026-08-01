@@ -3,7 +3,7 @@ import fs from "fs-extra";
 
 import { resolveOutputPath } from "../lib/output-safety.js";
 import type { PageMeta, SectionConfig } from "../lib/types.js";
-import { safeMatter, writeFileAtomic } from "../lib/utils.js";
+import { isMdxPath, safeMatter, writeFileAtomic } from "../lib/utils.js";
 import { robotsTemplate } from "../templates/app/robots.js";
 import {
   sitemapTemplate,
@@ -179,7 +179,7 @@ export async function collectPageBodies(
 ): Promise<PageWithBody[]> {
   return Promise.all(
     pages.map(async (page) => {
-      if (!page.path.endsWith(".mdx")) {
+      if (!isMdxPath(page.path)) {
         return { ...page, body: readOpenApiBody(page.slug) ?? "" };
       }
       const { content: raw } = await readMdxSource(page.path);

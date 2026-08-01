@@ -7,6 +7,31 @@ import { MDXToNextJSGenerator } from "./mdx-to-nextjs-generator.js";
 import { fixture } from "./test-utils/generator-fixture.js";
 
 describe.sequential("MDXToNextJSGenerator MDX reconciliation", () => {
+  it("generates a page for an uppercase .MDX source", async () => {
+    const { root, watchDir, outputDir } = await fixture();
+    await fs.outputFile(
+      path.join(watchDir, "Guide.MDX"),
+      "---\ntitle: Shouty\n---\nSHOUTY_BODY\n",
+    );
+    const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
+
+    await generator.init();
+
+    const page = await fs.readFile(
+      path.join(outputDir, "app", "(site)", "guide", "page.tsx"),
+      "utf8",
+    );
+    expect(page).toContain("SHOUTY_BODY");
+    // The llms aggregate reads bodies from MDX sources and falls back to the
+    // OpenAPI body map for anything it does not recognize as one.
+    expect(
+      await fs.readFile(
+        path.join(outputDir, "public", "llms-full.txt"),
+        "utf8",
+      ),
+    ).toContain("SHOUTY_BODY");
+  });
+
   it("restores sections.json and rebuilds routes after deletion", async () => {
     const { root, watchDir, outputDir } = await fixture();
     await fs.outputFile(

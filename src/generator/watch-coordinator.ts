@@ -5,6 +5,7 @@ import path from "node:path";
 
 import { isPathInside } from "../lib/output-safety.js";
 import type { NormalizedOpenApiSpec } from "../lib/types.js";
+import { isMdxPath } from "../lib/utils.js";
 import type { SecureSourceFs } from "./secure-source-fs.js";
 
 interface WatchSourceSnapshot {
@@ -177,11 +178,7 @@ export class WatchCoordinator {
     ).join("\n");
 
     return {
-      mdx: await sourceFs.treeState(
-        watchDir,
-        (relativePath) => relativePath.toLowerCase().endsWith(".mdx"),
-        true,
-      ),
+      mdx: await sourceFs.treeState(watchDir, isMdxPath, true),
       configs,
       font: await sourceFs.pathState(path.join(rootDir, fontConfigFile), true),
       analytics: await sourceFs.pathState(
@@ -346,7 +343,7 @@ export class WatchCoordinator {
           return true;
         }
 
-        if (isFile && !filePath.endsWith(".mdx")) {
+        if (isFile && !isMdxPath(filePath)) {
           return true;
         }
         return false;
