@@ -25,3 +25,30 @@ jobs:
       - run: pnpm test
       - run: pnpm test:package
       - run: pnpm smoke:generated
+
+  changelog:
+    name: Changelog entry
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # A version bump is what triggers the release workflow, so the entry it
+      # publishes as release notes has to land in the same change.
+      - name: Require a changelog entry for a version bump
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git fetch --depth=1 origin "$BASE_REF"
+          base=$(git show FETCH_HEAD:package.json | node -p "JSON.parse(require('node:fs').readFileSync(0, 'utf8')).version")
+          head=$(node -p "require('./package.json').version")
+
+          if [ "$base" = "$head" ]; then
+            echo "Version unchanged at $head"
+            exit 0
+          fi
+
+          echo "Version bumped from $base to $head"
+          node scripts/release-notes.mjs > /dev/null
+          echo "CHANGELOG.md documents $head"

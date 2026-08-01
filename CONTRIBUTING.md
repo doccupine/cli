@@ -50,6 +50,22 @@ When adding a new template:
 3. Write a clear PR description explaining the change and why
 4. Keep PRs focused - one feature or fix per PR
 
+## Releasing
+
+Releases are published by GitHub Actions. To ship a version:
+
+1. Bump `version` in `package.json`
+2. Add a matching `## <version>` section to `CHANGELOG.md`
+3. Commit as `chore: release <version>` and push to `main`
+
+`.github/workflows/release.yml` compares `package.json` against the registry on every push to `main`. A version that is already published is skipped, so an ordinary push costs one registry lookup. An unpublished one runs the full check suite, publishes to npm, and creates the `v<version>` tag and a GitHub release whose notes are that changelog section. A version bump that arrives through a pull request is checked for its changelog entry by CI, since the release itself refuses to publish without one.
+
+Publishing uses npm trusted publishing over OIDC, so no npm token exists in the repository and every release carries a provenance attestation. The trust is registered on npmjs.com against `doccupine/cli` and the workflow filename `release.yml`; renaming or moving that file stops publishing until the trusted publisher is updated to match.
+
+A prerelease publishes under a dist-tag taken from its own version, so `1.0.0-beta.1` lands on `beta` and never becomes `latest`. Name the channel in the version: a bare numeric prerelease such as `1.0.0-1` has no valid dist-tag and fails the guard before anything is published.
+
+If a release fails part way through, fix the cause and re-run the workflow from the Actions tab. Once the version is on the registry the workflow is a no-op, so a rerun cannot double-publish.
+
 ## Code of Conduct
 
 By participating in this project you agree to abide by the [Code of Conduct](CODE_OF_CONDUCT.md).

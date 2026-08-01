@@ -1,0 +1,87 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Never let two releases run at once: both would race the same version check.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    name: Look for an unpublished version
+    runs-on: ubuntu-latest
+    outputs:
+      publish: ${{ steps.check.outputs.publish }}
+      version: ${{ steps.check.outputs.version }}
+      dist_tag: ${{ steps.check.outputs.dist_tag }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - id: check
+        run: node scripts/release-guard.mjs >> "$GITHUB_OUTPUT"
+
+  publish:
+    name: Publish to npm
+    needs: guard
+    if: needs.guard.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write # create the tag and the GitHub release
+      id-token: write # mint the OIDC token npm trusted publishing verifies
+
+    env:
+      VERSION: ${{ needs.guard.outputs.version }}
+      DIST_TAG: ${{ needs.guard.outputs.dist_tag }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      # Trusted publishing needs npm 11.5.1 or newer; the runner image is on 10.
+      - name: Update npm
+        run: npm install --global npm@latest
+
+      # Before anything is published, so a missing entry fails the release
+      # rather than leaving a published version with no notes. It is written
+      # outside the workspace to keep the tree clean for format:check.
+      - name: Collect the release notes
+        run: node scripts/release-notes.mjs > "$RUNNER_TEMP/release-notes.md"
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm test
+      - run: pnpm test:package
+      - run: pnpm smoke:generated
+
+      # No token: the OIDC token from id-token: write authenticates the publish
+      # and npm attaches a provenance attestation on its own.
+      - name: Publish
+        run: npm publish --tag "$DIST_TAG"
+
+      - name: Tag the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          args=(
+            --target "$GITHUB_SHA"
+            --title "v$VERSION"
+            --notes-file "$RUNNER_TEMP/release-notes.md"
+          )
+          [ "$DIST_TAG" = "latest" ] || args+=(--prerelease)
+          gh release create "v$VERSION" "${args[@]}"
