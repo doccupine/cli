@@ -2,6 +2,7 @@ export const platformFontsSettingsMdxTemplate = `---
 title: "Fonts Settings"
 description: "Configure custom typography with Google Fonts or local font files."
 date: "2026-02-19"
+updated: "2026-08-01"
 category: "Configuration"
 categoryOrder: 2
 order: 3
@@ -10,6 +11,10 @@ section: "Platform"
 # Fonts Settings
 
 The Fonts settings page lets you customize your documentation site's typography using Google Fonts or locally uploaded font files.
+
+## Enabling custom fonts
+
+Use the **Enable Custom Fonts** toggle to turn custom typography on or off. Turning it off stages a **deletion** of \`fonts.json\` rather than saving an empty configuration, so the file disappears from your repository on the next publish and the site falls back to its default typeface. Absence is what the generator reads as "no custom fonts". An empty \`{}\` left in place ends up disabled too, but it fails validation on every build and prints a warning as it goes.
 
 ## Google Fonts
 
@@ -33,6 +38,17 @@ Upload your own font files for complete typographic control:
 4. Add more sources for additional weights and styles.
 
 WOFF2 is recommended for the best compression and browser support.
+
+A weight or style already in your \`fonts.json\` that is not one of the offered choices appears as **Custom (value)** and is kept, so a hand-authored entry survives a round trip through the settings page.
+
+## Validation
+
+\`fonts.json\` is checked against the same rules the generator uses, both when the settings page loads it and when you save. A configuration the generator would refuse shows an error here, rather than passing silently and leaving your site on its default typeface:
+
+- Exactly one of \`googleFont\` or \`localFonts\` must be defined, never both and never neither.
+- \`googleFont.fontName\` must be a valid identifier, because it becomes an import in the generated site.
+- \`googleFont.subsets\` must be an array of non-empty strings, and \`googleFont.weight\` a non-empty string or array of them.
+- \`localFonts\` must be a non-empty path, or an object whose \`src\` array holds at least one entry with a string \`path\`.
 
 ## How it works
 

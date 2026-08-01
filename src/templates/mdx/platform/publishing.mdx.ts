@@ -2,7 +2,7 @@ export const platformPublishingMdxTemplate = `---
 title: "Publishing Changes"
 description: "Commit your edits to GitHub and deploy your documentation site with one click."
 date: "2026-02-19"
-updated: "2026-07-31"
+updated: "2026-08-01"
 category: "Editing"
 categoryOrder: 1
 order: 1
@@ -72,7 +72,22 @@ In the publish modal, every row in the change set carries a badge for what happe
 - **updated** - the file already exists and was edited
 - **deleted** - the file is being removed
 
+A file that [Agent Sync](/platform/self-updating-docs) staged carries an **agent** badge as well, so the agent's proposals are distinguishable from your own edits at a glance.
+
 If the diffs cannot be loaded, the modal falls back to a plain file list whose badges read **mod**, **del**, or **bin** - the last for a binary asset such as an image or a font, which has no text diff to show.
+
+## Changes staged by Agent Sync
+
+Agent Sync stages the pages it writes into the same staging area your own edits go to, so a single publish commits both. The modal tells you when that is happening:
+
+- **A conversation is waiting for review** - a notice names how many. Publishing or discarding those files here also settles the agent conversation, exactly as reviewing it from Agent Sync would.
+- **A run is still writing** - the notice says so, and **Deploy**, **Discard all**, and the per-file and per-line discard controls stay disabled until the run finishes. Committing half-written pages, or pulling files out from under a run, would leave the conversation recording one decision and your repository holding another.
+
+Discarding an agent's file reconciles its conversation: the proposal is dropped from the run and its file count shrinks. Discard everything a run wrote and the conversation records the change set as **discarded**, so the thread reads as a review decision rather than an abandoned run.
+
+<Callout type="note">
+  Cherry-picking is easier from Agent Sync itself. Its run view keeps the agent's original change set and offers **Restore discarded changes** to put back whatever you removed - here in the publish modal, a discard is final.
+</Callout>
 
 ## Auto-deploy from GitHub
 

@@ -45,6 +45,8 @@ Replies are threaded, so a follow-up builds on what came before - and agreeing t
 
 A turn that changes documentation shows the steps the agent took, the pages it changed, the sources it read, and what the run cost. You can switch between conversations, rename them, or start a fresh one.
 
+A run commits itself only when every page it wrote is set to auto-update and untouched by hand. Anything else is staged alongside your own edits and waits, and you can settle it from the conversation or from the project's [Publish](/platform/publishing) modal - either way, the other side is kept in step.
+
 <Callout type="note">
   An empty result is a valid answer. If the docs already describe the code accurately, the agent will say so rather than rewriting pages for the sake of it.
 </Callout>
@@ -109,6 +111,8 @@ When a linked source changes, what happens next depends on the page:
 | Edited by a human                | **Always** flagged for review, whatever else is set               |
 
 Each row on the Map and Table views has an **Auto-update this page when its source changes** toggle, so you can let routine reference pages look after themselves while a carefully worded overview page always waits for you.
+
+The same settings decide what happens to a run you started yourself from the Agent view - auto-update is not only about drift. What differs is that a run writes one change set and commits or stages it as a unit: if any page in it resolves to review, the whole set waits. Publishing half a coherent change and leaving the rest behind would be worse than waiting for you.
 
 For anything in review, **Review update** opens the change set - the same diff view as [publishing](/platform/publishing) - and **Update from source** asks the agent to regenerate that one page on demand.
 
