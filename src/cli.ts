@@ -170,6 +170,47 @@ export function superviseWatchLifecycle(
   });
 }
 
+function errorMessages(error: unknown, seen = new Set<unknown>()): string[] {
+  if (error === null || error === undefined || seen.has(error)) return [];
+  seen.add(error);
+
+  if (error instanceof AggregateError) {
+    // The aggregate's own message is a summary ("Unable to shut down
+    // cleanly"); the causes underneath it are what the user can act on.
+    return [
+      error.message,
+      ...error.errors.flatMap((nested) => errorMessages(nested, seen)),
+    ].filter(Boolean);
+  }
+  if (error instanceof Error) {
+    return [error.message, ...errorMessages(error.cause, seen)].filter(Boolean);
+  }
+  return [String(error)].filter(Boolean);
+}
+
+/**
+ * Prints a command failure the way a CLI should: the actionable message first,
+ * nested causes indented under it, and the stack only when `--verbose` asked
+ * for it. Errors raised here are written for the person running the command,
+ * so a bare stack trace would bury the part that tells them what to do.
+ */
+export function reportCliError(
+  error: unknown,
+  argv: readonly string[] = process.argv,
+): void {
+  const [message, ...causes] = errorMessages(error);
+  console.error(chalk.red(`❌ ${message ?? "Unknown error"}`));
+  for (const cause of causes) {
+    console.error(chalk.red(`   ↳ ${cause}`));
+  }
+
+  if (argv.includes("--verbose")) {
+    if (error instanceof Error && error.stack) console.error(error.stack);
+  } else {
+    console.error(chalk.gray("   Re-run with --verbose for the full stack."));
+  }
+}
+
 async function dependencyFingerprint(
   outputDir: string,
   packageManager: string,
@@ -368,6 +409,9 @@ export async function runCli(argv?: string[]): Promise<void> {
     .alias("generate")
     .description("Generate the Next.js app once without running its build")
     .option("--reset", "Reset configuration and prompt for new directories")
+    // Accepted so the failure hint printed by reportCliError is actionable
+    // here too, not only under `watch`.
+    .option("--verbose", "Show verbose output")
     .action(async (options) => {
       const configManager = new ConfigManager();
       const config = await configManager.getConfig({
@@ -388,6 +432,7 @@ export async function runCli(argv?: string[]): Promise<void> {
     .description("Show or reset configuration")
     .option("--show", "Show current configuration")
     .option("--reset", "Reset configuration")
+    .option("--verbose", "Show verbose output")
     .action(async (options) => {
       const configManager = new ConfigManager();
 

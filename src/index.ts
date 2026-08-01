@@ -39,6 +39,11 @@ export function isProcessEntrypoint(
 }
 
 if (isProcessEntrypoint()) {
-  const { runCli } = await import("./cli.js");
-  await runCli();
+  const { runCli, reportCliError } = await import("./cli.js");
+  try {
+    await runCli();
+  } catch (error) {
+    reportCliError(error);
+    process.exitCode = 1;
+  }
 }

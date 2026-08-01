@@ -3,7 +3,7 @@ import fs from "fs-extra";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 
-import { superviseWatchLifecycle } from "./cli.js";
+import { reportCliError, superviseWatchLifecycle } from "./cli.js";
 
 class FakeChildProcess extends EventEmitter {
   pid: number | undefined;
@@ -100,6 +100,69 @@ describe("watch lifecycle", () => {
       expect(stopGenerator).toHaveBeenCalledOnce();
     },
   );
+});
+
+describe("reportCliError", () => {
+  function captureErrors(error: unknown, argv: string[] = []): string {
+    const lines: string[] = [];
+    vi.spyOn(console, "error").mockImplementation((...args: unknown[]) => {
+      lines.push(args.map(String).join(" "));
+    });
+    reportCliError(error, argv);
+    return lines.join("\n");
+  }
+
+  it("leads with the actionable message instead of a stack trace", () => {
+    const error = new Error("Refusing to overwrite non-empty directory /site.");
+    error.stack = "Error: Refusing\n    at claimOutputDirectory (out.js:1:1)";
+
+    const output = captureErrors(error);
+
+    expect(output).toContain(
+      "Refusing to overwrite non-empty directory /site.",
+    );
+    expect(output).not.toContain("at claimOutputDirectory");
+    expect(output).toContain("--verbose");
+  });
+
+  it("prints the stack when --verbose asked for it", () => {
+    const error = new Error("boom");
+    error.stack = "Error: boom\n    at somewhere (out.js:1:1)";
+
+    const output = captureErrors(error, ["node", "doccupine", "--verbose"]);
+
+    expect(output).toContain("at somewhere");
+  });
+
+  it("unwraps causes and aggregate members under the summary", () => {
+    const output = captureErrors(
+      new AggregateError(
+        [
+          new Error("watcher close failed", { cause: new Error("EBUSY") }),
+          new Error("generator stop failed"),
+        ],
+        "Failed to shut down cleanly",
+      ),
+    );
+
+    expect(output).toContain("❌ Failed to shut down cleanly");
+    expect(output).toContain("↳ watcher close failed");
+    expect(output).toContain("↳ EBUSY");
+    expect(output).toContain("↳ generator stop failed");
+  });
+
+  it("survives a self-referencing cause chain", () => {
+    const error = new Error("looping") as Error & { cause?: unknown };
+    error.cause = error;
+
+    expect(() => captureErrors(error)).not.toThrow();
+  });
+
+  it("reports a non-Error rejection", () => {
+    expect(captureErrors("plain string failure")).toContain(
+      "plain string failure",
+    );
+  });
 });
 
 describe("package metadata", () => {
