@@ -86,10 +86,14 @@ describe("generated theming", () => {
     // The site's mode is cookie-based, so OS-scheme-scoped SSR metas (a
     // viewport themeColor export) would paint white browser chrome on a dark
     // site under a light OS until hydration - a visible flash on every load.
-    // The blocking script writes the single unscoped meta instead, before
-    // first paint, from the palettes the generated layout imports.
+    // The single unscoped meta is server-rendered with the light primary
+    // (pages are static, so the server cannot know the mode) because Safari
+    // only tints reliably from a tag present in the parsed HTML; the
+    // blocking script then corrects its content before first paint.
     expect(rootLayout).not.toContain("themeColor");
     expect(rootLayout).not.toContain("prefers-color-scheme: light");
+    expect(rootLayout).toContain('name="theme-color"');
+    expect(rootLayout).toContain("content={colorsLight.primary}");
     expect(rootLayout).toContain('meta[name="theme-color"]');
     // The script and the provider's $themeColor must stay on the same token,
     // or the chrome color jumps at hydration.

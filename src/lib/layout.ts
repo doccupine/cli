@@ -118,14 +118,20 @@ function fontDeclLine(fontConfig: FontConfig | null): string {
 // and seeding the cookie so Cherry's ClientThemeProvider reconciles against
 // the same answer on mount instead of flipping the class back.
 //
-// The script also writes the theme-color meta from the resolved mode. It
-// cannot be emitted as OS-scheme-scoped SSR metas (Next's viewport export):
-// the site's mode is cookie-based, so a dark site on a light-OS device would
-// show the wrong browser chrome until hydration - a visible flash on every
-// load. The \${...} palette interpolations below are escaped so they resolve
-// in the generated layout, at app build time, from the imported theme
-// palettes. The token must match the provider's $themeColor (primary), so
-// the pre-paint chrome color equals what Cherry syncs after hydration.
+// The script also retargets the theme-color meta from the resolved mode. The
+// meta itself is server-rendered in the layout below, because Safari only
+// tints reliably from a tag present in the parsed HTML - a meta created by
+// script is honored inconsistently or not at all - while it does track
+// content updates to an existing tag. It cannot be emitted as
+// OS-scheme-scoped SSR metas (Next's viewport export): the site's mode is
+// cookie-based, so a dark site on a light-OS device would show the wrong
+// browser chrome until hydration - a visible flash on every load. Pages are
+// static, so the server cannot know the mode either: the SSR value is the
+// light primary and this script corrects it before first paint. The \${...}
+// palette interpolations below are escaped so they resolve in the generated
+// layout, at app build time, from the imported theme palettes. The token
+// must match the provider's $themeColor (primary), so the pre-paint chrome
+// color equals what Cherry syncs after hydration.
 const THEME_INIT_SCRIPT = `(function(){try{var c=document.cookie.split(";").map(function(s){return s.trim();}).find(function(s){return s.indexOf("theme=")===0;});var v=c?c.split("=")[1]:null;var d=v?v==="dark":(window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches);if(!v){document.cookie="theme="+(d?"dark":"light")+";path=/;max-age=31536000;SameSite=Lax";}var r=document.documentElement;r.dataset.theme=d?"dark":"light";if(d){r.classList.add("dark");}var m=document.querySelector('meta[name="theme-color"]');if(!m){m=document.createElement("meta");m.name="theme-color";document.head.appendChild(m);}m.content=d?"\${colorsDark.primary}":"\${colorsLight.primary}";}catch(e){}})();`;
 
 /**
@@ -185,6 +191,18 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Server-rendered so Safari has a real tag to tint from: WebKit
+            honors a theme-color meta created by script inconsistently, but
+            reliably tracks content updates to an existing one. Pages are
+            static, so the value is the light primary; the blocking script
+            below corrects it before first paint and Cherry keeps it in sync
+            after hydration. suppressHydrationWarning: the script edits
+            content before React hydrates. */}
+        <meta
+          name="theme-color"
+          content={colorsLight.primary}
+          suppressHydrationWarning
+        />
         {/* Resolves dark mode before the first paint by stamping data-theme
             on <html>, which flips the CSS variables in GlobalStyles.
             Inlined as a plain <script> (not next/script) so it ships in the
