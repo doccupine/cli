@@ -2,6 +2,7 @@ export const themeMdxTemplate = `---
 title: "Theme"
 description: "Customize the documentation UI colors with a theme.json file."
 date: "2026-02-19"
+updated: "2026-08-04"
 category: "Configuration"
 categoryOrder: 2
 order: 5
@@ -96,6 +97,7 @@ Place a \`theme.json\` at your project root (the same directory where you execut
 - **Placement**: Put \`theme.json\` in the project root alongside \`config.json\`.
 - **Partial palettes**: If a key is missing in a mode, consumers may fall back to the \`default\` value.
 - **Logo size**: Recommended dimensions are 164px width and 30px height.
+- **Browser chrome**: The \`theme-color\` shown in browser UI (such as the iOS Safari status bar) is derived from each mode's \`primary\` token, so it carries your brand color in both modes.
 
 <Callout type="warning">
   Use valid hex colors (e.g., \`#22c55e\`). Invalid color values may cause unexpected rendering.
