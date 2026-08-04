@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import { siteLayoutTemplate } from "../lib/layout.js";
 import { appStructure } from "../lib/structures.js";
 import { chatTemplate } from "./components/Chat.js";
-import { chatStylesTemplate } from "./components/ChatStyles.js";
 import { searchDocsTemplate } from "./components/SearchDocs.js";
 import { searchModalContentTemplate } from "./components/SearchModalContent.js";
 import { sideBarTemplate } from "./components/SideBar.js";
@@ -38,71 +37,75 @@ describe("generated accessibility behavior", () => {
     expect(searchDocsTemplate).toContain(
       "const opener = closeSearchImmediately(false)",
     );
-    expect(searchDocsTemplate).toContain("askAssistant(q, opener)");
+    expect(searchDocsTemplate).toContain("ask(q, opener)");
   });
 
-  it("allows only one Chat or Search modal and transfers opener ownership", () => {
+  it("allows only one Chat or Search modal at a time", () => {
+    // Opening search dismisses the chat drawer first, adopting its opener so
+    // focus restoration chains through both overlays.
     const closeChatIndex = searchDocsTemplate.indexOf(
       "const previousOverlayOpener = closeChat(false)",
     );
     const showSearchIndex = searchDocsTemplate.indexOf("setIsVisible(true)");
     expect(closeChatIndex).toBeGreaterThan(-1);
     expect(closeChatIndex).toBeLessThan(showSearchIndex);
+
+    // Opening chat (launcher, Cmd+I, or ask) dismisses the search modal
+    // without restoring focus, since focus moves into the chat composer.
     expect(searchDocsTemplate).toContain(
-      "registerSearchClose(closeSearchImmediately)",
+      "if (isChatOpen) closeSearchImmediately(false)",
     );
     expect(searchDocsTemplate).toContain(
       "restoreSearchFocusRef.current = restoreFocus",
     );
     expect(searchDocsTemplate).toContain("returnFocusTo={returnFocusTo}");
-
-    const closeSearchIndex = chatTemplate.indexOf(
-      "const previousOverlayOpener = closeSearchRef.current?.(false) ?? null",
-    );
-    const showChatIndex = chatTemplate.indexOf("setIsOpen(true)");
-    expect(closeSearchIndex).toBeGreaterThan(-1);
-    expect(closeSearchIndex).toBeLessThan(showChatIndex);
-    expect(chatTemplate).toContain(
-      "previousOverlayOpener?.isConnected === true",
-    );
-    expect(chatTemplate).toContain("pendingRestoreFocusRef.current");
-    expect(chatTemplate).toContain("if (restoreFocus)");
     expect(searchDocsTemplate).toContain("{isVisible && (");
-    expect(chatTemplate).toContain(
-      "const isMobileModal = isOpen && isMobileChat",
-    );
 
     expect(searchDocsTemplate).toContain('e.key === "k"');
     expect(searchDocsTemplate).toContain("openSearch()");
-    expect(chatTemplate).toContain('e.key.toLowerCase() === "i"');
-    expect(chatTemplate).toContain("toggleChat()");
+    // The Cmd/Ctrl+I toggle lives in Cherry's ChatProvider and must stay
+    // disabled while no LLM provider is configured.
+    expect(chatTemplate).toContain('shortcut={isChatActive ? "i" : null}');
   });
 
-  it("makes mobile chat modal, restores focus, and scrolls only near bottom", () => {
-    expect(chatTemplate).toContain("inert={!isOpen}");
-    expect(chatTemplate).toContain("aria-hidden={!isOpen}");
+  it("delegates the chat dialog contract to Cherry's chat kit", () => {
+    // Focus trap, inert siblings, Escape, aria-modal below lg, body scroll
+    // lock, and stick-to-bottom scrolling are ChatPanel/ChatMessageList
+    // behavior in cherry-styled-components 0.2.13+, so the template must
+    // compose the kit instead of hand-rolling the dialog.
+    for (const component of [
+      "<ChatPanel",
+      "<ChatMessageList>",
+      "<ChatMessage",
+      "<ChatInput $glow />",
+      "<ChatTyping />",
+      "ChatProvider",
+    ]) {
+      expect(chatTemplate).toContain(component);
+    }
+    expect(chatTemplate).not.toContain("aria-modal");
+    expect(chatTemplate).not.toContain("inert");
+    expect(chatTemplate).not.toContain("requestAnimationFrame");
+
+    // The typing indicator only shows until the first streamed token creates
+    // the assistant bubble.
     expect(chatTemplate).toContain(
-      'role={isMobileModal ? "dialog" : "complementary"}',
+      'loading && lastMessage?.role !== "assistant"',
     );
-    expect(chatTemplate).toContain(
-      'aria-modal={isMobileModal ? "true" : undefined}',
-    );
-    expect(chatTemplate).toContain(
-      'document.addEventListener("focusin", containFocus)',
-    );
-    expect(chatTemplate).toContain("sibling.inert = true");
-    expect(chatTemplate).toContain("focusTarget?.isConnected");
-    expect(chatTemplate).toContain("shouldAutoScrollRef.current");
-    expect(chatTemplate).toContain("distanceFromBottom <=");
-    expect(chatTemplate).toContain("cancelAnimationFrame");
-    expect(chatTemplate).toContain('"(prefers-reduced-motion: reduce)"');
-    expect(chatStylesTemplate).toContain("transition-delay: 0s, 0s, 0.3s;");
-    expect(chatStylesTemplate).not.toContain("transition-delay: 0.3s;");
+
+    // Below lg the drawer is a fullscreen dialog, so following a source link
+    // must close it to reveal the navigated page.
+    expect(chatTemplate).toContain('useBelowBreakpoint("lg")');
+    expect(chatTemplate).toContain("if (isMobileChat) close();");
   });
 
-  it("registers and imports the split chat styles", () => {
-    expect(appStructure["components/ChatStyles.ts"]).toBe(chatStylesTemplate);
-    expect(chatTemplate).toContain('from "@/components/ChatStyles";');
+  it("streams into a single assistant bubble with a plain-text mirror", () => {
+    expect(chatTemplate).toContain(
+      "setAssistant(streamedContent, { text: streamedContent, sources })",
+    );
+    expect(chatTemplate).toContain("{ text: streamedContent, sources },");
+    expect(appStructure["components/ChatStyles.ts"]).toBeUndefined();
+    expect(chatTemplate).not.toContain("@/components/ChatStyles");
   });
 
   it("hides collapsed accordion and sidebar-group descendants", () => {

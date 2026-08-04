@@ -11,6 +11,7 @@ import React, {
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import styled from "styled-components";
+import { useChat } from "cherry-styled-components";
 import { mq, Theme } from "@/app/theme";
 import { interactiveStyles } from "@/components/layout/SharedStyled";
 import { ChatContext } from "@/components/Chat";
@@ -114,8 +115,8 @@ function SearchProvider({
   const abortRef = useRef<AbortController | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
   const router = useRouter();
-  const { isChatActive, askAssistant, closeChat, registerSearchClose } =
-    useContext(ChatContext);
+  const { isChatActive } = useContext(ChatContext);
+  const { ask, close: closeChat, isOpen: isChatOpen } = useChat();
 
   const sectionLabels = useMemo(() => {
     const map: Record<string, string> = {};
@@ -194,10 +195,12 @@ function SearchProvider({
     return opener;
   }, []);
 
-  useEffect(
-    () => registerSearchClose(closeSearchImmediately),
-    [closeSearchImmediately, registerSearchClose],
-  );
+  // Only one overlay at a time: the chat panel opening (launcher, Cmd+I, or
+  // \`ask\`) dismisses the search modal without restoring focus, since focus
+  // has already moved into the chat composer.
+  useEffect(() => {
+    if (isChatOpen) closeSearchImmediately(false);
+  }, [isChatOpen, closeSearchImmediately]);
 
   const trimmedQuery = query.trim();
   const contentResults =
@@ -314,14 +317,14 @@ function SearchProvider({
   );
 
   // Hand the current query to the AI assistant, then dismiss the search modal.
-  // \`askAssistant\` opens the chat and either submits the question or (if a
-  // response is already streaming) pre-fills it, ready to send.
+  // \`ask\` opens the chat and either submits the question or (if a response is
+  // already streaming) pre-fills it, ready to send.
   const askAssistantWithQuery = useCallback(() => {
     const q = query.trim();
     if (!q) return;
     const opener = closeSearchImmediately(false);
-    askAssistant(q, opener);
-  }, [query, askAssistant, closeSearchImmediately]);
+    ask(q, opener);
+  }, [query, ask, closeSearchImmediately]);
 
   // Global Cmd+K / Ctrl+K listener
   useEffect(() => {

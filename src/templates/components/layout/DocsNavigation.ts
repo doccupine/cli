@@ -1,10 +1,10 @@
 import { SIDEBAR_WIDTH, CHAT_WIDTH } from "../../app/theme.js";
 
 export const docsNavigationTemplate = `"use client";
-import { useContext } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import styled, { css } from "styled-components";
+import { useChat } from "cherry-styled-components";
 import { Icon } from "@/components/layout/Icon";
 import { mq, Theme } from "@/app/theme";
 import {
@@ -12,7 +12,6 @@ import {
   interactiveStyles,
   sidePanelOffset,
 } from "@/components/layout/SharedStyled";
-import { ChatContext } from "@/components/Chat";
 
 const StyledNavigationWrapper = styled.div<{
   $isChatOpen?: boolean;
@@ -118,7 +117,7 @@ interface DocsNavigationProps {
 }
 
 function DocsNavigation({ result }: DocsNavigationProps) {
-  const { isOpen } = useContext(ChatContext);
+  const { isOpen } = useChat();
   const pathname = usePathname();
   // Walk categories and any nested link groups depth-first so prev/next spans
   // every real page (a node with a slug), in reading order.

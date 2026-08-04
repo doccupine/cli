@@ -2,8 +2,7 @@ import { SIDEBAR_WIDTH, CHAT_WIDTH } from "../../app/theme.js";
 
 export const staticLinksTemplate = `"use client";
 import styled, { css } from "styled-components";
-import { useContext } from "react";
-import { ChatContext } from "@/components/Chat";
+import { useChat } from "cherry-styled-components";
 import { mq, Theme } from "@/app/theme";
 import {
   focusModeColumn,
@@ -95,7 +94,7 @@ const StyledLink = styled.a<{ theme: Theme; $hasIcon?: boolean }>\`
 \`;
 
 function StaticLinks() {
-  const { isOpen } = useContext(ChatContext);
+  const { isOpen } = useChat();
 
   if (links.length === 0) {
     return null;

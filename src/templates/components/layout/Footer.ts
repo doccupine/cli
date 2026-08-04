@@ -1,10 +1,8 @@
 import { SIDEBAR_WIDTH, CHAT_WIDTH } from "../../app/theme.js";
 
 export const footerTemplate = `"use client";
-import { useContext } from "react";
 import styled, { css } from "styled-components";
-import { Space, styledSmall } from "cherry-styled-components";
-import { ChatContext } from "@/components/Chat";
+import { Space, styledSmall, useChat } from "cherry-styled-components";
 import { mq, Theme } from "@/app/theme";
 import { GitHubLogo } from "@/components/layout/Pictograms";
 import {
@@ -98,7 +96,7 @@ const StyledFooterFlex = styled.div\`
 \`;
 
 function Footer({ hideBranding }: { hideBranding?: boolean }) {
-  const { isOpen } = useContext(ChatContext);
+  const { isOpen } = useChat();
 
   if (hideBranding) return <Space $xs={80} $lg="none" />;
 

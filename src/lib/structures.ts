@@ -16,7 +16,6 @@ import { notFoundTemplate } from "../templates/app/not-found.js";
 import { themeTemplate } from "../templates/app/theme.js";
 
 import { chatTemplate } from "../templates/components/Chat.js";
-import { chatStylesTemplate } from "../templates/components/ChatStyles.js";
 import { lockBodyScrollTemplate } from "../templates/components/LockBodyScroll.js";
 import { docsTemplate } from "../templates/components/Docs.js";
 import { docsSideBarTemplate } from "../templates/components/DocsSideBar.js";
@@ -229,7 +228,6 @@ export const appStructure: Record<string, string> = {
   "utils/requestBody.ts": requestBodyTemplate,
 
   "components/Chat.tsx": chatTemplate,
-  "components/ChatStyles.ts": chatStylesTemplate,
   "components/LockBodyScroll.ts": lockBodyScrollTemplate,
   "components/Docs.tsx": docsTemplate,
   "components/DocsSideBar.tsx": docsSideBarTemplate,

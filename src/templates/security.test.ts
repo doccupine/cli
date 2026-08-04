@@ -421,8 +421,11 @@ describe("generated security boundaries", () => {
   });
 
   it("bounds submitted chat history to the RAG server contract", () => {
-    expect(chatTemplate).toContain(".slice(-20)");
-    expect(chatTemplate).toContain("content: a.text.slice(0, 4000)");
+    // The client bound now lives in Cherry's ChatProvider (historyLimit
+    // defaults to 20 entries capped at 4000 chars each, matching the RAG
+    // contract), so the template must pass the provider's history through
+    // untouched rather than rebuilding its own.
+    expect(chatTemplate).toContain("JSON.stringify({ question, history })");
     expect(ragRoutesTemplate).toContain(
       "history: z.array(messageSchema).max(20).optional()",
     );

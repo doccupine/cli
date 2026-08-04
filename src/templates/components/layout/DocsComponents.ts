@@ -1,7 +1,7 @@
 import { SIDEBAR_WIDTH, CHAT_WIDTH } from "../../app/theme.js";
 
 export const docsComponentsTemplate = `"use client";
-import React, { createContext, useContext } from "react";
+import React, { createContext } from "react";
 import styled, { css } from "styled-components";
 import {
   Button,
@@ -9,6 +9,7 @@ import {
   styledSmall,
   styledStrong,
   styledText,
+  useChat,
 } from "cherry-styled-components";
 import Link from "next/link";
 import { mq, Theme } from "@/app/theme";
@@ -21,7 +22,6 @@ import {
   stylesLists,
 } from "@/components/layout/SharedStyled";
 import { Badge } from "@/components/layout/Badge";
-import { ChatContext } from "@/components/Chat";
 
 const SectionBarContext = createContext(false);
 
@@ -618,7 +618,7 @@ function DocsSidebar({ children }: DocsProps) {
 }
 
 function DocsContainer({ children }: DocsProps) {
-  const { isOpen } = useContext(ChatContext);
+  const { isOpen } = useChat();
 
   return (
     <StyledDocsContainer $isChatOpen={isOpen}>{children}</StyledDocsContainer>

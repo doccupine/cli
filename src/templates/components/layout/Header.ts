@@ -4,10 +4,10 @@ import { useCallback, useContext, useRef, useState } from "react";
 import styled, { css } from "styled-components";
 import Link from "next/link";
 import { mq, Theme } from "@/app/theme";
-import { useOnClickOutside } from "cherry-styled-components";
+import { ChatLauncher, useOnClickOutside } from "cherry-styled-components";
 import { Search } from "lucide-react";
 import { Logo } from "@/components/layout/Pictograms";
-import { ChatContext, ChatButtonCTA } from "@/components/Chat";
+import { ChatContext } from "@/components/Chat";
 import {
   SearchContext,
   SearchKbd,
@@ -167,7 +167,7 @@ function Header({ children }: HeaderProps) {
             <Search size={14} />
             <SearchKbd>&#8984;K</SearchKbd>
           </StyledSearchButton>
-          {isChatActive && <ChatButtonCTA />}
+          {isChatActive && <ChatLauncher $glow />}
         </StyledLeftWrapper>
       </StyledHeaderInner>
     </StyledHeader>
