@@ -41,6 +41,10 @@ import { GeneratedRouteManager } from "./generator/generated-route-manager.js";
 import { MdxReconciliationCoordinator } from "./generator/mdx-reconciliation-coordinator.js";
 import { ProjectConfigRepository } from "./generator/project-config-repository.js";
 import { PublicAssetManager } from "./generator/public-asset-manager.js";
+import {
+  ICON_SOURCE_FILES,
+  IconAssetManager,
+} from "./generator/icon-asset-manager.js";
 import { WatchCoordinator } from "./generator/watch-coordinator.js";
 import { SectionIndexGenerator } from "./generator/section-index-generator.js";
 import {
@@ -94,6 +98,7 @@ export class MDXToNextJSGenerator {
   private sectionIndexGenerator: SectionIndexGenerator;
   private projectConfigRepository: ProjectConfigRepository;
   private publicAssetManager: PublicAssetManager;
+  private iconAssetManager: IconAssetManager;
   private watchCoordinator: WatchCoordinator;
 
   constructor(
@@ -166,12 +171,24 @@ export class MDXToNextJSGenerator {
       this.configFiles,
       this.fontConfigFile,
       this.analyticsConfigFile,
+      ICON_SOURCE_FILES,
     );
     this.publicAssetManager = new PublicAssetManager(
       this.rootDir,
       this.outputDir,
       this.artifacts,
       this.sourceFs,
+    );
+    this.iconAssetManager = new IconAssetManager(
+      this.rootDir,
+      this.outputDir,
+      this.artifacts,
+      this.sourceFs,
+      (fileName) =>
+        this.projectConfigRepository.readOptionalRootBinaryFile(
+          fileName,
+          "icon source",
+        ),
     );
     this.watchCoordinator = new WatchCoordinator({
       watchDir: this.watchDir,
@@ -180,6 +197,7 @@ export class MDXToNextJSGenerator {
       fontConfigFile: this.fontConfigFile,
       analyticsConfigFile: this.analyticsConfigFile,
       doccupineConfigFile: this.doccupineConfigFile,
+      iconFiles: ICON_SOURCE_FILES,
       sourceFs: this.sourceFs,
       getOpenApiSpecs: () => this.openApiSpecs,
       getOpenApiSourceFiles: () => this.apiRegistry.sourceFiles,
@@ -203,6 +221,7 @@ export class MDXToNextJSGenerator {
           this.handlePublicFileChange(filePath),
         handlePublicFileDelete: (filePath) =>
           this.handlePublicFileDelete(filePath),
+        syncIconFiles: () => this.syncIconFiles(),
         processAllMDXFiles: () => this.reconcileMdxSources(),
       },
     });
@@ -307,6 +326,7 @@ export class MDXToNextJSGenerator {
       await this.copyFontConfig();
       await this.copyAnalyticsConfig();
       await this.copyPublicFiles();
+      await this.syncIconFiles();
       if (this.sectionsConfig) {
         console.log(
           chalk.blue(
@@ -606,6 +626,10 @@ export class MDXToNextJSGenerator {
 
   async copyPublicFiles() {
     return this.publicAssetManager.copyPublicFiles();
+  }
+
+  async syncIconFiles() {
+    return this.iconAssetManager.syncIconFiles();
   }
 
   async handlePublicFileChange(filePath: string) {

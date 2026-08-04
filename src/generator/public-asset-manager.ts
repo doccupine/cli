@@ -65,6 +65,21 @@ export class PublicAssetManager {
     await writeFileAtomic(destPath, data);
   }
 
+  // A tracked root icon file already publishes this URL. Refuse the copy so
+  // the two sources cannot silently overwrite each other.
+  private assertNotTrackedIconFile(
+    destRelativePath: string,
+    relativePath: string,
+  ): void {
+    if (this.artifacts.iconFiles().has(destRelativePath)) {
+      throw new Error(
+        `Conflicting icon sources: ${path.join(this.rootDir, destRelativePath)} ` +
+          `and ${path.join(this.rootDir, "public", relativePath)} both ` +
+          `publish public/${destRelativePath}. Remove one of them.`,
+      );
+    }
+  }
+
   async copyPublicFiles(): Promise<void> {
     const publicDir = path.join(this.rootDir, "public");
     const previousFiles = this.artifacts.publicFiles();
@@ -85,6 +100,7 @@ export class PublicAssetManager {
     const nextByFoldedPath = new Map<string, string>();
     for (const relativePath of files) {
       const destRelativePath = publicDestinationRelativePath(relativePath);
+      this.assertNotTrackedIconFile(destRelativePath, relativePath);
       nextFiles.add(destRelativePath);
       nextByFoldedPath.set(destRelativePath.toLowerCase(), destRelativePath);
     }
@@ -127,6 +143,7 @@ export class PublicAssetManager {
     const destPath = this.publicOutputFilePath(destRelativePath);
 
     try {
+      this.assertNotTrackedIconFile(destRelativePath, relativePath);
       await this.copyRegularPublicFile(filePath, destPath);
       const publicFiles = this.artifacts.publicFiles();
       publicFiles.add(destRelativePath);

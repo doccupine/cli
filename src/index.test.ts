@@ -310,6 +310,16 @@ describe.skipIf(!fs.pathExistsSync(distEntry))(
 }
 `,
         );
+        // Root icon files exercise the populated icons.json and the pages'
+        // "@/utils/icons" imports in the formatting check.
+        await fs.writeFile(
+          path.join(projectDir, "icon.png"),
+          Buffer.from([0x89, 0x50, 0x4e, 0x47]),
+        );
+        await fs.writeFile(
+          path.join(projectDir, "icon-dark.png"),
+          Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x00]),
+        );
 
         await execFileAsync(process.execPath, [distEntry, "build"], {
           cwd: projectDir,

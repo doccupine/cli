@@ -17,6 +17,7 @@ interface ArtifactManifest {
   routes: RouteArtifact[];
   llmsPageFiles: string[];
   publicFiles: string[];
+  iconFiles: string[];
 }
 
 const MANIFEST_FILE = ".doccupine-artifacts.json";
@@ -67,6 +68,7 @@ export class GeneratedArtifacts {
   private routes = new Map<string, RouteArtifact>();
   private llmsFiles = new Set<string>();
   private publicFilePaths = new Set<string>();
+  private iconFilePaths = new Set<string>();
 
   constructor(private readonly outputDir: string) {}
 
@@ -82,6 +84,7 @@ export class GeneratedArtifacts {
     this.routes.clear();
     this.llmsFiles.clear();
     this.publicFilePaths.clear();
+    this.iconFilePaths.clear();
 
     const manifestContent = await readOutputFileIfPresent(
       this.outputDir,
@@ -93,6 +96,7 @@ export class GeneratedArtifacts {
           routes?: unknown;
           llmsPageFiles?: unknown;
           publicFiles?: unknown;
+          iconFiles?: unknown;
         };
         if (Array.isArray(parsed.routes)) {
           for (const value of parsed.routes) {
@@ -111,6 +115,12 @@ export class GeneratedArtifacts {
           for (const value of parsed.publicFiles) {
             const file = normalizePublicFile(value);
             if (file) this.publicFilePaths.add(file);
+          }
+        }
+        if (Array.isArray(parsed.iconFiles)) {
+          for (const value of parsed.iconFiles) {
+            const file = normalizePublicFile(value);
+            if (file) this.iconFilePaths.add(file);
           }
         }
       } catch {
@@ -230,6 +240,20 @@ export class GeneratedArtifacts {
     this.publicFilePaths = next;
   }
 
+  iconFiles(): Set<string> {
+    return new Set(this.iconFilePaths);
+  }
+
+  replaceIconFiles(files: Iterable<string>): void {
+    const next = new Set<string>();
+    for (const value of files) {
+      const file = normalizePublicFile(value);
+      if (!file) throw new Error("Refusing to record an unsafe icon path");
+      next.add(file);
+    }
+    this.iconFilePaths = next;
+  }
+
   private async writeManifest(
     routes: ReadonlyMap<string, RouteArtifact>,
   ): Promise<void> {
@@ -240,6 +264,7 @@ export class GeneratedArtifacts {
       ),
       llmsPageFiles: [...this.llmsFiles].sort(),
       publicFiles: [...this.publicFilePaths].sort(),
+      iconFiles: [...this.iconFilePaths].sort(),
     };
     await writeFileAtomic(
       this.manifestPath(MANIFEST_FILE),

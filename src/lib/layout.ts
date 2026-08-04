@@ -1,6 +1,5 @@
 import {
   DEFAULT_DESCRIPTION,
-  DEFAULT_FAVICON,
   DEFAULT_OG_IMAGE,
   DEFAULT_SITE_NAME,
 } from "./constants.js";
@@ -118,7 +117,16 @@ function fontDeclLine(fontConfig: FontConfig | null): string {
 // The mode comes from the "theme" cookie, falling back to the OS preference
 // and seeding the cookie so Cherry's ClientThemeProvider reconciles against
 // the same answer on mount instead of flipping the class back.
-const THEME_INIT_SCRIPT = `(function(){try{var c=document.cookie.split(";").map(function(s){return s.trim();}).find(function(s){return s.indexOf("theme=")===0;});var v=c?c.split("=")[1]:null;var d=v?v==="dark":(window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches);if(!v){document.cookie="theme="+(d?"dark":"light")+";path=/;max-age=31536000;SameSite=Lax";}var r=document.documentElement;r.dataset.theme=d?"dark":"light";if(d){r.classList.add("dark");}}catch(e){}})();`;
+//
+// The script also writes the theme-color meta from the resolved mode. It
+// cannot be emitted as OS-scheme-scoped SSR metas (Next's viewport export):
+// the site's mode is cookie-based, so a dark site on a light-OS device would
+// show the wrong browser chrome until hydration - a visible flash on every
+// load. The \${...} palette interpolations below are escaped so they resolve
+// in the generated layout, at app build time, from the imported theme
+// palettes. The token must match the provider's $themeColor (primary), so
+// the pre-paint chrome color equals what Cherry syncs after hydration.
+const THEME_INIT_SCRIPT = `(function(){try{var c=document.cookie.split(";").map(function(s){return s.trim();}).find(function(s){return s.indexOf("theme=")===0;});var v=c?c.split("=")[1]:null;var d=v?v==="dark":(window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches);if(!v){document.cookie="theme="+(d?"dark":"light")+";path=/;max-age=31536000;SameSite=Lax";}var r=document.documentElement;r.dataset.theme=d?"dark":"light";if(d){r.classList.add("dark");}var m=document.querySelector('meta[name="theme-color"]');if(!m){m=document.createElement("meta");m.name="theme-color";document.head.appendChild(m);}m.content=d?"\${colorsDark.primary}":"\${colorsLight.primary}";}catch(e){}})();`;
 
 /**
  * Root layout ("app/layout.tsx"). Minimal shell: html/body, fonts, the theme
@@ -136,9 +144,10 @@ export const rootLayoutTemplate = (
   return `import type { Metadata } from "next";
 ${fontImportLine(fontConfig)}
 import { StyledComponentsRegistry } from "cherry-styled-components";
-import { theme, themeDark } from "@/app/theme";
+import { colorsDark, colorsLight, theme, themeDark } from "@/app/theme";
 import { CherryThemeProvider } from "@/components/layout/CherryThemeProvider";
 import { config } from "@/utils/config";
+import { siteIcons } from "@/utils/icons";
 ${analyticsEnabled ? `import { PostHogProvider } from "@/components/PostHogProvider";\n` : ""}
 ${fontDeclLine(fontConfig)}
 
@@ -158,7 +167,7 @@ export const metadata: Metadata = {
   description:
     config.description ||
     "${DEFAULT_DESCRIPTION}",
-  icons: config.icon || "${DEFAULT_FAVICON}",
+  icons: siteIcons,
   openGraph: {
     title: config.name || "${DEFAULT_SITE_NAME}",
     description:

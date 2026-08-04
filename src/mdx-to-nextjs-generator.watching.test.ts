@@ -420,12 +420,17 @@ describe.sequential("MDXToNextJSGenerator watching", () => {
     await fs.outputFile(path.join(watchDir, "index.mdx"), "# Home\n");
     await fs.writeJson(path.join(root, "config.json"), { name: "Docs" });
     await fs.outputFile(path.join(root, "public", "asset.txt"), "asset\n");
+    await fs.writeFile(
+      path.join(root, "icon.png"),
+      Buffer.from([0x89, 0x50, 0x4e, 0x47]),
+    );
     const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
     await generator.init();
     const processAll = vi.spyOn(generator, "processAllMDXFiles");
     const configChange = vi.spyOn(generator, "handleConfigFileChange");
     const configDelete = vi.spyOn(generator, "handleConfigFileDelete");
     const publicCopy = vi.spyOn(generator, "copyPublicFiles");
+    const iconSync = vi.spyOn(generator, "syncIconFiles");
 
     await generator.startWatching();
 
@@ -433,6 +438,7 @@ describe.sequential("MDXToNextJSGenerator watching", () => {
     expect(configChange).not.toHaveBeenCalled();
     expect(configDelete).not.toHaveBeenCalled();
     expect(publicCopy).not.toHaveBeenCalled();
+    expect(iconSync).not.toHaveBeenCalled();
     await generator.stop();
   });
 });

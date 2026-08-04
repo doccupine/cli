@@ -38,6 +38,7 @@ describe("GeneratedArtifacts", () => {
     ]);
     artifacts.replaceLlmsPageFiles(["api/guide.md"]);
     artifacts.replacePublicFiles(["images/logo.png"]);
+    artifacts.replaceIconFiles(["icon.png"]);
     await artifacts.save();
 
     const reloaded = new GeneratedArtifacts(outputDir);
@@ -46,6 +47,7 @@ describe("GeneratedArtifacts", () => {
     expect(reloaded.routeFor("mdx", "guide.mdx")).toBe("api/guide");
     expect(reloaded.llmsPageFiles()).toEqual(new Set(["api/guide.md"]));
     expect(reloaded.publicFiles()).toEqual(new Set(["images/logo.png"]));
+    expect(reloaded.iconFiles()).toEqual(new Set(["icon.png"]));
   });
 
   it("keeps live route ownership unchanged when persistence fails", async () => {
@@ -89,6 +91,9 @@ describe("GeneratedArtifacts", () => {
     );
     expect(() => artifacts.replacePublicFiles(["../../outside.png"])).toThrow(
       "unsafe public path",
+    );
+    expect(() => artifacts.replaceIconFiles(["../../outside.png"])).toThrow(
+      "unsafe icon path",
     );
   });
 

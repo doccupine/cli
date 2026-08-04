@@ -1,6 +1,5 @@
 import {
   DEFAULT_DESCRIPTION,
-  DEFAULT_FAVICON,
   DEFAULT_OG_IMAGE,
   DEFAULT_URL,
 } from "../../lib/constants.js";
@@ -9,6 +8,7 @@ export const globalsMdxTemplate = `---
 title: "Globals"
 description: "Configure global settings for your documentation."
 date: "2026-02-19"
+updated: "2026-08-04"
 category: "Configuration"
 categoryOrder: 2
 categoryIcon: "settings"
@@ -26,7 +26,7 @@ Place a \`config.json\` at your project root (the same directory where you execu
 {
   "name": "Doccupine",
   "description": "${DEFAULT_DESCRIPTION}",
-  "icon": "${DEFAULT_FAVICON}",
+  "icon": "/icon.png",
   "image": "${DEFAULT_OG_IMAGE}",
   "url": "${DEFAULT_URL}"
 }
@@ -38,9 +38,31 @@ All fields are optional. Doccupine uses sensible defaults when a field is not se
 
 - **name**: The primary name of your documentation website. Displayed in the site title and used in various UI elements.
 - **description**: A concise summary of your project, used in site metadata (e.g., HTML meta description) and social previews when not overridden.
-- **icon**: The favicon for your site. You can provide a full URL or a relative path to an asset in your project.
+- **icon**: The favicon for your site. You can provide a full URL or a relative path to an asset in your project. Dropping an \`icon.png\` file at the project root (see [Icon files](#icon-files)) takes precedence over this field.
 - **image**: The Open Graph image used when links to your docs are shared on social platforms. Accepts a full URL or a relative path.
 - **url**: The public URL of your deployed site. Used as the base URL for \`sitemap.xml\` and \`robots.txt\`. When omitted, \`/sitemap.xml\` is served but empty and \`robots.txt\` omits its sitemap reference. Can be overridden at deploy time with the \`NEXT_PUBLIC_SITE_URL\` environment variable.
+
+## Icon files
+
+Instead of pointing \`icon\` at a URL, you can drop conventional icon files next to \`config.json\` at your project root:
+
+| File              | Purpose                                                    |
+| ----------------- | ---------------------------------------------------------- |
+| \`icon.png\`        | Favicon shown in browser tabs                              |
+| \`icon-dark.png\`   | Favicon variant for dark interfaces (requires \`icon.png\`)  |
+| \`apple-icon.png\`  | Home-screen icon for iOS devices                           |
+
+Doccupine copies the files into the generated site and wires them into every page's metadata. Each icon URL carries a content hash, so replacing an icon busts browser caches automatically. The light and dark favicons are selected by the operating system's color scheme, because browser tab chrome follows the OS theme rather than the site's theme toggle.
+
+Precedence: a page's frontmatter \`icon\` wins for that page, then root icon files, then \`icon\` in \`config.json\`, then the Doccupine default.
+
+<Callout type="warning">
+  A root icon file and a file with the same name in your \`public/\` directory would publish the same URL, so Doccupine reports a validation error instead of letting one silently overwrite the other.
+</Callout>
+
+<Callout type="note">
+  Some legacy tools request \`/favicon.ico\` directly instead of reading the page's icon links. If you need that path covered, place a \`favicon.ico\` in your \`public/\` directory and it is copied through as-is.
+</Callout>
 
 ## Per-page overrides
 
@@ -70,7 +92,7 @@ Example frontmatter in an \`.mdx\` file:
 title: "My Feature"
 description: "A focused description just for this page."
 name: "My Product Docs"
-icon: "/custom-favicon.ico"
+icon: "/custom-favicon.png"
 image: "/custom-preview.png"
 date: "2026-02-19"
 updated: "2026-03-04"

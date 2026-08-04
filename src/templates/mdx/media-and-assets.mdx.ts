@@ -2,7 +2,7 @@ export const mediaAndAssetsMdxTemplate = `---
 title: "Media and assets"
 description: "Serve static files like images, favicons, fonts, and Open Graph previews from the public directory."
 date: "2026-02-19"
-updated: "2026-07-31"
+updated: "2026-08-04"
 category: "Configuration"
 categoryOrder: 2
 order: 7
@@ -18,7 +18,6 @@ Create a \`public\` directory at your project root. Any file you place inside is
 \`\`\`text
 my-docs/
 ├── public/
-│   ├── favicon.ico
 │   ├── og-image.png
 │   ├── logo.svg
 │   └── fonts/
@@ -35,7 +34,6 @@ Files in the \`public\` directory are available at the root of your deployed dom
 
 | File                             | URL                                               |
 | -------------------------------- | ------------------------------------------------- |
-| \`public/favicon.ico\`             | \`https://your-domain.com/favicon.ico\`             |
 | \`public/og-image.png\`            | \`https://your-domain.com/og-image.png\`            |
 | \`public/logo.svg\`                | \`https://your-domain.com/logo.svg\`                |
 | \`public/fonts/custom-font.woff2\` | \`https://your-domain.com/fonts/custom-font.woff2\` |
@@ -44,11 +42,9 @@ Files in the \`public\` directory are available at the root of your deployed dom
 
 ### Favicon
 
-Drop a \`favicon.ico\` into the \`public\` directory. Browsers pick it up automatically from the root path.
+Prefer the icon file convention: drop an \`icon.png\` (and optionally \`icon-dark.png\` and \`apple-icon.png\`) at your project root, next to \`config.json\`, and Doccupine wires it into every page's metadata with cache-busting URLs. See [Icon files](/globals#icon-files).
 
-\`\`\`text
-public/favicon.ico → https://your-domain.com/favicon.ico
-\`\`\`
+If a legacy tool needs the bare \`/favicon.ico\` path, drop a \`favicon.ico\` into the \`public\` directory and it is served from the root path as-is.
 
 ### Open Graph preview image
 

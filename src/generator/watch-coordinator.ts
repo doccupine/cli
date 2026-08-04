@@ -16,6 +16,7 @@ interface WatchSourceSnapshot {
   doccupine: string;
   public: string;
   openapi: string;
+  icons: Record<string, string>;
 }
 
 interface WatchCoordinatorCallbacks {
@@ -33,6 +34,7 @@ interface WatchCoordinatorCallbacks {
   copyPublicFiles(): Promise<void>;
   handlePublicFileChange(filePath: string): Promise<void>;
   handlePublicFileDelete(filePath: string): Promise<void>;
+  syncIconFiles(): Promise<void>;
   processAllMDXFiles(): Promise<void>;
 }
 
@@ -43,6 +45,7 @@ interface WatchCoordinatorOptions {
   fontConfigFile: string;
   analyticsConfigFile: string;
   doccupineConfigFile: string;
+  iconFiles: readonly string[];
   sourceFs: SecureSourceFs;
   getOpenApiSpecs(): readonly NormalizedOpenApiSpec[];
   getOpenApiSourceFiles(): readonly string[];
@@ -153,6 +156,7 @@ export class WatchCoordinator {
       fontConfigFile,
       getOpenApiSpecs,
       getOpenApiSourceFiles,
+      iconFiles,
       rootDir,
       sourceFs,
       watchDir,
@@ -160,6 +164,14 @@ export class WatchCoordinator {
     const configs = Object.fromEntries(
       await Promise.all(
         configFiles.map(async (fileName) => [
+          fileName,
+          await sourceFs.pathState(path.join(rootDir, fileName), true),
+        ]),
+      ),
+    );
+    const icons = Object.fromEntries(
+      await Promise.all(
+        iconFiles.map(async (fileName) => [
           fileName,
           await sourceFs.pathState(path.join(rootDir, fileName), true),
         ]),
@@ -194,6 +206,7 @@ export class WatchCoordinator {
         () => true,
       ),
       openapi,
+      icons,
     };
   }
 
@@ -206,6 +219,11 @@ export class WatchCoordinator {
     for (const fileName of this.options.configFiles) {
       if (projectSourceStates[fileName] !== undefined) {
         snapshot.configs[fileName] = projectSourceStates[fileName];
+      }
+    }
+    for (const fileName of this.options.iconFiles) {
+      if (projectSourceStates[fileName] !== undefined) {
+        snapshot.icons[fileName] = projectSourceStates[fileName];
       }
     }
     snapshot.font =
@@ -229,6 +247,7 @@ export class WatchCoordinator {
       doccupineConfigFile,
       fontConfigFile,
       getOpenApiSpecs,
+      iconFiles,
       rootDir,
     } = this.options;
     const doccupineConfigPath = path.join(rootDir, doccupineConfigFile);
@@ -284,6 +303,15 @@ export class WatchCoordinator {
         if (this.stopping) return;
       }
       await callbacks.copyPublicFiles();
+    }
+
+    if (
+      previous === null ||
+      iconFiles.some(
+        (fileName) => previous.icons[fileName] !== current.icons[fileName],
+      )
+    ) {
+      await callbacks.syncIconFiles();
     }
 
     if (
@@ -544,6 +572,15 @@ export class WatchCoordinator {
       });
     };
 
+    const isRootIconFile = (filePath: string): boolean =>
+      this.options.iconFiles.includes(path.basename(filePath)) &&
+      path.dirname(filePath) === rootDir;
+    const queueIconSync = () => {
+      this.enqueueMutation("Error syncing icon files", () =>
+        callbacks.syncIconFiles(),
+      );
+    };
+
     this.rootDirWatcher
       .on("addDir", (dirPath: string) => {
         if (
@@ -555,6 +592,13 @@ export class WatchCoordinator {
       })
       .on("add", (filePath: string) => {
         if (isPathInside(publicDir, filePath)) queuePublicWatcherStart();
+        if (isRootIconFile(filePath)) queueIconSync();
+      })
+      .on("change", (filePath: string) => {
+        if (isRootIconFile(filePath)) queueIconSync();
+      })
+      .on("unlink", (filePath: string) => {
+        if (isRootIconFile(filePath)) queueIconSync();
       })
       .on("unlinkDir", (dirPath: string) => {
         if (

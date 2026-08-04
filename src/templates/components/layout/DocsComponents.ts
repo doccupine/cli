@@ -167,15 +167,15 @@ export const StyledSidebar = styled.nav<Props>\`
     border-right: solid 1px \${({ theme }) => theme.colors.grayLight};
     transition: none;
     max-height: 100dvh;
-    width: 220px;
-    background: transparent;
     padding: 82px 20px 20px 20px;
     opacity: 1;
     pointer-events: all;
     visibility: visible;
     transform: translateY(0);
+    /* Mixed over the page background rather than transparent so the panel
+       reads as a filled surface in both modes. */
     background: \${({ theme }) =>
-      \`color-mix(in srgb, \${theme.colors.primaryLight} 5%, transparent)\`};
+      \`color-mix(in srgb, \${theme.colors.primaryLight} 8%, \${theme.colors.light})\`};
     top: 0;
     width: ${SIDEBAR_WIDTH}px;
   }
@@ -207,11 +207,12 @@ export const StyledSidebarFooter = styled.div\`
   padding: 22px 20px;
   position: sticky;
   border-top: 1px solid \${({ theme }) => theme.colors.grayLight};
+  /* Same opaque mix as the sidebar panel so the sticky footer blends into it
+     while still masking the list scrolling underneath. */
   background: \${({ theme }) =>
-    \`color-mix(in srgb, \${theme.colors.primaryLight} 5%, transparent)\`};
+    \`color-mix(in srgb, \${theme.colors.primaryLight} 8%, \${theme.colors.light})\`};
   margin: 0 -20px -20px;
   bottom: -20px;
-  backdrop-filter: blur(10px);
 
   \${mq("lg")} {
     padding: 16px 20px;

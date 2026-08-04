@@ -71,6 +71,37 @@ describe.sequential("MDXToNextJSGenerator source safety", () => {
     expect(await fs.readdir(watchDir)).toEqual([]);
   });
 
+  it("rejects a symlinked icon file before mutating output", async () => {
+    const { root } = await fixture();
+    const projectRoot = path.join(root, "project");
+    const watchDir = path.join(projectRoot, "docs");
+    const outputDir = path.join(projectRoot, "site");
+    const externalIcon = path.join(root, "external-icon.png");
+    const existingPage = path.join(outputDir, "app", "existing", "page.tsx");
+    await fs.ensureDir(watchDir);
+    await fs.outputJson(path.join(outputDir, ".doccupine-generated.json"), {
+      generator: "doccupine",
+      schemaVersion: 1,
+    });
+    await fs.outputFile(existingPage, "EXISTING_PAGE\n");
+    await fs.writeFile(externalIcon, Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+    await fs.symlink(externalIcon, path.join(projectRoot, "icon.png"));
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const generator = new MDXToNextJSGenerator(
+      watchDir,
+      outputDir,
+      [],
+      projectRoot,
+    );
+
+    await expect(generator.init()).rejects.toThrow(
+      /icon source.*icon\.png.*symbolic link/i,
+    );
+
+    expect(await fs.readFile(existingPage, "utf8")).toBe("EXISTING_PAGE\n");
+    expect(await fs.readdir(watchDir)).toEqual([]);
+  });
+
   it("does not load sections through a symlinked source", async () => {
     const { root } = await fixture();
     const projectRoot = path.join(root, "project");
