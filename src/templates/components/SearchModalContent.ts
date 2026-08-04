@@ -158,7 +158,7 @@ const StyledAskAssistant = styled.button<{ theme: Theme }>\`
   background: \${({ theme }) => theme.colors.light};
   color: \${({ theme }) => theme.colors.grayDark};
   border-radius: \${({ theme }) => theme.spacing.radius.xs};
-  padding: 5px 8px;
+  padding: 5px 4px 5px 8px;
   font-family: inherit;
   font-size: \${({ theme }) => theme.fontSizes.small.lg};
   font-weight: 500;
@@ -172,6 +172,12 @@ const StyledAskAssistant = styled.button<{ theme: Theme }>\`
 
     &:hover {
       border-color: \${({ theme }) => theme.colors.grayLight};
+    }
+
+    &:focus,
+    &:active {
+      outline: none;
+      box-shadow: 0 0 0 0 \${({ theme }) => theme.colors.primaryLight};
     }
   }
 

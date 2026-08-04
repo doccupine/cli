@@ -69,19 +69,21 @@ const StyledSearchButton = styled.button<{ theme: Theme }>\`
   display: flex;
   align-items: center;
   gap: 6px;
+  /* Pinned to the 30px compact header-control tier, matching Cherry's
+     ChatLauncher, so the height cannot drift with platform font metrics
+     and the header controls always align exactly. */
+  box-sizing: border-box;
+  height: 30px;
   background: \${({ theme }) => theme.colors.light};
   color: \${({ theme }) => theme.colors.primary};
   border-radius: \${({ theme }) => theme.spacing.radius.xs};
-  padding: 7px 8px;
+  padding: 0 4px 0 8px;
   font-family: inherit;
   cursor: pointer;
 
-  \${mq("lg")} {
-    padding: 5px 8px;
-  }
-
   & svg.lucide {
     color: inherit;
+    min-width: 14px;
   }
 \`;
 
