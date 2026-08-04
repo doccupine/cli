@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import net from "node:net";
 
 import { appStructure } from "../lib/structures.js";
+import type { AnalyticsConfig } from "../lib/types.js";
 import { accessControlTemplate } from "./lib/access.js";
 import { gateRoutesTemplate } from "./app/api/gate/route.js";
 import { mcpRoutesTemplate } from "./app/api/mcp/route.js";
@@ -418,6 +419,27 @@ describe("generated security boundaries", () => {
     expect(mcpAuthorization).toBeLessThan(
       mcpRoutesTemplate.indexOf("return handleRESTRequest(req", mcpPost),
     );
+  });
+
+  it("keeps extra dev origins an explicit env opt-in", () => {
+    // Browsing the dev server via a non-localhost hostname (LAN, Tailscale)
+    // needs Next's allowedDevOrigins, but the allowlist must stay empty -
+    // preserving Next's DNS-rebinding protection - unless the user opts in
+    // through ALLOWED_DEV_ORIGINS.
+    const posthogConfig = {
+      provider: "posthog",
+      posthog: { key: "phc_test", host: "https://us.i.posthog.com" },
+    } as AnalyticsConfig;
+    for (const nextConfig of [
+      nextConfigTemplate(null),
+      nextConfigTemplate(posthogConfig),
+    ]) {
+      expect(nextConfig).toContain('process.env.ALLOWED_DEV_ORIGINS ?? ""');
+      expect(nextConfig).toContain(
+        "allowedDevOrigins.length > 0 ? { allowedDevOrigins } : {}",
+      );
+      expect(nextConfig).not.toMatch(/allowedDevOrigins:\s*\[[^\]]/);
+    }
   });
 
   it("bounds submitted chat history to the RAG server contract", () => {

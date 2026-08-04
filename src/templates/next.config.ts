@@ -9,7 +9,19 @@ export const nextConfigTemplate = (
   if (!hasPostHog) {
     return `import type { NextConfig } from "next";
 
+// Dev-only allowlist for reaching the dev server through a non-localhost
+// hostname (a LAN IP, a Tailscale/VPN name, ...). Next blocks its dev
+// resources - including the HMR socket Turbopack needs before it hydrates
+// the page - for hosts it does not know, which leaves the site rendered but
+// inert. Comma-separated hostnames, set via ALLOWED_DEV_ORIGINS in .env;
+// production builds ignore it.
+const allowedDevOrigins = (process.env.ALLOWED_DEV_ORIGINS ?? "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 const nextConfig: NextConfig = {
+  ...(allowedDevOrigins.length > 0 ? { allowedDevOrigins } : {}),
   compiler: {
     styledComponents: true,
   },
@@ -50,7 +62,19 @@ export default nextConfig;
 
   return `import type { NextConfig } from "next";
 
+// Dev-only allowlist for reaching the dev server through a non-localhost
+// hostname (a LAN IP, a Tailscale/VPN name, ...). Next blocks its dev
+// resources - including the HMR socket Turbopack needs before it hydrates
+// the page - for hosts it does not know, which leaves the site rendered but
+// inert. Comma-separated hostnames, set via ALLOWED_DEV_ORIGINS in .env;
+// production builds ignore it.
+const allowedDevOrigins = (process.env.ALLOWED_DEV_ORIGINS ?? "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 const nextConfig: NextConfig = {
+  ...(allowedDevOrigins.length > 0 ? { allowedDevOrigins } : {}),
   compiler: {
     styledComponents: true,
   },

@@ -20,6 +20,14 @@ export const envExampleTemplate = `# Public Site URL
 # documentation site.
 # DOCS_API_KEY=generate-another-long-random-secret
 
+# Remote Dev Access (optional, dev server only)
+# Hostnames (besides localhost) allowed to load the Next.js dev server's
+# resources, for when you browse the dev server over a LAN IP or a
+# Tailscale/VPN hostname. Without this, Next blocks the dev HMR socket for
+# such hosts and the page renders but never becomes interactive. Ignored by
+# production builds. Comma-separate multiple hostnames.
+# ALLOWED_DEV_ORIGINS=my-machine.tailnet-name.ts.net
+
 # LLM Provider Configuration
 # Choose your preferred LLM provider: openai, anthropic, or google
 LLM_PROVIDER=openai
