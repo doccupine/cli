@@ -2,7 +2,7 @@ export const commandsMdxTemplate = `---
 title: "Commands"
 description: "In this page, you can find all the commands available in Doccupine CLI."
 date: "2026-02-19"
-updated: "2026-07-31"
+updated: "2026-08-04"
 category: "Getting Started"
 categoryOrder: 0
 order: 2
@@ -70,6 +70,22 @@ The output directory must be a real directory, and generated paths cannot contai
 ## Dependency installation
 
 The first run installs the generated app's dependencies. After that, Doccupine records a fingerprint of the generated \`package.json\` and the package manager in \`.doccupine-install\` and reinstalls only when that fingerprint changes or \`node_modules\` is missing - later runs start the dev server straight away. Pass \`--skip-install\` to skip the check entirely, for example when you manage dependencies yourself.
+
+## Browsing from another device
+
+The dev server is reachable from other devices on your network, but Next.js only serves development resources such as the hot-reload socket to hosts it recognizes. Opened over a LAN IP or a Tailscale/VPN hostname, the page renders but never becomes interactive.
+
+To allow additional hostnames, set \`ALLOWED_DEV_ORIGINS\` in the generated app's \`.env\` file and restart the dev server. Comma-separate multiple hostnames:
+
+\`\`\`env
+ALLOWED_DEV_ORIGINS=my-machine.tailnet-name.ts.net
+\`\`\`
+
+<Callout type="note">
+  This only affects the development server. Production builds ignore the
+  variable, and leaving it unset keeps Next's DNS-rebinding protection fully
+  enabled.
+</Callout>
 
 ## Verbose mode
 
