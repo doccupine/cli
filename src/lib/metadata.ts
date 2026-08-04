@@ -1,5 +1,4 @@
 import {
-  DEFAULT_FAVICON,
   DEFAULT_META_DESCRIPTION,
   DEFAULT_OG_IMAGE,
   DEFAULT_SITE_NAME,
@@ -43,13 +42,11 @@ export function generateJsonLdScript(opts: JsonLdOptions): {
     : opts.date
       ? JSON.stringify(opts.date)
       : "undefined";
-  const defaultFaviconLiteral = JSON.stringify(DEFAULT_FAVICON);
-  // When the page declares an image, it always wins - emitting a `||` chain
-  // after a string literal makes TypeScript fail the build with
-  // "This kind of expression is always truthy".
+  // When the page declares an image, it always wins; otherwise the site-wide
+  // primary icon (root icon files > config.icon > default) supplies the logo.
   const faviconLine = opts.image
     ? `const faviconUrl = ${JSON.stringify(opts.image)};`
-    : `const faviconUrl = config.icon || ${defaultFaviconLiteral};`;
+    : `const faviconUrl = primaryIconUrl;`;
   // Indent 10 + "description: ".length(13) + ",".length(1) = 24. Prettier
   // wraps the value to the next line (indent 12) once total exceeds 80.
   const descriptionLine =
@@ -210,7 +207,9 @@ export function generateMetadataBlock(opts: MetadataOptions): string {
     "description",
     DEFAULT_META_DESCRIPTION,
   );
-  const icon = buildFieldExpression(opts.icon, "icon", DEFAULT_FAVICON);
+  // Frontmatter icon wins as a literal; otherwise the site-wide icon set
+  // built by utils/icons.ts (root icon files > config.icon > default) applies.
+  const icon = opts.icon ? JSON.stringify(String(opts.icon)) : "siteIcons";
   const image = buildFieldExpression(opts.image, "image", DEFAULT_OG_IMAGE);
   const canonical = buildAlternatesBlock(opts.canonicalPath, opts.rssPath);
   const inlineTitleDeclaration = `const pageTitle = ${title};`;
@@ -240,7 +239,7 @@ ${imageLine}
 export function generateRuntimeOnlyMetadataBlock(): string {
   const title = `config.name || ${JSON.stringify(DEFAULT_SITE_NAME)}`;
   const desc = `config.description || ${JSON.stringify(DEFAULT_META_DESCRIPTION)}`;
-  const icon = `config.icon || ${JSON.stringify(DEFAULT_FAVICON)}`;
+  const icon = "siteIcons";
   const image = `config.image || ${JSON.stringify(DEFAULT_OG_IMAGE)}`;
   const descriptionLine = formatProperty(2, "description", desc);
   const iconLine = formatProperty(2, "icons", icon);

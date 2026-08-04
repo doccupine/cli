@@ -38,6 +38,7 @@ export class ProjectConfigRepository {
     private readonly configFiles: readonly string[],
     private readonly fontConfigFile: string,
     private readonly analyticsConfigFile: string,
+    private readonly iconFiles: readonly string[] = [],
   ) {}
 
   private outputPath(...segments: string[]): string {
@@ -89,6 +90,14 @@ export class ProjectConfigRepository {
     return this.readOptionalRootSourceFile("config.json", "config source");
   }
 
+  async readOptionalRootBinaryFile(
+    fileName: string,
+    label: string,
+  ): Promise<Buffer | null> {
+    if (!(await this.hasRootSourceFile(fileName))) return null;
+    return this.readRootSourceFile(path.join(this.rootDir, fileName), label);
+  }
+
   async preflightSourceFiles(): Promise<void> {
     const sources = [
       ...this.configFiles.map(
@@ -96,6 +105,7 @@ export class ProjectConfigRepository {
       ),
       [this.fontConfigFile, "font source"] as const,
       [this.analyticsConfigFile, "analytics source"] as const,
+      ...this.iconFiles.map((fileName) => [fileName, "icon source"] as const),
     ];
     const snapshot = new Map<string, SourceSnapshotEntry>();
     for (const [fileName, label] of sources) {

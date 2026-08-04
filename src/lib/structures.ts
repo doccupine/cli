@@ -97,6 +97,7 @@ import { orderNavItemsTemplate } from "../templates/utils/orderNavItems.js";
 import { rateLimitTemplate } from "../templates/utils/rateLimit.js";
 import { brandingTemplate } from "../templates/utils/branding.js";
 import { configTemplate } from "../templates/utils/config.js";
+import { iconsTemplate } from "../templates/utils/icons.js";
 import { playgroundAllowlistTemplate } from "../templates/utils/playgroundAllowlist.js";
 import { ssrfGuardTemplate } from "../templates/utils/ssrfGuard.js";
 import { apiSnippetsTemplate } from "../templates/utils/apiSnippets.js";
@@ -221,6 +222,7 @@ export const appStructure: Record<string, string> = {
   "utils/rateLimit.ts": rateLimitTemplate,
   "utils/rehypeCodeMeta.ts": rehypeCodeMetaTemplate,
   "utils/config.ts": configTemplate,
+  "utils/icons.ts": iconsTemplate,
   "utils/playgroundAllowlist.ts": playgroundAllowlistTemplate,
   "utils/ssrfGuard.ts": ssrfGuardTemplate,
   "utils/apiSnippets.ts": apiSnippetsTemplate,

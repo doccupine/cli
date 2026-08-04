@@ -26,6 +26,7 @@ const GENERATED_TOP_LEVEL_FILES = new Set([
   "config.json",
   "eslint.config.mjs",
   "fonts.json",
+  "icons.json",
   "links.json",
   "navigation.json",
   "next.config.ts",

@@ -1,6 +1,5 @@
 import {
   DEFAULT_DESCRIPTION,
-  DEFAULT_FAVICON,
   DEFAULT_OG_IMAGE,
   DEFAULT_SITE_NAME,
 } from "./constants.js";
@@ -139,6 +138,7 @@ import { StyledComponentsRegistry } from "cherry-styled-components";
 import { theme, themeDark } from "@/app/theme";
 import { CherryThemeProvider } from "@/components/layout/CherryThemeProvider";
 import { config } from "@/utils/config";
+import { siteIcons } from "@/utils/icons";
 ${analyticsEnabled ? `import { PostHogProvider } from "@/components/PostHogProvider";\n` : ""}
 ${fontDeclLine(fontConfig)}
 
@@ -158,7 +158,7 @@ export const metadata: Metadata = {
   description:
     config.description ||
     "${DEFAULT_DESCRIPTION}",
-  icons: config.icon || "${DEFAULT_FAVICON}",
+  icons: siteIcons,
   openGraph: {
     title: config.name || "${DEFAULT_SITE_NAME}",
     description:

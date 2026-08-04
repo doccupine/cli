@@ -53,6 +53,7 @@ export class AppScaffolder {
       "proxy.ts": proxyTemplate(analyticsConfig),
       "analytics.json": `{}\n`,
       "config.json": `{}\n`,
+      "icons.json": `{}\n`,
       "links.json": `[]\n`,
       "navigation.json": `[]\n`,
       "sections.json": `[]\n`,

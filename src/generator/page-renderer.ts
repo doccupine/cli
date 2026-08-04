@@ -109,9 +109,10 @@ export function renderMdxPage(
       ? inlineDocs
       : `<Docs\n${docsAttrs.map((attr) => `        ${attr}`).join("\n")}\n      />`;
 
+  const iconsImport = iconsImportLine(metadataBlock, jsonLd.declarations);
   const pageContent = `import { Metadata } from "next";
 import { Docs } from "@/components/Docs";
-import { config } from "@/utils/config";${apiImport}
+import { config } from "@/utils/config";${iconsImport}${apiImport}
 
 const content = \`${escapeTemplateContent(mdxFile.content)}\`;
 ${apiConst}
@@ -155,6 +156,17 @@ export default function Page() {
       : { action: "remove" };
 
   return { pageContent, rssRoute };
+}
+
+// Pages with a frontmatter icon and image reference neither export; scanning
+// only the generated metadata/JSON-LD code keeps their imports unused-free.
+function iconsImportLine(...codeBlocks: string[]): string {
+  const names = ["primaryIconUrl", "siteIcons"].filter((name) =>
+    codeBlocks.some((block) => block.includes(name)),
+  );
+  return names.length > 0
+    ? `\nimport { ${names.join(", ")} } from "@/utils/icons";`
+    : "";
 }
 
 export function renderHomepage(
@@ -202,9 +214,10 @@ export function renderHomepage(
       ? `<Docs content={content} sourcePath="index.mdx" rssHref={"/rss.xml"} />`
       : `<Docs content={content} sourcePath="index.mdx" />`;
 
+  const iconsImport = iconsImportLine(metadataBlock, homeJsonLd.declarations);
   const pageContent = `import { Metadata } from "next";
 import { Docs } from "@/components/Docs";
-import { config } from "@/utils/config";${apiImport}
+import { config } from "@/utils/config";${iconsImport}${apiImport}
 
 ${indexMDX ? `const content = \`${escapeTemplateContent(indexMDX.content)}\`;` : `const content = null;`}
 ${apiConst}
@@ -294,9 +307,13 @@ export function renderSectionPage(
       ? inlineDocs
       : `<Docs\n${docsAttrs.map((attr) => `        ${attr}`).join("\n")}\n      />`;
 
+  const iconsImport = iconsImportLine(
+    metadataBlock,
+    sectionJsonLd.declarations,
+  );
   const pageContent = `import { Metadata } from "next";
 import { Docs } from "@/components/Docs";
-import { config } from "@/utils/config";
+import { config } from "@/utils/config";${iconsImport}
 
 const content = \`${escapeTemplateContent(mdxContent)}\`;
 
