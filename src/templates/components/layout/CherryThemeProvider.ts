@@ -2,47 +2,45 @@ export const cherryThemeProviderTemplate = `"use client";
 import React, { useEffect, useRef } from "react";
 import { useTheme } from "styled-components";
 import { ClientThemeProvider } from "cherry-styled-components";
-import { colorsDark, colorsLight, Theme } from "@/app/theme";
+import { Theme } from "@/app/theme";
 import { GlobalStyles } from "@/components/layout/GlobalStyles";
 
 /**
  * Mirrors the active mode onto the data-theme attribute that every themed
- * selector keys off (see GlobalStyles), and keeps the theme-color meta tag in
- * step so browser chrome (the iOS Safari status bar) matches the page.
+ * selector keys off (see GlobalStyles).
  *
  * The attribute is already correct before the first paint - the blocking script
- * in the root layout sets it from the theme cookie - and the provider's first
- * client render still carries the light theme the server rendered, so the first
- * pass leaves it alone and only later changes are written: the provider's own
- * reconciliation against the cookie, and user toggles. Writing on the first
- * pass would flip the whole page to light for a frame on every dark load.
+ * in the root layout sets it from the theme cookie - but the provider's first
+ * client render still carries the light theme the server rendered, so the
+ * active theme cannot be trusted until the provider has reconciled it against
+ * the cookie. The mirror therefore reads the cookie, not the theme object:
+ * the blocking script seeds it pre-paint and Cherry persists it synchronously
+ * before any re-render on toggles and reconciliation, so writing it is
+ * idempotent. Counting effect passes instead (a "skip the first run" ref)
+ * breaks under StrictMode's dev double-invocation: the second pass writes the
+ * unreconciled light theme and the whole page flashes white on dark loads.
+ * The theme object is only a fallback for browsers that block cookies, where
+ * the first (unreconciled) pass must still be skipped.
+ *
+ * This effect must stay a child of ClientThemeProvider: child effects run
+ * first, so the attribute is updated before the provider's own theme-color
+ * sync resolves var(--color-primary) against the document's computed styles.
  */
 function ThemeModeAttribute() {
   const activeTheme = useTheme() as Theme;
   const settled = useRef(false);
 
   useEffect(() => {
-    const root = document.documentElement;
-
-    if (settled.current) {
-      root.dataset.theme = activeTheme.isDark ? "dark" : "light";
+    const mode = /(?:^|;\\s*)theme=(dark|light)(?:;|$)/.exec(document.cookie);
+    if (mode) {
+      document.documentElement.dataset.theme = mode[1];
+    } else if (settled.current) {
+      document.documentElement.dataset.theme = activeTheme.isDark
+        ? "dark"
+        : "light";
     } else {
       settled.current = true;
     }
-
-    // A meta tag cannot resolve a custom property, and every color on the theme
-    // object is a var() reference, so read the palette that GlobalStyles built
-    // its variables from. \`light\` is the page background in both modes.
-    let meta = document.querySelector<HTMLMetaElement>(
-      'meta[name="theme-color"]',
-    );
-    if (!meta) {
-      meta = document.createElement("meta");
-      meta.name = "theme-color";
-      document.head.appendChild(meta);
-    }
-    meta.content =
-      root.dataset.theme === "dark" ? colorsDark.light : colorsLight.light;
   }, [activeTheme.isDark]);
 
   return null;
@@ -60,9 +58,14 @@ function ThemeModeAttribute() {
  * it is briefly out of step on mount while the provider reconciles the
  * server-rendered light theme against the cookie.
  *
- * $globalStyles is off because this app ships its own GlobalStyles, and
- * $themeColor is off because ThemeModeAttribute writes that meta tag itself
- * from resolved colors.
+ * $globalStyles is off because this app ships its own GlobalStyles.
+ * $themeColor="primary" hands the post-hydration theme-color sync to Cherry
+ * with the branded chrome Cherry's own site uses: since 0.2.15 the provider
+ * resolves var() color references through computed styles, so the \`primary\`
+ * token yields each mode's brand hex for the active data-theme. The blocking
+ * script in the root layout writes the same token's value before first
+ * paint; the provider takes over from there, so the two must stay on the
+ * same token.
  */
 function CherryThemeProvider({
   children,
@@ -78,7 +81,7 @@ function CherryThemeProvider({
       theme={theme}
       themeDark={themeDark}
       $globalStyles={false}
-      $themeColor={false}
+      $themeColor="primary"
     >
       <GlobalStyles />
       <ThemeModeAttribute />

@@ -27,9 +27,16 @@ describe("generated theming", () => {
     expect(rootLayout).toContain("SameSite=Lax");
     expect(globalStylesTemplate).toContain(':root[data-theme="dark"]');
     expect(globalStylesTemplate).not.toContain(":root.dark");
-    // The provider's class is out of step on mount, so the attribute has to be
-    // mirrored from the active theme rather than read back off that class.
-    expect(cherryThemeProviderTemplate).toContain("root.dataset.theme =");
+    // The attribute mirror must read the cookie, not the theme object: the
+    // first client render carries the unreconciled light theme, and a
+    // skip-the-first-pass ref alone breaks under StrictMode's dev
+    // double-invocation - the second pass writes light and the page flashes
+    // white on every dark load. The theme object is only the cookie-less
+    // fallback, where the first pass must still be skipped.
+    expect(cherryThemeProviderTemplate).toContain("theme=(dark|light)");
+    expect(cherryThemeProviderTemplate).toContain(
+      "document.documentElement.dataset.theme = activeTheme.isDark",
+    );
     expect(cherryThemeProviderTemplate).toContain("settled.current");
   });
 
@@ -65,12 +72,33 @@ describe("generated theming", () => {
 
   it("keeps the provider free of request data and mode guessing", () => {
     expect(cherryThemeProviderTemplate).toContain("$globalStyles={false}");
-    // A meta tag cannot resolve a custom property, so the provider must not be
-    // left to copy a var() reference into it.
-    expect(cherryThemeProviderTemplate).toContain("$themeColor={false}");
-    expect(cherryThemeProviderTemplate).toContain('name="theme-color"');
+    // Cherry 0.2.15's provider resolves var() color references through
+    // computed styles, so the post-hydration theme-color sync belongs to it
+    // ($themeColor="primary" - the branded chrome Cherry's own site uses)
+    // and the template must not duplicate the meta bookkeeping by hand.
+    expect(cherryThemeProviderTemplate).toContain('$themeColor="primary"');
+    expect(cherryThemeProviderTemplate).not.toContain('name="theme-color"');
     expect(cherryThemeProviderTemplate).not.toContain("cookies()");
     expect(cherryThemeProviderTemplate).not.toContain("$initial");
+  });
+
+  it("writes the theme-color meta pre-paint from the resolved mode", () => {
+    // The site's mode is cookie-based, so OS-scheme-scoped SSR metas (a
+    // viewport themeColor export) would paint white browser chrome on a dark
+    // site under a light OS until hydration - a visible flash on every load.
+    // The blocking script writes the single unscoped meta instead, before
+    // first paint, from the palettes the generated layout imports.
+    expect(rootLayout).not.toContain("themeColor");
+    expect(rootLayout).not.toContain("prefers-color-scheme: light");
+    expect(rootLayout).toContain('meta[name="theme-color"]');
+    // The script and the provider's $themeColor must stay on the same token,
+    // or the chrome color jumps at hydration.
+    expect(rootLayout).toContain(
+      'm.content=d?"${colorsDark.primary}":"${colorsLight.primary}"',
+    );
+    // The layout reads palette values server-side, so the theme module must
+    // not be a client module.
+    expect(themeTemplate).not.toContain('"use client"');
   });
 
   it("tints icons in CSS, since var() does not resolve in SVG attributes", () => {
