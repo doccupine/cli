@@ -25,6 +25,14 @@ const nextConfig: NextConfig = {
   compiler: {
     styledComponents: true,
   },
+  // Type-checking runs through TypeScript 6's compiler API (the \`typescript\`
+  // dependency is aliased to @typescript/typescript6, whose only binary is
+  // \`tsc6\`). Next 16.3 defaults experimental.useTypeScriptCli to true, and
+  // that path requires a \`tsc\` bin, so builds fail with a "typescript is not
+  // installed" prompt unless the CLI path stays off.
+  experimental: {
+    useTypeScriptCli: false,
+  },
   // Trace the runtime-loaded corpus and precomputed embeddings index into the
   // serverless functions (dynamic fs reads are invisible to automatic tracing).
   outputFileTracingIncludes: {
@@ -77,6 +85,14 @@ const nextConfig: NextConfig = {
   ...(allowedDevOrigins.length > 0 ? { allowedDevOrigins } : {}),
   compiler: {
     styledComponents: true,
+  },
+  // Type-checking runs through TypeScript 6's compiler API (the \`typescript\`
+  // dependency is aliased to @typescript/typescript6, whose only binary is
+  // \`tsc6\`). Next 16.3 defaults experimental.useTypeScriptCli to true, and
+  // that path requires a \`tsc\` bin, so builds fail with a "typescript is not
+  // installed" prompt unless the CLI path stays off.
+  experimental: {
+    useTypeScriptCli: false,
   },
   // Trace the runtime-loaded corpus and precomputed embeddings index into the
   // serverless functions (dynamic fs reads are invisible to automatic tracing).
