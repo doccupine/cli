@@ -42,4 +42,17 @@ function buildSiteIcons(): Metadata["icons"] {
 }
 
 export const siteIcons: Metadata["icons"] = buildSiteIcons();
+
+/**
+ * Icon entries for the web app manifest. Only the root icon files are
+ * listed - their true pixel dimensions are unknown to the generator, so the
+ * spec's "any" stands in - and a site without them gets a manifest without
+ * icons rather than a guessed format.
+ */
+export const manifestIcons: { src: string; sizes: string; type: string }[] = [
+  ...(icons.icon ? [{ src: icons.icon, sizes: "any", type: "image/png" }] : []),
+  ...(icons.appleIcon
+    ? [{ src: icons.appleIcon, sizes: "any", type: "image/png" }]
+    : []),
+];
 `;

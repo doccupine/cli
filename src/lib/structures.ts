@@ -13,6 +13,7 @@ import { mcpRoutesTemplate } from "../templates/app/api/mcp/route.js";
 import { ragRoutesTemplate } from "../templates/app/api/rag/route.js";
 import { searchRoutesTemplate } from "../templates/app/api/search/route.js";
 import { notFoundTemplate } from "../templates/app/not-found.js";
+import { manifestTemplate } from "../templates/app/manifest.js";
 import { themeTemplate } from "../templates/app/theme.js";
 
 import { chatTemplate } from "../templates/components/Chat.js";
@@ -184,6 +185,7 @@ export const appStructure: Record<string, string> = {
 
   "app/not-found.tsx": notFoundTemplate,
   "app/gate/page.tsx": gatePageTemplate,
+  "app/manifest.ts": manifestTemplate,
   "app/theme.ts": themeTemplate,
   "app/api/gate/route.ts": gateRoutesTemplate,
   "app/api/mcp/route.ts": mcpRoutesTemplate,
