@@ -97,7 +97,7 @@ Place a \`theme.json\` at your project root (the same directory where you execut
 - **Placement**: Put \`theme.json\` in the project root alongside \`config.json\`.
 - **Partial palettes**: If a key is missing in a mode, consumers may fall back to the \`default\` value.
 - **Logo size**: Recommended dimensions are 164px width and 30px height.
-- **Browser chrome**: The \`theme-color\` shown in browser UI (such as the iOS Safari status bar) is derived from each mode's \`primary\` token, so it carries your brand color in both modes.
+- **Browser chrome**: The \`theme-color\` shown in browser UI (such as the iOS Safari status bar) carries your brand color: pages serve the light mode's \`primary\`, and once the page loads the active mode's \`primary\` takes over and follows the theme toggle. If your two modes define very different \`primary\` values, dark-mode visitors may notice the shade settle shortly after the page appears.
 
 <Callout type="warning">
   Use valid hex colors (e.g., \`#22c55e\`). Invalid color values may cause unexpected rendering.
