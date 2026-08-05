@@ -3,6 +3,7 @@
 ## 0.0.152
 
 - Fix the browser-chrome color flipping back to the light `primary` on every route change: 0.0.151 served the `theme-color` meta from a static viewport export, and on each soft navigation Next re-asserts that React-owned tag with its baked-in light value, which then sticks because Cherry's post-hydration sync only re-runs on theme changes. The tag is script-owned again, as in the pre-release builds: the pre-paint script emits it via `document.write` with the resolved mode's `primary` already in it, so the right color is in place from the first paint, hydration has nothing to reconcile (a server-rendered tag corrected pre-paint is answered by React 19 hydration with a stale duplicate, which is what 0.0.150 shipped), and navigation never touches it. Cherry's `$themeColor="primary"` sync keeps it current across theme toggles, on the same `primary` token the script resolves. The Theme page's Browser chrome note in the generated starter documentation describes the restored behavior again
+- Update generated app dependency tsx to ^4.23.6
 
 ## 0.0.151
 
