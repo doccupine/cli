@@ -56,6 +56,8 @@ Doccupine copies the files into the generated site and wires them into every pag
 
 Precedence: a page's frontmatter \`icon\` wins for that page, then root icon files, then \`icon\` in \`config.json\`, then the Doccupine default.
 
+The generated site also serves a web app manifest at \`/manifest.webmanifest\`, linked from every page automatically. It carries your site's \`name\` and \`description\` from \`config.json\`, the light palette's \`primary\` as \`theme_color\`, and the root icon files as its icon entries, so browsers that install or pin the site pick up your branding.
+
 <Callout type="warning">
   A root icon file and a file with the same name in your \`public/\` directory would publish the same URL, so Doccupine reports a validation error instead of letting one silently overwrite the other.
 </Callout>
