@@ -77,13 +77,17 @@ const StyledSearchButton = styled.button<{ theme: Theme }>\`
   background: \${({ theme }) => theme.colors.light};
   color: \${({ theme }) => theme.colors.primary};
   border-radius: \${({ theme }) => theme.spacing.radius.xs};
-  padding: 0 4px 0 8px;
+  padding: 0 8px;
   font-family: inherit;
   cursor: pointer;
 
   & svg.lucide {
     color: inherit;
     min-width: 14px;
+  }
+
+  \${mq("lg")} {
+    padding: 0 4px 0 8px;
   }
 \`;
 
