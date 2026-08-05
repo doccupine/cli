@@ -1,8 +1,13 @@
 # Changelog
 
+## 0.0.151
+
+- Generate a web app manifest: every site now serves `/manifest.webmanifest` through a generated `app/manifest.ts`, linked from every page's head automatically. It carries the site's `name` and `description` from `config.json` (falling back to the Doccupine defaults), `start_url`, `standalone` display, background and theme colors drawn from the light palette, and the root icon files as icon entries through a new `manifestIcons` export in `utils/icons.ts`, keeping their cache-busting hashed URLs; a site without root icon files gets a manifest without icons rather than a guessed format, and Global Settings documents the manifest under Icon files
+- Move the browser-chrome color meta out of React's tree: 0.0.150 server-rendered the tag and had the pre-paint script correct it for dark visits, but React 19 hydration treats a head meta whose attributes no longer match its props as missing and inserts a second tag beside the corrected one, leaving the document with two different values. The blocking script now writes the single tag itself with the active mode's `primary` already resolved, hydration has nothing to reconcile, and the theme provider and theme toggles keep updating that same tag in place - verified across cookied, cookieless, light, and dark loads and across toggles: one tag, the right value at every step
+
 ## 0.0.150
 
-- Server-render the `theme-color` meta so Safari actually tints its chrome: 0.0.149 had the blocking pre-paint script create the tag, but WebKit honors a `theme-color` meta created by script inconsistently or not at all - it reliably tracks content updates only on a tag already present in the parsed HTML - so iPad Safari's chrome stayed uncolored while Chromium looked fine. The generated layout now renders the tag in `<head>` with the light `primary` (pages are static, so the server cannot know the cookie-based mode) under `suppressHydrationWarning`, the pre-paint script corrects that existing tag's content for dark visits before first paint, and Cherry's provider keeps it in sync after hydration as before. The template test now pins the server-rendered tag's name and content alongside the pre-paint correction
+- Server-render the browser-chrome color meta in the layout with the light `primary` (pages are static, so the server cannot know the cookie-based mode), with the pre-paint script correcting it for dark visits before first paint and the theme provider keeping it in sync after hydration as before. The template test pins the server-rendered tag's name and content alongside the pre-paint correction
 
 ## 0.0.149
 
