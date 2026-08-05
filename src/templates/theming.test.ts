@@ -86,19 +86,19 @@ describe("generated theming", () => {
     // The site's mode is cookie-based, so OS-scheme-scoped SSR metas (a
     // viewport themeColor export) would paint white browser chrome on a dark
     // site under a light OS until hydration - a visible flash on every load.
-    // The single unscoped meta is server-rendered with the light primary
-    // (pages are static, so the server cannot know the mode) because Safari
-    // only tints reliably from a tag present in the parsed HTML; the
-    // blocking script then corrects its content before first paint.
+    // The meta must also stay out of React entirely: Safari only tints
+    // reliably from a parser-inserted tag, so a server-rendered meta would
+    // have to be corrected by the blocking script before paint, and React 19
+    // hydration answers any pre-paint mutation of a head meta by inserting a
+    // duplicate with the stale color beside it. The blocking script's
+    // document.write is parser-inserted and invisible to hydration at once.
     expect(rootLayout).not.toContain("themeColor");
     expect(rootLayout).not.toContain("prefers-color-scheme: light");
-    expect(rootLayout).toContain('name="theme-color"');
-    expect(rootLayout).toContain("content={colorsLight.primary}");
-    expect(rootLayout).toContain('meta[name="theme-color"]');
+    expect(rootLayout).not.toContain("content={colorsLight.primary}");
     // The script and the provider's $themeColor must stay on the same token,
     // or the chrome color jumps at hydration.
     expect(rootLayout).toContain(
-      'm.content=d?"${colorsDark.primary}":"${colorsLight.primary}"',
+      'document.write(\'<meta name="theme-color" content="\'+(d?"${colorsDark.primary}":"${colorsLight.primary}")+\'">\');',
     );
     // The layout reads palette values server-side, so the theme module must
     // not be a client module.
