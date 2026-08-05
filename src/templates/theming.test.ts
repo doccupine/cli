@@ -72,28 +72,34 @@ describe("generated theming", () => {
 
   it("keeps the provider free of request data and mode guessing", () => {
     expect(cherryThemeProviderTemplate).toContain("$globalStyles={false}");
-    // Cherry's provider resolves var() color references through computed
-    // styles, so the post-hydration theme-color sync belongs to it
-    // ($themeColor="primary"), exactly as on the Doccupine platform site,
+    // Cherry 0.2.15's provider resolves var() color references through
+    // computed styles, so the post-hydration theme-color sync belongs to it
+    // ($themeColor="primary" - the branded chrome Cherry's own site uses)
     // and the template must not duplicate the meta bookkeeping by hand.
     expect(cherryThemeProviderTemplate).toContain('$themeColor="primary"');
     expect(cherryThemeProviderTemplate).not.toContain('name="theme-color"');
-    expect(cherryThemeProviderTemplate).not.toContain("MutationObserver");
     expect(cherryThemeProviderTemplate).not.toContain("cookies()");
     expect(cherryThemeProviderTemplate).not.toContain("$initial");
   });
 
-  it("serves one theme-color meta and hands the correction to Cherry", () => {
-    // A single unscoped tag with the light primary from the static viewport
-    // export - the same channel the Doccupine platform site uses - corrected
-    // by Cherry's $themeColor sync after hydration. The pre-paint script
-    // must never touch it: React 19 hydration answers any pre-paint edit of
-    // a head meta by inserting a duplicate with the stale value beside it.
-    expect(rootLayout).toContain("themeColor: colorsLight.primary");
+  it("writes the theme-color meta pre-paint from the resolved mode", () => {
+    // The site's mode is cookie-based, so OS-scheme-scoped SSR metas (a
+    // viewport themeColor export) would paint white browser chrome on a dark
+    // site under a light OS until hydration - a visible flash on every load.
+    // The meta must also stay out of React entirely: Safari only tints
+    // reliably from a parser-inserted tag, so a server-rendered meta would
+    // have to be corrected by the blocking script before paint, and React 19
+    // hydration answers any pre-paint mutation of a head meta by inserting a
+    // duplicate with the stale color beside it. The blocking script's
+    // document.write is parser-inserted and invisible to hydration at once.
+    expect(rootLayout).not.toContain("themeColor");
     expect(rootLayout).not.toContain("prefers-color-scheme: light");
     expect(rootLayout).not.toContain("content={colorsLight.primary}");
-    expect(rootLayout).not.toContain("document.write");
-    expect(rootLayout).not.toContain('meta[name="theme-color"]');
+    // The script and the provider's $themeColor must stay on the same token,
+    // or the chrome color jumps at hydration.
+    expect(rootLayout).toContain(
+      'document.write(\'<meta name="theme-color" content="\'+(d?"${colorsDark.primary}":"${colorsLight.primary}")+\'">\');',
+    );
     // The layout reads palette values server-side, so the theme module must
     // not be a client module.
     expect(themeTemplate).not.toContain('"use client"');

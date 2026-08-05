@@ -23,8 +23,8 @@ import { GlobalStyles } from "@/components/layout/GlobalStyles";
  * the first (unreconciled) pass must still be skipped.
  *
  * This effect must stay a child of ClientThemeProvider: child effects run
- * first, so the attribute is already correct before any provider-level
- * effect reads the document's computed styles.
+ * first, so the attribute is updated before the provider's own theme-color
+ * sync resolves var(--color-primary) against the document's computed styles.
  */
 function ThemeModeAttribute() {
   const activeTheme = useTheme() as Theme;
@@ -59,12 +59,13 @@ function ThemeModeAttribute() {
  * server-rendered light theme against the cookie.
  *
  * $globalStyles is off because this app ships its own GlobalStyles.
- * $themeColor="primary" hands the post-hydration theme-color sync to Cherry,
- * exactly as the Doccupine platform site does: since 0.2.15 the provider
+ * $themeColor="primary" hands the post-hydration theme-color sync to Cherry
+ * with the branded chrome Cherry's own site uses: since 0.2.15 the provider
  * resolves var() color references through computed styles, so the \`primary\`
- * token yields each mode's brand hex for the active data-theme. The layout's
- * static viewport export serves the light \`primary\`; Cherry corrects it once
- * hydrated and keeps it in step with theme toggles.
+ * token yields each mode's brand hex for the active data-theme. The blocking
+ * script in the root layout writes the same token's value before first
+ * paint; the provider takes over from there, so the two must stay on the
+ * same token.
  */
 function CherryThemeProvider({
   children,

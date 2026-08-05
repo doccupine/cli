@@ -118,13 +118,28 @@ function fontDeclLine(fontConfig: FontConfig | null): string {
 // and seeding the cookie so Cherry's ClientThemeProvider reconciles against
 // the same answer on mount instead of flipping the class back.
 //
-// The theme-color meta is deliberately NOT touched here. It is served by the
-// static viewport export below and corrected after hydration by Cherry's
-// $themeColor sync, mirroring the Doccupine platform site. A pre-paint edit
-// is the one thing that must never happen: React 19 hydration treats a head
-// meta whose attributes differ from its props as missing and inserts a
-// duplicate with the stale value beside it.
-const THEME_INIT_SCRIPT = `(function(){try{var c=document.cookie.split(";").map(function(s){return s.trim();}).find(function(s){return s.indexOf("theme=")===0;});var v=c?c.split("=")[1]:null;var d=v?v==="dark":(window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches);if(!v){document.cookie="theme="+(d?"dark":"light")+";path=/;max-age=31536000;SameSite=Lax";}var r=document.documentElement;r.dataset.theme=d?"dark":"light";if(d){r.classList.add("dark");}}catch(e){}})();`;
+// The script also emits the theme-color meta for the resolved mode through
+// document.write, which hands the tag to the HTML parser itself: Safari only
+// tints its chrome reliably from a parser-inserted tag - one created through
+// the DOM APIs is honored inconsistently or not at all - though it does track
+// content updates to such a tag, which is how Cherry's post-hydration sync
+// and theme toggles keep it current. The meta cannot be rendered from the
+// layout instead: pages are static, so the server would emit one mode's color
+// and this script would have to correct it before paint, and React 19
+// hydration treats a head meta whose attributes differ from its props as
+// missing and inserts a duplicate with the stale light color beside it -
+// suppressHydrationWarning does not cover hoisted metas, and a meta emitted
+// through Next's viewport export hydrates the same way (both verified against
+// Next 16.3; the duplicate is what broke the chrome tint on iPad Safari).
+// OS-scheme-scoped SSR metas are no answer either: the site's mode is
+// cookie-based, so a dark site on a light-OS device would show the wrong
+// browser chrome until hydration - a visible flash on every load. Keeping the
+// tag out of React leaves exactly one meta that nothing ever re-inserts. The
+// \${...} palette interpolations below are escaped so they resolve in the
+// generated layout, at app build time, from the imported theme palettes. The
+// token must match the provider's $themeColor (primary), so the pre-paint
+// chrome color equals what Cherry syncs after hydration.
+const THEME_INIT_SCRIPT = `(function(){try{var c=document.cookie.split(";").map(function(s){return s.trim();}).find(function(s){return s.indexOf("theme=")===0;});var v=c?c.split("=")[1]:null;var d=v?v==="dark":(window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches);if(!v){document.cookie="theme="+(d?"dark":"light")+";path=/;max-age=31536000;SameSite=Lax";}var r=document.documentElement;r.dataset.theme=d?"dark":"light";if(d){r.classList.add("dark");}document.write('<meta name="theme-color" content="'+(d?"\${colorsDark.primary}":"\${colorsLight.primary}")+'">');}catch(e){}})();`;
 
 /**
  * Root layout ("app/layout.tsx"). Minimal shell: html/body, fonts, the theme
@@ -139,10 +154,10 @@ export const rootLayoutTemplate = (
   fontConfig: FontConfig | null,
   analyticsEnabled: boolean = false,
 ): string => {
-  return `import type { Metadata, Viewport } from "next";
+  return `import type { Metadata } from "next";
 ${fontImportLine(fontConfig)}
 import { StyledComponentsRegistry } from "cherry-styled-components";
-import { colorsLight, theme, themeDark } from "@/app/theme";
+import { colorsDark, colorsLight, theme, themeDark } from "@/app/theme";
 import { CherryThemeProvider } from "@/components/layout/CherryThemeProvider";
 import { config } from "@/utils/config";
 import { siteIcons } from "@/utils/icons";
@@ -158,17 +173,6 @@ function resolveSiteUrl(): URL | undefined {
     return undefined;
   }
 }
-
-// A single unscoped tag, server-rendered in the first bytes of head - the
-// same channel the Doccupine platform site uses. Pages are static, so the
-// server cannot know the cookie-based mode and renders the light \`primary\`;
-// Cherry's provider ($themeColor="primary") corrects the tag's content after
-// hydration, exactly as it does on the platform. The pre-paint script never
-// touches it: a pre-paint edit makes React 19 hydration insert a duplicate
-// with the stale value beside it.
-export const viewport: Viewport = {
-  themeColor: colorsLight.primary,
-};
 
 export const metadata: Metadata = {
   metadataBase: resolveSiteUrl(),
