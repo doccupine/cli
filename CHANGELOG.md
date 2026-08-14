@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.154
+
+- Import `StyledComponentsRegistry` from the cherry `/next` subpath: cherry-styled-components 0.2.16 moved the registry out of the package root barrel into a `cherry-styled-components/next` entry point, and the generated root layout still imported it from the root, so every newly generated app failed to resolve it against the version the scaffolded `package.json` installs. `rootLayoutTemplate` now emits the subpath import, and the scaffolded `package.json` pins cherry-styled-components at `^0.2.16` so the import and the installed package agree
+- Update dependencies: the CLI moves @readme/openapi-parser to ^7.0.1, @types/node to ^26.2.0, next to ^16.3.1, and pnpm to 11.21.0; generated apps move to next 16.3.1 with `@next/env`/`@next/eslint-plugin-next` 16.3.1, cherry-styled-components ^0.2.16, styled-components ^6.5.2, langchain ^1.5.8 with `@langchain/anthropic` ^1.5.5, `@langchain/core` ^1.2.7, and `@langchain/openai` ^1.5.7, lucide-react ^1.31.0, posthog-js ^1.417.1, posthog-node ^5.49.1, `@typescript-eslint/*` ^8.67.0, globals ^17.11.0, and tsx ^4.23.12
+
 ## 0.0.153
 
 - Keep mermaid node labels readable on colored boxes in dark mode: the diagram renderer labels every node with the theme foreground even when the diagram sets its own fill via `classDef` or `style`, and those literal fills - usually light pastels - do not follow the theme, so dark mode painted white text over light boxes. The rendered SVG is produced once server-side and shared by both modes, so `renderDiagram` now bakes a literal contrast color into the labels of nodes whose shape carries a literal fill, chosen from the fill's perceived brightness: black on light fills, white on dark ones, correct in both modes at once. Nodes without a custom fill keep the theme-variable color so they continue to follow theme toggles, and a `classDef` that sets `color:` explicitly is left untouched
