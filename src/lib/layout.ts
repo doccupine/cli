@@ -156,7 +156,7 @@ export const rootLayoutTemplate = (
 ): string => {
   return `import type { Metadata } from "next";
 ${fontImportLine(fontConfig)}
-import { StyledComponentsRegistry } from "cherry-styled-components";
+import { StyledComponentsRegistry } from "cherry-styled-components/next";
 import { colorsDark, colorsLight, theme, themeDark } from "@/app/theme";
 import { CherryThemeProvider } from "@/components/layout/CherryThemeProvider";
 import { config } from "@/utils/config";
