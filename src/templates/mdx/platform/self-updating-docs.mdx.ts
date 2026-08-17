@@ -150,14 +150,14 @@ Doccupine emails the project owner when pages are ready to review, and when page
 
 ## What it costs
 
-Agent runs use your project's AI credit. Doccupine keeps that spend predictable:
+Agent runs spend whatever the project's [AI setting](/platform/ai-assistant) points at - the AI credit included with your plan, or your own provider key. Doccupine keeps that spend predictable either way:
 
 - Automatic regeneration only ever happens for pages you've explicitly set to auto-update. A page waiting for review costs nothing when its source changes.
 - Drift that changes no lines - a merge or a rename that leaves the tracked file's content alone - never triggers a run.
-- Every run has a ceiling on pages and spend.
+- Every run has a ceiling on pages, and a ceiling on spend: a built-in one on included credit, or the limit you set on your own key.
 - Only one run happens at a time per project.
 
-See [AI Assistant](/platform/ai-assistant) for how AI is configured and budgeted.
+If AI is switched off for the project, Agent Sync keeps tracking drift but the agent cannot run, and the page says so.
 
 ## In the editor
 

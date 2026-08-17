@@ -35,7 +35,7 @@ Deployments are triggered in three ways:
 
 1. **Publishing from Doccupine** - clicking Publish in the project header
 2. **Pushing to GitHub** - pushing to the \`main\` branch of your repository triggers an automatic deploy via webhook
-3. **Configuration changes** - saving AI assistant settings triggers a redeploy since those are stored as environment variables
+3. **Configuration changes** - saving AI settings triggers a redeploy, since your published site reads them from its deployment
 
 ## Visiting your site
 

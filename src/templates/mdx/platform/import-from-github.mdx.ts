@@ -26,6 +26,9 @@ Start at [doccupine.com/import](https://doccupine.com/import) and paste any GitH
   <Step title="Choose where the code lives">
     Pick whether Doccupine manages the new documentation repository for you or creates it on your own GitHub account. This is the same choice described in [Creating a Project](/platform/creating-a-project).
   </Step>
+  <Step title="Choose what writes the docs">
+    Use the AI credit included with your plan, or bring your own OpenAI, Anthropic, or Google API key. Whichever you pick becomes the new project's [AI setting](/platform/ai-assistant), so the import and every later Agent Sync run on it are funded the same way - you can change it afterwards.
+  </Step>
   <Step title="Watch it build">
     A live progress view walks through five stages: **Validate**, **Read repo**, **Plan**, **Write pages**, and **Publish**. You can close the tab - the import keeps running.
   </Step>
@@ -76,7 +79,11 @@ A full import can take a few minutes, so you don't have to sit and watch it. Doc
 Doccupine reads a bounded number of files and writes a bounded number of pages, so an enormous monorepo produces a solid starting set rather than an endless run. Very large or very sparse repositories may need a few manual pages afterwards.
 
 <Callout type="note">
-  The initial generation is on us. It does **not** draw down your project's AI assistant budget, which is reserved for your deployed site's assistant. See [AI Assistant](/platform/ai-assistant) for those budgets.
+  An import spends the same AI you configured for the project: your included credit, or your own provider key. On included credit it also stops at a per-import ceiling, so a large repository produces a solid starting set rather than consuming a month's budget. See [AI Assistant](/platform/ai-assistant).
+</Callout>
+
+<Callout type="warning">
+  If your included AI credit has run out, the import is refused before anything is created - no project, no repository, nothing counted against your plan's project limit. Top up, or bring your own API key, and start it again.
 </Callout>
 
 ## After the import
