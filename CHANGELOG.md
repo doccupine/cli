@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.155
+
+- Update dependencies: the CLI moves to pnpm 11.22.0, and generated apps move to langchain ^1.5.9 with `@langchain/anthropic` ^1.5.6, `@langchain/core` ^1.2.8, and `@langchain/openai` ^1.5.8, posthog-js ^1.417.3, and styled-components ^6.5.3
+
 ## 0.0.154
 
 - Import `StyledComponentsRegistry` from the cherry `/next` subpath: cherry-styled-components 0.2.16 moved the registry out of the package root barrel into a `cherry-styled-components/next` entry point, and the generated root layout still imported it from the root, so every newly generated app failed to resolve it against the version the scaffolded `package.json` installs. `rootLayoutTemplate` now emits the subpath import, and the scaffolded `package.json` pins cherry-styled-components at `^0.2.16` so the import and the installed package agree
