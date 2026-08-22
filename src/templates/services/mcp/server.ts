@@ -1,6 +1,9 @@
 export const mcpServerTemplate = `import path from "node:path";
 import fs from "node:fs";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import {
+  McpServer,
+  ResourceTemplate,
+} from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import {
   listDocs,
@@ -470,20 +473,58 @@ export function createMCPServer(): McpServer {
     },
   );
 
-  // Register documentation as resources
-  server.resource("docs://list", "docs://list", async () => {
-    const docs = await listDocs();
-    return {
-      contents: [
-        {
-          uri: "docs://list",
-          text: resourceText(
-            docs.map((d) => ({ name: d.name, path: d.path, uri: d.uri })),
-          ),
-        },
-      ],
-    };
-  });
+  // Register the documentation index as a resource
+  server.registerResource(
+    "docs-list",
+    "docs://list",
+    {
+      title: "Documentation index",
+      description:
+        "JSON index of every documentation page: name, path, and docs:// URI readable with resources/read",
+      mimeType: "application/json",
+    },
+    async () => {
+      const docs = await listDocs();
+      return {
+        contents: [
+          {
+            uri: "docs://list",
+            mimeType: "application/json",
+            text: resourceText(
+              docs.map((d) => ({ name: d.name, path: d.path, uri: d.uri })),
+            ),
+          },
+        ],
+      };
+    },
+  );
+
+  // Register every documentation page as a readable docs://<route> resource.
+  // \`{+path}\` is a reserved expansion so nested routes keep their slashes.
+  // The fixed docs://list resource above is matched before this template.
+  server.registerResource(
+    "doc",
+    new ResourceTemplate("docs://{+path}", { list: undefined }),
+    {
+      title: "Documentation page",
+      description:
+        "The Markdown content of one documentation page, addressed by the docs:// URI from the docs://list index",
+      mimeType: "text/markdown",
+    },
+    async (uri, _variables, { signal }) => {
+      signal.throwIfAborted();
+      const doc = await getDoc({ path: uri.href });
+      signal.throwIfAborted();
+      if (!doc) {
+        throw new Error(\`Document not found: \${uri.href}\`);
+      }
+      return {
+        contents: [
+          { uri: doc.uri, mimeType: "text/markdown", text: doc.content },
+        ],
+      };
+    },
+  );
 
   return server;
 }

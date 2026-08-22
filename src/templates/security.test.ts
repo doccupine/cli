@@ -371,6 +371,20 @@ describe("generated security boundaries", () => {
     expect(ragRoutesTemplate).not.toContain("Boolean(refresh)");
   });
 
+  it("registers MCP resources with typed metadata and readable doc URIs", () => {
+    expect(mcpServerTemplate).not.toContain("server.resource(");
+    expect(mcpServerTemplate).toContain(
+      'server.registerResource(\n    "docs-list",\n    "docs://list",',
+    );
+    expect(mcpServerTemplate).toContain('mimeType: "application/json"');
+    expect(mcpServerTemplate).toContain('title: "Documentation index"');
+    expect(mcpServerTemplate).toContain(
+      'new ResourceTemplate("docs://{+path}", { list: undefined })',
+    );
+    expect(mcpServerTemplate).toContain('mimeType: "text/markdown"');
+    expect(mcpServerTemplate).toContain("getDoc({ path: uri.href })");
+  });
+
   it("initializes embeddings lazily after RAG and MCP authorization", () => {
     const buildCalls = mcpServerTemplate.match(/\bbuildDocsIndex\(/g) ?? [];
     const ensureStart = mcpServerTemplate.indexOf(
