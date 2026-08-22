@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.156
+
+- Expose every documentation page as a readable MCP resource: the generated MCP server registered only the `docs://list` index, so an MCP client that discovered a page's `docs://` URI from that index had nothing to read it with. The server now uses `registerResource` for both the index and a `docs://{+path}` resource template that returns each page's Markdown content (the `{+path}` reserved expansion keeps nested routes intact), both carrying a title, description, and MIME type (`application/json` for the index, `text/markdown` for pages) so clients can present them properly; the deprecated `server.resource` call is gone and the security template test pins the new registrations
+- Update dependencies: the CLI moves to next ^16.3.2 and vitest ^4.1.11; generated apps move to next 16.3.2 with `@next/env`/`@next/eslint-plugin-next` 16.3.2, langchain ^1.5.10 with `@langchain/anthropic` ^1.5.8, `@langchain/core` ^1.2.9, `@langchain/google-genai` ^2.3.0, and `@langchain/openai` ^1.5.10, lucide-react ^1.33.0, posthog-js ^1.418.10, and posthog-node ^5.50.0
+
 ## 0.0.155
 
 - Update dependencies: the CLI moves to pnpm 11.22.0, and generated apps move to langchain ^1.5.9 with `@langchain/anthropic` ^1.5.6, `@langchain/core` ^1.2.8, and `@langchain/openai` ^1.5.8, posthog-js ^1.417.3, and styled-components ^6.5.3
