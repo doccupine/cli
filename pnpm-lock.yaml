@@ -27,7 +27,7 @@ importers:
         specifier: ^4.0.3
         version: 4.0.3
       next:
-        specifier: ^16.3.2
+        specifier: ^16.3.3
         version: 16.3.3(@types/node@26.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       prompts:
         specifier: ^2.4.2
@@ -43,7 +43,7 @@ importers:
         specifier: ^11.0.4
         version: 11.0.4
       '@types/node':
-        specifier: ^26.2.0
+        specifier: ^26.4.0
         version: 26.4.0
       '@types/prompts':
         specifier: ^2.4.9
