@@ -124,6 +124,7 @@ const StyledInputWrapper = styled.div<{ theme: Theme }>\`
 
 const StyledInput = styled.input<{ theme: Theme }>\`
   flex: 1;
+  padding: 0;
   border: none;
   outline: none;
   background: transparent;
