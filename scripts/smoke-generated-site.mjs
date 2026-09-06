@@ -73,6 +73,10 @@ try {
       "",
       "<Space $size={24} />",
       "",
+      // Icons resolve through the generated IconRegistry; an unregistered name
+      // renders nothing, so the glyph has to be read back out of the page too.
+      '<Icon name="flag" size={16} />',
+      "",
     ].join("\n"),
   );
   await fs.writeFile(
@@ -129,6 +133,11 @@ try {
     if (!new RegExp(`min-height:\\s*${gap}px`).test(guideHtml)) {
       throw new Error(`Space did not render a ${gap}px gap into the page`);
     }
+  }
+  if (!guideHtml.includes("lucide-flag")) {
+    throw new Error(
+      "Icon did not render the registered flag glyph into the page",
+    );
   }
 
   for (const route of ["mcp", "rag"]) {

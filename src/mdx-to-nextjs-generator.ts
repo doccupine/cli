@@ -45,6 +45,7 @@ import {
   ICON_SOURCE_FILES,
   IconAssetManager,
 } from "./generator/icon-asset-manager.js";
+import { IconRegistryGenerator } from "./generator/icon-registry-generator.js";
 import { WatchCoordinator } from "./generator/watch-coordinator.js";
 import { SectionIndexGenerator } from "./generator/section-index-generator.js";
 import {
@@ -99,6 +100,7 @@ export class MDXToNextJSGenerator {
   private projectConfigRepository: ProjectConfigRepository;
   private publicAssetManager: PublicAssetManager;
   private iconAssetManager: IconAssetManager;
+  private iconRegistryGenerator: IconRegistryGenerator;
   private watchCoordinator: WatchCoordinator;
 
   constructor(
@@ -114,6 +116,7 @@ export class MDXToNextJSGenerator {
     this.artifacts = new GeneratedArtifacts(this.outputDir);
     this.sourceFs = new SecureSourceFs(this.watchDir, this.rootDir);
     this.appScaffolder = new AppScaffolder(this.outputDir);
+    this.iconRegistryGenerator = new IconRegistryGenerator(this.outputDir);
     this.apiReferenceGenerator = new ApiReferenceGenerator(
       this.outputDir,
       this.artifacts,
@@ -159,6 +162,8 @@ export class MDXToNextJSGenerator {
       updateRootLayout: (pages) => this.updateRootLayout(pages),
       updateSitemap: (pages) => this.updateSitemap(pages),
       updateLlmsFiles: (pages) => this.updateLlmsFiles(pages),
+      updateIconRegistry: (pages, mdxSources) =>
+        this.iconRegistryGenerator.updateFromPages(pages, mdxSources),
       generateSectionIndexPages: (pages, declaredSlugs) =>
         this.generateSectionIndexPages(pages, declaredSlugs),
       maybeUpdateSections: () => this.maybeUpdateSections(),
@@ -356,6 +361,7 @@ export class MDXToNextJSGenerator {
       generateSiteLayout: () => this.generateSiteLayout(),
       updateSitemap: () => this.updateSitemap(),
       updateLlmsFiles: () => this.updateLlmsFiles(),
+      updateIconRegistry: () => this.iconRegistryGenerator.ensurePresent(),
     });
   }
 
@@ -492,6 +498,10 @@ export class MDXToNextJSGenerator {
           await this.updateRobots();
           await this.updateLlmsFiles();
         }
+
+        if (fileName === "navigation.json") {
+          await this.iconRegistryGenerator.refresh();
+        }
       } catch (error) {
         console.error(chalk.red(`❌ Error copying ${fileName}:`), error);
       }
@@ -516,6 +526,10 @@ export class MDXToNextJSGenerator {
           await this.updateSitemap();
           await this.updateRobots();
           await this.updateLlmsFiles();
+        }
+
+        if (fileName === "navigation.json") {
+          await this.iconRegistryGenerator.refresh();
         }
       } catch (error) {
         console.error(chalk.red(`❌ Error removing ${fileName}:`), error);

@@ -63,6 +63,10 @@ interface MdxReconciliationCoordinatorOptions {
   updateRootLayout(pages?: PageMeta[]): Promise<void>;
   updateSitemap(pages?: PageMeta[]): Promise<void>;
   updateLlmsFiles(pages?: PageMeta[]): Promise<void>;
+  updateIconRegistry(
+    pages: PageMeta[],
+    mdxSources: ReadonlyMap<string, string>,
+  ): Promise<void>;
   generateSectionIndexPages(
     pages?: PageMeta[],
     declaredSlugs?: Set<string>,
@@ -505,6 +509,7 @@ export class MdxReconciliationCoordinator {
     await this.options.updateRootLayout(pages);
     await this.options.updateSitemap(pages);
     await this.options.updateLlmsFiles(pages);
+    await this.options.updateIconRegistry(pages, this.successfulMdxContent);
     await this.options.generateSectionIndexPages(pages, declaredSlugs);
   }
 

@@ -25,6 +25,7 @@
 - **MCP server** - exposes `search_docs`, `get_doc`, and `list_docs` tools for AI agents
 - **Custom fonts** - Google Fonts or local fonts via `fonts.json`
 - **Static assets** - `public/` directory is watched and synced to the generated app
+- **Lean icons** - only the Lucide glyphs your pages, navigation, and components use are bundled; an unknown icon name warns when the site is generated and renders nothing
 - **Password protection** - gate the whole site behind a shared password with `SITE_PASSWORD`
 - **Zero config to start** - `npx doccupine` scaffolds everything and starts the server
 

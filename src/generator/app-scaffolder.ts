@@ -19,6 +19,7 @@ interface AppStructureCallbacks {
   generateSiteLayout(): Promise<string>;
   updateSitemap(): Promise<void>;
   updateLlmsFiles(): Promise<void>;
+  updateIconRegistry(): Promise<void>;
 }
 
 interface StarterDocumentCallbacks {
@@ -71,6 +72,7 @@ export class AppScaffolder {
 
     await callbacks.updateSitemap();
     await callbacks.updateLlmsFiles();
+    await callbacks.updateIconRegistry();
   }
 
   async createStartingDocs(callbacks: StarterDocumentCallbacks): Promise<void> {
