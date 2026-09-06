@@ -6,7 +6,7 @@ import { MDXToNextJSGenerator } from "./mdx-to-nextjs-generator.js";
 
 import { fixture, waitUntil } from "./test-utils/generator-fixture.js";
 
-describe.sequential("MDXToNextJSGenerator OpenAPI refresh", () => {
+describe("MDXToNextJSGenerator OpenAPI refresh", () => {
   it("keeps the active OpenAPI config and watcher target after an invalid replacement", async () => {
     const { root, watchDir, outputDir } = await fixture();
     const specPath = path.join(root, "openapi.json");

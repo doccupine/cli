@@ -6,7 +6,7 @@ import { MDXToNextJSGenerator } from "./mdx-to-nextjs-generator.js";
 
 import { fixture } from "./test-utils/generator-fixture.js";
 
-describe.sequential("MDXToNextJSGenerator OpenAPI route ownership", () => {
+describe("MDXToNextJSGenerator OpenAPI route ownership", () => {
   it("never overwrites or cleans up a hand-written OpenAPI route", async () => {
     const { root, watchDir, outputDir } = await fixture();
     const specPath = path.join(root, "openapi.json");

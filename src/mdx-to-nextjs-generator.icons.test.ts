@@ -9,7 +9,7 @@ import { fixture, waitUntil } from "./test-utils/generator-fixture.js";
 const PNG_BYTES = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a]);
 const PNG_BYTES_ALT = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x00, 0x11, 0x22]);
 
-describe.sequential("MDXToNextJSGenerator icon files", () => {
+describe("MDXToNextJSGenerator icon files", () => {
   it("copies root icon files and wires them through icons.json", async () => {
     const { root, watchDir, outputDir } = await fixture();
     await fs.outputFile(path.join(watchDir, "index.mdx"), "# Home\n");

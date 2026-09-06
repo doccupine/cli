@@ -7,7 +7,7 @@ import { MDXToNextJSGenerator } from "./mdx-to-nextjs-generator.js";
 
 import { fixture } from "./test-utils/generator-fixture.js";
 
-describe.sequential("MDXToNextJSGenerator MDX route recovery", () => {
+describe("MDXToNextJSGenerator MDX route recovery", () => {
   it("deletes the recorded frontmatter route and preserves nested pages", async () => {
     const { watchDir, outputDir } = await fixture();
     await fs.outputFile(

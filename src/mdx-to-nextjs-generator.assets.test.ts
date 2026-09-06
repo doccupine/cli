@@ -6,7 +6,7 @@ import { MDXToNextJSGenerator } from "./mdx-to-nextjs-generator.js";
 
 import { fixture, waitUntil } from "./test-utils/generator-fixture.js";
 
-describe.sequential("MDXToNextJSGenerator assets and config", () => {
+describe("MDXToNextJSGenerator assets and config", () => {
   it("preserves project-owned public aggregate artifacts on every refresh", async () => {
     const { root, watchDir, outputDir } = await fixture();
     await fs.outputFile(path.join(watchDir, "index.mdx"), "# Home\n");

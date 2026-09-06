@@ -6,7 +6,7 @@ import { MDXToNextJSGenerator } from "./mdx-to-nextjs-generator.js";
 
 import { fixture, waitUntil } from "./test-utils/generator-fixture.js";
 
-describe.sequential("MDXToNextJSGenerator watching", () => {
+describe("MDXToNextJSGenerator watching", () => {
   it("reconciles MDX, public, and OpenAPI changes made during init", async () => {
     const { root, watchDir, outputDir } = await fixture();
     const mdxPath = path.join(watchDir, "guide.mdx");

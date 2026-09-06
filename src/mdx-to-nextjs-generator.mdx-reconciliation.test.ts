@@ -6,7 +6,7 @@ import { MDXToNextJSGenerator } from "./mdx-to-nextjs-generator.js";
 
 import { fixture } from "./test-utils/generator-fixture.js";
 
-describe.sequential("MDXToNextJSGenerator MDX reconciliation", () => {
+describe("MDXToNextJSGenerator MDX reconciliation", () => {
   it("generates a page for an uppercase .MDX source", async () => {
     const { root, watchDir, outputDir } = await fixture();
     await fs.outputFile(

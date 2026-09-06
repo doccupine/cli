@@ -7,7 +7,7 @@ import { MDXToNextJSGenerator } from "./mdx-to-nextjs-generator.js";
 
 import { fixture } from "./test-utils/generator-fixture.js";
 
-describe.sequential("MDXToNextJSGenerator source safety", () => {
+describe("MDXToNextJSGenerator source safety", () => {
   it("does not seed starter docs over an existing MDX source", async () => {
     const { watchDir, outputDir } = await fixture();
     const existingPath = path.join(watchDir, "components.mdx");
