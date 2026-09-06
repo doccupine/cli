@@ -8,7 +8,7 @@ import { prettierrcTemplate } from "../templates/prettierrc.js";
 import {
   INDIRECT_TEMPLATE_ICON_NAMES,
   collectMdxIconNames,
-  collectNavigationIconNames,
+  collectConfigIconNames,
   collectTemplateIconNames,
   renderIconRegistry,
   resolveLucideIconName,
@@ -67,7 +67,7 @@ describe("collectMdxIconNames", () => {
   });
 });
 
-describe("collectNavigationIconNames", () => {
+describe("collectConfigIconNames", () => {
   it("walks the array form, the per-section form, and nested links", () => {
     const sectioned = JSON.stringify({
       "": [
@@ -85,22 +85,33 @@ describe("collectNavigationIconNames", () => {
         },
       ],
     });
-    expect(collectNavigationIconNames(sectioned)).toEqual([
+    expect(collectConfigIconNames(sectioned)).toEqual([
       "book-open",
       "compass",
       "settings",
     ]);
     expect(
-      collectNavigationIconNames(
+      collectConfigIconNames(
         JSON.stringify([{ label: "Docs", icon: "rocket", links: [] }]),
       ),
     ).toEqual(["rocket"]);
   });
 
+  it("reads the footer link icons of links.json", () => {
+    expect(
+      collectConfigIconNames(
+        JSON.stringify([
+          { title: "GitHub", url: "https://github.com", icon: "git-branch" },
+          { title: "Docs", url: "https://example.com" },
+        ]),
+      ),
+    ).toEqual(["git-branch"]);
+  });
+
   it("contributes nothing for an empty, missing, or malformed file", () => {
-    expect(collectNavigationIconNames("[]")).toEqual([]);
-    expect(collectNavigationIconNames(null)).toEqual([]);
-    expect(collectNavigationIconNames("{not json")).toEqual([]);
+    expect(collectConfigIconNames("[]")).toEqual([]);
+    expect(collectConfigIconNames(null)).toEqual([]);
+    expect(collectConfigIconNames("{not json")).toEqual([]);
   });
 });
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.158
+
+- Bundle the footer link icons from `links.json`: the icon registry introduced in 0.0.157 collected names from MDX, frontmatter, `navigation.json`, and the generated components, but not from `links.json`, so a footer link whose glyph nothing else on the site used rendered without its icon. The registry now includes the `icon` entries of `links.json`, is rewritten when that file changes or is removed in watch mode, and reports an unknown name there the same way it does for `navigation.json`
+
 ## 0.0.157
 
 - Bundle only the Lucide icons a site uses: the generated `Icon` component resolved names against Lucide's full `icons` map, which put every glyph, about 500 KB (130 KB gzipped), into the first-load JavaScript of every page whatever the docs referenced. The generator now writes `components/layout/IconRegistry.ts`, a map of static imports for exactly the names it finds in `<Icon name="...">` and the `icon` props of authoring components in MDX, `navIcon` and `categoryIcon` frontmatter, `navigation.json`, and the glyphs the generated components draw themselves, and `Icon` looks names up there. Authors change nothing: both spellings keep working (`chevron-right` and `ChevronRight`), and the registry is rewritten whenever a page or `navigation.json` changes so watch mode stays live. A name Lucide does not have now prints a warning naming the file (or `navigation.json`) at generate time and, as before, renders nothing rather than failing the build; names inside code blocks and inline code are ignored, so documenting an icon does not bundle it. On a minimal page the first-load JavaScript drops from 1113 KB to 603 KB (315 KB to 186 KB gzipped). The CLI depends on `lucide-react` itself now, to validate names against the icon set it knows

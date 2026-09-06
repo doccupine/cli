@@ -49,6 +49,14 @@ describe("MDXToNextJSGenerator icon registry", () => {
         links: [{ slug: "guide", title: "Guide", icon: "also-missing" }],
       },
     ]);
+    await fs.writeJson(path.join(root, "links.json"), [
+      {
+        title: "GitHub",
+        url: "https://github.com/example",
+        icon: "git-branch",
+      },
+      { title: "Chat", url: "https://example.com/chat", icon: "missing-too" },
+    ]);
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
     const generator = new MDXToNextJSGenerator(watchDir, outputDir, [], root);
@@ -62,6 +70,7 @@ describe("MDXToNextJSGenerator icon registry", () => {
       "Terminal",
       "Compass",
       "Settings",
+      "GitBranch",
       "ChevronRight",
       "ChevronDown",
       "Copy",
@@ -72,10 +81,12 @@ describe("MDXToNextJSGenerator icon registry", () => {
     expect(registry).not.toContain("FencedExample");
     expect(registry).not.toContain("NotARealIcon");
     expect(registry).not.toContain("AlsoMissing");
+    expect(registry).not.toContain("MissingToo");
 
     const warnings = unknownIconWarnings(warn);
     expect(warnings).toContain('"not-a-real-icon" in guide.mdx (navIcon)');
     expect(warnings).toContain('"also-missing" in navigation.json');
+    expect(warnings).toContain('"missing-too" in links.json');
     expect(warnings).not.toContain("fenced-example");
 
     const icon = await fs.readFile(
@@ -86,7 +97,7 @@ describe("MDXToNextJSGenerator icon registry", () => {
     expect(icon).not.toContain("import { icons }");
   });
 
-  it("rewrites the registry when MDX pages or navigation.json change", async () => {
+  it("rewrites the registry when MDX pages, navigation.json, or links.json change", async () => {
     const { root, watchDir, outputDir } = await fixture();
     const guidePath = path.join(watchDir, "guide.mdx");
     await fs.outputFile(path.join(watchDir, "index.mdx"), "# Home\n");
@@ -113,6 +124,17 @@ describe("MDXToNextJSGenerator icon registry", () => {
     await fs.remove(navigationPath);
     await generator.handleConfigFileDelete(navigationPath);
     expect(await readRegistry(outputDir)).not.toContain("  BookOpen,");
+
+    const linksPath = path.join(root, "links.json");
+    await fs.writeJson(linksPath, [
+      { title: "GitHub", url: "https://github.com", icon: "git-branch" },
+    ]);
+    await generator.handleConfigFileChange(linksPath);
+    expect(await readRegistry(outputDir)).toContain("  GitBranch,");
+
+    await fs.remove(linksPath);
+    await generator.handleConfigFileDelete(linksPath);
+    expect(await readRegistry(outputDir)).not.toContain("  GitBranch,");
   });
 
   it("leaves an unchanged registry untouched on a rerun", async () => {

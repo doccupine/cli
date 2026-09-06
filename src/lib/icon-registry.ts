@@ -8,6 +8,15 @@ import { iconNames } from "lucide-react/dynamic.mjs";
  */
 export const ICON_REGISTRY_FILE = "components/layout/IconRegistry.ts";
 
+/**
+ * Project config files, copied to the output directory, whose `icon` entries
+ * the registry includes: navigation.json (sidebar) and links.json (footer).
+ */
+export const ICON_CONFIG_FILES: readonly string[] = [
+  "navigation.json",
+  "links.json",
+];
+
 /** An icon name together with where it was authored, for warnings. */
 export interface IconReference {
   name: string;
@@ -90,11 +99,12 @@ export function collectMdxIconNames(content: string): string[] {
 }
 
 /**
- * Every `icon` string in navigation.json, at any depth: category icons,
- * link icons, and the icons of nested link groups, in either the array or the
- * per-section object form. Malformed JSON contributes nothing.
+ * Every `icon` string in a JSON config file, at any depth: the category, link,
+ * and nested link-group icons of navigation.json in either the array or the
+ * per-section object form, and the footer link icons of links.json. Malformed
+ * JSON contributes nothing.
  */
-export function collectNavigationIconNames(json: string | null): string[] {
+export function collectConfigIconNames(json: string | null): string[] {
   if (!json) return [];
   let parsed: unknown;
   try {

@@ -4,6 +4,7 @@ import path from "path";
 
 import chalk from "chalk";
 
+import { ICON_CONFIG_FILES } from "./lib/icon-registry.js";
 import { rootLayoutTemplate, siteLayoutTemplate } from "./lib/layout.js";
 import {
   normalizeOpenApiConfig,
@@ -499,7 +500,7 @@ export class MDXToNextJSGenerator {
           await this.updateLlmsFiles();
         }
 
-        if (fileName === "navigation.json") {
+        if (ICON_CONFIG_FILES.includes(fileName)) {
           await this.iconRegistryGenerator.refresh();
         }
       } catch (error) {
@@ -528,7 +529,7 @@ export class MDXToNextJSGenerator {
           await this.updateLlmsFiles();
         }
 
-        if (fileName === "navigation.json") {
+        if (ICON_CONFIG_FILES.includes(fileName)) {
           await this.iconRegistryGenerator.refresh();
         }
       } catch (error) {

@@ -1,10 +1,11 @@
 import chalk from "chalk";
 
 import {
+  ICON_CONFIG_FILES,
   ICON_REGISTRY_FILE,
   INDIRECT_TEMPLATE_ICON_NAMES,
+  collectConfigIconNames,
   collectMdxIconNames,
-  collectNavigationIconNames,
   collectTemplateIconNames,
   renderIconRegistry,
   resolveLucideIconName,
@@ -28,10 +29,10 @@ export function builtinIconNames(): string[] {
 
 /**
  * Keeps `components/layout/IconRegistry.ts` in step with the icon names the
- * site uses: sidebar icons from frontmatter, `icon` entries in navigation.json,
- * `<Icon>` and `icon` props in MDX, and the glyphs the generated components
- * draw themselves. Unknown names are reported once and left out, so a typo
- * renders nothing rather than failing the build.
+ * site uses: sidebar icons from frontmatter, `icon` entries in navigation.json
+ * and links.json, `<Icon>` and `icon` props in MDX, and the glyphs the
+ * generated components draw themselves. Unknown names are reported once and
+ * left out, so a typo renders nothing rather than failing the build.
  */
 export class IconRegistryGenerator {
   private pages: readonly PageMeta[] = [];
@@ -54,7 +55,10 @@ export class IconRegistryGenerator {
     await this.write();
   }
 
-  /** Re-reads navigation.json (already copied to the output) and rewrites. */
+  /**
+   * Re-reads navigation.json and links.json (already copied to the output)
+   * and rewrites.
+   */
   async refresh(): Promise<void> {
     await this.write();
   }
@@ -74,7 +78,9 @@ export class IconRegistryGenerator {
     await this.write();
   }
 
-  private collectReferences(navigationJson: string | null): IconReference[] {
+  private collectReferences(
+    configs: ReadonlyMap<string, string | null>,
+  ): IconReference[] {
     const references: IconReference[] = this.builtinNames.map((name) => ({
       name,
       source: "",
@@ -98,20 +104,25 @@ export class IconRegistryGenerator {
         references.push({ name, source });
       }
     }
-    for (const name of collectNavigationIconNames(navigationJson)) {
-      references.push({ name, source: "navigation.json" });
+    for (const [fileName, json] of configs) {
+      for (const name of collectConfigIconNames(json)) {
+        references.push({ name, source: fileName });
+      }
     }
     return references;
   }
 
   private async write(): Promise<void> {
-    const navigationJson = await readOutputFileIfPresent(
-      this.outputDir,
-      "navigation.json",
-    );
+    const configs = new Map<string, string | null>();
+    for (const fileName of ICON_CONFIG_FILES) {
+      configs.set(
+        fileName,
+        await readOutputFileIfPresent(this.outputDir, fileName),
+      );
+    }
     const ids = new Set<string>();
     const unknown = new Map<string, Set<string>>();
-    for (const { name, source } of this.collectReferences(navigationJson)) {
+    for (const { name, source } of this.collectReferences(configs)) {
       const id = resolveLucideIconName(name);
       if (id) {
         ids.add(id);
