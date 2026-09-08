@@ -6,6 +6,7 @@ import {
   ensureDocsIndex,
   getIndexStatus,
 } from "@/services/mcp/server";
+import { resolveDocsFilter } from "@/services/mcp/tools";
 import { rateLimit } from "@/utils/rateLimit";
 import { config } from "@/utils/config";
 import { isSiteRequestAuthorized } from "@/lib/access";
@@ -22,10 +23,18 @@ const messageSchema = z
   })
   .strict();
 
+// A language code or version slug is a lowercase URL segment.
+const variantTokenSchema = z
+  .string()
+  .regex(/^[a-z0-9-]{1,32}$/)
+  .optional();
+
 const ragSchema = z
   .object({
     question: z.string().min(1).max(2000),
     history: z.array(messageSchema).max(20).optional(),
+    locale: variantTokenSchema,
+    version: variantTokenSchema,
   })
   .strict();
 
@@ -139,7 +148,9 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
-  const { question, history } = parsed.data;
+  const { question, history, locale, version } = parsed.data;
+  // Retrieval stays inside the language/version the reader is looking at.
+  const docsFilter = resolveDocsFilter({ language: locale, version });
 
   let llmConfig;
   try {
@@ -194,7 +205,7 @@ export async function POST(req: Request) {
         signal.throwIfAborted();
 
         // Use MCP search_docs tool to find relevant documentation
-        const searchResults = await searchDocs(question, 6, signal);
+        const searchResults = await searchDocs(question, 6, signal, docsFilter);
         signal.throwIfAborted();
 
         // Build context from search results

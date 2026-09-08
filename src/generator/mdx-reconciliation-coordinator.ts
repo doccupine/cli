@@ -4,6 +4,12 @@ import type { RouteArtifact } from "../lib/generated-artifacts.js";
 import type { OperationDescriptor } from "../lib/openapi-types.js";
 import type { MDXFile, PageMeta, SectionConfig } from "../lib/types.js";
 import { getFullSlug, safeMatter } from "../lib/utils.js";
+import {
+  buildLanguageAlternates,
+  defaultLanguage,
+  joinVariantSlug,
+  type VariantSet,
+} from "../lib/variants.js";
 import type { GeneratedPageCommit } from "./generated-page-publisher.js";
 import { GeneratedRouteManager } from "./generated-route-manager.js";
 import {
@@ -12,7 +18,12 @@ import {
   type MdxSourceSnapshot,
 } from "./mdx-pass-builder.js";
 import { mergePages, RouteCollisionError } from "./page-catalog.js";
-import { type HomepageSource } from "./page-renderer.js";
+import {
+  type HomepageSource,
+  type RenderPageOptions,
+  type RenderVariantOptions,
+} from "./page-renderer.js";
+import type { ResolvedPageRoute } from "./section-resolver.js";
 import { SecureSourceFs } from "./secure-source-fs.js";
 
 interface SuccessfulMdxState {
@@ -39,7 +50,8 @@ interface MdxReconciliationCoordinatorOptions {
     filePath: string,
     frontmatter: Record<string, any>,
     sections?: SectionConfig[] | null,
-  ): { sectionSlug: string; pageSlug: string };
+  ): ResolvedPageRoute;
+  getVariants(): VariantSet;
   lookupOpenApi(reference: string): OperationDescriptor | undefined;
   isOpenApiRegistryEmpty(): boolean;
   syntheticOpenApiPages(): PageMeta[];
@@ -50,13 +62,14 @@ interface MdxReconciliationCoordinatorOptions {
   ): Promise<void>;
   generatePageFromMdx(
     mdxFile: MDXFile,
-    options?: { apiOperation?: OperationDescriptor },
+    options?: RenderPageOptions,
   ): Promise<GeneratedPageCommit>;
   updateSectionIndex(
-    sectionSlug: string,
+    routeSlug: string,
     frontmatter: Record<string, any>,
     mdxContent: string,
     sourcePath?: string,
+    options?: RenderVariantOptions,
   ): Promise<GeneratedPageCommit>;
   writeApiPages(realPages?: PageMeta[]): Promise<Map<string, string>>;
   updatePagesIndex(pages?: readonly PageMeta[]): Promise<void>;
@@ -83,6 +96,8 @@ export class MdxReconciliationCoordinator {
   private successfulMdxContent = new Map<string, string>();
   private successfulMdxSourcesBySlug = new Map<string, string>();
   private collisionBlockedMdxSources = new Set<string>();
+  /** hreflang alternates of the current pass, by page slug (languages.json). */
+  private currentAlternates = new Map<string, Record<string, string>>();
 
   constructor(private readonly options: MdxReconciliationCoordinatorOptions) {
     this.mdxPassBuilder = new MdxPassBuilder({
@@ -96,11 +111,51 @@ export class MdxReconciliationCoordinator {
         options.determineSectionForFile(filePath, frontmatter, sections),
       resolveHttpMethod: (reference) =>
         options.lookupOpenApi(reference)?.method,
+      getVariants: () => options.getVariants(),
     });
+  }
+
+  /**
+   * Synthetic API-reference pages have no source folder, so they belong to
+   * the default variant. They carry that variant explicitly (like every real
+   * page does) only when a variant file is configured, so their serialized
+   * shape is unchanged for every other site.
+   */
+  private withDefaultVariant(pages: PageMeta[]): PageMeta[] {
+    const { languages, versions } = this.options.getVariants();
+    if (!languages && !versions) return pages;
+    const locale = defaultLanguage(languages)?.code;
+    return pages.map((page) => ({
+      ...page,
+      ...(locale !== undefined ? { locale } : {}),
+      ...(versions ? { version: "" } : {}),
+    }));
   }
 
   resetForInitialPublication(): void {
     this.retainExistingMdxOutput = false;
+  }
+
+  private refreshAlternates(pages: readonly PageMeta[]): void {
+    this.currentAlternates = buildLanguageAlternates(
+      pages,
+      this.options.getVariants().languages,
+    );
+  }
+
+  /**
+   * Whether a page's hreflang set differs from the previous pass. A page
+   * embeds the set of its translations, so adding or removing one language
+   * of a page has to re-render its siblings in the other languages.
+   */
+  private alternatesChanged(
+    previous: ReadonlyMap<string, Record<string, string>>,
+    slug: string,
+  ): boolean {
+    return (
+      JSON.stringify(previous.get(slug) ?? null) !==
+      JSON.stringify(this.currentAlternates.get(slug) ?? null)
+    );
   }
 
   successfulPages(): PageMeta[] {
@@ -153,9 +208,11 @@ export class MdxReconciliationCoordinator {
       real,
       this.options.isOpenApiRegistryEmpty()
         ? []
-        : this.options
-            .syntheticOpenApiPages()
-            .filter((page) => !declaredRealSlugs.has(page.slug)),
+        : this.withDefaultVariant(
+            this.options
+              .syntheticOpenApiPages()
+              .filter((page) => !declaredRealSlugs.has(page.slug)),
+          ),
     );
   }
 
@@ -227,6 +284,7 @@ export class MdxReconciliationCoordinator {
     this.collisionBlockedMdxSources = state.collisionBlockedSources;
     this.options.setSections(state.sections);
     this.mdxSnapshotInitialized = state.snapshotInitialized;
+    this.refreshAlternates([...state.pages.values()]);
   }
 
   private async rollbackPageCommits(
@@ -412,14 +470,21 @@ export class MdxReconciliationCoordinator {
       content,
       filePath,
     );
-    const { sectionSlug, pageSlug } = this.options.determineSectionForFile(
-      filePath,
-      frontmatter,
+    const {
+      sectionSlug,
+      pageSlug,
+      prefix = "",
+      locale,
+      version,
+    } = this.options.determineSectionForFile(filePath, frontmatter);
+    const fullSlug = joinVariantSlug(
+      prefix,
+      getFullSlug(pageSlug, sectionSlug),
     );
-    const fullSlug = getFullSlug(pageSlug, sectionSlug);
     const isIndex = filePath === "index.mdx" || filePath === "./index.mdx";
     const isSectionIndex =
       this.options.getSections() && pageSlug === "" && sectionSlug !== "";
+    const alternateLanguages = this.currentAlternates.get(fullSlug);
 
     try {
       if (isIndex) {
@@ -432,6 +497,8 @@ export class MdxReconciliationCoordinator {
           content: mdxContent,
           frontmatter,
           slug: fullSlug,
+          ...(locale !== undefined ? { locale } : {}),
+          ...(version !== undefined ? { version } : {}),
         };
         let apiOperation: OperationDescriptor | undefined;
         if (frontmatter.openapi) {
@@ -446,21 +513,32 @@ export class MdxReconciliationCoordinator {
             );
           }
         }
+        const renderOptions: RenderPageOptions = {
+          ...(apiOperation ? { apiOperation } : {}),
+          ...(alternateLanguages ? { alternateLanguages } : {}),
+        };
         commits.push(
           await this.options.generatePageFromMdx(
             mdxFile,
-            apiOperation ? { apiOperation } : undefined,
+            Object.keys(renderOptions).length > 0 ? renderOptions : undefined,
           ),
         );
       }
 
       if (isSectionIndex) {
+        // The section index route carries the variant prefix, so
+        // `docs/de/api/index.mdx` lands on `/de/api` and never overwrites
+        // the default variant's `/api`.
         commits.push(
           await this.options.updateSectionIndex(
-            sectionSlug,
+            joinVariantSlug(prefix, sectionSlug),
             frontmatter,
             mdxContent,
             filePath,
+            {
+              ...(locale !== undefined ? { locale } : {}),
+              ...(alternateLanguages ? { alternateLanguages } : {}),
+            },
           ),
         );
       }
@@ -534,6 +612,8 @@ export class MdxReconciliationCoordinator {
       );
       if (!currentPage) throw new Error(`Unable to resolve ${filePath}`);
       this.options.setSections(snapshot.sections);
+      const previousAlternates = this.currentAlternates;
+      this.refreshAlternates(realPages);
 
       try {
         pageCommits.push(
@@ -554,9 +634,10 @@ export class MdxReconciliationCoordinator {
 
       await this.retryMdxPages(
         snapshot,
-        (source) =>
+        (source, page) =>
           source !== normalizedSource &&
-          this.collisionBlockedMdxSources.has(source),
+          (this.collisionBlockedMdxSources.has(source) ||
+            this.alternatesChanged(previousAlternates, page.slug)),
         pageCommits,
       );
 
@@ -602,11 +683,14 @@ export class MdxReconciliationCoordinator {
       this.collisionBlockedMdxSources.delete(normalizedSource);
       this.options.setSections(snapshot.sections);
       const realPages = snapshot.pages;
+      const previousAlternates = this.currentAlternates;
+      this.refreshAlternates(realPages);
       await this.retryMdxPages(
         snapshot,
         (source, page) =>
           this.collisionBlockedMdxSources.has(source) ||
-          this.successfulMdxPages.get(source)?.slug !== page.slug,
+          this.successfulMdxPages.get(source)?.slug !== page.slug ||
+          this.alternatesChanged(previousAlternates, page.slug),
         pageCommits,
       );
 
@@ -652,6 +736,7 @@ export class MdxReconciliationCoordinator {
     }
     this.options.setSections(snapshot.sections);
     const realPages = snapshot.pages;
+    this.refreshAlternates(realPages);
     const pagesBySource = new Map(
       realPages.map((page) => [page.path.replace(/\\/g, "/"), page]),
     );

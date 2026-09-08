@@ -12,6 +12,15 @@ export interface SectionRoute {
   pageSlug: string;
 }
 
+/** A section route plus the variant (language/version) folder it was
+ *  resolved under. `prefix` is the URL prefix of that variant ("" at the
+ *  docs root); `locale`/`version` are present only when configured. */
+export interface ResolvedPageRoute extends SectionRoute {
+  prefix?: string;
+  locale?: string;
+  version?: string;
+}
+
 export function validateSectionsConfig(
   parsed: unknown,
 ): SectionConfig[] | null {

@@ -5,6 +5,8 @@ import { Search, X } from "lucide-react";
 import { IconButton } from "cherry-styled-components";
 import { mq, Theme } from "@/app/theme";
 import { Spinner } from "@/components/Spinner";
+import { useStrings } from "@/components/useStrings";
+import { withCount } from "@/utils/strings";
 import {
   interactiveStyles,
   thinScrollbar,
@@ -16,6 +18,8 @@ export interface PageItem {
   description?: string;
   category: string;
   section?: string;
+  locale?: string;
+  version?: string;
 }
 
 export interface MergedResult {
@@ -393,6 +397,7 @@ export function SearchModalContent({
   );
   const listboxId = React.useId();
   const optionId = (index: number) => listboxId + "-option-" + index;
+  const t = useStrings();
 
   React.useEffect(() => {
     const previouslyFocused = previouslyFocusedRef.current;
@@ -512,7 +517,7 @@ export function SearchModalContent({
         $isClosing={isClosing}
         role="dialog"
         aria-modal="true"
-        aria-label="Search documentation"
+        aria-label={t.searchDialog}
         data-search-dialog
         onKeyDownCapture={handleDialogKeyDown}
         onClick={(e) => e.stopPropagation()}
@@ -528,10 +533,10 @@ export function SearchModalContent({
               setActiveIndex(0);
             }}
             onKeyDown={onKeyDown}
-            placeholder="Search docs..."
+            placeholder={t.searchPlaceholder}
             autoComplete="off"
             spellCheck={false}
-            aria-label="Search documentation"
+            aria-label={t.searchDialog}
             role="combobox"
             aria-autocomplete="list"
             aria-haspopup="listbox"
@@ -546,10 +551,10 @@ export function SearchModalContent({
               type="button"
               onClick={onAskAssistant}
               disabled={!query.trim()}
-              aria-label="Ask AI"
-              title="Ask AI"
+              aria-label={t.askAi}
+              title={t.askAi}
             >
-              Ask AI
+              {t.askAi}
               <StyledAskKeys aria-hidden="true">
                 <StyledAskKbd>&#8997;</StyledAskKbd>
                 <StyledAskKbd>
@@ -560,24 +565,26 @@ export function SearchModalContent({
           )}
           <IconButton
             onClick={closeSearch}
-            aria-label="Close search"
-            title="Close search"
+            aria-label={t.closeSearch}
+            title={t.closeSearch}
           >
             <X />
           </IconButton>
         </StyledInputWrapper>
         <StyledLiveStatus role="status" aria-live="polite" aria-atomic="true">
           {isSearching
-            ? "Searching documentation"
+            ? t.searching
             : merged.length === 0
-              ? "No search results found"
-              : \`\${merged.length} search \${merged.length === 1 ? "result" : "results"} available\`}
+              ? t.noResults
+              : merged.length === 1
+                ? t.resultAvailable
+                : withCount(t.resultsAvailable, merged.length)}
         </StyledLiveStatus>
         <StyledResults
           ref={resultsRef}
           id={listboxId}
           role="listbox"
-          aria-label="Search results"
+          aria-label={t.searchResults}
           aria-busy={isSearching}
           hidden={merged.length === 0}
         >
@@ -619,10 +626,10 @@ export function SearchModalContent({
           <StyledEmpty aria-hidden="true">
             {isSearching ? (
               <>
-                <Spinner size={18} /> Searching documentation...
+                <Spinner size={18} /> {t.searching}...
               </>
             ) : (
-              "No results found"
+              t.noResults
             )}
           </StyledEmpty>
         )}

@@ -3,7 +3,13 @@ import {
   DEFAULT_OG_IMAGE,
   DEFAULT_SITE_NAME,
 } from "./constants.js";
-import type { FontConfig, SectionConfig } from "./types.js";
+import type { FontConfig, LanguageConfig, SectionConfig } from "./types.js";
+import {
+  defaultLanguage,
+  listVariantPrefixes,
+  sectionsForVariant,
+  type VariantSet,
+} from "./variants.js";
 
 function formatObjectArray<T extends object>(items: T[]): string {
   const MAX_WIDTH = 80;
@@ -36,6 +42,26 @@ interface PageData {
   categoryOrder: number;
   order: number;
   section: string;
+  locale?: string;
+  version?: string;
+}
+
+/**
+ * `{ "": ["", "api"], de: [""] }` as Prettier prints it: keys quoted only when
+ * they are not identifiers, one entry per line, arrays inline unless the line
+ * would overflow.
+ */
+function formatSectionScopes(scopes: Record<string, string[]>): string {
+  const lines = Object.entries(scopes).map(([prefix, slugs]) => {
+    const key = /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(prefix)
+      ? prefix
+      : JSON.stringify(prefix);
+    const items = slugs.map((slug) => JSON.stringify(slug));
+    const inline = `  ${key}: [${items.join(", ")}],`;
+    if (inline.length <= 80) return inline;
+    return `  ${key}: [\n${items.map((item) => `    ${item},`).join("\n")}\n  ],`;
+  });
+  return `{\n${lines.join("\n")}\n}`;
 }
 
 function isGoogleFont(
@@ -153,7 +179,22 @@ const THEME_INIT_SCRIPT = `(function(){try{var c=document.cookie.split(";").map(
 export const rootLayoutTemplate = (
   fontConfig: FontConfig | null,
   analyticsEnabled: boolean = false,
+  languages: LanguageConfig[] | null = null,
 ): string => {
+  // A single root layout serves every language, so the server-rendered
+  // <html lang> is the default language's. The pre-paint script corrects it
+  // from the URL's language prefix before anything renders, and the docs
+  // content container carries its own lang attribute server-side.
+  const defaultCode = defaultLanguage(languages)?.code ?? "en";
+  const languageCodes = (languages ?? [])
+    .filter((language) => !language.default)
+    .map((language) => language.code);
+  const themeInitScript = languages
+    ? THEME_INIT_SCRIPT.replace(
+        "document.write(",
+        `var p=location.pathname.split("/")[1];r.lang=${JSON.stringify(languageCodes)}.indexOf(p)>=0?p:${JSON.stringify(defaultCode)};document.write(`,
+      )
+    : THEME_INIT_SCRIPT;
   return `import type { Metadata } from "next";
 ${fontImportLine(fontConfig)}
 import { StyledComponentsRegistry } from "cherry-styled-components/next";
@@ -196,7 +237,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="${defaultCode}" suppressHydrationWarning>
       <head>
         {/* Resolves dark mode before the first paint by stamping data-theme
             on <html>, which flips the CSS variables in GlobalStyles.
@@ -207,7 +248,7 @@ export default function RootLayout({
             intentionally different between server (none) and client. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: \`${THEME_INIT_SCRIPT}\`,
+            __html: \`${themeInitScript}\`,
           }}
         />
       </head>
@@ -242,9 +283,14 @@ ${
 export const siteLayoutTemplate = (
   pages: PageData[],
   sectionsConfig: SectionConfig[] | null = null,
+  variants: VariantSet | null = null,
 ): string => {
   const hasSections = sectionsConfig !== null && sectionsConfig.length > 0;
   const chtOpen = `<ChtProvider isChatActive={process.env.LLM_PROVIDER ? true : false}>`;
+
+  if (variants) {
+    return variantSiteLayout(pages, sectionsConfig, variants, chtOpen);
+  }
 
   return `import dynamic from "next/dynamic";
 import { ChtProvider } from "@/components/Chat";
@@ -367,3 +413,91 @@ ${
 }
 `;
 };
+
+/**
+ * The docs chrome layout of a site with languages or versions. Always routes
+ * the sidebar through SectionNavProvider, which scopes sections and pages to
+ * the current language/version prefix and hands the sidebar the full page list
+ * its language and version switchers navigate through. The section bar shows
+ * only the sections that have pages in the current prefix.
+ */
+function variantSiteLayout(
+  pages: PageData[],
+  sectionsConfig: SectionConfig[] | null,
+  variants: VariantSet,
+  chtOpen: string,
+): string {
+  const hasSections = sectionsConfig !== null && sectionsConfig.length > 0;
+  const { languages, versions } = variants;
+  const sectionScopes: Record<string, string[]> = {};
+  if (hasSections) {
+    for (const prefix of listVariantPrefixes(languages, versions)) {
+      sectionScopes[prefix] = sectionsForVariant(
+        pages as PageMetaLike[],
+        sectionsConfig,
+        prefix,
+        languages,
+        versions,
+      );
+    }
+  }
+
+  const sectionBar = hasSections
+    ? `
+          <SectionBar
+            sections={doccupineSections}
+            variantSections={doccupineVariantSections}
+          />
+        `
+    : "";
+
+  return `import dynamic from "next/dynamic";
+import { ChtProvider } from "@/components/Chat";
+import { SearchProvider } from "@/components/SearchDocs";
+import { Header } from "@/components/layout/Header";
+import { DocsWrapper, LlmsDirective } from "@/components/layout/DocsComponents";
+import { type PagesProps } from "@/utils/orderNavItems";
+import { verifyBrandingKey } from "@/utils/branding";
+${hasSections ? `import { SectionBar } from "@/components/layout/SectionBar";\n` : ""}import { SectionNavProvider } from "@/components/SectionNavProvider";
+
+const Chat = dynamic(() => import("@/components/Chat").then((mod) => mod.Chat));
+
+const doccupinePages = ${formatObjectArray(pages)};${
+    hasSections
+      ? `\nconst doccupineSections = ${formatObjectArray(sectionsConfig!)};
+const doccupineVariantSections: Record<string, string[]> = ${formatSectionScopes(sectionScopes)};`
+      : ""
+  }
+
+export default function SiteLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  const hideBranding = verifyBrandingKey();
+
+  const pages: PagesProps[] = doccupinePages;
+
+  return (
+    ${chtOpen}
+      <SearchProvider pages={pages}${hasSections ? " sections={doccupineSections}" : ""}>
+        <LlmsDirective />
+        <Header${hasSections ? `>${sectionBar}</Header>` : " />"}
+        {process.env.LLM_PROVIDER && <Chat />}
+        <DocsWrapper>
+          <SectionNavProvider
+            sections={${hasSections ? "doccupineSections" : "[]"}}
+            allPages={pages}
+            hideBranding={hideBranding}${hasSections ? "" : "\n            hasSectionBar={false}"}
+          >
+            {children}
+          </SectionNavProvider>
+        </DocsWrapper>
+      </SearchProvider>
+    </ChtProvider>
+  );
+}
+`;
+}
+
+type PageMetaLike = Parameters<typeof sectionsForVariant>[0][number];

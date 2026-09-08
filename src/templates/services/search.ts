@@ -1,11 +1,24 @@
 export const searchServiceTemplate = `import MiniSearch from "minisearch";
-import { listDocs } from "@/services/mcp/tools";
+import {
+  listAllDocs,
+  matchesDocsFilter,
+  resolveDocsFilter,
+} from "@/services/mcp/tools";
 
 interface IndexedDoc {
   id: string;
   slug: string;
   title: string;
   content: string;
+  locale?: string;
+  version?: string;
+}
+
+/** The language/version a search is scoped to; each defaults to the site's
+ *  default variant when the site configures one. */
+export interface SearchScope {
+  locale?: string;
+  version?: string;
 }
 
 export interface SearchHit {
@@ -55,7 +68,9 @@ async function ensureIndex(): Promise<MiniSearch<IndexedDoc>> {
   }
 
   buildPromise = (async () => {
-    const resources = await listDocs();
+    // One index over every language and version; a search filters it down to
+    // the variant the reader is looking at.
+    const resources = await listAllDocs();
 
     docs = resources.map((doc) => {
       // Strip the leading "app/", the "/page.ext" suffix, and any Next.js
@@ -77,12 +92,14 @@ async function ensureIndex(): Promise<MiniSearch<IndexedDoc>> {
         slug,
         title: doc.name,
         content: cleanContent,
+        ...(doc.locale !== undefined ? { locale: doc.locale } : {}),
+        ...(doc.version !== undefined ? { version: doc.version } : {}),
       };
     });
 
     index = new MiniSearch<IndexedDoc>({
       fields: ["title", "content"],
-      storeFields: ["slug", "title", "content"],
+      storeFields: ["slug", "title", "content", "locale", "version"],
       searchOptions: {
         boost: { title: 3 },
         fuzzy: 0.2,
@@ -132,12 +149,25 @@ function extractSnippet(content: string, query: string): string {
 export async function searchContent(
   query: string,
   limit = 10,
+  scope: SearchScope = {},
 ): Promise<SearchHit[]> {
   const q = query.trim();
   if (!q) return [];
 
   const idx = await ensureIndex();
-  const results = idx.search(q);
+  const filter = resolveDocsFilter({
+    language: scope.locale,
+    version: scope.version,
+  });
+  const results = idx.search(q, {
+    // MiniSearch types a result's stored fields loosely; they are the
+    // indexed doc's own locale and version.
+    filter: (result) =>
+      matchesDocsFilter(
+        result as unknown as Pick<IndexedDoc, "locale" | "version">,
+        filter,
+      ),
+  });
 
   return results.slice(0, limit).map((result) => {
     const doc = docs.find((d) => d.id === result.id);

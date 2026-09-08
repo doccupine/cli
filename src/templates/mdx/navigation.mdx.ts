@@ -143,6 +143,8 @@ When using [sections](/sections), you can define navigation for each section by 
 
 The key \`""\` controls the root section. Other keys match section slugs defined in \`sections.json\` or derived from frontmatter. See [Sections](/sections) for details on configuring sections.
 
+Keys are URL prefixes, so on a site with [languages](/languages) or [versions](/versions) they can also name a variant: \`"de"\` for the German root, \`"de/platform"\` for the German Platform section, \`"v1"\` for the root of version v1. A scope without a key builds its sidebar from frontmatter, so you only have to define the scopes you want to control by hand.
+
 ### Fields
 
 - **label**: The section header shown in the sidebar.

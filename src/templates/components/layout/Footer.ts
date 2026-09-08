@@ -2,6 +2,7 @@ import { SIDEBAR_WIDTH, CHAT_WIDTH } from "../../app/theme.js";
 
 export const footerTemplate = `"use client";
 import styled, { css } from "styled-components";
+import { useStrings } from "@/components/useStrings";
 import { Space, styledSmall, useChat } from "cherry-styled-components";
 import { mq, Theme } from "@/app/theme";
 import { GitHubLogo } from "@/components/layout/Pictograms";
@@ -97,6 +98,7 @@ const StyledFooterFlex = styled.div\`
 
 function Footer({ hideBranding }: { hideBranding?: boolean }) {
   const { isOpen } = useChat();
+  const t = useStrings();
 
   if (hideBranding) return <Space $xs={80} $lg="none" />;
 
@@ -105,7 +107,7 @@ function Footer({ hideBranding }: { hideBranding?: boolean }) {
       <StyledFooterInner>
         <StyledFooterFlex>
           <span>
-            Powered by{" "}
+            {t.poweredBy}{" "}
             <a
               href="https://doccupine.com"
               target="_blank"
@@ -118,7 +120,7 @@ function Footer({ hideBranding }: { hideBranding?: boolean }) {
             href="https://github.com/doccupine/cli"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Doccupine on GitHub"
+            aria-label={t.githubLink}
           >
             <GitHubLogo />
           </a>

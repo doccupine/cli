@@ -1,11 +1,22 @@
 import type { PageMeta, SectionConfig } from "../../lib/types.js";
 
+export interface LlmsVariantLink {
+  label: string;
+  url: string;
+}
+
 export interface LlmsIndexArgs {
   siteName: string;
   siteDescription?: string;
   baseUrl: string | null;
   pages: PageMeta[];
   sectionsConfig: SectionConfig[] | null;
+  /** The `llms.txt` of every other language/version of the site, appended as
+   *  a final section so an agent can find the variant it needs. */
+  variantLinks?: { heading: string; links: LlmsVariantLink[] };
+  /** URL prefix of the language/version this index describes ("" at the
+   *  root); its full-corpus file lives under the same prefix. */
+  variantPrefix?: string;
 }
 
 export interface CategoryGroup {
@@ -108,11 +119,34 @@ export function buildSectionGroups(
   return groups;
 }
 
+function variantLinkLines(
+  variantLinks: LlmsIndexArgs["variantLinks"],
+): string[] {
+  if (!variantLinks || variantLinks.links.length === 0) return [];
+  return [
+    `## ${variantLinks.heading}`,
+    "",
+    ...variantLinks.links.map((link) => `- [${link.label}](${link.url})`),
+    "",
+  ];
+}
+
 export function llmsIndexTemplate(args: LlmsIndexArgs): string {
-  const { siteName, siteDescription, baseUrl, pages, sectionsConfig } = args;
+  const {
+    siteName,
+    siteDescription,
+    baseUrl,
+    pages,
+    sectionsConfig,
+    variantLinks,
+    variantPrefix = "",
+  } = args;
   const lines: string[] = [];
 
   const prefix = baseUrl ?? "";
+  const fullCorpusPath = variantPrefix
+    ? `/${variantPrefix}/llms-full.txt`
+    : "/llms-full.txt";
 
   lines.push(`# ${siteName}`);
   lines.push("");
@@ -125,7 +159,7 @@ export function llmsIndexTemplate(args: LlmsIndexArgs): string {
   lines.push(
     "Every page link below points to a markdown mirror; drop the .md suffix for the HTML version.",
   );
-  lines.push(`Full corpus in one file: ${prefix}/llms-full.txt`);
+  lines.push(`Full corpus in one file: ${prefix}${fullCorpusPath}`);
   lines.push(`Agent skill: ${prefix}/skill.md`);
   lines.push(
     `MCP server (streamable HTTP; tools: search_docs, get_doc, list_docs): ${prefix}/api/mcp`,
@@ -133,7 +167,8 @@ export function llmsIndexTemplate(args: LlmsIndexArgs): string {
   lines.push("");
 
   if (pages.length === 0) {
-    return lines.join("\n") + "\n";
+    lines.push(...variantLinkLines(variantLinks));
+    return lines.join("\n").replace(/\n+$/, "\n");
   }
 
   const groups = buildSectionGroups(pages, sectionsConfig);
@@ -162,6 +197,8 @@ export function llmsIndexTemplate(args: LlmsIndexArgs): string {
       lines.push("");
     }
   }
+
+  lines.push(...variantLinkLines(variantLinks));
 
   return lines.join("\n").replace(/\n+$/, "\n");
 }

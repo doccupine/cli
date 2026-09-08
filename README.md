@@ -161,6 +161,52 @@ Each entry has:
 ]
 ```
 
+## Languages
+
+Translate your docs by adding a `languages.json` file in your project root and one folder per language inside the docs directory. The default language stays at the docs root with unprefixed URLs; every other language lives in a folder named after its code, which is also its URL prefix:
+
+```json
+[
+  { "code": "en", "label": "English", "default": true },
+  { "code": "de", "label": "Deutsch" }
+]
+```
+
+```text
+docs/
+  guides/intro.mdx      -> /guides/intro
+  de/guides/intro.mdx   -> /de/guides/intro
+```
+
+- `code` - a lowercase URL segment (`en`, `de`, `pt-br`); the folder name, the URL prefix, and the `lang`/`hreflang` value
+- `label` - the name shown in the sidebar's language dropdown, on the footer row with the focus-mode and theme toggles
+- `default` - exactly one entry; its pages live at the docs root
+- `strings` (optional) - overrides for the generated site's own labels in that language (search box, sidebar, "On this page", previous/next, action bar, code blocks, AI chat, footer); the key list is documented on the generated site's Languages page
+
+Only translated pages exist in a language (an untranslated page is a 404 under that prefix, and the switcher falls back to the language's home). The sidebar, search, AI chat, and `llms.txt` are scoped to the current language; translated pages carry `hreflang` alternates with an `x-default`, and the sitemap lists them. A language code must not collide with a section slug, a version slug, or the reserved segments `api`, `gate`, `mcp`, and `ingest`.
+
+## Versions
+
+Keep older releases online by adding a `versions.json` file in your project root and one folder per older version. The default version is the docs root; every other version is a folder named after its slug holding a full copy of the docs as they were:
+
+```json
+[
+  { "label": "v2.0", "default": true },
+  { "slug": "v1", "label": "v1.0" }
+]
+```
+
+```text
+docs/
+  guides/intro.mdx       -> /guides/intro
+  v1/guides/intro.mdx    -> /v1/guides/intro
+  de/v1/guides/intro.mdx -> /de/v1/guides/intro
+```
+
+The default entry has no `slug`. Versions combine with languages; the language folder comes first. The sidebar shows a version dropdown on the footer row with the focus-mode and theme toggles, and the sidebar, search, AI chat, and `llms.txt` are scoped to the current version. The API reference generated from an OpenAPI spec is published in the default language and version only.
+
+For both features, `navigation.json` in object form is keyed by URL prefix: `""`, `"api"`, `"de"`, `"de/api"`, `"v1"`, `"de/v1/api"`. Existing files keyed by section slug keep working.
+
 ## API Reference
 
 Point Doccupine at an OpenAPI document (`.json`, `.yaml`, or `.yml`, OpenAPI 3.0/3.1) and it generates an interactive API reference: a directory at `/api-reference` linking every operation, plus one page per operation with a live playground for sending requests. Set the `openapi` field in `doccupine.json`:
@@ -206,6 +252,8 @@ Place these JSON files in your project root (where you run `doccupine`). They ar
 | `links.json`      | Static header/footer links                                                                                                                                                            |
 | `fonts.json`      | Font configuration (Google Fonts or local)                                                                                                                                            |
 | `sections.json`   | Section definitions for tabbed doc groups (see [Sections](#sections))                                                                                                                 |
+| `languages.json`  | Languages and their folders (see [Languages](#languages))                                                                                                                             |
+| `versions.json`   | Documentation versions and their folders (see [Versions](#versions))                                                                                                                  |
 | `analytics.json`  | Analytics provider configuration (PostHog supported)                                                                                                                                  |
 
 ## Public Directory
@@ -234,6 +282,8 @@ Doccupine generates [llms.txt](https://llmstxt.org) artifacts so AI agents can d
 | `llms.txt`         | Index of every page (title, description, URL), grouped by section and category          |
 | `llms-full.txt`    | Full-text bundle: every page's body concatenated for one-shot ingestion                 |
 | `public/<slug>.md` | Per-page Markdown mirror of each MDX page, suitable for direct fetching at `/<slug>.md` |
+
+With [languages](#languages) or [versions](#versions) configured, the root `llms.txt` and `llms-full.txt` describe the default language and version and link to the other variants, each of which has its own pair under its URL prefix (`/de/llms.txt`, `/v1/llms-full.txt`).
 
 The site name and description used in `llms.txt` come from `config.json` (`name`, `description`). Page URLs are absolute when `url` is set in `config.json` (or via `NEXT_PUBLIC_SITE_URL`), and root-relative otherwise.
 
@@ -287,7 +337,7 @@ The generated app exposes an MCP endpoint at `/api/mcp` with three tools:
 - `get_doc` - retrieve a specific document by path
 - `list_docs` - list all available documents
 
-This lets AI agents (Claude, ChatGPT, etc.) query your docs programmatically. Semantic `search_docs` requires the AI setup above for embeddings; `get_doc` and `list_docs` work from the generated content manifest without an embedding provider.
+This lets AI agents (Claude, ChatGPT, etc.) query your docs programmatically. Semantic `search_docs` requires the AI setup above for embeddings; `get_doc` and `list_docs` work from the generated content manifest without an embedding provider. On a site with [languages](#languages) or [versions](#versions), `search_docs` and `list_docs` accept optional `language` and `version` parameters and default to the default language and version; the `docs://list` resource lists every variant.
 
 ## Password Protection
 

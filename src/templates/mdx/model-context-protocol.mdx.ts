@@ -145,6 +145,8 @@ Search through the documentation content using semantic search. Returns relevant
 
 - \`query\` (required): The search query to find relevant documentation
 - \`limit\` (optional): Maximum number of results to return (default: 6)
+- \`language\` (optional): Language code to search on a site with [languages](/languages); defaults to the site's default language
+- \`version\` (optional): Version slug to search on a site with [versions](/versions); defaults to the current version
 
 **Example:**
 
@@ -184,6 +186,10 @@ List all available documentation pages, optionally filtered by directory.
 **Parameters:**
 
 - \`directory\` (optional): Optional directory to filter results (e.g., \`components\`)
+- \`language\` (optional): Language code to list on a site with [languages](/languages); defaults to the site's default language
+- \`version\` (optional): Version slug to list on a site with [versions](/versions); defaults to the current version
+
+Results carry the page's \`language\` and \`version\` on such a site, and the \`docs://list\` resource lists every language and version at once.
 
 **Example:**
 

@@ -13,6 +13,8 @@ import {
   renderMdxPage,
   renderSectionPage,
   type HomepageSource,
+  type RenderPageOptions,
+  type RenderVariantOptions,
   type RenderedPage,
 } from "./page-renderer.js";
 import { GeneratedRouteManager } from "./generated-route-manager.js";
@@ -147,7 +149,7 @@ export class GeneratedPagePublisher {
 
   async generatePageFromMdx(
     mdxFile: MDXFile,
-    options?: { apiOperation?: OperationDescriptor },
+    options?: RenderPageOptions,
   ): Promise<GeneratedPageCommit> {
     const rendered = renderMdxPage(mdxFile, options);
     const pagePath = resolveOutputPath(
@@ -164,8 +166,9 @@ export class GeneratedPagePublisher {
   async updateHomepage(
     source: HomepageSource | null,
     apiOperation?: OperationDescriptor,
+    options: RenderVariantOptions = {},
   ): Promise<GeneratedPageCommit> {
-    const rendered = renderHomepage(source, apiOperation);
+    const rendered = renderHomepage(source, apiOperation, options);
     const pagePath = resolveOutputPath(
       this.outputDir,
       "app",
@@ -176,23 +179,27 @@ export class GeneratedPagePublisher {
     return this.commitRenderedPage(pagePath, rendered);
   }
 
+  /** `routeSlug` is the full route of the section index (`api`, or
+   *  `de/api` inside a language folder), not just the section slug. */
   async updateSectionIndex(
-    sectionSlug: string,
+    routeSlug: string,
     frontmatter: Record<string, any>,
     mdxContent: string,
     sourcePath?: string,
+    options: RenderVariantOptions = {},
   ): Promise<GeneratedPageCommit> {
     const rendered = renderSectionPage(
-      sectionSlug,
+      routeSlug,
       frontmatter,
       mdxContent,
       sourcePath,
+      options,
     );
     const pagePath = resolveOutputPath(
       this.outputDir,
       "app",
       "(site)",
-      sectionSlug,
+      routeSlug,
       "page.tsx",
     );
     await fs.ensureDir(path.dirname(pagePath));

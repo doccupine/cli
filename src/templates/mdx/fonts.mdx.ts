@@ -4,7 +4,7 @@ description: "Customize the documentation typography with a fonts.json file (Goo
 date: "2026-02-19"
 category: "Configuration"
 categoryOrder: 2
-order: 6
+order: 8
 ---
 # Fonts
 

@@ -2,8 +2,8 @@ import { DEFAULT_DESCRIPTION } from "../../lib/constants.js";
 
 export const sectionNavProviderTemplate = `"use client";
 import { useMemo } from "react";
-import { usePathname } from "next/navigation";
 import { SideBar } from "@/components/SideBar";
+import { useVariant } from "@/components/useVariant";
 import { DocsNavigation } from "@/components/layout/DocsNavigation";
 import { SectionBarProvider } from "@/components/layout/DocsComponents";
 import { Footer } from "@/components/layout/Footer";
@@ -12,9 +12,12 @@ import {
   transformPagesToGroupedStructure,
   type PagesProps,
 } from "@/utils/orderNavItems";
+import { navigationScopeKey, pageVariantPrefix } from "@/utils/variants";
 import rawNavigation from "@/navigation.json";
 
-// navigation.json can be an array (root section only) or an object keyed by section slug
+// navigation.json can be an array (root scope only) or an object keyed by the
+// URL prefix of each scope: a section slug ("api"), a language or version
+// prefix ("de", "v1", "de/v1"), or both ("de/api").
 type NavLink = {
   slug?: string;
   title: string;
@@ -26,15 +29,15 @@ type NavigationConfig = NavItem[] | Record<string, NavItem[]>;
 
 const navigation = rawNavigation as NavigationConfig;
 
-function getNavigationForSection(
+function getNavigationForScope(
   nav: NavigationConfig,
-  sectionSlug: string,
+  scopeKey: string,
 ): NavItem[] | null {
   if (Array.isArray(nav)) {
-    return sectionSlug === "" && nav.length ? nav : null;
+    return scopeKey === "" && nav.length ? nav : null;
   }
-  const sectionNav = nav[sectionSlug];
-  return sectionNav && sectionNav.length ? sectionNav : null;
+  const scopeNav = nav[scopeKey];
+  return scopeNav && scopeNav.length ? scopeNav : null;
 }
 
 interface SectionConfig {
@@ -47,6 +50,8 @@ interface SectionNavProviderProps {
   sections: SectionConfig[];
   allPages: PagesProps[];
   hideBranding: boolean;
+  /** False when the site has no section bar (languages or versions only). */
+  hasSectionBar?: boolean;
   children: React.ReactNode;
 }
 
@@ -54,30 +59,34 @@ function SectionNavProvider({
   sections,
   allPages,
   hideBranding,
+  hasSectionBar = true,
   children,
 }: SectionNavProviderProps) {
-  const pathname = usePathname();
-  const currentPath = pathname.replace(/^\\//, "").replace(/\\/$/, "");
+  // Sections and pages are matched inside the current language/version, so
+  // the sidebar of /de/api lists the German API pages only.
+  const { prefix, rest } = useVariant();
 
   const activeSectionSlug = useMemo(() => {
     const match = sections.find((section) => {
       if (section.slug === "") return false;
-      return (
-        currentPath === section.slug ||
-        currentPath.startsWith(section.slug + "/")
-      );
+      return rest === section.slug || rest.startsWith(section.slug + "/");
     });
     return match ? match.slug : "";
-  }, [sections, currentPath]);
+  }, [sections, rest]);
 
   const result = useMemo(() => {
-    const sectionNav = getNavigationForSection(navigation, activeSectionSlug);
-    if (sectionNav) return sectionNav;
+    const scopeNav = getNavigationForScope(
+      navigation,
+      navigationScopeKey(prefix, activeSectionSlug),
+    );
+    if (scopeNav) return scopeNav;
     const filtered = allPages.filter(
-      (page) => (page.section || "") === activeSectionSlug,
+      (page) =>
+        pageVariantPrefix(page) === prefix &&
+        (page.section || "") === activeSectionSlug,
     );
     return transformPagesToGroupedStructure(filtered);
-  }, [allPages, activeSectionSlug]);
+  }, [allPages, activeSectionSlug, prefix]);
 
   // Fallback when no pages exist yet (also defined in layout.tsx for the non-sections path)
   const defaultPages = [
@@ -97,8 +106,11 @@ function SectionNavProvider({
   const defaultResults = transformPagesToGroupedStructure(defaultPages);
 
   return (
-    <SectionBarProvider hasSectionBar={true}>
-      <SideBar result={result.length ? result : defaultResults} />
+    <SectionBarProvider hasSectionBar={hasSectionBar}>
+      <SideBar
+        result={result.length ? result : defaultResults}
+        pages={allPages}
+      />
       {children}
       <DocsNavigation result={result.length ? result : defaultResults} />
       <StaticLinks />

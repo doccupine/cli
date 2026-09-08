@@ -171,7 +171,7 @@ For explicit control, use \`navigation.json\` with the object format to define p
 }
 \`\`\`
 
-Keys are section slugs. The root section uses \`""\`. Sections without a key fall back to auto-generated navigation. See the Navigation page for the full format.
+Keys are URL prefixes: a section slug, with \`""\` for the root section. On a site with [languages](/languages) or [versions](/versions), a key can also carry the variant prefix (\`"de"\`, \`"de/platform"\`, \`"v1"\`). Scopes without a key fall back to auto-generated navigation. See the Navigation page for the full format.
 
 ## How pages are assigned to sections
 

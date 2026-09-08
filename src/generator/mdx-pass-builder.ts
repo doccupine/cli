@@ -2,8 +2,16 @@ import type { Stats } from "node:fs";
 
 import type { PageMeta, SectionConfig } from "../lib/types.js";
 import { safeMatter } from "../lib/utils.js";
+import {
+  assertVariantLayout,
+  assertVariantsDisjoint,
+  type VariantSet,
+} from "../lib/variants.js";
 import { buildRealPagesMeta, parseMdxPageMeta } from "./page-catalog.js";
-import { discoverSections } from "./section-resolver.js";
+import {
+  discoverSections,
+  type ResolvedPageRoute,
+} from "./section-resolver.js";
 import { SecureSourceFs } from "./secure-source-fs.js";
 
 export interface MdxSourceSnapshot {
@@ -30,8 +38,9 @@ interface MdxPassBuilderOptions {
     filePath: string,
     frontmatter: Record<string, any>,
     sections: SectionConfig[] | null,
-  ): { sectionSlug: string; pageSlug: string };
+  ): ResolvedPageRoute;
   resolveHttpMethod(reference: string): string | undefined;
+  getVariants(): VariantSet;
 }
 
 export class MdxPassBuilder {
@@ -75,6 +84,13 @@ export class MdxPassBuilder {
         );
       }
     }
+
+    // Variant folders are resolved before sections, so a layout mistake or a
+    // section that claims a variant's folder aborts the pass the same way a
+    // route collision does, before any page is written.
+    const { languages, versions } = this.options.getVariants();
+    assertVariantLayout(resolvedFiles, languages, versions);
+    assertVariantsDisjoint(languages, versions, sections);
 
     const pages = await buildRealPagesMeta(resolvedFiles, async (file) => {
       const source = sources.get(file.replace(/\\/g, "/"));

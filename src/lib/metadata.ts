@@ -133,6 +133,26 @@ export interface MetadataOptions {
    * `alternates.types` entry so feed readers can autodiscover the feed.
    */
   rssPath?: string;
+  /**
+   * hreflang -> path of the same page in each language it exists in,
+   * including "x-default" (languages.json). Emitted as `alternates.languages`.
+   */
+  alternateLanguages?: Record<string, string>;
+  /** Open Graph locale of the page ("de", "pt_BR"). */
+  ogLocale?: string;
+}
+
+function formatLanguagesBlock(languages: Record<string, string>): string {
+  const entries = Object.entries(languages).map(([lang, href]) => {
+    const key = /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(lang)
+      ? lang
+      : JSON.stringify(lang);
+    return `${key}: ${JSON.stringify(href)}`;
+  });
+  const inline = `    languages: { ${entries.join(", ")} },`;
+  return inline.length <= 80
+    ? inline
+    : `    languages: {\n${entries.map((entry) => `      ${entry},`).join("\n")}\n    },`;
 }
 
 function buildFieldExpression(
@@ -181,23 +201,34 @@ function formatProperty(
 function buildAlternatesBlock(
   canonicalPath: string | undefined,
   rssPath: string | undefined,
+  alternateLanguages?: Record<string, string>,
 ): string {
   if (canonicalPath === undefined) return "";
   const safePath = canonicalPath.replace(/^\/+/, "");
   // Relative paths resolve against `metadataBase` set in the root layout.
   // Empty string means the homepage canonical equals the base URL itself.
   const canonical = JSON.stringify("/" + safePath);
-  if (!rssPath) return `\n  alternates: { canonical: ${canonical} },`;
-  const rss = JSON.stringify(rssPath);
+  const hasLanguages =
+    alternateLanguages !== undefined &&
+    Object.keys(alternateLanguages).length > 0;
+  if (!rssPath && !hasLanguages) {
+    return `\n  alternates: { canonical: ${canonical} },`;
+  }
   // Prettier preserves an object literal that already breaks after "{", so
   // the expanded form is stable; only the inner `types` line can overflow
   // the 80-col print width (long slugs) and needs the pre-wrap check.
-  const typesInline = `    types: { "application/rss+xml": ${rss} },`;
-  const typesLines =
-    typesInline.length <= 80
-      ? typesInline
-      : `    types: {\n      "application/rss+xml": ${rss},\n    },`;
-  return `\n  alternates: {\n    canonical: ${canonical},\n${typesLines}\n  },`;
+  const lines = [`    canonical: ${canonical},`];
+  if (hasLanguages) lines.push(formatLanguagesBlock(alternateLanguages));
+  if (rssPath) {
+    const rss = JSON.stringify(rssPath);
+    const typesInline = `    types: { "application/rss+xml": ${rss} },`;
+    lines.push(
+      typesInline.length <= 80
+        ? typesInline
+        : `    types: {\n      "application/rss+xml": ${rss},\n    },`,
+    );
+  }
+  return `\n  alternates: {\n${lines.join("\n")}\n  },`;
 }
 
 export function generateMetadataBlock(opts: MetadataOptions): string {
@@ -211,7 +242,14 @@ export function generateMetadataBlock(opts: MetadataOptions): string {
   // built by utils/icons.ts (root icon files > config.icon > default) applies.
   const icon = opts.icon ? JSON.stringify(String(opts.icon)) : "siteIcons";
   const image = buildFieldExpression(opts.image, "image", DEFAULT_OG_IMAGE);
-  const canonical = buildAlternatesBlock(opts.canonicalPath, opts.rssPath);
+  const canonical = buildAlternatesBlock(
+    opts.canonicalPath,
+    opts.rssPath,
+    opts.alternateLanguages,
+  );
+  const ogLocaleLine = opts.ogLocale
+    ? `\n    locale: ${JSON.stringify(opts.ogLocale)},`
+    : "";
   const inlineTitleDeclaration = `const pageTitle = ${title};`;
   const titleDeclaration =
     title.includes("\n") || inlineTitleDeclaration.length <= 80
@@ -231,7 +269,7 @@ ${iconLine}${canonical}
   openGraph: {
     title: pageTitle,
 ${openGraphDescriptionLine}
-${imageLine}
+${imageLine}${ogLocaleLine}
   },
 };`;
 }

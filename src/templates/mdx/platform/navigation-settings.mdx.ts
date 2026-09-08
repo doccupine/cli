@@ -151,6 +151,8 @@ Icons are written as an \`icon\` field on a category or link, and nested groups 
 }
 \`\`\`
 
+Object keys are URL prefixes. On a project with [languages](/platform/languages) or [versions](/platform/versions), a key can also name a variant scope, such as \`"de"\` for the German root or \`"de/api"\` for the German API section; scopes without a key build their sidebar from frontmatter.
+
 **Sections** (\`sections.json\`):
 
 \`\`\`json

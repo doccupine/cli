@@ -25,10 +25,12 @@ describe("generated app formatting", () => {
       "analytics.json",
       "config.json",
       "fonts.json",
+      "languages.json",
       "links.json",
       "navigation.json",
       "sections.json",
       "theme.json",
+      "versions.json",
     ];
     const ignored = new Set(
       prettierignoreTemplate

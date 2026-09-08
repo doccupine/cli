@@ -2,8 +2,21 @@ import chalk from "chalk";
 import fs from "fs-extra";
 
 import { resolveOutputPath } from "../lib/output-safety.js";
-import type { PageMeta, SectionConfig } from "../lib/types.js";
+import type {
+  LanguageConfig,
+  PageMeta,
+  SectionConfig,
+  VersionConfig,
+} from "../lib/types.js";
 import { isMdxPath, safeMatter, writeFileAtomic } from "../lib/utils.js";
+import {
+  buildLanguageAlternates,
+  joinVariantSlug,
+  listVariantPrefixes,
+  pageVariantPrefix,
+  resolveVariantFromSlug,
+  type VariantSet,
+} from "../lib/variants.js";
 import { robotsTemplate } from "../templates/app/robots.js";
 import {
   sitemapTemplate,
@@ -13,7 +26,10 @@ import {
   llmsFullTemplate,
   type PageWithBody,
 } from "../templates/llms/llmsFull.js";
-import { llmsIndexTemplate } from "../templates/llms/llmsIndex.js";
+import {
+  llmsIndexTemplate,
+  type LlmsVariantLink,
+} from "../templates/llms/llmsIndex.js";
 import { skillMdTemplate } from "../templates/llms/skillMd.js";
 import type { PublicAssetManager } from "./public-asset-manager.js";
 
@@ -98,6 +114,7 @@ export async function loadSiteMetadata(
 export function buildSitemapEntries(
   pages: PageMeta[],
   sectionsConfig: SectionConfig[] | null,
+  variants: VariantSet | null = null,
 ): SitemapEntry[] {
   const sectionSlugs = new Set(
     (sectionsConfig || [])
@@ -106,19 +123,46 @@ export function buildSitemapEntries(
         (slug): slug is string => typeof slug === "string" && slug !== "",
       ),
   );
+  // Section indexes rank 0.8 in every language/version, as do the variant
+  // homes themselves (`de`, `v1`).
+  const prominentSlugs = new Set<string>();
+  for (const prefix of listVariantPrefixes(
+    variants?.languages ?? null,
+    variants?.versions ?? null,
+  )) {
+    if (prefix !== "") prominentSlugs.add(prefix);
+    for (const slug of sectionSlugs) {
+      prominentSlugs.add(joinVariantSlug(prefix, slug));
+    }
+  }
+  const alternates = buildLanguageAlternates(
+    pages,
+    variants?.languages ?? null,
+  );
 
   const entries: SitemapEntry[] = pages.map((page) => {
     let priority = 0.5;
     if (page.slug === "") {
       priority = 1.0;
-    } else if (sectionSlugs.has(page.slug)) {
+    } else if (prominentSlugs.has(page.slug)) {
       priority = 0.8;
     }
+    const pageAlternates = alternates.get(page.slug);
     return {
       slug: page.slug,
       lastModified: page.lastModified,
       changeFrequency: "weekly",
       priority,
+      ...(pageAlternates
+        ? {
+            alternates: Object.fromEntries(
+              Object.entries(pageAlternates).map(([lang, href]) => [
+                lang,
+                href.replace(/^\/+/, ""),
+              ]),
+            ),
+          }
+        : {}),
     };
   });
 
@@ -138,9 +182,14 @@ export async function writeSitemap(
   sectionsConfig: SectionConfig[] | null,
   resolvePages: ResolvePages,
   resolveSiteUrl: () => Promise<string | null>,
+  variants: VariantSet | null = null,
 ): Promise<void> {
   const siteUrl = await resolveSiteUrl();
-  const entries = buildSitemapEntries(await resolvePages(), sectionsConfig);
+  const entries = buildSitemapEntries(
+    await resolvePages(),
+    sectionsConfig,
+    variants,
+  );
   await writeFileAtomic(
     resolveOutputPath(outputDir, "app", "sitemap.ts"),
     sitemapTemplate(entries),
@@ -189,6 +238,23 @@ export async function collectPageBodies(
   );
 }
 
+/** "Deutsch", "v1.0", or "Deutsch (v1.0)": the label of a variant prefix. */
+function variantLabel(
+  prefix: string,
+  languages: LanguageConfig[] | null,
+  versions: VersionConfig[] | null,
+): string {
+  const { locale, version } = resolveVariantFromSlug(
+    prefix,
+    languages,
+    versions,
+  );
+  const language = languages?.find((entry) => entry.code === locale)?.label;
+  const versionLabel = versions?.find((entry) => entry.slug === version)?.label;
+  if (language && versionLabel) return `${language} (${versionLabel})`;
+  return language ?? versionLabel ?? prefix;
+}
+
 export async function writeLlmsFiles(
   outputDir: string,
   sectionsConfig: SectionConfig[] | null,
@@ -197,6 +263,7 @@ export async function writeLlmsFiles(
   readOpenApiBody: ReadOpenApiBody,
   resolveSiteMetadata: () => Promise<SiteMetadata>,
   publicAssetManager: PublicAssetManager,
+  variants: VariantSet | null = null,
 ): Promise<void> {
   await fs.ensureDir(resolveOutputPath(outputDir, "public"));
 
@@ -217,6 +284,9 @@ export async function writeLlmsFiles(
       name: page.title,
       path: pagePath,
       content: page.body,
+      // Present only on sites that configure languages.json / versions.json.
+      ...(page.locale !== undefined ? { locale: page.locale } : {}),
+      ...(page.version !== undefined ? { version: page.version } : {}),
     };
   });
   await writeFileAtomic(
@@ -224,29 +294,91 @@ export async function writeLlmsFiles(
     JSON.stringify(docsContent, null, 2) + "\n",
   );
 
+  // Each language/version gets its own llms.txt and llms-full.txt under its
+  // URL prefix; the root files describe the default variant and link to the
+  // others. Without variants there is exactly one group, the root.
+  const languages = variants?.languages ?? null;
+  const versions = variants?.versions ?? null;
+  const prefixes = listVariantPrefixes(languages, versions);
+  const pagesByPrefix = new Map<string, PageWithBody[]>(
+    prefixes.map((prefix) => [prefix, []]),
+  );
+  for (const page of pagesWithBodies) {
+    const prefix = variants ? pageVariantPrefix(page, languages, versions) : "";
+    pagesByPrefix.get(prefix)?.push(page);
+  }
+  const urlPrefix = baseUrl ?? "";
+  const linksFor = (current: string) =>
+    prefixes.length > 1
+      ? {
+          heading: "Other languages and versions",
+          links: prefixes
+            .filter((prefix) => prefix !== current)
+            .map((prefix): LlmsVariantLink => ({
+              label: variantLabel(prefix, languages, versions),
+              url: `${urlPrefix}/${joinVariantSlug(prefix, "llms.txt")}`,
+            })),
+        }
+      : undefined;
+
+  const rootPages = pagesByPrefix.get("") ?? [];
   const indexContent = llmsIndexTemplate({
     siteName: name,
     siteDescription: description,
     baseUrl,
-    pages: resolvedPages,
+    pages: rootPages,
     sectionsConfig,
+    variantLinks: linksFor(""),
   });
   const fullContent = llmsFullTemplate({
     siteName: name,
     siteDescription: description,
     baseUrl,
-    pages: pagesWithBodies,
+    pages: rootPages,
     sectionsConfig,
   });
 
   await publicAssetManager.writePublicAggregate("llms.txt", indexContent);
   await publicAssetManager.writePublicAggregate("llms-full.txt", fullContent);
 
+  const variantAggregates = new Map<string, string>();
+  for (const prefix of prefixes) {
+    if (prefix === "") continue;
+    const variantPages = pagesByPrefix.get(prefix) ?? [];
+    variantAggregates.set(
+      `${prefix}/llms.txt`,
+      llmsIndexTemplate({
+        siteName: name,
+        siteDescription: description,
+        baseUrl,
+        pages: variantPages,
+        sectionsConfig,
+        variantLinks: linksFor(prefix),
+        variantPrefix: prefix,
+      }),
+    );
+    variantAggregates.set(
+      `${prefix}/llms-full.txt`,
+      llmsFullTemplate({
+        siteName: name,
+        siteDescription: description,
+        baseUrl,
+        pages: variantPages,
+        sectionsConfig,
+      }),
+    );
+  }
+  // Also runs when the variant files were just removed, so the aggregates of
+  // a previous run are cleaned up; a site that never had any skips it.
+  if (variantAggregates.size > 0 || publicAssetManager.hasVariantAggregates()) {
+    await publicAssetManager.syncVariantAggregates(variantAggregates);
+  }
+
   const skillContent = skillMdTemplate({
     siteName: name,
     siteDescription: description,
     baseUrl,
-    pages: resolvedPages,
+    pages: rootPages,
     sectionsConfig,
   });
   await publicAssetManager.writePublicAggregate("skill.md", skillContent);

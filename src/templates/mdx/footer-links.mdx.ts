@@ -4,7 +4,7 @@ description: "Add static links at the bottom of the documentation pages."
 date: "2026-02-19"
 category: "Configuration"
 categoryOrder: 2
-order: 4
+order: 6
 ---
 # Footer Links
 

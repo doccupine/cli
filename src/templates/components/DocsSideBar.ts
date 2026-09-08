@@ -1,6 +1,7 @@
 export const docsSideBarTemplate = `"use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Space } from "cherry-styled-components";
+import { useStrings } from "@/components/useStrings";
 import {
   StyledIndexSidebar,
   StyledIndexSidebarLink,
@@ -24,6 +25,7 @@ function getOffset() {
 export function DocsSideBar({ headings }: { headings: Heading[] }) {
   const [activeId, setActiveId] = useState<string>("");
   const activeRef = useRef<HTMLLIElement>(null);
+  const t = useStrings();
 
   const handleScroll = useCallback(() => {
     if (headings.length === 0) return;
@@ -146,7 +148,7 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
     <StyledIndexSidebar data-sidebar data-markdown-ignore>
       {headings?.length > 0 && (
         <li aria-hidden="true">
-          <StyledIndexSidebarLabel>On this page</StyledIndexSidebarLabel>
+          <StyledIndexSidebarLabel>{t.onThisPage}</StyledIndexSidebarLabel>
           <Space $size={15} />
         </li>
       )}

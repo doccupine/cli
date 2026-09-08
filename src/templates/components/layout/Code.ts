@@ -13,6 +13,7 @@ import rehypeHighlight from "rehype-highlight";
 import rehypeStringify from "rehype-stringify";
 import { Icon } from "@/components/layout/Icon";
 import { thinScrollbar } from "@/components/layout/SharedStyled";
+import { useStrings } from "@/components/useStrings";
 
 interface CodeProps extends Omit<
   React.HTMLAttributes<HTMLDivElement>,
@@ -440,6 +441,7 @@ function Code({
   className,
 }: CodeProps) {
   const [copied, setCopied] = useState(false);
+  const t = useStrings();
   const highlightedCode = useMemo(
     () => highlightCode(code, language),
     [code, language],
@@ -471,7 +473,7 @@ function Code({
           onClick={handleCopy}
           $copied={copied}
           theme={theme}
-          aria-label={copied ? "Copied" : "Copy code"}
+          aria-label={copied ? t.copied : t.copyCode}
         >
           <Icon name={copied ? "check" : "copy"} size={12} />
         </CopyButton>
@@ -492,6 +494,7 @@ function CodeTabs({ tabs, theme, className }: CodeTabsProps) {
   const baseId = useId();
   const [active, setActive] = useState(0);
   const [copied, setCopied] = useState(false);
+  const t = useStrings();
 
   const safeActive = active < tabs.length ? active : 0;
   const activeTab = tabs[safeActive];
@@ -550,7 +553,7 @@ function CodeTabs({ tabs, theme, className }: CodeTabsProps) {
       theme={theme}
     >
       <TopBar theme={theme}>
-        <TabList role="tablist" aria-label="Code variants">
+        <TabList role="tablist" aria-label={t.codeVariants}>
           {tabs.map((tab, index) => (
             <CodeTab
               key={\`\${tab.label}-\${index}\`}
@@ -573,7 +576,7 @@ function CodeTabs({ tabs, theme, className }: CodeTabsProps) {
           onClick={handleCopy}
           $copied={copied}
           theme={theme}
-          aria-label={copied ? "Copied" : "Copy code"}
+          aria-label={copied ? t.copied : t.copyCode}
         >
           <Icon name={copied ? "check" : "copy"} size={12} />
         </CopyButton>

@@ -5,7 +5,7 @@ date: "2026-02-19"
 updated: "2026-08-04"
 category: "Configuration"
 categoryOrder: 2
-order: 5
+order: 7
 ---
 # Theme
 

@@ -17,17 +17,27 @@ const PUBLIC_AGGREGATE_PATHS = new Set([
   ".well-known/mcp.json",
 ]);
 
+// `llms.txt` / `llms-full.txt` under a language or version prefix
+// (`de/llms.txt`, `de/v1/llms-full.txt`).
+const VARIANT_AGGREGATE_PATTERN = /^(?:[a-z0-9-]+\/)+llms(?:-full)?\.txt$/;
+
 function normalizePublicArtifactPath(relativePath: string): string {
   return relativePath.replace(/\\/g, "/").toLowerCase();
 }
 
 function isPublicAggregate(relativePath: string): boolean {
-  return PUBLIC_AGGREGATE_PATHS.has(normalizePublicArtifactPath(relativePath));
+  const normalized = normalizePublicArtifactPath(relativePath);
+  return (
+    PUBLIC_AGGREGATE_PATHS.has(normalized) ||
+    VARIANT_AGGREGATE_PATTERN.test(normalized)
+  );
 }
 
 function isManagedPublicArtifact(relativePath: string): boolean {
-  const normalized = normalizePublicArtifactPath(relativePath);
-  return PUBLIC_AGGREGATE_PATHS.has(normalized) || normalized.endsWith(".md");
+  return (
+    isPublicAggregate(relativePath) ||
+    normalizePublicArtifactPath(relativePath).endsWith(".md")
+  );
 }
 
 function publicDestinationRelativePath(relativePath: string): string {
@@ -224,6 +234,70 @@ export class PublicAssetManager {
 
     await fs.ensureDir(path.dirname(targetPath));
     await writeFileAtomic(targetPath, content);
+  }
+
+  hasVariantAggregates(): boolean {
+    return this.artifacts.llmsVariantFiles().size > 0;
+  }
+
+  /**
+   * Writes the per-language/version `llms.txt` and `llms-full.txt` files and
+   * removes the ones a previous run wrote for a variant that no longer
+   * exists. A project asset that owns one of the paths wins, as for every
+   * generated public file.
+   */
+  async syncVariantAggregates(
+    files: ReadonlyMap<string, string>,
+  ): Promise<void> {
+    const publicDir = this.outputPath("public");
+    const nextRelativePaths = new Set<string>();
+    for (const [relativePath, content] of files) {
+      const sourcePath = await this.findSourcePublicAsset(relativePath);
+      if (sourcePath) {
+        console.warn(
+          chalk.yellow(
+            `⚠️ Skipping generated public/${relativePath}; a project public asset owns that path`,
+          ),
+        );
+        await this.copyRegularPublicFile(
+          sourcePath,
+          this.publicOutputFilePath(relativePath),
+        );
+        continue;
+      }
+      const targetPath = this.publicOutputFilePath(relativePath);
+      await fs.ensureDir(path.dirname(targetPath));
+      await writeFileAtomic(targetPath, content);
+      nextRelativePaths.add(relativePath);
+    }
+
+    for (const stale of this.artifacts.llmsVariantFiles()) {
+      if (nextRelativePaths.has(stale)) continue;
+      try {
+        if (await this.findSourcePublicAsset(stale)) continue;
+        const stalePath = resolveOutputPath(publicDir, stale);
+        if (await fs.pathExists(stalePath)) {
+          await fs.remove(stalePath);
+          await this.removeEmptyPublicDirs(path.dirname(stalePath));
+        }
+      } catch {
+        // ignore
+      }
+    }
+    this.artifacts.replaceLlmsVariantFiles(nextRelativePaths);
+    await this.artifacts.save();
+  }
+
+  /** Removes now-empty directories under public/ left by a stale aggregate. */
+  private async removeEmptyPublicDirs(dir: string): Promise<void> {
+    const publicDir = this.outputPath("public");
+    let current = dir;
+    while (current !== publicDir && current.startsWith(publicDir)) {
+      const entries = await fs.readdir(current).catch(() => null);
+      if (entries === null || entries.length > 0) return;
+      await fs.remove(current);
+      current = path.dirname(current);
+    }
   }
 
   async syncMcpManifest(

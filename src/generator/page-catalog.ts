@@ -2,6 +2,8 @@ import chalk from "chalk";
 
 import type { PageMeta } from "../lib/types.js";
 import { getFullSlug, safeMatter } from "../lib/utils.js";
+import { joinVariantSlug } from "../lib/variants.js";
+import type { ResolvedPageRoute } from "./section-resolver.js";
 
 type ReadMdxSource = (
   filePath: string,
@@ -10,7 +12,7 @@ type ReadMdxSource = (
 type ResolveSectionRoute = (
   filePath: string,
   frontmatter: Record<string, any>,
-) => { sectionSlug: string; pageSlug: string };
+) => ResolvedPageRoute;
 
 type ResolveHttpMethod = (reference: string) => string | undefined;
 
@@ -22,8 +24,12 @@ export async function parseMdxPageMeta(
 ): Promise<PageMeta> {
   const { content, stat } = await readMdxSource(filePath);
   const { data: frontmatter } = safeMatter(content, filePath);
-  const { sectionSlug, pageSlug } = resolveSectionRoute(filePath, frontmatter);
-  const fullSlug = getFullSlug(pageSlug, sectionSlug);
+  const { sectionSlug, pageSlug, prefix, locale, version } =
+    resolveSectionRoute(filePath, frontmatter);
+  const fullSlug = joinVariantSlug(
+    prefix ?? "",
+    getFullSlug(pageSlug, sectionSlug),
+  );
 
   let lastModified: string | undefined;
   const authoredLastModified = frontmatter.updated ?? frontmatter.date;
@@ -57,6 +63,10 @@ export async function parseMdxPageMeta(
       ? { categoryIcon: String(frontmatter.categoryIcon) }
       : {}),
     ...(httpMethod ? { httpMethod } : {}),
+    // Present only when languages.json / versions.json are configured, so
+    // the serialized nav objects of every other site stay unchanged.
+    ...(locale !== undefined ? { locale } : {}),
+    ...(version !== undefined ? { version } : {}),
     lastModified,
   };
 }

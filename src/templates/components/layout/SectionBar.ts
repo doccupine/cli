@@ -1,9 +1,10 @@
 export const sectionBarTemplate = `"use client";
-import { usePathname } from "next/navigation";
 import Link from "next/link";
 import styled from "styled-components";
 import { styledText } from "cherry-styled-components";
 import { mq, Theme } from "@/app/theme";
+import { useVariant } from "@/components/useVariant";
+import { joinVariantSlug } from "@/utils/variants";
 
 interface SectionConfig {
   label: string;
@@ -13,6 +14,9 @@ interface SectionConfig {
 
 interface SectionBarProps {
   sections: SectionConfig[];
+  /** Section slugs that have pages in each language/version prefix; a
+   *  section absent from the current prefix is not shown there. */
+  variantSections?: Record<string, string[]>;
 }
 
 const StyledSectionBar = styled.nav<{ theme: Theme }>\`
@@ -81,25 +85,27 @@ const StyledSectionLink = styled(Link)<{
   }
 \`;
 
-function SectionBar({ sections }: SectionBarProps) {
-  const pathname = usePathname();
-  const currentPath = pathname.replace(/^\\//, "").replace(/\\/$/, "");
+function SectionBar({ sections, variantSections }: SectionBarProps) {
+  const { prefix, rest } = useVariant();
+  const visibleSections = variantSections
+    ? sections.filter((section) =>
+        (variantSections[prefix] ?? []).includes(section.slug),
+      )
+    : sections;
 
-  const activeSection = sections.find((section) => {
+  const activeSection = visibleSections.find((section) => {
     if (section.slug === "") return false;
-    return (
-      currentPath === section.slug || currentPath.startsWith(section.slug + "/")
-    );
+    return rest === section.slug || rest.startsWith(section.slug + "/");
   });
 
   const activeSectionSlug = activeSection ? activeSection.slug : "";
 
   return (
     <StyledSectionBar>
-      {sections.map((section) => (
+      {visibleSections.map((section) => (
         <StyledSectionLink
           key={section.slug}
-          href={section.slug === "" ? "/" : \`/\${section.slug}\`}
+          href={"/" + joinVariantSlug(prefix, section.slug)}
           $isActive={activeSectionSlug === section.slug}
         >
           {section.label}

@@ -7,7 +7,31 @@ import type { OperationDescriptor } from "../lib/openapi-types.js";
 import { parseUpdateBlocks } from "../lib/rss.js";
 import type { MDXFile } from "../lib/types.js";
 import { escapeTemplateContent, toJsStringLiteral } from "../lib/utils.js";
+import { toOgLocale } from "../lib/variants.js";
 import { rssRouteTemplate } from "../templates/app/rssRoute.js";
+
+export interface RenderPageOptions {
+  apiOperation?: OperationDescriptor;
+  /** hreflang -> path of this page in each language, incl. "x-default". */
+  alternateLanguages?: Record<string, string>;
+}
+
+export interface RenderVariantOptions {
+  /** Language of the page content (languages.json). */
+  locale?: string;
+  alternateLanguages?: Record<string, string>;
+}
+
+/** `<Docs>` attributes and metadata fields a page's language contributes. */
+function languageAttributes(locale: string | undefined): {
+  docsAttr: string[];
+  ogLocale: string | undefined;
+} {
+  return {
+    docsAttr: locale ? [`lang=${JSON.stringify(locale)}`] : [],
+    ogLocale: locale ? toOgLocale(locale) : undefined,
+  };
+}
 
 export type RssRouteState =
   | { action: "write"; content: string }
@@ -53,7 +77,7 @@ function apiOperationDeclaration(
 
 export function renderMdxPage(
   mdxFile: MDXFile,
-  options?: { apiOperation?: OperationDescriptor },
+  options?: RenderPageOptions,
 ): RenderedPage {
   const fm = mdxFile.frontmatter;
   const apiOperation = options?.apiOperation;
@@ -61,6 +85,7 @@ export function renderMdxPage(
   const updates = isSynthetic ? [] : parseUpdateBlocks(mdxFile.content);
   const hasFeed = updates.length > 0;
   const feedPath = `/${mdxFile.slug}/rss.xml`;
+  const language = languageAttributes(mdxFile.locale);
 
   const metadataBlock = generateMetadataBlock({
     title: fm.title,
@@ -72,6 +97,8 @@ export function renderMdxPage(
     image: fm.image,
     canonicalPath: mdxFile.slug,
     rssPath: hasFeed ? feedPath : undefined,
+    alternateLanguages: options?.alternateLanguages,
+    ogLocale: language.ogLocale,
   });
 
   const jsonLd = generateJsonLdScript({
@@ -98,11 +125,12 @@ export function renderMdxPage(
   const docsAttrs = [
     `content={content}`,
     `sourcePath={${sourcePathLiteral}}`,
+    ...language.docsAttr,
     ...(showRssButton ? [`rssHref={${JSON.stringify(feedPath)}}`] : []),
   ];
   const inlineDocs = `<Docs ${docsAttrs.join(" ")} />`;
   const docsElement = apiOperation
-    ? `<Docs content={content}>
+    ? `<Docs ${["content={content}", ...language.docsAttr].join(" ")}>
         <ApiPlayground operation={operation} />
       </Docs>`
     : inlineDocs.length + 6 <= 80
@@ -172,10 +200,12 @@ function iconsImportLine(...codeBlocks: string[]): string {
 export function renderHomepage(
   indexMDX: HomepageSource | null,
   apiOperation?: OperationDescriptor,
+  options: RenderVariantOptions = {},
 ): RenderedPage {
   const updates = indexMDX ? parseUpdateBlocks(indexMDX.content) : [];
   const hasFeed = updates.length > 0;
   const feedPath = "/rss.xml";
+  const language = languageAttributes(options.locale);
 
   const metadataBlock = indexMDX
     ? generateMetadataBlock({
@@ -188,6 +218,8 @@ export function renderHomepage(
         image: indexMDX.image,
         canonicalPath: "",
         rssPath: hasFeed ? feedPath : undefined,
+        alternateLanguages: options.alternateLanguages,
+        ogLocale: language.ogLocale,
       })
     : generateRuntimeOnlyMetadataBlock();
 
@@ -206,13 +238,19 @@ export function renderHomepage(
     : "";
   const apiConst = apiOperationDeclaration(apiOperation);
   const showRssButton = hasFeed && indexMDX?.rss === true && !apiOperation;
+  const homeAttrs = [
+    `content={content}`,
+    `sourcePath="index.mdx"`,
+    ...language.docsAttr,
+  ];
+  const inlineDocs = `<Docs ${[...homeAttrs, ...(showRssButton ? [`rssHref={"/rss.xml"}`] : [])].join(" ")} />`;
   const docsElement = apiOperation
-    ? `<Docs content={content} sourcePath="index.mdx">
+    ? `<Docs ${homeAttrs.join(" ")}>
         <ApiPlayground operation={operation} />
       </Docs>`
-    : showRssButton
-      ? `<Docs content={content} sourcePath="index.mdx" rssHref={"/rss.xml"} />`
-      : `<Docs content={content} sourcePath="index.mdx" />`;
+    : inlineDocs.length + 6 <= 80
+      ? inlineDocs
+      : `<Docs\n${[...homeAttrs, ...(showRssButton ? [`rssHref={"/rss.xml"}`] : [])].map((attr) => `        ${attr}`).join("\n")}\n      />`;
 
   const iconsImport = iconsImportLine(metadataBlock, homeJsonLd.declarations);
   const pageContent = `import { Metadata } from "next";
@@ -258,16 +296,20 @@ export default function Home() {
   return { pageContent, rssRoute };
 }
 
+/** `routeSlug` is the full route of the section index (`api`, or `de/api`
+ *  inside a language folder). */
 export function renderSectionPage(
-  sectionSlug: string,
+  routeSlug: string,
   frontmatter: Record<string, any>,
   mdxContent: string,
   sourcePath?: string,
+  options: RenderVariantOptions = {},
 ): RenderedPage {
   const updates = parseUpdateBlocks(mdxContent);
   const hasFeed = updates.length > 0;
-  const feedPath = `/${sectionSlug}/rss.xml`;
+  const feedPath = `/${routeSlug}/rss.xml`;
   const showRssButton = hasFeed && frontmatter.rss === true;
+  const language = languageAttributes(options.locale);
 
   const metadataBlock = generateMetadataBlock({
     title: frontmatter.title,
@@ -277,13 +319,15 @@ export function renderSectionPage(
     description: frontmatter.description || undefined,
     icon: frontmatter.icon,
     image: frontmatter.image,
-    canonicalPath: sectionSlug,
+    canonicalPath: routeSlug,
     rssPath: hasFeed ? feedPath : undefined,
+    alternateLanguages: options.alternateLanguages,
+    ogLocale: language.ogLocale,
   });
 
   const sectionJsonLd = generateJsonLdScript({
     kind: "article",
-    canonicalPath: sectionSlug,
+    canonicalPath: routeSlug,
     title: frontmatter.title,
     description: frontmatter.description,
     date: typeof frontmatter.date === "string" ? frontmatter.date : undefined,
@@ -298,7 +342,8 @@ export function renderSectionPage(
 
   const docsAttrs = [
     `content={content}`,
-    `sourcePath={${JSON.stringify(sourcePath ?? `${sectionSlug}/index.mdx`)}}`,
+    `sourcePath={${JSON.stringify(sourcePath ?? `${routeSlug}/index.mdx`)}}`,
+    ...language.docsAttr,
     ...(showRssButton ? [`rssHref={${JSON.stringify(feedPath)}}`] : []),
   ];
   const inlineDocs = `<Docs ${docsAttrs.join(" ")} />`;

@@ -21,6 +21,9 @@ interface DocsProps {
   // Path of this page's RSS feed; when set, the action bar shows an RSS
   // button linking to it.
   rssHref?: string;
+  // Language of the page content (languages.json); set on the <main> element
+  // so the article's language is correct server-side whatever <html lang> is.
+  lang?: string;
   // Extra content rendered inside the markdown column, after the MDX body.
   // Used to place generated widgets (e.g. the API playground) inside the docs
   // content area rather than outside its layout.
@@ -137,7 +140,7 @@ async function MdxBody({ source, components, sourcePath }: MdxBodyProps) {
   }
 }
 
-function Docs({ content, sourcePath, rssHref, children }: DocsProps) {
+function Docs({ content, sourcePath, rssHref, lang, children }: DocsProps) {
   const components = useMDXComponents({
     pre: createMermaidPre(sourcePath),
     ApiPlaygroundDemo,
@@ -165,7 +168,7 @@ function Docs({ content, sourcePath, rssHref, children }: DocsProps) {
 
   return (
     <>
-      <DocsContainer>
+      <DocsContainer lang={lang}>
         <ActionBar content={content} rssHref={rssHref}>
           <Flex $gap={20}>
             <StyledMarkdownContainer>

@@ -20,6 +20,14 @@ import {
 } from "./lib/output-safety.js";
 import { OpenApiRegistry, DEFAULT_API_BASE_SLUG } from "./lib/openapi.js";
 import { safeMatter, writeFileAtomic } from "./lib/utils.js";
+import {
+  assertVariantsDisjoint,
+  buildLanguageAlternates,
+  defaultLanguage,
+  resolveVariant,
+  VARIANT_CONFIG_FILES,
+  type VariantSet,
+} from "./lib/variants.js";
 import { nextConfigTemplate } from "./templates/next.config.js";
 import { proxyTemplate } from "./templates/proxy.js";
 import type {
@@ -28,7 +36,9 @@ import type {
   SectionConfig,
   FontConfig,
   AnalyticsConfig,
+  LanguageConfig,
   NormalizedOpenApiSpec,
+  VersionConfig,
 } from "./lib/types.js";
 import type { OperationDescriptor } from "./lib/openapi-types.js";
 import { SecureSourceFs } from "./generator/secure-source-fs.js";
@@ -57,8 +67,13 @@ import {
   addApiReferenceSection,
   determineSectionRoute,
   discoverSections,
+  type ResolvedPageRoute,
 } from "./generator/section-resolver.js";
-import type { HomepageSource } from "./generator/page-renderer.js";
+import type {
+  HomepageSource,
+  RenderPageOptions,
+  RenderVariantOptions,
+} from "./generator/page-renderer.js";
 import {
   loadSiteMetadata,
   loadSiteUrl as loadSiteUrlArtifact,
@@ -78,11 +93,15 @@ export class MDXToNextJSGenerator {
     "config.json",
     "links.json",
     "sections.json",
+    "languages.json",
+    "versions.json",
   ];
   private fontConfigFile = "fonts.json";
   private analyticsConfigFile = "analytics.json";
   private analyticsConfig: AnalyticsConfig | null = null;
   private sectionsConfig: SectionConfig[] | null = null;
+  private languagesConfig: LanguageConfig[] | null = null;
+  private versionsConfig: VersionConfig[] | null = null;
   /** Guards against recursive reprocessing when maybeUpdateSections() triggers processAllMDXFiles() */
   private isReprocessing = false;
   /** OpenAPI specs (build config) that drive the generated API reference. */
@@ -147,6 +166,7 @@ export class MDXToNextJSGenerator {
         this.withApiReferenceSection(sections),
       determineSectionForFile: (filePath, frontmatter, sections) =>
         this.determineSectionForFile(filePath, frontmatter, sections),
+      getVariants: () => this.variants,
       lookupOpenApi: (reference) => this.apiRegistry.lookup(reference),
       isOpenApiRegistryEmpty: () => this.apiRegistry.isEmpty,
       syntheticOpenApiPages: () => this.apiRegistry.syntheticPages(),
@@ -156,8 +176,20 @@ export class MDXToNextJSGenerator {
         this.artifacts.replaceRoutesAndSave("mdx", routes),
       generatePageFromMdx: (mdxFile, options) =>
         this.generatePageFromMDX(mdxFile, options),
-      updateSectionIndex: (sectionSlug, frontmatter, content, sourcePath) =>
-        this.updateSectionIndex(sectionSlug, frontmatter, content, sourcePath),
+      updateSectionIndex: (
+        routeSlug,
+        frontmatter,
+        content,
+        sourcePath,
+        options,
+      ) =>
+        this.updateSectionIndex(
+          routeSlug,
+          frontmatter,
+          content,
+          sourcePath,
+          options,
+        ),
       writeApiPages: (realPages) => this.writeApiPages(realPages),
       updatePagesIndex: (pages) => this.updatePagesIndex(pages),
       updateRootLayout: (pages) => this.updateRootLayout(pages),
@@ -309,6 +341,7 @@ export class MDXToNextJSGenerator {
       await this.createStartingDocs();
       const doccupineSourceState = await this.refreshInitialDoccupineConfig();
       await this.loadOpenApiRegistry();
+      await this.loadVariantsConfig();
       await this.watchCoordinator.establishSourceSnapshot(
         this.projectConfigRepository.sourceSnapshotStates(),
         this.apiRegistry.sourceFingerprint,
@@ -318,6 +351,11 @@ export class MDXToNextJSGenerator {
       // Resolve sections after loading OpenAPI so the generated reference is
       // present in the first layout, sitemap, and LLMS pass.
       this.sectionsConfig = await this.resolveSections();
+      assertVariantsDisjoint(
+        this.languagesConfig,
+        this.versionsConfig,
+        this.sectionsConfig,
+      );
       this.analyticsConfig = await this.loadAnalyticsConfig();
 
       if (this.analyticsConfig) {
@@ -398,6 +436,71 @@ export class MDXToNextJSGenerator {
     return this.projectConfigRepository.loadSectionsConfig();
   }
 
+  private get variants(): VariantSet {
+    return { languages: this.languagesConfig, versions: this.versionsConfig };
+  }
+
+  /** `null` when neither languages.json nor versions.json is configured, so
+   *  every template keeps its single-tree code path. */
+  private get configuredVariants(): VariantSet | null {
+    return this.languagesConfig || this.versionsConfig ? this.variants : null;
+  }
+
+  /** Loads languages.json and versions.json; an invalid file throws. */
+  private async loadVariantsConfig(): Promise<void> {
+    this.languagesConfig =
+      await this.projectConfigRepository.loadLanguagesConfig();
+    this.versionsConfig =
+      await this.projectConfigRepository.loadVersionsConfig();
+    if (this.languagesConfig) {
+      console.log(
+        chalk.blue(
+          `🌐 Languages: ${this.languagesConfig
+            .map((l) => (l.default ? `${l.code} (default)` : l.code))
+            .join(", ")}`,
+        ),
+      );
+    }
+    if (this.versionsConfig) {
+      console.log(
+        chalk.blue(
+          `🏷️ Versions: ${this.versionsConfig
+            .map((v) => (v.default ? `${v.label} (default)` : v.slug))
+            .join(", ")}`,
+        ),
+      );
+    }
+  }
+
+  /**
+   * Watch-mode reload of the variant files. An invalid file keeps the
+   * previous configuration (like a half-written doccupine.json), so the
+   * site never silently degrades to unscoped pages mid-session.
+   */
+  private async reloadVariants(fileName: string): Promise<void> {
+    console.log(chalk.cyan(`🌐 ${fileName} changed`));
+    const previous = this.variants;
+    try {
+      await this.loadVariantsConfig();
+      assertVariantsDisjoint(
+        this.languagesConfig,
+        this.versionsConfig,
+        this.sectionsConfig,
+      );
+    } catch (error) {
+      this.languagesConfig = previous.languages;
+      this.versionsConfig = previous.versions;
+      console.error(
+        chalk.red(
+          `❌ ${fileName} was not applied; keeping the previous configuration:`,
+        ),
+        error,
+      );
+      return;
+    }
+    await this.processAllMDXFiles();
+  }
+
   async discoverSectionsFromFrontmatter(): Promise<SectionConfig[] | null> {
     const files = await this.getAllMDXFiles();
     const documents = [];
@@ -474,12 +577,27 @@ export class MDXToNextJSGenerator {
     await this.processAllMDXFiles();
   }
 
+  /**
+   * A page's route: the language/version folder comes off first (it is the
+   * URL prefix), then the section resolves against the remaining path, so
+   * `sections.json` directories and section slugs apply inside every variant.
+   */
   private determineSectionForFile(
     filePath: string,
     frontmatter: Record<string, any>,
     sections: SectionConfig[] | null = this.sectionsConfig,
-  ): { sectionSlug: string; pageSlug: string } {
-    return determineSectionRoute(filePath, frontmatter, sections);
+  ): ResolvedPageRoute {
+    const variant = resolveVariant(
+      filePath,
+      this.languagesConfig,
+      this.versionsConfig,
+    );
+    return {
+      ...determineSectionRoute(variant.rest, frontmatter, sections),
+      prefix: variant.prefix,
+      ...(variant.locale !== undefined ? { locale: variant.locale } : {}),
+      ...(variant.version !== undefined ? { version: variant.version } : {}),
+    };
   }
 
   async handleConfigFileChange(filePath: string) {
@@ -492,6 +610,10 @@ export class MDXToNextJSGenerator {
 
         if (fileName === "sections.json") {
           await this.reloadSections();
+        }
+
+        if (VARIANT_CONFIG_FILES.includes(fileName)) {
+          await this.reloadVariants(fileName);
         }
 
         if (fileName === "config.json") {
@@ -521,6 +643,10 @@ export class MDXToNextJSGenerator {
 
         if (fileName === "sections.json") {
           await this.reloadSections();
+        }
+
+        if (VARIANT_CONFIG_FILES.includes(fileName)) {
+          await this.reloadVariants(fileName);
         }
 
         if (fileName === "config.json") {
@@ -712,12 +838,20 @@ export class MDXToNextJSGenerator {
   async generateRootLayout(): Promise<string> {
     const fontConfig = await this.loadFontConfig();
     const analyticsEnabled = this.analyticsConfig !== null;
-    return rootLayoutTemplate(fontConfig, analyticsEnabled);
+    return rootLayoutTemplate(
+      fontConfig,
+      analyticsEnabled,
+      this.languagesConfig,
+    );
   }
 
   async generateSiteLayout(pages?: PageMeta[]): Promise<string> {
     const resolvedPages = pages ?? (await this.buildAllPagesMeta());
-    return siteLayoutTemplate(resolvedPages, this.sectionsConfig);
+    return siteLayoutTemplate(
+      resolvedPages,
+      this.sectionsConfig,
+      this.configuredVariants,
+    );
   }
 
   async generateSectionIndexPages(
@@ -730,6 +864,7 @@ export class MDXToNextJSGenerator {
       this.sectionsConfig,
       declaredSlugs,
       (slug, target) => this.writeSectionIndexRedirect(slug, target),
+      this.configuredVariants,
     );
   }
 
@@ -754,7 +889,7 @@ export default function SectionIndex() {
 
   async generatePageFromMDX(
     mdxFile: MDXFile,
-    options?: { apiOperation?: OperationDescriptor },
+    options?: RenderPageOptions,
   ): Promise<GeneratedPageCommit> {
     return this.generatedPagePublisher.generatePageFromMdx(mdxFile, options);
   }
@@ -862,20 +997,31 @@ export default function SectionIndex() {
         );
       }
     }
-    await this.generatedPagePublisher.updateHomepage(indexMDX, apiOperation);
+    // The homepage is the default language's; its translations are the
+    // `index.mdx` of each language folder (slug "de").
+    const locale = defaultLanguage(this.languagesConfig)?.code;
+    const alternateLanguages = pages
+      ? buildLanguageAlternates(pages, this.languagesConfig).get("")
+      : undefined;
+    await this.generatedPagePublisher.updateHomepage(indexMDX, apiOperation, {
+      ...(locale !== undefined ? { locale } : {}),
+      ...(alternateLanguages ? { alternateLanguages } : {}),
+    });
   }
 
   async updateSectionIndex(
-    sectionSlug: string,
+    routeSlug: string,
     frontmatter: Record<string, any>,
     mdxContent: string,
     sourcePath?: string,
+    options?: RenderVariantOptions,
   ): Promise<GeneratedPageCommit> {
     return this.generatedPagePublisher.updateSectionIndex(
-      sectionSlug,
+      routeSlug,
       frontmatter,
       mdxContent,
       sourcePath,
+      options,
     );
   }
 
@@ -901,6 +1047,7 @@ export default function SectionIndex() {
       this.sectionsConfig,
       async () => pages ?? (await this.buildAllPagesMeta()),
       () => this.loadSiteUrl(),
+      this.configuredVariants,
     );
   }
 
@@ -918,6 +1065,7 @@ export default function SectionIndex() {
       () =>
         loadSiteMetadata(() => this.projectConfigRepository.readConfigFile()),
       this.publicAssetManager,
+      this.configuredVariants,
     );
   }
 

@@ -1,5 +1,5 @@
 export const chatTemplate = `"use client";
-import React, { createContext, useMemo } from "react";
+import React, { createContext, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   ChatInput,
@@ -24,8 +24,16 @@ import { MDXRemote, MDXRemoteSerializeResult } from "next-mdx-remote";
 import { serialize } from "next-mdx-remote/serialize";
 import { Callout } from "@/components/layout/Callout";
 import { useMDXComponents as getMDXComponents } from "@/components/MDXComponents";
+import { useStrings } from "@/components/useStrings";
+import { useVariant } from "@/components/useVariant";
 
 const mdxComponents = getMDXComponents({});
+
+/** The language/version the reader is looking at; retrieval stays inside it. */
+interface ChatScope {
+  locale?: string;
+  version?: string;
+}
 
 type RagSource = {
   id: string;
@@ -58,11 +66,17 @@ function toSourceChip(src: RagSource): ChatSourceData {
 async function sendToAssistant(
   question: string,
   { signal, history, setAssistant }: ChatSendContext,
+  scope: ChatScope,
 ) {
   const res = await fetch("/api/rag", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question, history }),
+    body: JSON.stringify({
+      question,
+      history,
+      ...(scope.locale ? { locale: scope.locale } : {}),
+      ...(scope.version ? { version: scope.version } : {}),
+    }),
     signal,
   });
 
@@ -198,6 +212,7 @@ function ChatSourceLink({ source }: { source: ChatSourceData }) {
 function ChatTranscript() {
   const { messages, loading, error } = useChat();
   const lastMessage = messages[messages.length - 1];
+  const t = useStrings();
 
   return (
     <ChatMessageList>
@@ -223,11 +238,13 @@ function ChatTranscript() {
             )}
         </ChatMessage>
       ))}
-      {loading && lastMessage?.role !== "assistant" && <ChatTyping />}
+      {loading && lastMessage?.role !== "assistant" && (
+        <ChatTyping>{t.chatAnswering}</ChatTyping>
+      )}
       {error && (
         <Callout type="danger">
           <p>
-            <strong>Error:</strong> {error}
+            <strong>{t.chatError}</strong> {error}
           </p>
         </Callout>
       )}
@@ -237,23 +254,26 @@ function ChatTranscript() {
 
 function ChatActions() {
   const { reset } = useChat();
+  const t = useStrings();
 
   return (
-    <IconButton
-      onClick={reset}
-      aria-label="Reset chat history"
-      title="Reset chat history"
-    >
+    <IconButton onClick={reset} aria-label={t.resetChat} title={t.resetChat}>
       <RotateCcw />
     </IconButton>
   );
 }
 
 function Chat() {
+  const t = useStrings();
+
   return (
-    <ChatPanel $title="AI Assistant" $actions={<ChatActions />}>
+    <ChatPanel $title={t.aiAssistant} $actions={<ChatActions />}>
       <ChatTranscript />
-      <ChatInput $glow />
+      <ChatInput
+        $glow
+        placeholder={t.chatPlaceholder}
+        aria-label={t.chatInputLabel}
+      />
     </ChatPanel>
   );
 }
@@ -273,11 +293,19 @@ interface ChatContextProviderProps {
 
 const ChtProvider = ({ children, isChatActive }: ChatContextProviderProps) => {
   const value = useMemo(() => ({ isChatActive }), [isChatActive]);
+  const { locale, version } = useVariant();
+  const t = useStrings();
+  const onSend = useCallback(
+    (question: string, context: ChatSendContext) =>
+      sendToAssistant(question, context, { locale, version }),
+    [locale, version],
+  );
 
   return (
     <ChatContext.Provider value={value}>
       <ChatProvider
-        onSend={sendToAssistant}
+        onSend={onSend}
+        greeting={t.chatGreeting}
         shortcut={isChatActive ? "i" : null}
       >
         {children}

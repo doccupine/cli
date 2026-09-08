@@ -27,6 +27,8 @@ In the Files tab, you can:
 - **Rename** and **delete** existing files
 - **Upload** binary assets like images, favicons, and font files
 
+On a project with [languages](/platform/languages) or [versions](/platform/versions), a selector above the tree scopes it to one language and version at a time; the other variant folders stay out of view until you switch.
+
 Click any file to open it in the editor panel.
 
 ## Editing files

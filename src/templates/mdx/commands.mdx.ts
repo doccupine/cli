@@ -45,7 +45,7 @@ Doccupine marks its output directory with \`.doccupine-generated.json\` and reco
 
 ## Watch mode
 
-The default command watches MDX files, supported project-root JSON configuration, \`fonts.json\`, \`analytics.json\`, \`doccupine.json\`, public assets, and configured OpenAPI documents with their discovered local \`$ref\` files. Changes are processed serially. Once every watcher is ready, Doccupine compares the current sources with the versions used during initial generation and reconciles edits made while startup was still running.
+The default command watches MDX files, supported project-root JSON configuration (including \`languages.json\` and \`versions.json\`, which regenerate the whole site when they change and keep the previous configuration while the file is invalid), \`fonts.json\`, \`analytics.json\`, \`doccupine.json\`, public assets, and configured OpenAPI documents with their discovered local \`$ref\` files. Changes are processed serially. Once every watcher is ready, Doccupine compares the current sources with the versions used during initial generation and reconciles edits made while startup was still running.
 
 ## Route collisions and recovery
 
