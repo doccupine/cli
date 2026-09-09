@@ -41,7 +41,7 @@ Keep durable customizations in MDX, project-root JSON configuration, and \`publi
 
 Run \`npx doccupine\` to watch MDX, supported project-root configuration, public assets, and configured OpenAPI sources. Doccupine reconciles edits made during startup and keeps the last successful site when a watch refresh fails.
 
-Files such as \`theme.json\`, \`navigation.json\`, \`sections.json\`, \`fonts.json\`, and \`analytics.json\` update live. Within \`doccupine.json\`, the \`openapi\` field updates live, while \`watchDir\`, \`outputDir\`, \`port\`, and \`packageManager\` require a restart.
+Files such as \`theme.json\`, \`navigation.json\`, \`sections.json\`, \`languages.json\`, \`versions.json\`, \`fonts.json\`, and \`analytics.json\` update live. Within \`doccupine.json\`, the \`openapi\` field updates live, while \`watchDir\`, \`outputDir\`, \`port\`, and \`packageManager\` require a restart.
 
 ## AI-native
 

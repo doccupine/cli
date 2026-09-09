@@ -26,6 +26,8 @@ You'll find it under **Settings → AI** in the project sidebar.
 
 Uses the AI credit included with your plan. Nothing to configure - no API keys, no provider account.
 
+Page translation from the [Languages](/platform/languages) page uses the project's AI configuration like every other AI feature: this credit here, your own keys with custom models.
+
 | Plan       | Monthly Budget |
 | ---------- | -------------- |
 | Trial      | $5             |

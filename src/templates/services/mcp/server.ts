@@ -6,10 +6,14 @@ import {
 } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import {
+  listAllDocs,
   listDocs,
   getDoc,
   getAllDocsChunks,
+  matchesDocsFilter,
+  resolveDocsFilter,
   DOCS_TOOLS,
+  type DocsFilter,
 } from "@/services/mcp/tools";
 import { getLLMConfig, createEmbeddings } from "@/services/llm";
 import {
@@ -27,10 +31,18 @@ export const MCP_MAX_REQUEST_BYTES = 64 * 1024;
 export const MCP_MAX_TOOL_ARGUMENT_BYTES = 8 * 1024;
 export const MCP_MAX_RESULT_BYTES = 256 * 1024;
 
+// A language code or version slug is a lowercase URL segment.
+const variantTokenSchema = z
+  .string()
+  .regex(/^[a-z0-9-]{1,32}$/)
+  .optional();
+
 export const searchDocsArgsSchema = z
   .object({
     query: z.string().min(1).max(2000),
     limit: z.number().int().min(1).max(20).optional(),
+    language: variantTokenSchema,
+    version: variantTokenSchema,
   })
   .strict();
 
@@ -39,8 +51,20 @@ export const getDocArgsSchema = z
   .strict();
 
 export const listDocsArgsSchema = z
-  .object({ directory: z.string().max(500).optional() })
+  .object({
+    directory: z.string().max(500).optional(),
+    language: variantTokenSchema,
+    version: variantTokenSchema,
+  })
   .strict();
+
+/** The language/version fields of a doc or chunk, for tool results. */
+function variantFields(doc: { locale?: string; version?: string }) {
+  return {
+    ...(doc.locale !== undefined ? { language: doc.locale } : {}),
+    ...(doc.version !== undefined ? { version: doc.version } : {}),
+  };
+}
 
 export function serializeMCPResult(value: unknown): {
   text: string;
@@ -168,6 +192,8 @@ function loadPrecomputedIndex(): IndexedChunk[] | null {
         text: c.text,
         path: c.path,
         uri: c.uri,
+        ...(c.locale !== undefined ? { locale: c.locale } : {}),
+        ...(c.version !== undefined ? { version: c.version } : {}),
         embedding,
       });
     }
@@ -369,6 +395,7 @@ export async function searchDocs(
   query: string,
   limit = 6,
   signal?: AbortSignal,
+  filter: DocsFilter = resolveDocsFilter(),
 ): Promise<{ chunk: DocsChunk; score: number }[]> {
   await ensureDocsIndex(false, signal);
   throwIfCancelled(signal);
@@ -379,10 +406,13 @@ export async function searchDocs(
   const rawQueryVector = await embedQuery(query, signal);
   const queryVector = reduceDims(rawQueryVector, getLLMConfig().embeddingDims);
 
+  // One index holds every language and version; the filter keeps the answer
+  // inside the variant the reader is looking at.
   const scored = docsIndex.chunks
-    .map((c) => ({
-      chunk: { id: c.id, text: c.text, path: c.path, uri: c.uri },
-      score: cosineFloatInt8(queryVector, c.embedding),
+    .filter((c) => matchesDocsFilter(c, filter))
+    .map(({ embedding, ...chunk }) => ({
+      chunk,
+      score: cosineFloatInt8(queryVector, embedding),
     }))
     .sort((a, b) => b.score - a.score)
     .slice(0, normalizeSearchLimit(limit));
@@ -421,12 +451,18 @@ export function createMCPServer(): McpServer {
       description: DOCS_TOOLS[0].description,
       inputSchema: searchDocsArgsSchema,
     },
-    async ({ query, limit }, { signal }) => {
-      const results = await searchDocs(query, limit ?? 6, signal);
+    async ({ query, limit, language, version }, { signal }) => {
+      const results = await searchDocs(
+        query,
+        limit ?? 6,
+        signal,
+        resolveDocsFilter({ language, version }),
+      );
       return toolResult(
         results.map(({ chunk, score }) => ({
           path: chunk.path,
           uri: chunk.uri,
+          ...variantFields(chunk),
           score: score.toFixed(3),
           text: chunk.text,
         })),
@@ -459,15 +495,16 @@ export function createMCPServer(): McpServer {
       description: DOCS_TOOLS[2].description,
       inputSchema: listDocsArgsSchema,
     },
-    async ({ directory }, { signal }) => {
+    async ({ directory, language, version }, { signal }) => {
       signal.throwIfAborted();
-      const docs = await listDocs({ directory });
+      const docs = await listDocs({ directory, language, version });
       signal.throwIfAborted();
       return toolResult(
         docs.map((d) => ({
           name: d.name,
           path: d.path,
           uri: d.uri,
+          ...variantFields(d),
         })),
       );
     },
@@ -484,14 +521,21 @@ export function createMCPServer(): McpServer {
       mimeType: "application/json",
     },
     async () => {
-      const docs = await listDocs();
+      // The index lists every language and version; each entry carries its
+      // language/version so a client can pick the variant it wants to read.
+      const docs = await listAllDocs();
       return {
         contents: [
           {
             uri: "docs://list",
             mimeType: "application/json",
             text: resourceText(
-              docs.map((d) => ({ name: d.name, path: d.path, uri: d.uri })),
+              docs.map((d) => ({
+                name: d.name,
+                path: d.path,
+                uri: d.uri,
+                ...variantFields(d),
+              })),
             ),
           },
         ],

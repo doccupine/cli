@@ -39,6 +39,13 @@ export class AppScaffolder {
     analyticsConfig: AnalyticsConfig | null,
     callbacks: AppStructureCallbacks,
   ): Promise<void> {
+    // Render the layouts before touching the output: both read the docs
+    // sources and abort on a broken project (route collision, misplaced
+    // language folder), and a promise created eagerly here would reject as
+    // unhandled while the loop below is still writing earlier files.
+    const rootLayout = await callbacks.generateRootLayout();
+    const siteLayout = await callbacks.generateSiteLayout();
+
     // Everything under app/ is generated, so clear stale routes before writing
     // the current structure. Other generated directories remain untouched.
     await fs.remove(this.outputPath("app"));
@@ -47,7 +54,7 @@ export class AppScaffolder {
       obsoleteFiles.map((file) => fs.remove(this.outputPath(file))),
     );
 
-    const structure: Record<string, string | Promise<string>> = {
+    const structure: Record<string, string> = {
       ...appStructure,
       "next.config.ts": nextConfigTemplate(analyticsConfig),
       "pnpm-workspace.yaml": pnpmWorkspaceTemplate,
@@ -55,19 +62,21 @@ export class AppScaffolder {
       "analytics.json": `{}\n`,
       "config.json": `{}\n`,
       "icons.json": `{}\n`,
+      "languages.json": `[]\n`,
       "links.json": `[]\n`,
       "navigation.json": `[]\n`,
       "sections.json": `[]\n`,
       "theme.json": `{}\n`,
+      "versions.json": `[]\n`,
       "app/robots.ts": robotsTemplate,
-      "app/layout.tsx": callbacks.generateRootLayout(),
-      "app/(site)/layout.tsx": callbacks.generateSiteLayout(),
+      "app/layout.tsx": rootLayout,
+      "app/(site)/layout.tsx": siteLayout,
     };
 
     for (const [filePath, content] of Object.entries(structure)) {
       const fullPath = this.outputPath(filePath);
       await fs.ensureDir(path.dirname(fullPath));
-      await writeFileAtomic(fullPath, String(await content));
+      await writeFileAtomic(fullPath, content);
     }
 
     await callbacks.updateSitemap();

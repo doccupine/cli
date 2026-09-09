@@ -15,7 +15,9 @@ import { useChat } from "cherry-styled-components";
 import { mq, Theme } from "@/app/theme";
 import { interactiveStyles } from "@/components/layout/SharedStyled";
 import { ChatContext } from "@/components/Chat";
+import { useVariant } from "@/components/useVariant";
 import type { PageItem, MergedResult } from "@/components/SearchModalContent";
+import { pageVariantPrefix } from "@/utils/variants";
 
 const SearchModalContent = dynamic(
   () =>
@@ -92,7 +94,7 @@ const StyledSearchButton = styled.button<{ theme: Theme }>\`
 \`;
 
 function SearchProvider({
-  pages,
+  pages: allPages,
   sections,
   children,
 }: {
@@ -100,6 +102,13 @@ function SearchProvider({
   sections?: SectionItem[];
   children: React.ReactNode;
 }) {
+  // Search stays inside the current language and version: the title matches
+  // below and the content search on the server both see this scope only.
+  const variant = useVariant();
+  const pages = useMemo(
+    () => allPages.filter((page) => pageVariantPrefix(page) === variant.prefix),
+    [allPages, variant.prefix],
+  );
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [query, setQuery] = useState("");
@@ -262,12 +271,17 @@ function SearchProvider({
     const q = query.trim();
     if (q.length < 2) return;
 
+    const scope = [
+      variant.locale ? "&locale=" + encodeURIComponent(variant.locale) : "",
+      variant.version ? "&version=" + encodeURIComponent(variant.version) : "",
+    ].join("");
+
     debounceRef.current = setTimeout(async () => {
       const controller = new AbortController();
       abortRef.current = controller;
       try {
         const res = await fetch(
-          \`/api/search?q=\${encodeURIComponent(q)}&limit=15\`,
+          \`/api/search?q=\${encodeURIComponent(q)}&limit=15\${scope}\`,
           { signal: controller.signal },
         );
         if (!res.ok) throw new Error("Search failed");
@@ -282,7 +296,7 @@ function SearchProvider({
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [query]);
+  }, [query, variant.locale, variant.version]);
 
   const navigate = useCallback(
     (

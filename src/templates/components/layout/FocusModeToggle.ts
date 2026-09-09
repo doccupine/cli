@@ -2,6 +2,7 @@ export const focusModeToggleTemplate = `"use client";
 import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { resetButton } from "cherry-styled-components";
+import { useStrings } from "@/components/useStrings";
 import { Icon } from "@/components/layout/Icon";
 import { mq, Theme } from "@/app/theme";
 import { interactiveStyles } from "@/components/layout/SharedStyled";
@@ -23,8 +24,9 @@ const StyledFocusToggle = styled.button<{ theme: Theme }>\`
     /* Above the sidebar (99) so it stays clickable once the rails are out,
        below the chat panel (1000). */
     z-index: 100;
-    /* Sidebar footer row, flush with the footer's left padding (the
-       ThemeToggle holds the right end of the same row). */
+    /* Left end of the sidebar footer row, flush with the footer's left
+       padding; the switchers follow and the ThemeToggle holds the right end,
+       all of them 30px tall. */
     left: 20px;
     bottom: 16px;
     width: 30px;
@@ -51,6 +53,7 @@ const StyledFocusToggle = styled.button<{ theme: Theme }>\`
 function FocusModeToggle() {
   const [isFocusMode, setIsFocusMode] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const t = useStrings();
 
   // Cmd/Ctrl+B, the editor convention for collapsing the side columns. Sits
   // alongside the app's other chords (Cmd+K search, Cmd+I chat,
@@ -91,8 +94,8 @@ function FocusModeToggle() {
       type="button"
       onClick={() => setIsFocusMode((value) => !value)}
       aria-pressed={isFocusMode}
-      aria-label={isFocusMode ? "Exit focus mode" : "Enter focus mode"}
-      title={isFocusMode ? "Exit focus mode (⌘B)" : "Focus mode (⌘B)"}
+      aria-label={isFocusMode ? t.exitFocusMode : t.enterFocusMode}
+      title={(isFocusMode ? t.exitFocusMode : t.focusMode) + " (⌘B)"}
     >
       <Icon name={isFocusMode ? "minimize" : "maximize"} size={16} />
     </StyledFocusToggle>

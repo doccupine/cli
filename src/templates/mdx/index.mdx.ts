@@ -46,5 +46,7 @@ Doccupine works with no configuration, but when you're ready to customize, every
 - [Navigation](/navigation) - Override the auto-generated sidebar with \`navigation.json\`
 - [Theme](/theme) - Colors, logos, and dark mode palette via \`theme.json\`
 - [Fonts](/fonts) - Google Fonts or local font files via \`fonts.json\`
+- [Languages](/languages) - Translate your docs, one folder per language, via \`languages.json\`
+- [Versions](/versions) - Keep older releases online, one folder per version, via \`versions.json\`
 - [AI Assistant](/ai-assistant) - Enable the built-in chat with your own API key
 - [MCP Server](/model-context-protocol) - Let AI tools search your docs through \`/api/mcp\``;

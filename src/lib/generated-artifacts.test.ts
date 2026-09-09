@@ -48,6 +48,43 @@ describe("GeneratedArtifacts", () => {
     expect(reloaded.llmsPageFiles()).toEqual(new Set(["api/guide.md"]));
     expect(reloaded.publicFiles()).toEqual(new Set(["images/logo.png"]));
     expect(reloaded.iconFiles()).toEqual(new Set(["icon.png"]));
+    // A site without languages or versions never records variant aggregates,
+    // and the manifest omits the key so its shape is unchanged.
+    expect(reloaded.llmsVariantFiles()).toEqual(new Set());
+    const manifest = JSON.parse(
+      await fs.readFile(
+        path.join(outputDir, ".doccupine-artifacts.json"),
+        "utf8",
+      ),
+    ) as Record<string, unknown>;
+    expect(manifest).not.toHaveProperty("llmsVariantFiles");
+  });
+
+  it("persists per-variant llms aggregates and refuses unsafe ones", async () => {
+    const outputDir = await temporaryDirectory();
+    const artifacts = new GeneratedArtifacts(outputDir);
+    artifacts.replaceLlmsVariantFiles([
+      "de/llms.txt",
+      "de/v1/llms-full.txt",
+      "v1/llms.txt",
+    ]);
+    await artifacts.save();
+
+    const reloaded = new GeneratedArtifacts(outputDir);
+    await reloaded.load();
+
+    expect(reloaded.llmsVariantFiles()).toEqual(
+      new Set(["de/llms.txt", "de/v1/llms-full.txt", "v1/llms.txt"]),
+    );
+    expect(() => artifacts.replaceLlmsVariantFiles(["llms.txt"])).toThrow(
+      "unsafe llms variant path",
+    );
+    expect(() => artifacts.replaceLlmsVariantFiles(["../de/llms.txt"])).toThrow(
+      "unsafe llms variant path",
+    );
+    expect(() => artifacts.replaceLlmsVariantFiles(["de/guide.md"])).toThrow(
+      "unsafe llms variant path",
+    );
   });
 
   it("keeps live route ownership unchanged when persistence fails", async () => {

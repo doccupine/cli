@@ -98,6 +98,8 @@ Each part maps to something in the playground: \`servers\` sets the request targ
 
 The generated \`/api-reference\` index lists every operation with a direct link, grouped by API and tag. Each operation also gets its own page under \`/api-reference/{tag}/{operation}\`, showing:
 
+On a site with [languages](/languages) or [versions](/versions), the API reference is generated for the default language and version only, and its section tab is hidden under every other prefix. Hand-written pages inside a language or version folder are unaffected.
+
 <Callout type="note">
   A hand-written MDX page takes precedence when it resolves to the same route as a generated OpenAPI page. Moving or deleting that MDX source returns the route to OpenAPI on the next successful refresh.
 </Callout>

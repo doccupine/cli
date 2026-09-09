@@ -7,6 +7,49 @@ import type {
   GetDocParams,
   ListDocsParams,
 } from "@/services/mcp/types";
+import {
+  defaultLanguage,
+  isVariantsConfigured,
+  languages,
+  versions,
+} from "@/utils/variants";
+
+/** The language/version a docs query is scoped to. Empty when the site has
+ *  neither configured, so every page matches. */
+export interface DocsFilter {
+  locale?: string;
+  version?: string;
+}
+
+/**
+ * Resolve the scope of a docs query: the requested language and version, or
+ * the site's default language / default version when a request names none.
+ * A language or version the site does not declare matches nothing.
+ */
+export function resolveDocsFilter(params?: {
+  language?: string;
+  version?: string;
+}): DocsFilter {
+  if (!isVariantsConfigured()) return {};
+  const filter: DocsFilter = {};
+  if (languages) {
+    filter.locale = params?.language ?? defaultLanguage()?.code ?? "";
+  }
+  if (versions) {
+    filter.version = params?.version ?? "";
+  }
+  return filter;
+}
+
+export function matchesDocsFilter(
+  doc: { locale?: string; version?: string },
+  filter: DocsFilter,
+): boolean {
+  return (
+    (filter.locale === undefined || doc.locale === filter.locale) &&
+    (filter.version === undefined || doc.version === filter.version)
+  );
+}
 
 // Keep the corpus out of the function's JavaScript bundle. next.config.ts
 // traces this fixed file into the RAG/MCP functions, just like docs-index.json.
@@ -63,6 +106,16 @@ export const DOCS_TOOLS: MCPToolDefinition[] = [
           type: "number",
           description: "Maximum number of results to return (default: 6)",
         },
+        language: {
+          type: "string",
+          description:
+            "Language code to search (e.g. 'de'); defaults to the site's default language",
+        },
+        version: {
+          type: "string",
+          description:
+            "Documentation version slug to search (e.g. 'v1'); defaults to the current version",
+        },
       },
       required: ["query"],
     },
@@ -95,23 +148,43 @@ export const DOCS_TOOLS: MCPToolDefinition[] = [
           description:
             "Optional directory to filter results (e.g., 'components')",
         },
+        language: {
+          type: "string",
+          description:
+            "Language code to list (e.g. 'de'); defaults to the site's default language",
+        },
+        version: {
+          type: "string",
+          description:
+            "Documentation version slug to list (e.g. 'v1'); defaults to the current version",
+        },
       },
     },
   },
 ];
 
 /**
- * List all documentation resources
+ * Every documentation resource in every language and version. Indexes are
+ * built from this and filtered at query time.
+ */
+export async function listAllDocs(): Promise<DocsResource[]> {
+  return loadDocsContent().map((doc) => ({ ...doc }));
+}
+
+/**
+ * List the documentation resources of one language/version (the default
+ * variant unless the params name another), optionally under a directory.
  */
 export async function listDocs(
   params?: ListDocsParams,
 ): Promise<DocsResource[]> {
   const docsContent = loadDocsContent();
   const filterDir = params?.directory?.replace(/\\\\/g, "/");
-  const resources = filterDir
-    ? docsContent.filter((doc) => doc.path.includes(filterDir))
-    : docsContent;
-  return resources.map((doc) => ({ ...doc }));
+  const filter = resolveDocsFilter(params);
+  return docsContent
+    .filter((doc) => matchesDocsFilter(doc, filter))
+    .filter((doc) => !filterDir || doc.path.includes(filterDir))
+    .map((doc) => ({ ...doc }));
 }
 
 /**
@@ -167,7 +240,7 @@ function chunkText(text: string, chunkSize = 800, overlap = 100): string[] {
  */
 export async function getAllDocsChunks(): Promise<DocsChunk[]> {
   const allChunks: DocsChunk[] = [];
-  const docs = await listDocs();
+  const docs = await listAllDocs();
 
   for (const doc of docs) {
     const cleanContent = doc.content
@@ -182,6 +255,8 @@ export async function getAllDocsChunks(): Promise<DocsChunk[]> {
         text: textChunks[i],
         path: doc.path,
         uri: doc.uri,
+        ...(doc.locale !== undefined ? { locale: doc.locale } : {}),
+        ...(doc.version !== undefined ? { version: doc.version } : {}),
       });
     }
   }

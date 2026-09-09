@@ -3,6 +3,10 @@ export const mcpTypesTemplate = `export interface DocsResource {
   name: string;
   path: string;
   content: string;
+  /** Language code and version slug; present only on sites that configure
+   *  languages.json / versions.json. */
+  locale?: string;
+  version?: string;
 }
 
 export interface DocsChunk {
@@ -10,6 +14,8 @@ export interface DocsChunk {
   text: string;
   path: string;
   uri: string;
+  locale?: string;
+  version?: string;
 }
 
 export interface GetDocParams {
@@ -18,6 +24,10 @@ export interface GetDocParams {
 
 export interface ListDocsParams {
   directory?: string;
+  /** Language code and version slug to list; each defaults to the site's
+   *  default language / version when the site configures them. */
+  language?: string;
+  version?: string;
 }
 
 export type MCPToolName = "search_docs" | "get_doc" | "list_docs";

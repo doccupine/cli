@@ -12,6 +12,7 @@ import {
   searchDocsArgsSchema,
   getDocArgsSchema,
   listDocsArgsSchema,
+  resolveDocsFilter,
   serializeMCPResult,
 } from "@/services/mcp";
 import type { MCPToolName } from "@/services/mcp";
@@ -159,11 +160,17 @@ async function handleRESTRequest(req: Request, body: ToolCallRequest) {
           parsed.data.query,
           parsed.data.limit ?? 6,
           req.signal,
+          resolveDocsFilter({
+            language: parsed.data.language,
+            version: parsed.data.version,
+          }),
         );
         return toolResponse({
           content: results.map(({ chunk, score }) => ({
             path: chunk.path,
             uri: chunk.uri,
+            ...(chunk.locale !== undefined ? { language: chunk.locale } : {}),
+            ...(chunk.version !== undefined ? { version: chunk.version } : {}),
             score: score.toFixed(3),
             text: chunk.text,
           })),
@@ -199,13 +206,19 @@ async function handleRESTRequest(req: Request, body: ToolCallRequest) {
           );
         }
         req.signal.throwIfAborted();
-        const docs = await listDocs({ directory: parsed.data.directory });
+        const docs = await listDocs({
+          directory: parsed.data.directory,
+          language: parsed.data.language,
+          version: parsed.data.version,
+        });
         req.signal.throwIfAborted();
         return toolResponse({
           content: docs.map((doc) => ({
             name: doc.name,
             path: doc.path,
             uri: doc.uri,
+            ...(doc.locale !== undefined ? { language: doc.locale } : {}),
+            ...(doc.version !== undefined ? { version: doc.version } : {}),
           })),
         });
       }

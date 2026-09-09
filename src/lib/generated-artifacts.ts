@@ -18,6 +18,9 @@ interface ArtifactManifest {
   llmsPageFiles: string[];
   publicFiles: string[];
   iconFiles: string[];
+  /** Per-language/version `llms.txt` and `llms-full.txt` aggregates
+   *  (`de/llms.txt`); present only when a site configures variants. */
+  llmsVariantFiles?: string[];
 }
 
 const MANIFEST_FILE = ".doccupine-artifacts.json";
@@ -64,9 +67,18 @@ function normalizePublicFile(value: unknown): string | null {
   return typeof value === "string" ? normalizeRelativePath(value) : null;
 }
 
+function normalizeLlmsVariantFile(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const normalized = normalizeRelativePath(value);
+  return normalized && /^(?:[a-z0-9-]+\/)+llms(?:-full)?\.txt$/.test(normalized)
+    ? normalized
+    : null;
+}
+
 export class GeneratedArtifacts {
   private routes = new Map<string, RouteArtifact>();
   private llmsFiles = new Set<string>();
+  private llmsVariantFilePaths = new Set<string>();
   private publicFilePaths = new Set<string>();
   private iconFilePaths = new Set<string>();
 
@@ -83,6 +95,7 @@ export class GeneratedArtifacts {
   async load(): Promise<void> {
     this.routes.clear();
     this.llmsFiles.clear();
+    this.llmsVariantFilePaths.clear();
     this.publicFilePaths.clear();
     this.iconFilePaths.clear();
 
@@ -95,6 +108,7 @@ export class GeneratedArtifacts {
         const parsed = JSON.parse(manifestContent) as {
           routes?: unknown;
           llmsPageFiles?: unknown;
+          llmsVariantFiles?: unknown;
           publicFiles?: unknown;
           iconFiles?: unknown;
         };
@@ -109,6 +123,12 @@ export class GeneratedArtifacts {
           for (const value of parsed.llmsPageFiles) {
             const file = normalizeLlmsPageFile(value);
             if (file) this.llmsFiles.add(file);
+          }
+        }
+        if (Array.isArray(parsed.llmsVariantFiles)) {
+          for (const value of parsed.llmsVariantFiles) {
+            const file = normalizeLlmsVariantFile(value);
+            if (file) this.llmsVariantFilePaths.add(file);
           }
         }
         if (Array.isArray(parsed.publicFiles)) {
@@ -226,6 +246,22 @@ export class GeneratedArtifacts {
     this.llmsFiles = next;
   }
 
+  llmsVariantFiles(): Set<string> {
+    return new Set(this.llmsVariantFilePaths);
+  }
+
+  replaceLlmsVariantFiles(files: Iterable<string>): void {
+    const next = new Set<string>();
+    for (const value of files) {
+      const file = normalizeLlmsVariantFile(value);
+      if (!file) {
+        throw new Error("Refusing to record an unsafe llms variant path");
+      }
+      next.add(file);
+    }
+    this.llmsVariantFilePaths = next;
+  }
+
   publicFiles(): Set<string> {
     return new Set(this.publicFilePaths);
   }
@@ -265,6 +301,11 @@ export class GeneratedArtifacts {
       llmsPageFiles: [...this.llmsFiles].sort(),
       publicFiles: [...this.publicFilePaths].sort(),
       iconFiles: [...this.iconFilePaths].sort(),
+      // Emitted only when a site has variant aggregates, so the manifest of
+      // every other site keeps its exact shape.
+      ...(this.llmsVariantFilePaths.size > 0
+        ? { llmsVariantFiles: [...this.llmsVariantFilePaths].sort() }
+        : {}),
     };
     await writeFileAtomic(
       this.manifestPath(MANIFEST_FILE),

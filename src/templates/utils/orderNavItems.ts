@@ -11,6 +11,8 @@ export const orderNavItemsTemplate = `export interface PagesProps {
   navIcon?: string;
   categoryIcon?: string;
   httpMethod?: string;
+  locale?: string;
+  version?: string;
 }
 
 interface AccProps {

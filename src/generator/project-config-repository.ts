@@ -11,16 +11,24 @@ import {
 import type {
   AnalyticsConfig,
   FontConfig,
+  LanguageConfig,
   SectionConfig,
+  VersionConfig,
 } from "../lib/types.js";
 import { writeFileAtomic } from "../lib/utils.js";
+import {
+  validateLanguagesConfig,
+  validateVersionsConfig,
+} from "../lib/variants.js";
 import { SecureSourceFs } from "./secure-source-fs.js";
 import { validateSectionsConfig } from "./section-resolver.js";
 
 const ARRAY_CONFIG_DEFAULTS = new Set([
+  "languages.json",
   "links.json",
   "navigation.json",
   "sections.json",
+  "versions.json",
 ]);
 
 interface SourceSnapshotEntry {
@@ -283,5 +291,37 @@ export class ProjectConfigRepository {
     }
 
     return null;
+  }
+
+  // Unlike sections.json, an invalid languages.json or versions.json is an
+  // error rather than a warning: silently ignoring it would publish every
+  // variant folder as ordinary pages at the same URLs, without the switchers,
+  // scoping, or hreflang the author expects.
+  private async loadVariantConfig<T>(
+    fileName: string,
+    validate: (parsed: unknown) => T | null,
+  ): Promise<T | null> {
+    const content = await this.readOptionalRootSourceFile(
+      fileName,
+      "variant source",
+    );
+    if (content === null) return null;
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(content);
+    } catch (error) {
+      throw new Error(
+        `${fileName} is not valid JSON: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+    return validate(parsed);
+  }
+
+  async loadLanguagesConfig(): Promise<LanguageConfig[] | null> {
+    return this.loadVariantConfig("languages.json", validateLanguagesConfig);
+  }
+
+  async loadVersionsConfig(): Promise<VersionConfig[] | null> {
+    return this.loadVariantConfig("versions.json", validateVersionsConfig);
   }
 }

@@ -417,7 +417,9 @@ describe("generated security boundaries", () => {
       ragRoutesTemplate.indexOf("await ensureDocsIndex(false, signal)"),
     );
     expect(ragAuthorization).toBeLessThan(
-      ragRoutesTemplate.indexOf("await searchDocs(question, 6, signal)"),
+      ragRoutesTemplate.indexOf(
+        "await searchDocs(question, 6, signal, docsFilter)",
+      ),
     );
 
     const mcpPost = mcpRoutesTemplate.indexOf(
@@ -461,7 +463,11 @@ describe("generated security boundaries", () => {
     // defaults to 20 entries capped at 4000 chars each, matching the RAG
     // contract), so the template must pass the provider's history through
     // untouched rather than rebuilding its own.
-    expect(chatTemplate).toContain("JSON.stringify({ question, history })");
+    // The language/version scope is the only addition to that body.
+    expect(chatTemplate).toMatch(
+      /JSON\.stringify\(\{\s*question,\s*history,\s*\.\.\.\(scope\.locale/,
+    );
+    expect(chatTemplate).not.toContain("history.slice(");
     expect(ragRoutesTemplate).toContain(
       "history: z.array(messageSchema).max(20).optional()",
     );
@@ -499,6 +505,27 @@ describe("generated security boundaries", () => {
     expect(mcpServerTemplate).toContain(
       "limit: z.number().int().min(1).max(20).optional()",
     );
+  });
+
+  it("validates language and version scopes as lowercase URL segments", () => {
+    // A scope reaches a file-derived filter and the MCP result, so each route
+    // constrains it to the token shape the CLI accepts in languages.json /
+    // versions.json before anything reads it.
+    for (const template of [
+      searchRoutesTemplate,
+      ragRoutesTemplate,
+      mcpServerTemplate,
+    ]) {
+      expect(template).toContain(".regex(/^[a-z0-9-]{1,32}$/)");
+    }
+    expect(searchRoutesTemplate).toContain("locale: variantTokenSchema");
+    expect(searchRoutesTemplate).toContain("version: variantTokenSchema");
+    expect(ragRoutesTemplate).toContain("locale: variantTokenSchema");
+    expect(ragRoutesTemplate).toContain("version: variantTokenSchema");
+    expect(mcpServerTemplate).toContain("language: variantTokenSchema");
+    expect(mcpServerTemplate).toContain("version: variantTokenSchema");
+    expect(mcpToolsTemplate).toContain("export function matchesDocsFilter");
+    expect(mcpToolsTemplate).toContain("export function resolveDocsFilter");
   });
 
   it("allows at most one protocol tool call while retaining non-tool batches", () => {
@@ -581,7 +608,9 @@ describe("generated security boundaries", () => {
       'req.signal.addEventListener("abort", abortWork',
     );
     expect(ragRoutesTemplate).toContain("ensureDocsIndex(false, signal)");
-    expect(ragRoutesTemplate).toContain("searchDocs(question, 6, signal)");
+    expect(ragRoutesTemplate).toContain(
+      "searchDocs(question, 6, signal, docsFilter)",
+    );
     expect(ragRoutesTemplate).toContain("llm.stream(prompt, { signal })");
     expect(ragRoutesTemplate).toContain("if (signal.aborted) return");
     expect(mcpServerTemplate).toContain("signal?: AbortSignal");

@@ -2,6 +2,7 @@ import { SIDEBAR_WIDTH, CHAT_WIDTH } from "../../app/theme.js";
 
 export const docsNavigationTemplate = `"use client";
 import { usePathname } from "next/navigation";
+import { useStrings } from "@/components/useStrings";
 import Link from "next/link";
 import styled, { css } from "styled-components";
 import { useChat } from "cherry-styled-components";
@@ -119,6 +120,7 @@ interface DocsNavigationProps {
 function DocsNavigation({ result }: DocsNavigationProps) {
   const { isOpen } = useChat();
   const pathname = usePathname();
+  const t = useStrings();
   // Walk categories and any nested link groups depth-first so prev/next spans
   // every real page (a node with a slug), in reading order.
   const collectPages = (nodes: unknown): Page[] => {
@@ -160,7 +162,7 @@ function DocsNavigation({ result }: DocsNavigationProps) {
           <StyledNavButton href={\`/\${prevPage.slug}\`} data-direction="prev">
             <StyledNavTitle>{prevPage.title}</StyledNavTitle>
             <StyledNavLabel>
-              <Icon name="arrow-left" size={16} /> Previous
+              <Icon name="arrow-left" size={16} /> {t.previous}
             </StyledNavLabel>
           </StyledNavButton>
         ) : (
@@ -170,7 +172,7 @@ function DocsNavigation({ result }: DocsNavigationProps) {
           <StyledNavButton href={\`/\${nextPage.slug}\`} data-direction="next">
             <StyledNavTitle>{nextPage.title}</StyledNavTitle>
             <StyledNavLabel>
-              Next <Icon name="arrow-right" size={16} />
+              {t.next} <Icon name="arrow-right" size={16} />
             </StyledNavLabel>
           </StyledNavButton>
         )}

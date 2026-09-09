@@ -22,6 +22,8 @@ import {
   stylesLists,
 } from "@/components/layout/SharedStyled";
 import { Badge } from "@/components/layout/Badge";
+import { useVariant } from "@/components/useVariant";
+import { joinVariantSlug } from "@/utils/variants";
 
 const SectionBarContext = createContext(false);
 
@@ -203,7 +205,14 @@ export const StyledSidebar = styled.nav<Props>\`
   }
 \`;
 
+// One row of 30px controls: the focus-mode toggle, the language and version
+// switchers, then the theme toggle. The focus toggle is fixed rather than a
+// child (it outlives the sidebar in focus mode), so on the rail the row's own
+// padding leaves its 30px plus a gap free at the left.
 export const StyledSidebarFooter = styled.div\`
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 22px 20px;
   position: sticky;
   border-top: 1px solid \${({ theme }) => theme.colors.grayLight};
@@ -215,7 +224,25 @@ export const StyledSidebarFooter = styled.div\`
   bottom: -20px;
 
   \${mq("lg")} {
-    padding: 16px 20px;
+    padding: 16px 20px 16px 58px;
+  }
+\`;
+
+// The theme toggle's slot takes whatever the switchers leave, so the toggle
+// stays beside them in the mobile menu and holds the right end of the rail.
+// A plain flex row rather than Cherry's Flex: the slot has to grow, which is a
+// property of the child, and styled(Flex) would swallow Flex's own $-prefixed
+// props on the way through.
+export const StyledSidebarFooterToggle = styled.div\`
+  display: flex;
+  flex: 1;
+  justify-content: flex-start;
+
+  /* On the rail the switchers claim the free width when both are configured,
+     so the toggle keeps its own size and is pushed to the right end. */
+  \${mq("lg")} {
+    flex: 0 0 auto;
+    margin-left: auto;
   }
 \`;
 
@@ -597,11 +624,15 @@ const StyledLlmsDirective = styled.div\`
 \`;
 
 function LlmsDirective() {
+  // Every language and version has its own llms.txt under its URL prefix.
+  const { prefix } = useVariant();
+  const indexHref = "/" + joinVariantSlug(prefix, "llms.txt");
+  const fullHref = "/" + joinVariantSlug(prefix, "llms-full.txt");
   return (
     <StyledLlmsDirective data-markdown-ignore>
-      <a href="/llms.txt">Documentation index for AI agents (llms.txt)</a>.
+      <a href={indexHref}>Documentation index for AI agents (llms.txt)</a>.
       Markdown versions of every page are available by appending .md to the page
-      URL. The full corpus is at <a href="/llms-full.txt">/llms-full.txt</a>.
+      URL. The full corpus is at <a href={fullHref}>{fullHref}</a>.
     </StyledLlmsDirective>
   );
 }
@@ -618,11 +649,13 @@ function DocsSidebar({ children }: DocsProps) {
   return <StyledDocsSidebar>{children}</StyledDocsSidebar>;
 }
 
-function DocsContainer({ children }: DocsProps) {
+function DocsContainer({ children, lang }: DocsProps & { lang?: string }) {
   const { isOpen } = useChat();
 
   return (
-    <StyledDocsContainer $isChatOpen={isOpen}>{children}</StyledDocsContainer>
+    <StyledDocsContainer $isChatOpen={isOpen} lang={lang}>
+      {children}
+    </StyledDocsContainer>
   );
 }
 

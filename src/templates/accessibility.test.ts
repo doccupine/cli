@@ -9,6 +9,8 @@ import { sideBarTemplate } from "./components/SideBar.js";
 import { accordionTemplate } from "./components/layout/Accordion.js";
 import { docsComponentsTemplate } from "./components/layout/DocsComponents.js";
 import { tabsTemplate } from "./components/layout/Tabs.js";
+import { variantSwitchersTemplate } from "./components/layout/VariantSwitchers.js";
+import { dropdownTemplate } from "./components/layout/Dropdown.js";
 import { eslintConfigTemplate } from "./eslint.config.js";
 
 describe("generated accessibility behavior", () => {
@@ -77,8 +79,8 @@ describe("generated accessibility behavior", () => {
       "<ChatPanel",
       "<ChatMessageList>",
       "<ChatMessage",
-      "<ChatInput $glow />",
-      "<ChatTyping />",
+      "<ChatInput",
+      "<ChatTyping>",
       "ChatProvider",
     ]) {
       expect(chatTemplate).toContain(component);
@@ -137,6 +139,41 @@ describe("generated accessibility behavior", () => {
     expect(sideBarTemplate).toContain("id={groupContentId}");
     expect(sideBarTemplate).toContain("aria-controls={sidebarId}");
     expect(sideBarTemplate).toContain("id={sidebarId}");
+  });
+
+  it("gives the language and version switchers real controls", () => {
+    // Buttons, not a select: each switcher is the platform's dropdown, a
+    // disclosure trigger over a labelled radio menu, so both are reachable
+    // and announced from the keyboard.
+    expect(variantSwitchersTemplate).not.toContain("<Select");
+    expect(variantSwitchersTemplate).toContain(
+      'from "@/components/layout/Dropdown"',
+    );
+    expect(variantSwitchersTemplate).toContain('role="menu"');
+    expect(variantSwitchersTemplate).toContain('role="menuitemradio"');
+    expect(variantSwitchersTemplate).toContain(
+      "aria-checked={option.value === value}",
+    );
+    expect(dropdownTemplate).toContain("aria-haspopup={role}");
+    expect(dropdownTemplate).toContain(
+      "aria-expanded={role ? isOpen && !isClosing : undefined}",
+    );
+    expect(dropdownTemplate).toContain(
+      "aria-controls={role ? menuId : undefined}",
+    );
+    expect(dropdownTemplate).toContain("id={role ? menuId : undefined}");
+    expect(dropdownTemplate).toContain("aria-label={role ? label : undefined}");
+    for (const key of ["Escape", "ArrowDown", "ArrowUp"]) {
+      expect(dropdownTemplate).toContain(key);
+    }
+    // Focus lands on the current entry, and the ring is drawn inset so the
+    // menu's overflow clipping cannot hide it.
+    expect(dropdownTemplate).toContain('[aria-checked="true"]');
+    expect(dropdownTemplate).toContain("&:focus-visible");
+    expect(dropdownTemplate).toContain("box-shadow: inset 0 0 0 2px");
+    // Every button in the sidebar footer is decorated with an accessible
+    // name, so the glyphs beside them stay decorative.
+    expect(variantSwitchersTemplate).toContain('aria-hidden="true"');
   });
 
   it("resets inherited Cherry heights on compact custom controls", () => {

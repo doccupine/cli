@@ -51,6 +51,8 @@ A run commits itself only when every page it wrote is set to auto-update and unt
   An empty result is a valid answer. If the docs already describe the code accurately, the agent will say so rather than rewriting pages for the sake of it.
 </Callout>
 
+On a site with [languages](/platform/languages), the agent writes and rewrites pages in the default language. Translate them afterwards from the Languages page or with **Translate to** in the editor.
+
 ## Linking pages to sources
 
 A page needs at least one source link before drift can be detected. There are three ways to create them:

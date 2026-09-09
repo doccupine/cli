@@ -1,6 +1,7 @@
 export const actionBarTemplate = `"use client";
 import { useContext, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useStrings } from "@/components/useStrings";
 import styled, { css } from "styled-components";
 import { Icon } from "@/components/layout/Icon";
 import { mq, Theme } from "@/app/theme";
@@ -195,6 +196,7 @@ function ActionBar({ children, content, rssHref }: ActionBarProps) {
   const [copied, setCopied] = useState(false);
   const hasSectionBar = useContext(SectionBarContext);
   const pathname = usePathname();
+  const t = useStrings();
 
   const handleCopyContent = async () => {
     try {
@@ -214,33 +216,33 @@ function ActionBar({ children, content, rssHref }: ActionBarProps) {
             {copied ? (
               <>
                 <Icon name="check" size={16} />
-                Copied!
+                {t.copied}
               </>
             ) : (
               <>
                 <Icon name="copy" size={16} />
-                Copy content
+                {t.copyContent}
               </>
             )}
           </StyledCopyButton>
           {rssHref && (
-            <StyledRssLink as="a" href={rssHref} aria-label="RSS feed">
+            <StyledRssLink as="a" href={rssHref} aria-label={t.rssFeed}>
               <Icon name="rss" size={16} />
-              RSS
+              {t.rss}
             </StyledRssLink>
           )}
         </StyledActionBarGroup>
         <StyledActionBarContent>
           <StyledMarkdownLink
             href={toMarkdownHref(pathname)}
-            aria-label="View as Markdown"
-            title="View as Markdown"
+            aria-label={t.viewAsMarkdown}
+            title={t.viewAsMarkdown}
           >
             <Icon name="FileText" />
           </StyledMarkdownLink>
           <StyledToggle
             onClick={() => setIsView(!isView)}
-            aria-label="Toggle View"
+            aria-label={t.toggleView}
             $isActive={isView}
           >
             <Icon name="Eye" />

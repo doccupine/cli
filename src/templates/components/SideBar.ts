@@ -1,7 +1,8 @@
 export const sideBarTemplate = `"use client";
 import { useContext, useEffect, useId, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Flex, Space, ThemeToggle } from "cherry-styled-components";
+import { useStrings } from "@/components/useStrings";
+import { Space, ThemeToggle } from "cherry-styled-components";
 import { httpMethodBadgeColor } from "@/components/layout/Badge";
 import {
   DocsSidebar,
@@ -18,12 +19,15 @@ import {
   StyledSidebarGroupChevron,
   StyledSidebarGroupContent,
   StyledSidebarFooter,
+  StyledSidebarFooterToggle,
   StyleMobileBar,
   StyledMobileBurger,
 } from "@/components/layout/DocsComponents";
 import { FocusModeToggle } from "@/components/layout/FocusModeToggle";
 import { Icon } from "@/components/layout/Icon";
+import { VariantSwitchers } from "@/components/layout/VariantSwitchers";
 import { useLockBodyScroll } from "@/components/LockBodyScroll";
+import type { PagesProps } from "@/utils/orderNavItems";
 
 // A link can be a leaf (slug + title) or a group with nested children. Both the
 // category icon and the per-link icon are optional Lucide names.
@@ -43,6 +47,10 @@ type NavItem = {
 
 interface SideBarProps {
   result: NavItem[];
+  /** Every page of the site. The language and version switchers in the footer
+      resolve the current page's counterpart from it; sites without
+      languages.json or versions.json never render them. */
+  pages?: PagesProps[];
 }
 
 function linkContainsActivePath(link: NavItemLink, pathname: string): boolean {
@@ -71,6 +79,7 @@ function SidebarNavLink({
   const isActive = href !== undefined && pathname === href;
   const indent = { paddingLeft: \`\${20 + depth * 14}px\` };
   const groupContentId = useId();
+  const t = useStrings();
 
   // Open collapsible groups that contain the active page so deep links land
   // with their ancestors already expanded.
@@ -108,9 +117,10 @@ function SidebarNavLink({
   }
 
   const toggle = () => setIsOpen((prev) => !prev);
-  const toggleLabel = isOpen
-    ? \`Collapse \${link.title}\`
-    : \`Expand \${link.title}\`;
+  const toggleLabel = (isOpen ? t.collapseGroup : t.expandGroup).replace(
+    "{title}",
+    link.title,
+  );
   const groupActive = linkContainsActivePath(link, pathname);
 
   return (
@@ -170,10 +180,11 @@ function SidebarNavLink({
   );
 }
 
-function SideBar({ result }: SideBarProps) {
+function SideBar({ result, pages = [] }: SideBarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const hasSectionBar = useContext(SectionBarContext);
   const pathname = usePathname();
+  const t = useStrings();
   const sidebarId = useId();
   const navRef = useRef<HTMLElement>(null);
   const footerRef = useRef<HTMLDivElement>(null);
@@ -192,8 +203,9 @@ function SideBar({ result }: SideBarProps) {
     const navRect = nav.getBoundingClientRect();
     const activeRect = active.getBoundingClientRect();
 
-    // The theme-toggle footer is sticky over the bottom of the scroll area
-    // (~60px tall), so links underneath it are covered rather than visible.
+    // The sidebar footer - theme toggle plus the language and version
+    // switchers - is sticky over the bottom of the scroll area, so links
+    // underneath it are covered rather than visible.
     // Clamp the visible bottom to the footer's top edge when it's pinned.
     const footerRect = footerRef.current?.getBoundingClientRect();
     const visibleBottom = footerRect
@@ -227,9 +239,7 @@ function SideBar({ result }: SideBarProps) {
       <StyleMobileBar
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         $isActive={isMobileMenuOpen}
-        aria-label={
-          isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"
-        }
+        aria-label={isMobileMenuOpen ? t.closeNavigation : t.openNavigation}
         aria-expanded={isMobileMenuOpen}
         aria-controls={sidebarId}
       >
@@ -271,10 +281,14 @@ function SideBar({ result }: SideBarProps) {
               </StyledSidebarList>
             );
           })}
+        {/* One row of 30px controls. The focus-mode toggle is fixed over its
+            left end, the switchers follow, and the theme toggle holds the
+            right end of the rail. */}
         <StyledSidebarFooter ref={footerRef}>
-          <Flex $xsJustifyContent="flex-start" $lgJustifyContent="flex-end">
+          <VariantSwitchers pages={pages} />
+          <StyledSidebarFooterToggle>
             <ThemeToggle $shortcut />
-          </Flex>
+          </StyledSidebarFooterToggle>
         </StyledSidebarFooter>
       </StyledSidebar>
 

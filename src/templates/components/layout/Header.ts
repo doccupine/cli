@@ -4,10 +4,15 @@ import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import styled, { css } from "styled-components";
 import Link from "next/link";
 import { mq, Theme } from "@/app/theme";
-import { ChatLauncher, useOnClickOutside } from "cherry-styled-components";
-import { Search } from "lucide-react";
+import {
+  ChatLauncher,
+  Icon,
+  useOnClickOutside,
+} from "cherry-styled-components";
+import { Search, Sparkles } from "lucide-react";
 import { Logo } from "@/components/layout/Pictograms";
 import { ChatContext } from "@/components/Chat";
+import { useStrings } from "@/components/useStrings";
 import {
   SearchContext,
   SearchKbd,
@@ -148,7 +153,6 @@ interface HeaderProps {
 
 function Header({ children }: HeaderProps) {
   const [isOptionActive, setIsOptionActive] = useState(false);
-  const [isLangActive, setIsLangActive] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
   const headerRef = useRef<HTMLElement>(null);
@@ -171,19 +175,17 @@ function Header({ children }: HeaderProps) {
 
   const wrapperRef = useRef<HTMLSpanElement>(null);
   const elmRef = useRef<HTMLDivElement>(null);
-  const langRef = useRef<HTMLSpanElement>(null);
   const closeMenu = useCallback(() => {
     setIsOptionActive(false);
-    setIsLangActive(false);
   }, []);
 
   useOnClickOutside(
     [elmRef, wrapperRef],
     isOptionActive ? closeMenu : () => {},
   );
-  useOnClickOutside([langRef, wrapperRef], isLangActive ? closeMenu : () => {});
   const { isChatActive } = useContext(ChatContext);
   const { openSearch } = useContext(SearchContext);
+  const t = useStrings();
 
   return (
     <StyledHeaderShell $pinned={isPinned} $height={headerHeight}>
@@ -223,11 +225,19 @@ function Header({ children }: HeaderProps) {
           </Link>
           {children}
           <StyledLeftWrapper>
-            <StyledSearchButton onClick={openSearch} aria-label="Search docs">
+            <StyledSearchButton
+              onClick={openSearch}
+              aria-label={t.searchButton}
+            >
               <Search size={14} />
               <SearchKbd>&#8984;K</SearchKbd>
             </StyledSearchButton>
-            {isChatActive && <ChatLauncher $glow />}
+            {isChatActive && (
+              <ChatLauncher $glow aria-label={t.askAiAssistant}>
+                <Icon icon={Sparkles} />
+                {t.askAi}
+              </ChatLauncher>
+            )}
           </StyledLeftWrapper>
         </StyledHeaderInner>
       </StyledHeader>

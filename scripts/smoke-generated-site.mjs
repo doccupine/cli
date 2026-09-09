@@ -79,6 +79,55 @@ try {
       "",
     ].join("\n"),
   );
+  // A translated and a versioned copy of the sectioned page: the build has to
+  // prefix their routes, tag the translation with its language and hreflang
+  // set, and write the per-variant llms files.
+  await fs.writeFile(
+    path.join(projectDir, "languages.json"),
+    JSON.stringify([
+      { code: "en", label: "English", default: true },
+      { code: "de", label: "Deutsch" },
+    ]),
+  );
+  await fs.writeFile(
+    path.join(projectDir, "versions.json"),
+    JSON.stringify([
+      { label: "v2.0", default: true },
+      { slug: "v1", label: "v1.0" },
+    ]),
+  );
+  await fs.mkdir(path.join(projectDir, "docs", "de"), { recursive: true });
+  await fs.mkdir(path.join(projectDir, "docs", "v1"), { recursive: true });
+  await fs.writeFile(
+    path.join(projectDir, "docs", "de", "index.mdx"),
+    ["---", 'title: "Start"', "---", "", "# Start", ""].join("\n"),
+  );
+  await fs.writeFile(
+    path.join(projectDir, "docs", "de", "guide.mdx"),
+    [
+      "---",
+      'title: "Anleitung"',
+      'section: "Guides"',
+      "---",
+      "",
+      "# Anleitung",
+      "",
+      "Eine Seite mit Abschnitt.",
+      "",
+    ].join("\n"),
+  );
+  await fs.writeFile(
+    path.join(projectDir, "docs", "v1", "guide.mdx"),
+    [
+      "---",
+      'title: "Guide (v1)"',
+      'section: "Guides"',
+      "---",
+      "",
+      "# Guide v1",
+      "",
+    ].join("\n"),
+  );
   await fs.writeFile(
     path.join(projectDir, "openapi.json"),
     JSON.stringify({
@@ -138,6 +187,30 @@ try {
     throw new Error(
       "Icon did not render the registered flag glyph into the page",
     );
+  }
+  // Next renders the metadata links with the React attribute name.
+  if (!/hreflang="de"/i.test(guideHtml)) {
+    throw new Error("The English guide did not link its German translation");
+  }
+
+  const deGuideHtml = await fs.readFile(
+    path.join(siteDir, ".next", "server", "app", "de", "guides", "guide.html"),
+    "utf8",
+  );
+  if (!deGuideHtml.includes('lang="de"')) {
+    throw new Error("The German guide did not carry its lang attribute");
+  }
+  if (!/hreflang="en"/i.test(deGuideHtml)) {
+    throw new Error("The German guide did not link its English original");
+  }
+  if (!deGuideHtml.includes("Eine Seite mit Abschnitt")) {
+    throw new Error("The German guide did not render its content");
+  }
+  await fs.access(
+    path.join(siteDir, ".next", "server", "app", "v1", "guides", "guide.html"),
+  );
+  for (const aggregate of ["de/llms.txt", "v1/llms.txt", "de/v1/llms.txt"]) {
+    await fs.access(path.join(siteDir, "public", aggregate));
   }
 
   for (const route of ["mcp", "rag"]) {

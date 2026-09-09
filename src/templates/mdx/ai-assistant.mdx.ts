@@ -19,6 +19,8 @@ Once a provider is configured, an assistant button appears in the header. You ca
   The keyboard shortcut is only active once you have configured an LLM provider, as described below.
 </Callout>
 
+On a site with [languages](/languages) or [versions](/versions), the assistant answers from the pages of the language and version the reader is on.
+
 ## Setup
 
 To enable AI features, create an \`.env\` file in the directory where your website is generated. By default, this is the \`nextjs-app/\` directory.

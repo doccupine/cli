@@ -56,6 +56,8 @@ Press **Generate API pages** to create one page per operation from your spec. Ea
 
 Alongside them you get an **API Reference** landing page at the section root, listing every endpoint as a card with its method and path. It is a normal page like any other, so you can edit it, add an introduction, or delete it if you would rather write your own.
 
+The generated pages always land in the default language and version; the reference is neither translated nor versioned.
+
 Generation reads the committed spec, so save and commit your configuration first. Endpoints are shown with a colored HTTP-method badge so they are easy to scan in the file list.
 
 ## Sending requests

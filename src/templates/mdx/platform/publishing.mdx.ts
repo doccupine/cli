@@ -46,6 +46,10 @@ Two files that resolve to the same route - \`guide.mdx\` and \`guide/index.mdx\`
 
 Section URLs come from section names, so "API Reference" and "api-reference" both become \`/api-reference\`. Pick one spelling and use it in the \`section\` field of both pages.
 
+### Languages and versions that collide with other URLs
+
+On a site with [languages](/platform/languages) or [versions](/platform/versions), a language code or version slug becomes a URL prefix, so it must not equal a section name, the first folder of a section's \`directory\`, or a reserved route segment (\`api\`, \`gate\`, \`mcp\`, \`ingest\`). An invalid \`languages.json\` or \`versions.json\`, a folder named after the default language, or a version folder placed before a language folder is refused too. The message names the entry to fix.
+
 <Callout type="note">
   These checks look at the repository as it will be **after** your publish, so a file you are deleting in the same change set counts as gone. If a check cannot run - GitHub is unreachable, say - the publish goes ahead and the build remains the backstop.
 </Callout>

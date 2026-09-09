@@ -6,6 +6,7 @@ import path from "node:path";
 import { isPathInside } from "../lib/output-safety.js";
 import type { NormalizedOpenApiSpec } from "../lib/types.js";
 import { isMdxPath } from "../lib/utils.js";
+import { VARIANT_CONFIG_FILES } from "../lib/variants.js";
 import type { SecureSourceFs } from "./secure-source-fs.js";
 
 interface WatchSourceSnapshot {
@@ -271,7 +272,14 @@ export class WatchCoordinator {
       } else {
         await callbacks.handleConfigFileDelete(sourcePath);
       }
-      if (configFile === "sections.json") sectionsChanged = true;
+      // These handlers already run a full MDX pass, so the mdx check below
+      // must not schedule a second one.
+      if (
+        configFile === "sections.json" ||
+        VARIANT_CONFIG_FILES.includes(configFile)
+      ) {
+        sectionsChanged = true;
+      }
     }
 
     const fontPath = path.join(rootDir, fontConfigFile);
