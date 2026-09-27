@@ -10,7 +10,7 @@
   "engines": {
     "node": ">=22.12.0"
   },
-  "packageManager": "pnpm@12.5.1",
+  "packageManager": "pnpm@12.6.0",
   "scripts": {
     "clean": "node scripts/clean.mjs",
     "build": "pnpm clean && tsc",
@@ -43,24 +43,24 @@
   "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
     "@readme/openapi-parser": "^9.0.0",
-    "chalk": "^6.0.0",
+    "chalk": "^6.0.1",
     "chokidar": "^5.0.0",
     "commander": "^15.0.0",
-    "fs-extra": "^11.4.0",
+    "fs-extra": "^11.4.1",
     "gray-matter": "^4.0.3",
-    "lucide-react": "^1.47.0",
-    "next": "^16.3.5",
+    "lucide-react": "^1.48.0",
+    "next": "^16.3.6",
     "prompts": "^2.4.2",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^26.6.2",
+    "@types/node": "^26.6.3",
     "@types/prompts": "^2.4.9",
-    "prettier": "^3.9.8",
+    "prettier": "^3.9.9",
     "typescript": "^7.0.2",
-    "vitest": "^5.0.1"
+    "vitest": "^5.0.2"
   },
   "files": [
     "dist/**/*"
