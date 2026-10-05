@@ -36,16 +36,20 @@ The order of the entries is the order of the switcher.
 
 The default language lives at the root of the docs folder. Every other language lives in a folder named after its code, mirroring the default layout:
 
-\`\`\`text
-docs/
-  index.mdx              -> /
-  guides/
-    intro.mdx            -> /guides/intro
-  de/
-    index.mdx            -> /de
-    guides/
-      intro.mdx          -> /de/guides/intro
-\`\`\`
+<FileTree>
+
+- docs/
+  - index.mdx
+  - guides/
+    - intro.mdx
+  - de/
+    - index.mdx
+    - guides/
+      - intro.mdx
+
+</FileTree>
+
+These files publish at \`/\`, \`/guides/intro\`, \`/de\`, and \`/de/guides/intro\`.
 
 A page is the translation of another when it sits at the same path inside its language folder. Only translated pages exist in a language: a page you have not translated yet returns a 404 under that language's prefix, and the switcher takes readers to that language's home page instead.
 
