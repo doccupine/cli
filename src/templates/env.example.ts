@@ -51,7 +51,8 @@ GOOGLE_API_KEY=your_google_api_key_here
 # Note: Anthropic doesn't provide embeddings, will fallback to OpenAI
 # LLM_EMBEDDING_MODEL=
 
-# Optional: Set temperature (0-1, default: 0)
+# Optional: Set temperature (0-1 for Anthropic, 0-2 for OpenAI and Google, default: 0)
+# Use "default" to send none and keep the model's own default
 # LLM_TEMPERATURE=0
 
 # Optional: Embedding dimensions for the prebuilt search index (default: 512)

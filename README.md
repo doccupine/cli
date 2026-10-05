@@ -309,13 +309,15 @@ If `LLM_PROVIDER` is not set, the chat component is hidden automatically.
 ### Optional overrides
 
 ```env
-LLM_CHAT_MODEL=gpt-4.1-nano                 # Override the default chat model
+LLM_CHAT_MODEL=gpt-4.1-mini                 # Override the default chat model
 LLM_EMBEDDING_MODEL=text-embedding-3-small  # Override the default embedding model
-LLM_TEMPERATURE=0                           # Set temperature (0-1, default: 0)
+LLM_TEMPERATURE=0                           # Set temperature (default: 0; "default" sends none)
 LLM_EMBEDDING_DIMS=512                       # Dimensions for the prebuilt search index (default: 512)
 RAG_RUNTIME_EMBED_MAX_CHUNKS=400             # Max chunks embedded on demand in production (default: 400; 0 requires a prebuilt index)
 # RAG_API_KEY=...                            # Optional bearer auth for direct /api/rag requests
 ```
+
+`LLM_TEMPERATURE` accepts 0 to 1 for Anthropic and 0 to 2 for OpenAI and Google; an invalid value is ignored with a warning. OpenAI's reasoning models (`o3`, `o4-mini`) and its GPT-5 models onwards reject a custom temperature, so none is sent to them.
 
 `LLM_EMBEDDING_DIMS` Matryoshka-truncates document vectors so the prebuilt search index stays small; lower values shrink the index at a slight cost to recall. `RAG_RUNTIME_EMBED_MAX_CHUNKS` caps how many chunks the chat will embed on demand in production before requiring a prebuilt index (it's unlimited under `next dev`).
 
@@ -325,7 +327,7 @@ Default models per provider:
 
 | Provider  | Chat model                   | Embedding model          |
 | --------- | ---------------------------- | ------------------------ |
-| OpenAI    | `gpt-4.1-nano`               | `text-embedding-3-small` |
+| OpenAI    | `gpt-4.1-mini`               | `text-embedding-3-small` |
 | Anthropic | `claude-sonnet-4-5-20250929` | OpenAI fallback          |
 | Google    | `gemini-2.5-flash-lite`      | `gemini-embedding-001`   |
 

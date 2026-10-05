@@ -10,23 +10,26 @@ import type { LLMConfig } from "@/services/llm/types";
  * Creates a chat model instance based on the provider configuration
  */
 export function createChatModel(config: LLMConfig) {
+  // Some models reject the parameter outright, so it is sent only when set.
+  const temperature =
+    config.temperature === undefined ? {} : { temperature: config.temperature };
   switch (config.provider) {
     case "openai":
       return new ChatOpenAI({
         model: config.chatModel,
-        temperature: config.temperature,
+        ...temperature,
       });
 
     case "anthropic":
       return new ChatAnthropic({
         model: config.chatModel,
-        temperature: config.temperature,
+        ...temperature,
       });
 
     case "google":
       return new ChatGoogleGenerativeAI({
         model: config.chatModel,
-        temperature: config.temperature,
+        ...temperature,
       });
 
     default:
