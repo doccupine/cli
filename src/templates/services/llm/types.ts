@@ -5,7 +5,8 @@ export interface LLMConfig {
   chatModel: string;
   embeddingModel: string;
   embeddingDims: number;
-  temperature: number;
+  /** Omitted when the model should use its own default. */
+  temperature?: number;
 }
 
 interface ProviderModels {

@@ -5,7 +5,7 @@ export const llmConfigTemplate = `import type {
 } from "@/services/llm/types";
 const PROVIDER_DEFAULTS: ProviderDefaults = {
   openai: {
-    chat: "gpt-4.1-nano",
+    chat: "gpt-4.1-mini",
     embedding: "text-embedding-3-small",
   },
   anthropic: {
@@ -17,6 +17,52 @@ const PROVIDER_DEFAULTS: ProviderDefaults = {
     embedding: "gemini-embedding-001",
   },
 };
+// Used when LLM_TEMPERATURE is unset, for models that accept a temperature.
+const DEFAULT_TEMPERATURE = 0;
+const MAX_TEMPERATURE: Record<LLMProvider, number> = {
+  openai: 2,
+  anthropic: 1,
+  google: 2,
+};
+// OpenAI's reasoning models (o1, o3, o4-mini) and its GPT-5 line onwards reject
+// a custom temperature, some of them any temperature at all. A vendor prefix
+// such as OpenRouter's "openai/" is ignored.
+const NO_TEMPERATURE_MODEL = /^(?:[\\w-]+\\/)?(?:gpt-(?:[5-9]|\\d{2,})|o\\d)/;
+const warnings = new Set<string>();
+function warnOnce(message: string): void {
+  if (warnings.has(message)) return;
+  warnings.add(message);
+  console.warn(message);
+}
+function acceptsTemperature(provider: LLMProvider, chatModel: string): boolean {
+  return provider !== "openai" || !NO_TEMPERATURE_MODEL.test(chatModel);
+}
+// Returns undefined when no temperature should be sent, leaving the model on
+// its own default: LLM_TEMPERATURE=default, or a model that rejects one.
+function resolveTemperature(
+  provider: LLMProvider,
+  chatModel: string,
+): number | undefined {
+  const raw = process.env.LLM_TEMPERATURE?.trim() ?? "";
+  if (raw.toLowerCase() === "default") return undefined;
+  const accepted = acceptsTemperature(provider, chatModel);
+  if (raw === "") return accepted ? DEFAULT_TEMPERATURE : undefined;
+  const value = Number(raw);
+  const max = MAX_TEMPERATURE[provider];
+  if (!Number.isFinite(value) || value < 0 || value > max) {
+    warnOnce(
+      \`Ignoring LLM_TEMPERATURE="\${raw}": \${provider} accepts a number from 0 to \${max}, or "default".\`,
+    );
+    return accepted ? DEFAULT_TEMPERATURE : undefined;
+  }
+  if (!accepted) {
+    warnOnce(
+      \`Ignoring LLM_TEMPERATURE: \${chatModel} does not accept a custom temperature.\`,
+    );
+    return undefined;
+  }
+  return value;
+}
 function validateAPIKeys(provider: LLMProvider): void {
   const requiredKeys: Record<LLMProvider, string> = {
     openai: "OPENAI_API_KEY",
@@ -67,12 +113,13 @@ export function getLLMConfig(): LLMConfig {
     const parsed = parseInt(rawDims, 10);
     if (Number.isFinite(parsed) && parsed >= 0) embeddingDims = parsed;
   }
+  const chatModel = process.env.LLM_CHAT_MODEL || defaults.chat;
   return {
     provider,
-    chatModel: process.env.LLM_CHAT_MODEL || defaults.chat,
+    chatModel,
     embeddingModel: process.env.LLM_EMBEDDING_MODEL || defaults.embedding,
     embeddingDims,
-    temperature: parseFloat(process.env.LLM_TEMPERATURE || "0"),
+    temperature: resolveTemperature(provider, chatModel),
   };
 }
 `;
