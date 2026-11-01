@@ -362,12 +362,14 @@ export const StyledSidebarListItem = styled.li\`
   clear: both;
 \`;
 
+const sidebarRowLineHeight = 1.6;
+
 // Shared appearance for every sidebar row - leaf links AND nested group
 // headers - so hover, active state, and the left rail read identically.
 const sidebarRowStyles = css<Props>\`
   text-decoration: none;
   font-size: \${({ theme }) => theme.fontSizes.small.lg};
-  line-height: 1.6;
+  line-height: \${sidebarRowLineHeight};
   color: \${({ theme }) => theme.colors.accentMuted};
   padding: 5px 0 5px 20px;
   display: flex;
@@ -419,9 +421,21 @@ export const StyledSidebarListItemLink = styled(Link)<Props>\`
 // by verb so endpoints are scannable in the sidebar. Only rendered when a link
 // carries an \`httpMethod\` (endpoint pages do; hand-written pages do not).
 // The look is Badge's mono variation (tinted, solid when active); only
-// sidebar metrics are adjusted here.
-export const StyledSidebarMethodTag = styled(Badge)\`
+// sidebar metrics are adjusted here. The tag stays on the title's first line
+// when the title wraps, so its top offset centers it within one line box. The
+// min-width fits the longest verb (OPTIONS), so every title starts on one edge.
+const sidebarMethodTagHeight = 18;
+
+const sidebarMethodTagOffset = ({ theme }: { theme: Theme }) =>
+  \`calc((\${theme.fontSizes.small.lg} * \${sidebarRowLineHeight} - \${sidebarMethodTagHeight}px) / 2)\`;
+
+export const StyledSidebarMethodTag = styled(Badge)<{ theme: Theme }>\`
   flex-shrink: 0;
+  align-self: flex-start;
+  justify-content: center;
+  min-width: 48px;
+  height: \${sidebarMethodTagHeight}px;
+  margin-top: \${sidebarMethodTagOffset};
   font-size: 9px;
   letter-spacing: 0.02em;
   padding: 1px 4px;
