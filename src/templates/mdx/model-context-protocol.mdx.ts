@@ -48,6 +48,15 @@ Doccupine automatically generates an MCP server for your documentation and hosts
 
 The MCP server provides both a GET endpoint to discover available tools and a POST endpoint to execute tool calls.
 
+### Protocol versions
+
+The endpoint speaks both MCP protocol generations, so clients connect without any configuration:
+
+- **2026-07-28 (stateless)**: each request is self-contained and carries its protocol version, client details, and capabilities, with no handshake and no session. Clients find the server's capabilities with \`server/discover\`.
+- **2025 revisions**: clients that open with the \`initialize\` handshake are answered statelessly, as before.
+
+MCP protocol requests must be sent with \`Content-Type: application/json\`; other media types receive \`415 Unsupported Media Type\`. The documentation does not change while the site is running, so the server sends no list-change notifications.
+
 ### Authentication
 
 You can optionally protect your MCP server with an API key by setting the \`DOCS_API_KEY\` environment variable in your \`.env\` file:

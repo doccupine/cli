@@ -19,7 +19,7 @@ export const packageJsonTemplate =
         "@langchain/google-genai": "^2.3.6",
         "@langchain/openai": "^1.8.4",
         "@mdx-js/react": "^3.1.1",
-        "@modelcontextprotocol/sdk": "^1.32.2",
+        "@modelcontextprotocol/server": "^2.4.0",
         "beautiful-mermaid": "^1.1.3",
         "cherry-styled-components": "^0.2.22",
         langchain: "^1.6.6",

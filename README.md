@@ -339,6 +339,8 @@ The generated app exposes an MCP endpoint at `/api/mcp` with three tools:
 - `get_doc` - retrieve a specific document by path
 - `list_docs` - list all available documents
 
+The endpoint serves both the stateless MCP `2026-07-28` revision and 2025-era clients that open with the `initialize` handshake, built on `@modelcontextprotocol/server`.
+
 This lets AI agents (Claude, ChatGPT, etc.) query your docs programmatically. Semantic `search_docs` requires the AI setup above for embeddings; `get_doc` and `list_docs` work from the generated content manifest without an embedding provider. On a site with [languages](#languages) or [versions](#versions), `search_docs` and `list_docs` accept optional `language` and `version` parameters and default to the default language and version; the `docs://list` resource lists every variant.
 
 ## Password Protection

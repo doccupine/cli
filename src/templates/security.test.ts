@@ -507,6 +507,56 @@ describe("generated security boundaries", () => {
     );
   });
 
+  it("serves both MCP protocol eras behind the same guards", () => {
+    // v2 replaces the single v1 package; nothing may still import it.
+    for (const template of [mcpRoutesTemplate, mcpServerTemplate]) {
+      expect(template).toContain('from "@modelcontextprotocol/server"');
+      expect(template).not.toContain("@modelcontextprotocol/sdk");
+    }
+    expect(appStructure["package.json"]).toContain(
+      '"@modelcontextprotocol/server"',
+    );
+    expect(appStructure["package.json"]).not.toContain(
+      "@modelcontextprotocol/sdk",
+    );
+
+    // 2026-07-28 requests go to a strict modern handler that reads no body of
+    // its own: the bounded, validated body is
+    // handed over. 2025-era requests keep the stateless JSON transport.
+    expect(mcpRoutesTemplate).toContain(
+      "createMcpHandler(() => createMCPServer(), {",
+    );
+    expect(mcpRoutesTemplate).toContain('legacy: "reject"');
+    expect(mcpRoutesTemplate).toContain(
+      "maxRequestBodySize: MCP_MAX_REQUEST_BYTES",
+    );
+    expect(mcpRoutesTemplate).toContain(
+      "if (await isLegacyRequest(req, parsedBody))",
+    );
+    expect(mcpRoutesTemplate).toContain(
+      "return modernHandler.fetch(req, { parsedBody })",
+    );
+    expect(mcpRoutesTemplate).toContain("sessionIdGenerator: undefined");
+    expect(mcpRoutesTemplate).toContain("enableJsonResponse: true");
+
+    // Both eras are dispatched only after the body was validated.
+    const post = mcpRoutesTemplate.indexOf(
+      "export async function POST(req: Request)",
+    );
+    expect(
+      mcpRoutesTemplate.indexOf("protocolToolCallError(body)", post),
+    ).toBeLessThan(
+      mcpRoutesTemplate.indexOf("return handleMCPRequest(req, body)", post),
+    );
+
+    // With listChanged on, a subscriptions/listen stream stays open and holds
+    // a serverless function until it times out, for docs that never change.
+    expect(mcpServerTemplate).toContain("tools: { listChanged: false }");
+    expect(mcpServerTemplate).toContain("resources: { listChanged: false }");
+    expect(mcpServerTemplate).toContain("ctx.mcpReq");
+    expect(mcpServerTemplate).not.toMatch(/,\s*\{\s*signal\s*\}\s*\)\s*=>/);
+  });
+
   it("validates language and version scopes as lowercase URL segments", () => {
     // A scope reaches a file-derived filter and the MCP result, so each route
     // constrains it to the token shape the CLI accepts in languages.json /
