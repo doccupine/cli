@@ -260,7 +260,8 @@ export async function POST(req: Request) {
         const stream = await llm.stream(prompt, { signal });
         for await (const chunk of stream) {
           signal.throwIfAborted();
-          const content = chunk?.content || "";
+          // Text only: a chunk can also carry reasoning or signature blocks.
+          const content = chunk?.text || "";
           if (content) {
             safeEnqueue(
               \`data: \${JSON.stringify({ type: "content", data: content })}\\n\\n\`,
