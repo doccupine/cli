@@ -89,6 +89,7 @@ import { docsContentStubTemplate } from "../templates/services/mcp/docsContentSt
 import { llmConfigTemplate } from "../templates/services/llm/config.js";
 import { llmFactoryTemplate } from "../templates/services/llm/factory.js";
 import { llmIndexTemplate } from "../templates/services/llm/index.js";
+import { llmStreamTemplate } from "../templates/services/llm/stream.js";
 import { llmTypesTemplate } from "../templates/services/llm/types.js";
 import { buildDocsIndexScriptTemplate } from "../templates/scripts/build-docs-index.js";
 
@@ -214,6 +215,7 @@ export const appStructure: Record<string, string> = {
   "services/llm/config.ts": llmConfigTemplate,
   "services/llm/factory.ts": llmFactoryTemplate,
   "services/llm/index.ts": llmIndexTemplate,
+  "services/llm/stream.ts": llmStreamTemplate,
   "services/llm/types.ts": llmTypesTemplate,
   "services/openapi/playground-allowlist.json": playgroundAllowlistStubTemplate,
 

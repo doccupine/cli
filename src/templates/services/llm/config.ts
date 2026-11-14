@@ -5,37 +5,47 @@ export const llmConfigTemplate = `import type {
 } from "@/services/llm/types";
 const PROVIDER_DEFAULTS: ProviderDefaults = {
   openai: {
-    chat: "gpt-4.1-mini",
+    chat: "gpt-6-luna",
     embedding: "text-embedding-3-small",
   },
   anthropic: {
-    chat: "claude-sonnet-4-5-20250929",
+    chat: "claude-haiku-5-5",
     embedding: "text-embedding-3-small", // Fallback to OpenAI
   },
   google: {
-    chat: "gemini-2.5-flash-lite",
+    chat: "gemini-3.5-flash-lite",
     embedding: "gemini-embedding-001",
   },
 };
 // Used when LLM_TEMPERATURE is unset, for models that accept a temperature.
 const DEFAULT_TEMPERATURE = 0;
-const MAX_TEMPERATURE: Record<LLMProvider, number> = {
-  openai: 2,
-  anthropic: 1,
-  google: 2,
-};
+// OpenAI and Google both accept 0 to 2.
+const MAX_TEMPERATURE = 2;
 // OpenAI's reasoning models (o1, o3, o4-mini) and its GPT-5 line onwards reject
-// a custom temperature, some of them any temperature at all. A vendor prefix
-// such as OpenRouter's "openai/" is ignored.
-const NO_TEMPERATURE_MODEL = /^(?:[\\w-]+\\/)?(?:gpt-(?:[5-9]|\\d{2,})|o\\d)/;
+// a custom temperature, some of them any temperature at all.
+const OPENAI_NO_TEMPERATURE = /^(?:[\\w-]+\\/)?(?:gpt-(?:[5-9]|\\d{2,})|o\\d)/;
+// Gemini 3.5 models onwards ignore a temperature, and Google says later
+// generations will reject it.
+const GOOGLE_NO_TEMPERATURE = /^(?:[\\w-]+\\/)?gemini-(?:3\\.[5-9]|[4-9]|\\d{2,})/;
 const warnings = new Set<string>();
 function warnOnce(message: string): void {
   if (warnings.has(message)) return;
   warnings.add(message);
   console.warn(message);
 }
+// A vendor prefix such as OpenRouter's "openai/" or Google's "models/" is
+// ignored.
 function acceptsTemperature(provider: LLMProvider, chatModel: string): boolean {
-  return provider !== "openai" || !NO_TEMPERATURE_MODEL.test(chatModel);
+  switch (provider) {
+    // The Anthropic SDK sends API version 2026-10-21, which rejects a
+    // temperature on every model.
+    case "anthropic":
+      return false;
+    case "openai":
+      return !OPENAI_NO_TEMPERATURE.test(chatModel);
+    case "google":
+      return !GOOGLE_NO_TEMPERATURE.test(chatModel);
+  }
 }
 // Returns undefined when no temperature should be sent, leaving the model on
 // its own default: LLM_TEMPERATURE=default, or a model that rejects one.
@@ -45,21 +55,21 @@ function resolveTemperature(
 ): number | undefined {
   const raw = process.env.LLM_TEMPERATURE?.trim() ?? "";
   if (raw.toLowerCase() === "default") return undefined;
-  const accepted = acceptsTemperature(provider, chatModel);
-  if (raw === "") return accepted ? DEFAULT_TEMPERATURE : undefined;
-  const value = Number(raw);
-  const max = MAX_TEMPERATURE[provider];
-  if (!Number.isFinite(value) || value < 0 || value > max) {
-    warnOnce(
-      \`Ignoring LLM_TEMPERATURE="\${raw}": \${provider} accepts a number from 0 to \${max}, or "default".\`,
-    );
-    return accepted ? DEFAULT_TEMPERATURE : undefined;
-  }
-  if (!accepted) {
-    warnOnce(
-      \`Ignoring LLM_TEMPERATURE: \${chatModel} does not accept a custom temperature.\`,
-    );
+  if (!acceptsTemperature(provider, chatModel)) {
+    if (raw !== "") {
+      warnOnce(
+        \`Ignoring LLM_TEMPERATURE: \${chatModel} does not accept a custom temperature.\`,
+      );
+    }
     return undefined;
+  }
+  if (raw === "") return DEFAULT_TEMPERATURE;
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value < 0 || value > MAX_TEMPERATURE) {
+    warnOnce(
+      \`Ignoring LLM_TEMPERATURE="\${raw}": use a number from 0 to \${MAX_TEMPERATURE}, or "default".\`,
+    );
+    return DEFAULT_TEMPERATURE;
   }
   return value;
 }

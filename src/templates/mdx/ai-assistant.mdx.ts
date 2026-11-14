@@ -49,8 +49,9 @@ GOOGLE_API_KEY=your_google_api_key_here
 # Note: Anthropic doesn't provide embeddings, will fallback to OpenAI
 # LLM_EMBEDDING_MODEL=your-embedding-model-id
 
-# Optional: Set temperature (0-1 for Anthropic, 0-2 for OpenAI and Google, default: 0)
-# Use "default" to send none and keep the model's own default
+# Optional: Set temperature (0-2, default: 0) for models that accept one
+# Not sent to Anthropic, GPT-5 onwards, or Gemini 3.5 onwards, so the default
+# models get none. Use "default" to send none to any model
 # LLM_TEMPERATURE=0
 
 # Optional: Embedding dimensions for the prebuilt search index (default: 512)
@@ -122,11 +123,11 @@ This hybrid approach allows you to leverage Anthropic's powerful chat models whi
 
 ## Default models
 
-| Provider  | Chat model                   | Embedding model          |
-| --------- | ---------------------------- | ------------------------ |
-| OpenAI    | \`gpt-4.1-mini\`               | \`text-embedding-3-small\` |
-| Anthropic | \`claude-sonnet-4-5-20250929\` | OpenAI fallback          |
-| Google    | \`gemini-2.5-flash-lite\`      | \`gemini-embedding-001\`   |
+| Provider  | Chat model              | Embedding model          |
+| --------- | ----------------------- | ------------------------ |
+| OpenAI    | \`gpt-6-luna\`            | \`text-embedding-3-small\` |
+| Anthropic | \`claude-haiku-5-5\`      | OpenAI fallback          |
+| Google    | \`gemini-3.5-flash-lite\` | \`gemini-embedding-001\`   |
 
 ## Optional Settings
 
@@ -148,13 +149,13 @@ Override the default embedding model by uncommenting and setting \`LLM_EMBEDDING
 
 ### Temperature
 
-Control the randomness of AI responses by setting \`LLM_TEMPERATURE\`. Anthropic accepts a value from 0 to 1, OpenAI and Google from 0 to 2:
+Control the randomness of AI responses by setting \`LLM_TEMPERATURE\` to a value from 0 to 2:
 
 - \`0\` - More deterministic and focused responses (default)
 - \`1\` - More creative and varied responses
 - \`default\` - Send no temperature and keep the model's own default
 
-Some models do not accept a custom temperature: OpenAI's reasoning models (such as \`o3\` and \`o4-mini\`) and its GPT-5 models onwards. For those, Doccupine sends no temperature and ignores \`LLM_TEMPERATURE\` with a warning in the server logs. A value outside the provider's range is ignored the same way, and the default is used instead.
+Many models do not accept a custom temperature, including all three default models: Anthropic's models (its current API version rejects one on every model), OpenAI's reasoning models (such as \`o3\` and \`o4-mini\`) and its GPT-5 models onwards, and Google's Gemini 3.5 models onwards. For those, Doccupine sends no temperature and ignores \`LLM_TEMPERATURE\` with a warning in the server logs. The setting applies to models that still take one, such as \`gpt-4.1\` or \`gemini-2.5-flash\`. A value outside 0 to 2 is ignored with a warning, and the default is used instead.
 
 ### Embedding Dimensions
 
