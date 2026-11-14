@@ -1,6 +1,6 @@
 export const ragRoutesTemplate = `import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getLLMConfig, createChatModel } from "@/services/llm";
+import { getLLMConfig, createChatModel, chunkText } from "@/services/llm";
 import {
   searchDocs,
   ensureDocsIndex,
@@ -260,8 +260,7 @@ export async function POST(req: Request) {
         const stream = await llm.stream(prompt, { signal });
         for await (const chunk of stream) {
           signal.throwIfAborted();
-          // Text only: a chunk can also carry reasoning or signature blocks.
-          const content = chunk?.text || "";
+          const content = chunkText(chunk);
           if (content) {
             safeEnqueue(
               \`data: \${JSON.stringify({ type: "content", data: content })}\\n\\n\`,
