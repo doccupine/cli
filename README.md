@@ -23,17 +23,30 @@ Doccupine asks where your MDX files live (default `docs`) and where to put the g
 
 ## What you get
 
-- **Live preview.** Pages regenerate on every save. ([Commands](https://docs.doccupine.com/commands))
-- **Navigation and sections.** The sidebar comes from your frontmatter, and sections split the docs into tabs. ([Navigation](https://docs.doccupine.com/navigation), [Sections](https://docs.doccupine.com/sections))
-- **Components.** Callouts, tabs, steps, cards, code blocks, Mermaid diagrams and more, ready to use in MDX. ([Components](https://docs.doccupine.com/components))
-- **API reference.** Point it at an OpenAPI spec and get a page per endpoint with a live playground. ([API Playground](https://docs.doccupine.com/api-playground))
-- **AI chat assistant.** Visitors ask questions and get answers from your docs, using OpenAI, Anthropic or Google. ([AI Assistant](https://docs.doccupine.com/ai-assistant))
-- **MCP server.** AI tools like Claude, Cursor and VS Code can search your docs directly. ([Model Context Protocol](https://docs.doccupine.com/model-context-protocol))
-- **Languages and versions.** Translate your docs and keep older releases online. ([Languages](https://docs.doccupine.com/languages), [Versions](https://docs.doccupine.com/versions))
-- **Theming.** Light and dark mode, your colors and fonts. ([Theme](https://docs.doccupine.com/theme), [Fonts](https://docs.doccupine.com/fonts))
-- **Password protection.** Gate the whole site behind a shared password. ([Authentication](https://docs.doccupine.com/authentication))
+- **Live preview.** Pages regenerate on every save.
+  - [Commands](https://docs.doccupine.com/commands)
+- **Navigation and sections.** The sidebar comes from your frontmatter, and sections split the docs into tabs.
+  - [Navigation](https://docs.doccupine.com/navigation)
+  - [Sections](https://docs.doccupine.com/sections)
+- **Components.** Callouts, tabs, steps, cards, code blocks, Mermaid diagrams and more, ready to use in MDX.
+  - [Components](https://docs.doccupine.com/components)
+- **API reference.** Point it at an OpenAPI spec and get a page per endpoint with a live playground.
+  - [API Playground](https://docs.doccupine.com/api-playground)
+- **AI chat assistant.** Visitors ask questions and get answers from your docs, using OpenAI, Anthropic or Google.
+  - [AI Assistant](https://docs.doccupine.com/ai-assistant)
+- **MCP server.** AI tools like Claude, Cursor and VS Code can search your docs directly.
+  - [Model Context Protocol](https://docs.doccupine.com/model-context-protocol)
+- **Languages and versions.** Translate your docs and keep older releases online.
+  - [Languages](https://docs.doccupine.com/languages)
+  - [Versions](https://docs.doccupine.com/versions)
+- **Theming.** Light and dark mode, your colors and fonts.
+  - [Theme](https://docs.doccupine.com/theme)
+  - [Fonts](https://docs.doccupine.com/fonts)
+- **Password protection.** Gate the whole site behind a shared password.
+  - [Authentication](https://docs.doccupine.com/authentication)
 - **Built for search engines and AI.** Sitemap, `robots.txt`, `llms.txt` and a Markdown copy of every page are generated for you.
-- **Changelogs with RSS.** ([Update component](https://docs.doccupine.com/update))
+- **Changelogs with RSS.** Publish release notes that readers can subscribe to.
+  - [Update component](https://docs.doccupine.com/update)
 
 ## Commands
 
