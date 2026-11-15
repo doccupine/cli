@@ -38,9 +38,10 @@ Doccupine asks where your MDX files live (default `docs`) and where to put the g
 ## Commands
 
 ```bash
-doccupine           # watch your docs and run the live preview (same as `doccupine watch`)
-doccupine build     # generate the site once, for CI or deployment
-doccupine config    # show or reset the saved configuration
+doccupine                 # watch your docs and run the live preview (same as `doccupine watch`)
+doccupine build           # generate the site once, for CI or deployment
+doccupine config --show   # show the saved configuration
+doccupine config --reset  # reset the saved configuration
 ```
 
 All options are in the [Commands](https://docs.doccupine.com/commands) docs.

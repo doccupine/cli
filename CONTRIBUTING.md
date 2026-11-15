@@ -2,6 +2,8 @@
 
 ## Setup
 
+You need [Node.js](https://nodejs.org) 22.12 or later and pnpm 12 (the exact version is pinned in the `packageManager` field of `package.json`).
+
 ```bash
 git clone https://github.com/doccupine/cli.git
 cd cli
@@ -16,7 +18,7 @@ pnpm build          # One-time compile
 pnpm test           # Run tests
 pnpm format:check   # Verify formatting
 pnpm test:package   # Verify the npm package contents
-pnpm smoke:generated # Generate, lint, type-check, and build a fixture site
+pnpm smoke:generated # Generate, lint, type-check, build, and start a fixture site, then test its MCP endpoint
 ```
 
 To test your changes locally:
@@ -46,7 +48,7 @@ When adding a new template:
 ## Pull Requests
 
 1. Fork the repo and create a branch from `main`
-2. Make your changes and ensure `pnpm build && pnpm test && pnpm format:check && pnpm test:package` passes
+2. Make your changes and ensure `pnpm test && pnpm format:check && pnpm test:package && pnpm smoke:generated` passes, the same checks CI runs (`pnpm test` builds first)
 3. Write a clear PR description explaining the change and why
 4. Keep PRs focused - one feature or fix per PR
 
