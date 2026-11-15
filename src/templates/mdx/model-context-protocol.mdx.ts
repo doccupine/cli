@@ -2,7 +2,7 @@ export const mcpMdxTemplate = `---
 title: "Model Context Protocol"
 description: "Connect your Doccupine documentation to AI tools with an MCP server for enhanced AI-powered documentation search."
 date: "2026-02-19"
-updated: "2026-07-31"
+updated: "2026-11-15"
 category: "AI & Integrations"
 categoryOrder: 3
 order: 2
@@ -11,51 +11,23 @@ order: 2
 
 Connect your documentation to AI tools with a hosted MCP server.
 
-Doccupine automatically generates a Model Context Protocol (MCP) server from your documentation, making your content accessible to AI applications like Claude, Cursor, VS Code, and other MCP-compatible tools. Your MCP server exposes semantic search capabilities, allowing AI tools to query your documentation directly and provide accurate, context-aware answers.
+Doccupine automatically generates a Model Context Protocol (MCP) server from your documentation. AI tools like Claude, Cursor, and VS Code connect to it and search your docs directly, so they answer questions about your product with accurate, current information.
 
-<Callout type="warning">
-  Semantic \`search_docs\` requires the [AI Assistant](/ai-assistant) embedding
-  provider to be configured. \`get_doc\` and \`list_docs\` can retrieve the generated
-  content manifest without an embedding provider.
-</Callout>
+## Why use MCP
 
-## About MCP servers
-
-The Model Context Protocol (MCP) is an open protocol that creates standardized connections between AI applications and external services, like documentation. Doccupine generates an MCP server from your documentation, preparing your content for the broader AI ecosystem where any MCP client can connect to your documentation.
-
-Your MCP server exposes search and retrieval tools for AI applications to query your documentation. Your users must connect your MCP server to their preferred AI tools to access your documentation.
-
-### How MCP servers work
-
-When an AI tool has your documentation MCP server connected, the AI tool can search your documentation directly instead of making a generic web search in response to a user's prompt. Your MCP server provides access to all indexed content from your documentation site.
-
-- The LLM can proactively search your documentation while generating a response, not just when explicitly asked.
-- The LLM determines when to use the search tool based on the context of the conversation and the relevance of your documentation.
-- Each tool call happens during the generation process, so the LLM searches up-to-date information from your documentation to generate its response.
-
-### MCP compared to web search
-
-AI tools can search the web, but MCP provides distinct advantages for documentation.
-
-- **Direct source access**: Web search depends on what search engines have indexed, which may be stale or incomplete. MCP searches your current indexed documentation directly.
-- **Integrated workflow**: MCP allows the AI to search during response generation rather than performing a separate web search.
-- **Semantic search**: MCP uses vector embeddings for semantic similarity search, providing more relevant results than keyword-based web search.
-- **No search noise**: SEO and ranking algorithms influence web search results. MCP goes straight to your documentation content.
+- **Current answers**: AI tools read your latest docs instead of web search results, which may be stale or incomplete.
+- **Used when relevant**: The AI searches your docs on its own while it answers, whenever the conversation calls for them.
+- **Better matches**: Search finds pages by meaning, not just keywords, without the noise of web search rankings.
 
 ## Access your MCP server
 
-Doccupine automatically generates an MCP server for your documentation and hosts it at your documentation URL with the \`/api/mcp\` path. For example, if your documentation is hosted at \`https://example.com\`, your MCP server is available at \`https://example.com/api/mcp\`.
+Your MCP server is hosted at your documentation URL with the \`/api/mcp\` path. For example, if your documentation is hosted at \`https://example.com\`, your MCP server is available at \`https://example.com/api/mcp\`.
 
-The MCP server provides both a GET endpoint to discover available tools and a POST endpoint to execute tool calls.
-
-### Protocol versions
-
-The endpoint speaks both MCP protocol generations, so clients connect without any configuration:
-
-- **2026-07-28 (stateless)**: each request is self-contained and carries its protocol version, client details, and capabilities, with no handshake and no session. Clients find the server's capabilities with \`server/discover\`.
-- **2025 revisions**: clients that open with the \`initialize\` handshake are answered statelessly, as before.
-
-MCP protocol requests must be sent with \`Content-Type: application/json\`; other media types receive \`415 Unsupported Media Type\`. The documentation does not change while the site is running, so the server sends no list-change notifications.
+<Callout type="note">
+  The \`search_docs\` tool needs the [AI Assistant](/ai-assistant) to be configured,
+  because it searches with the same provider. \`get_doc\` and \`list_docs\` work
+  without it.
+</Callout>
 
 ### Authentication
 
@@ -79,11 +51,9 @@ Requests without a valid token receive a \`401 Unauthorized\` response. When \`D
 
 ### Rate limiting
 
-Tool calls to \`POST /api/mcp\` are rate limited per client IP when the generated app runs on a recognized platform that supplies a trusted client-address header. Unknown or self-hosted proxy setups use one conservative shared bucket instead of trusting spoofable forwarding headers. When the limit is exceeded, the server responds with \`429 Too Many Requests\` and a \`Retry-After\` header indicating how many seconds to wait before retrying.
+Tool calls to \`POST /api/mcp\` are rate limited. When the limit is exceeded, the server responds with \`429 Too Many Requests\` and a \`Retry-After\` header with the number of seconds to wait.
 
-The included limiter is intentionally lightweight and scoped to each running server instance. For a globally consistent limit across multiple serverless instances or regions, or accurate per-client limits behind a custom reverse proxy, configure rate limiting at your trusted hosting edge or use a shared external rate-limit store.
-
-Requests are bounded before tool execution: request bodies, protocol batches, tool arguments, search result counts, and serialized responses all have fixed limits. A protocol body may contain at most one \`tools/call\` message, so one rate-limited request cannot execute multiple paid tools; batches containing only non-tool protocol messages remain compatible. Internal provider errors are logged on the server and returned to clients as generic failures so deployment details are not exposed.
+The built-in limit is lightweight and applies to each running server instance. For a strict limit across all instances, configure rate limiting on your hosting platform.
 
 ### API Endpoints
 
@@ -211,31 +181,9 @@ Results carry the page's \`language\` and \`version\` on such a site, and the \`
 }
 \`\`\`
 
-## How it works
+## Keep your docs up to date
 
-Doccupine's MCP server uses semantic search powered by vector embeddings to provide accurate, context-aware search results.
-
-### Indexing Process
-
-Doccupine runs this pipeline at build time and ships the resulting vectors with your site, so the server loads a ready-made index instead of re-embedding your docs on every cold start.
-
-1. **Content Manifest**: During generation, Doccupine writes the source MDX and generated API-reference content to \`services/mcp/docs-content.json\`.
-2. **Runtime Loading**: The build traces that manifest into the MCP and RAG functions, which read it from one fixed path without inlining the corpus into their JavaScript bundles.
-3. **Chunking**: Large documents are split into chunks of approximately 800 characters with 100 character overlap for better context preservation.
-4. **Embedding Generation**: Each chunk is converted to a vector embedding using your configured LLM provider's embedding model.
-5. **Compaction**: Each vector is truncated to \`LLM_EMBEDDING_DIMS\` dimensions (default 512) and quantized to int8, keeping the index roughly 20x smaller than raw floats so large doc sets don't stall the chat on cold start.
-6. **Index Building**: The compact embeddings are written to \`services/mcp/docs-index.json\`, traced into your serverless functions as a data file, and loaded into memory at runtime for fast similarity search.
-
-### Search Process
-
-1. **Query Embedding**: The search query is converted to a vector embedding using the same embedding model.
-2. **Similarity Calculation**: Cosine similarity is calculated between the query embedding and all document chunk embeddings.
-3. **Ranking**: Results are sorted by similarity score (highest first).
-4. **Response**: The top N results (based on the limit parameter) are returned with their paths, URIs, scores, and text content.
-
-<Callout type="note">
-  Embeddings are precomputed at build time and shipped as a traced data file, so the server loads the ready-made index into memory on startup instead of re-embedding your docs on every cold start. It only embeds at runtime when the precomputed index is missing or was built with a different provider or model. When you update your documentation, regenerate and rebuild or redeploy your site to refresh both the content manifest and index.
-</Callout>
+Doccupine indexes your docs when you build the site, so searches are fast from the first request. After you change your docs, rebuild or redeploy your site so AI tools see the latest content.
 
 ## Use your MCP server
 
@@ -330,25 +278,12 @@ These are some of the ways you can help your users connect to your MCP server:
 
 ## Requirements
 
-To use the MCP server, you need to have the AI Assistant configured. The MCP server uses the same LLM configuration for generating embeddings.
-
-| Variable       | Required | Description                                                  |
-| -------------- | -------- | ------------------------------------------------------------ |
-| \`LLM_PROVIDER\` | Yes      | Your LLM provider (\`openai\`, \`anthropic\`, or \`google\`)       |
-| \`DOCS_API_KEY\` | No       | When set, requires Bearer token authentication on \`/api/mcp\` |
-
-<Callout type="warning">
-  The \`search_docs\` tool requires an LLM provider for query embeddings. Configure
-  the AI Assistant with a valid API key before using semantic search.
-</Callout>
+| Variable       | Required            | Description                                                  |
+| -------------- | ------------------- | ------------------------------------------------------------ |
+| \`LLM_PROVIDER\` | For \`search_docs\` | Your LLM provider (\`openai\`, \`anthropic\`, or \`google\`)       |
+| \`DOCS_API_KEY\` | No                  | When set, requires Bearer token authentication on \`/api/mcp\` |
 
 See the [AI Assistant documentation](/ai-assistant) for configuration details.
-
-## Content indexing
-
-Doccupine builds a \`services/mcp/docs-content.json\` manifest from your source MDX and generated API-reference pages. The deployed MCP and RAG routes load that traced data file at runtime, so the documentation corpus is not inlined into the server function's JavaScript bundle and the server never scans user-controlled paths.
-
-The manifest is refreshed after each successful generation. In watch mode, successful MDX and OpenAPI refreshes, including changes to watched local \`$ref\` files, become available to MCP automatically. If a refresh fails, the manifest continues to contain the last successfully generated corpus. For a one-time workflow, run \`doccupine build\` or \`doccupine generate\` before building and deploying the generated Next.js app.
 
 ## Troubleshooting
 
@@ -408,7 +343,6 @@ In Cloudflare dashboard:
 
 ## Best practices
 
-- **Keep content up-to-date**: Rebuild or redeploy your site after updating documentation to regenerate the index with fresh content.
 - **Use descriptive queries**: More specific queries yield better semantic search results.
 - **Monitor index status**: Use the GET endpoint to check if your index is ready before performing searches.
 - **Optimize content structure**: Well-structured markdown with clear headings improves search relevance.`;
