@@ -2,8 +2,9 @@ export const mcpServerTemplate = `import path from "node:path";
 import fs from "node:fs";
 import {
   McpServer,
+  ResourceNotFoundError,
   ResourceTemplate,
-} from "@modelcontextprotocol/sdk/server/mcp.js";
+} from "@modelcontextprotocol/server";
 import { z } from "zod";
 import {
   listAllDocs,
@@ -439,10 +440,17 @@ export function getIndexStatus(): {
  * Create and configure the MCP server with documentation tools
  */
 export function createMCPServer(): McpServer {
-  const server = new McpServer({
-    name: "docs-server",
-    version: "1.0.0",
-  });
+  // The docs are fixed for the life of a deployment, so the tool and resource
+  // lists never change and there is nothing to notify clients about.
+  const server = new McpServer(
+    { name: "docs-server", version: "1.0.0" },
+    {
+      capabilities: {
+        tools: { listChanged: false },
+        resources: { listChanged: false },
+      },
+    },
+  );
 
   // Register the search_docs tool
   server.registerTool(
@@ -451,7 +459,8 @@ export function createMCPServer(): McpServer {
       description: DOCS_TOOLS[0].description,
       inputSchema: searchDocsArgsSchema,
     },
-    async ({ query, limit, language, version }, { signal }) => {
+    async ({ query, limit, language, version }, ctx) => {
+      const { signal } = ctx.mcpReq;
       const results = await searchDocs(
         query,
         limit ?? 6,
@@ -477,7 +486,8 @@ export function createMCPServer(): McpServer {
       description: DOCS_TOOLS[1].description,
       inputSchema: getDocArgsSchema,
     },
-    async ({ path }, { signal }) => {
+    async ({ path }, ctx) => {
+      const { signal } = ctx.mcpReq;
       signal.throwIfAborted();
       const doc = await getDoc({ path });
       signal.throwIfAborted();
@@ -495,7 +505,8 @@ export function createMCPServer(): McpServer {
       description: DOCS_TOOLS[2].description,
       inputSchema: listDocsArgsSchema,
     },
-    async ({ directory, language, version }, { signal }) => {
+    async ({ directory, language, version }, ctx) => {
+      const { signal } = ctx.mcpReq;
       signal.throwIfAborted();
       const docs = await listDocs({ directory, language, version });
       signal.throwIfAborted();
@@ -555,12 +566,13 @@ export function createMCPServer(): McpServer {
         "The Markdown content of one documentation page, addressed by the docs:// URI from the docs://list index",
       mimeType: "text/markdown",
     },
-    async (uri, _variables, { signal }) => {
+    async (uri, _variables, ctx) => {
+      const { signal } = ctx.mcpReq;
       signal.throwIfAborted();
       const doc = await getDoc({ path: uri.href });
       signal.throwIfAborted();
       if (!doc) {
-        throw new Error(\`Document not found: \${uri.href}\`);
+        throw new ResourceNotFoundError(uri.href);
       }
       return {
         contents: [

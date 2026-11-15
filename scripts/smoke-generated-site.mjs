@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { smokeMcpEndpoint } from "./smoke-mcp.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const projectDir = await fs.mkdtemp(path.join(os.tmpdir(), "doccupine-smoke-"));
@@ -233,6 +234,8 @@ try {
       throw new Error(`${route} route did not trace docs-content.json`);
     }
   }
+
+  await smokeMcpEndpoint(siteDir);
 } finally {
   await fs.rm(projectDir, { recursive: true, force: true });
 }

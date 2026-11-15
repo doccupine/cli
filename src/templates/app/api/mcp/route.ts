@@ -1,5 +1,9 @@
 export const mcpRoutesTemplate = `import { NextResponse } from "next/server";
-import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import {
+  createMcpHandler,
+  isLegacyRequest,
+  WebStandardStreamableHTTPServerTransport,
+} from "@modelcontextprotocol/server";
 import {
   createMCPServer,
   searchDocs,
@@ -80,15 +84,30 @@ function protocolError(message: string, status = 400): Response {
   );
 }
 
-function createTransport() {
+function reportProtocolError(error: unknown) {
+  console.error("[doccupine] MCP protocol request failed:", error);
+}
+
+// Clients on the 2026-07-28 revision send self-contained requests: no
+// initialize handshake and no session. A fresh server answers each one; the
+// tools send nothing before their result, so the answer is a single JSON body.
+const modernHandler = createMcpHandler(() => createMCPServer(), {
+  legacy: "reject",
+  maxRequestBodySize: MCP_MAX_REQUEST_BYTES,
+  onerror: reportProtocolError,
+});
+
+// 2025-era clients (initialize handshake) keep the stateless transport they
+// used before, answered with JSON rather than an SSE stream.
+function createLegacyTransport() {
   return new WebStandardStreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
     enableJsonResponse: true,
   });
 }
 
-async function handleMCPRequest(req: Request, parsedBody?: unknown) {
-  const transport = createTransport();
+async function handleLegacyRequest(req: Request, parsedBody?: unknown) {
+  const transport = createLegacyTransport();
   const server = createMCPServer();
   let closed = false;
   const close = () => {
@@ -116,10 +135,17 @@ async function handleMCPRequest(req: Request, parsedBody?: unknown) {
     }
     return response;
   } catch (error: unknown) {
-    console.error("[doccupine] MCP protocol request failed:", error);
+    reportProtocolError(error);
     close();
     return protocolError("Internal server error", 500);
   }
+}
+
+async function handleMCPRequest(req: Request, parsedBody: unknown) {
+  if (await isLegacyRequest(req, parsedBody)) {
+    return handleLegacyRequest(req, parsedBody);
+  }
+  return modernHandler.fetch(req, { parsedBody });
 }
 
 interface ToolCallRequest {
@@ -303,6 +329,6 @@ export async function DELETE(req: Request) {
   if (!(await isMcpRequestAuthorized(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  return handleMCPRequest(req);
+  return handleLegacyRequest(req);
 }
 `;
