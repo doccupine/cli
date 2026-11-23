@@ -21,7 +21,7 @@ export const packageJsonTemplate =
         "@mdx-js/react": "^3.1.1",
         "@modelcontextprotocol/server": "^2.4.0",
         "beautiful-mermaid": "^1.1.3",
-        "cherry-styled-components": "^0.2.24",
+        "cherry-styled-components": "^0.3.0",
         langchain: "^1.6.6",
         "lucide-react": "^1.73.0",
         minisearch: "^7.2.0",

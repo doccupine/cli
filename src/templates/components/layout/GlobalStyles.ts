@@ -1,93 +1,45 @@
 export const globalStylesTemplate = `"use client";
 import { createGlobalStyle } from "styled-components";
-import {
-  colorsLight,
-  colorsDark,
-  shadowsLight,
-  shadowsDark,
-} from "@/app/theme";
+import { theme } from "@/app/theme";
 
-// Build "name: value;" lines for every entry in a record. Used to emit the
-// :root and dark-mode blocks from the resolved hex objects in theme.ts. Custom
-// theme.json overrides flow through automatically because they are already
-// merged into colorsLight / colorsDark.
-function toCssVars<T extends object>(prefix: string, record: T): string {
-  return Object.entries(record)
-    .map(([k, v]) => \`  --\${prefix}-\${k}: \${v};\`)
+// The theme's colors and shadows are CSS variables Cherry's provider declares,
+// light on :root and dark on :root.dark (--cherry-color-primary, ...). The
+// shorter --color-* and --shadow-* names are kept as aliases for CSS written
+// against them, including the diagram variables the Mermaid docs describe.
+function aliases(prefix: string, record: object): string {
+  return Object.keys(record)
+    .map((key) => \`  --\${prefix}-\${key}: var(--cherry-\${prefix}-\${key});\`)
     .join("\\n");
 }
 
-const lightVars = [
-  toCssVars("color", colorsLight),
-  toCssVars("shadow", shadowsLight),
-  // Semantic tokens — derived from the brand palette per mode. See the
-  // SemanticColors interface in theme.ts for the intent of each.
-  // These reference the palette via var() (not baked hex) so that any
-  // runtime override of --color-primary* (e.g. the DemoTheme presets)
-  // cascades into the semantic tokens automatically.
-  \`  --color-accent: var(--color-primaryDark);\`,
-  // accentStrong = accent shifted ~10% toward black (light mode) or white (dark
-  // mode). color-mix in sRGB is not identical to polished's HSL darken/lighten
-  // but the visual difference at 10% on a UI accent is imperceptible.
-  \`  --color-accentStrong: color-mix(in srgb, var(--color-primaryDark) 90%, black);\`,
-  \`  --color-accentMuted: var(--color-primary);\`,
-  \`  --color-surface: var(--color-light);\`,
-  // Cherry's mode-dependent colors (see buildColors in theme.ts).
-  \`  --color-link: var(--color-primary);\`,
-  \`  --color-onFilled: var(--color-light);\`,
-  \`  --color-primaryTintHover: color-mix(in srgb, var(--color-primary) 4%, transparent);\`,
-  \`  --color-primaryTintDrop: color-mix(in srgb, var(--color-primary) 5%, transparent);\`,
-  \`  --color-primaryTintActive: color-mix(in srgb, var(--color-primary) 10%, transparent);\`,
-].join("\\n");
-
-const darkVars = [
-  toCssVars("color", colorsDark),
-  toCssVars("shadow", shadowsDark),
-  \`  --color-accent: var(--color-primaryLight);\`,
-  \`  --color-accentStrong: color-mix(in srgb, var(--color-primaryLight) 90%, white);\`,
-  \`  --color-accentMuted: var(--color-grayDark);\`,
-  \`  --color-surface: var(--color-dark);\`,
-  \`  --color-link: var(--color-dark);\`,
-  \`  --color-onFilled: var(--color-dark);\`,
-  \`  --color-primaryTintHover: color-mix(in srgb, var(--color-primary) 10%, transparent);\`,
-  \`  --color-primaryTintDrop: color-mix(in srgb, var(--color-primary) 12%, transparent);\`,
-  \`  --color-primaryTintActive: color-mix(in srgb, var(--color-primary) 18%, transparent);\`,
+const aliasVars = [
+  aliases("color", theme.colors),
+  aliases("shadow", theme.shadows),
 ].join("\\n");
 
 const diagramVars = [
-  \`  --mermaid-bg: var(--color-light);\`,
-  \`  --mermaid-fg: var(--color-dark);\`,
-  \`  --mermaid-line: var(--color-grayDark);\`,
-  \`  --mermaid-accent: var(--color-accent);\`,
-  \`  --mermaid-muted: var(--color-grayDark);\`,
-  \`  --mermaid-surface: var(--color-grayLight);\`,
-  \`  --mermaid-border: var(--color-gray);\`,
+  \`  --mermaid-bg: var(--cherry-color-light);\`,
+  \`  --mermaid-fg: var(--cherry-color-dark);\`,
+  \`  --mermaid-line: var(--cherry-color-grayDark);\`,
+  \`  --mermaid-accent: var(--cherry-color-accent);\`,
+  \`  --mermaid-muted: var(--cherry-color-grayDark);\`,
+  \`  --mermaid-surface: var(--cherry-color-grayLight);\`,
+  \`  --mermaid-border: var(--cherry-color-gray);\`,
 ].join("\\n");
 
 const GlobalStyles = createGlobalStyle\`
 :root {
   color-scheme: light;
-\${lightVars}
+\${aliasVars}
 \${diagramVars}
 }
 
-/* The blocking theme-init script in the root layout stamps this attribute
-   before the first paint, so a statically rendered page arrives already dark.
+/* The blocking theme-init script in the root layout sets the dark class before
+   the first paint, so a statically rendered page arrives already dark.
    Declaring color-scheme here rather than inline on <html> keeps native form
    controls and scrollbars following the mode when the theme is toggled. */
-:root[data-theme="dark"] {
+:root.dark {
   color-scheme: dark;
-\${darkVars}
-}
-
-/* Set on <html> by CherryThemeProvider for the frame that paints a light/dark
-   switch, so every color changes at once instead of fading control by
-   control. */
-.theme-switching,
-.theme-switching *,
-.theme-switching *::before,
-.theme-switching *::after {
-  transition: none !important;
 }
 
 html,
@@ -95,7 +47,7 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  background-color: var(--color-light);
+  background-color: var(--cherry-color-light);
   scroll-padding-top: 80px;
 }
 
@@ -121,7 +73,7 @@ body {
 
 hr {
   border: none;
-  border-bottom: solid 1px var(--color-grayLight);
+  border-bottom: solid 1px var(--cherry-color-grayLight);
   margin: 10px 0;
 }
 
@@ -149,11 +101,11 @@ ul li,
 ol li {
   margin: 0;
   padding: 0;
-  color: var(--color-dark);
+  color: var(--cherry-color-dark);
 }
 
 a {
-  color: var(--color-primary);
+  color: var(--cherry-color-primary);
 }
 
 /* Keyboard-focus ring, defined once globally so links don't each re-declare it.
@@ -167,7 +119,7 @@ a {
 a:focus-visible:where(:not(.button-link)) {
   outline: none;
   border-radius: 6px;
-  box-shadow: 0 0 0 2px var(--color-primaryLight);
+  box-shadow: 0 0 0 2px var(--cherry-color-primaryLight);
 }
 
 ol,
@@ -208,10 +160,10 @@ b {
 /* Mode-conditional visibility helpers. ThemeToggle uses these to swap Sun
    and Moon icons; Header uses them to swap light/dark logos. Pure CSS so the
    swap happens via the active <html> attribute without JS or re-render. */
-:root[data-theme="dark"] .light-only {
+:root.dark .light-only {
   display: none !important;
 }
-:root:not([data-theme="dark"]) .dark-only {
+:root:not(.dark) .dark-only {
   display: none !important;
 }
 \`;

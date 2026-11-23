@@ -54,7 +54,7 @@ const CodeWrapper = styled.span<{ theme: Theme }>\`
    surface, however, matches the left sidebar's translucent brand tint
    (color-mix of theme.colors.primaryLight over the black page) instead of
    GitHub's #0d1117, so the window sits on the same background as the nav. Dark
-   variants live in :root[data-theme="dark"] & blocks so the swap happens via the active
+   variants live in :root.dark & blocks so the swap happens via the active
    <html> class with no re-render. */
 const TopBar = styled.div<{ theme: Theme }>\`
   position: relative;
@@ -83,7 +83,7 @@ const Dot = styled.span<{ theme: Theme }>\`
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.1);
 
-  :root[data-theme="dark"] & {
+  :root.dark & {
     background: rgba(255, 255, 255, 0.1);
   }
 \`;
@@ -91,7 +91,7 @@ const Dot = styled.span<{ theme: Theme }>\`
 /* Icon-only copy button. interactiveStyles supplies the border highlight on
    hover plus the focus/active rings (no scale effect). Colors come from theme
    tokens (grayLight border, success/grayDark icon) that swap for dark mode via
-   the theme prop, so no :root[data-theme="dark"] & override is needed and the copied state
+   the theme prop, so no :root.dark & override is needed and the copied state
    reads consistently in both modes. */
 const CopyButton = styled.button<{ theme: Theme; $copied: boolean }>\`
   \${resetButton}
@@ -183,7 +183,7 @@ const CodeTab = styled.button<{ theme: Theme; $active: boolean }>\`
   }
 \`;
 
-/* GitHub Light syntax highlighting by default; GitHub Dark in :root[data-theme="dark"].
+/* GitHub Light syntax highlighting by default; GitHub Dark in :root.dark.
    Browser resolves which rule wins based on the active <html> class with no
    JS or React re-render involved. */
 const lightSyntaxHighlight = css\`
@@ -384,7 +384,7 @@ const Body = styled.div<{ theme: Theme }>\`
     border-left-color: \${({ theme }) => theme.colors.error};
   }
 
-  :root[data-theme="dark"] & {
+  :root.dark & {
     background: \${({ theme }) =>
       \`color-mix(in srgb, \${theme.colors.primaryLight} 5%, transparent)\`};
     color: #ffffff;

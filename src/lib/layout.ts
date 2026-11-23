@@ -127,20 +127,21 @@ function fontDeclLine(fontConfig: FontConfig | null): string {
 
 // The inline blocking script that resolves dark mode before the first paint.
 // It only has to decide the mode and record it on <html>: every painted color
-// in the app resolves through the CSS custom properties that GlobalStyles
-// emits under :root and :root[data-theme="dark"], so that one attribute is
-// enough to make a statically rendered page arrive dark. Nothing is hidden and
-// nothing waits for hydration — the markup streams and paints in the right
-// theme exactly like a light visit does.
+// in the app resolves through the CSS custom properties Cherry's provider
+// declares under :root and :root.dark, so the "dark" class is enough to make a
+// statically rendered page arrive dark. Nothing is hidden and nothing waits for
+// hydration: the markup streams and paints in the right theme exactly like a
+// light visit does.
 //
-// The mode is decided the same way CherryThemeProvider decides it after
+// The mode is decided the same way Cherry's provider decides it after
 // hydration, so mounting never flips it: an explicit "themePreference" in
 // localStorage (light, dark or system); else a "theme" entry in localStorage,
 // which older releases wrote only when the visitor toggled; else the OS
 // preference. Where storage is blocked, the "theme" cookie is the only thing
 // that persists a choice, so it decides. The cookie is kept in step with the
-// resolved mode either way. The "dark" class is set alongside the attribute
-// for CSS written against it - Cherry's own, or a user's.
+// resolved mode either way. Cherry's own createThemeInitScript makes the same
+// decision, but creates the theme-color meta through the DOM, which Safari
+// does not tint from reliably, so the app keeps this script.
 //
 // The script also emits the theme-color meta for the resolved mode through
 // document.write, which hands the tag to the HTML parser itself: Safari only
@@ -164,7 +165,7 @@ function fontDeclLine(fontConfig: FontConfig | null): string {
 // generated layout, at app build time, from the imported theme palettes. The
 // token must match the one CherryThemeProvider syncs (primary), so the
 // chrome color does not change at hydration.
-const THEME_INIT_SCRIPT = `(function(){try{var r=document.documentElement,o=window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light",k=document.cookie.split(";").map(function(s){return s.trim();}).find(function(s){return s.indexOf("theme=")===0;}),c=k?k.split("=")[1]:null,m;try{var p=localStorage.getItem("themePreference"),t=localStorage.getItem("theme");m=p==="light"||p==="dark"?p:p!=="system"&&(t==="light"||t==="dark")?t:o;}catch(e){m=c==="light"||c==="dark"?c:o;}if(c!==m){document.cookie="theme="+m+";path=/;max-age=31536000;SameSite=Lax";}r.dataset.theme=m;if(m==="dark"){r.classList.add("dark");}document.write('<meta name="theme-color" content="'+(m==="dark"?"\${colorsDark.primary}":"\${colorsLight.primary}")+'">');}catch(e){}})();`;
+const THEME_INIT_SCRIPT = `(function(){try{var r=document.documentElement,o=window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light",k=document.cookie.split(";").map(function(s){return s.trim();}).find(function(s){return s.indexOf("theme=")===0;}),c=k?k.split("=")[1]:null,m;try{var p=localStorage.getItem("themePreference"),t=localStorage.getItem("theme");m=p==="light"||p==="dark"?p:p!=="system"&&(t==="light"||t==="dark")?t:o;}catch(e){m=c==="light"||c==="dark"?c:o;}if(c!==m){document.cookie="theme="+m+";path=/;max-age=31536000;SameSite=Lax";}r.classList.toggle("dark",m==="dark");document.write('<meta name="theme-color" content="'+(m==="dark"?"\${colorsDark.primary}":"\${colorsLight.primary}")+'">');}catch(e){}})();`;
 
 /**
  * Root layout ("app/layout.tsx"). Minimal shell: html/body, fonts, the theme
@@ -238,8 +239,8 @@ export default function RootLayout({
   return (
     <html lang="${defaultCode}" suppressHydrationWarning>
       <head>
-        {/* Resolves dark mode before the first paint by stamping data-theme
-            on <html>, which flips the CSS variables in GlobalStyles.
+        {/* Resolves dark mode before the first paint by setting the "dark"
+            class on <html>, which flips the theme's CSS variables.
             Inlined as a plain <script> (not next/script) so it ships in the
             SSR HTML and runs synchronously before paint — next/script with
             beforeInteractive is async in App Router and would flash.
