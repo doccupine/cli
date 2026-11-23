@@ -1,8 +1,5 @@
 export const demoThemeTemplate = `"use client";
-import { useContext } from "react";
-import { useTheme } from "styled-components";
-import { ThemeContext } from "cherry-styled-components";
-import { theme, themeDark, Theme } from "@/app/theme";
+import { useColorMode } from "@/components/layout/CherryThemeProvider";
 import { Button } from "@/components/layout/Button";
 import { Columns } from "@/components/layout/Columns";
 
@@ -15,8 +12,9 @@ type Palette = Record<string, string>;
 // Each preset is light + dark color overrides, mirroring what a user editing
 // theme.json would see. Applying one does two things: writes the overrides as
 // --color-* custom properties on <html>, which is where every painted color
-// resolves from, and switches the mode through Cherry's setTheme so the choice
-// persists and the "dark" class follows. Reset removes the properties so the
+// resolves from, and switches the mode through the color-mode preference so
+// the choice persists. Setting the preference also re-syncs the browser's
+// theme-color with the new primary. Reset removes the properties so the
 // values from theme.json (or the defaults) take over again.
 const PRESETS: Record<
   DemoThemeProps["variant"],
@@ -80,8 +78,7 @@ function clearPresetVars() {
 }
 
 function DemoTheme({ variant }: DemoThemeProps) {
-  const { setTheme } = useContext(ThemeContext);
-  const activeTheme = useTheme() as Theme;
+  const { preference, setPreference } = useColorMode();
   const preset = PRESETS[variant];
 
   if (!preset) {
@@ -90,7 +87,7 @@ function DemoTheme({ variant }: DemoThemeProps) {
         <Button
           onClick={() => {
             clearPresetVars();
-            setTheme(activeTheme.isDark ? themeDark : theme);
+            setPreference(preference);
           }}
           fullWidth
         >
@@ -105,7 +102,7 @@ function DemoTheme({ variant }: DemoThemeProps) {
       <Button
         onClick={() => {
           applyPresetVars(preset.light);
-          setTheme(theme);
+          setPreference("light");
         }}
         icon="sun"
         fullWidth
@@ -116,7 +113,7 @@ function DemoTheme({ variant }: DemoThemeProps) {
         outline
         onClick={() => {
           applyPresetVars(preset.dark);
-          setTheme(themeDark);
+          setPreference("dark");
         }}
         icon="moon-star"
         fullWidth

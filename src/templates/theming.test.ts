@@ -22,22 +22,34 @@ describe("generated theming", () => {
     // Cherry's provider, which strips it for a frame on mount while it
     // reconciles the server's light theme against the cookie. Anything painted
     // from it flashes light on every dark load.
-    expect(rootLayout).toContain('r.dataset.theme=d?"dark":"light"');
+    expect(rootLayout).toContain("r.dataset.theme=m;");
     expect(rootLayout).toContain("prefers-color-scheme:dark");
     expect(rootLayout).toContain("SameSite=Lax");
     expect(globalStylesTemplate).toContain(':root[data-theme="dark"]');
     expect(globalStylesTemplate).not.toContain(":root.dark");
-    // The attribute mirror must read the cookie, not the theme object: the
-    // first client render carries the unreconciled light theme, and a
-    // skip-the-first-pass ref alone breaks under StrictMode's dev
-    // double-invocation - the second pass writes light and the page flashes
-    // white on every dark load. The theme object is only the cookie-less
-    // fallback, where the first pass must still be skipped.
-    expect(cherryThemeProviderTemplate).toContain("theme=(dark|light)");
-    expect(cherryThemeProviderTemplate).toContain(
-      "document.documentElement.dataset.theme = activeTheme.isDark",
+  });
+
+  it("decides the mode the same way before paint and after hydration", () => {
+    // An explicit preference, else the legacy localStorage choice, else the
+    // OS; the cookie only decides where storage is blocked. If the script and
+    // the provider disagreed, mounting would flip the mode on a loaded page.
+    expect(rootLayout).toContain(
+      'm=p==="light"||p==="dark"?p:p!=="system"&&(t==="light"||t==="dark")?t:o;',
     );
-    expect(cherryThemeProviderTemplate).toContain("settled.current");
+    expect(rootLayout).toContain('m=c==="light"||c==="dark"?c:o;');
+    expect(cherryThemeProviderTemplate).toContain(
+      'const PREFERENCE_KEY = "themePreference";',
+    );
+    expect(cherryThemeProviderTemplate).toContain(
+      'const legacy = window.localStorage.getItem("theme");',
+    );
+    expect(cherryThemeProviderTemplate).toContain(
+      'return readCookieMode() ?? "system";',
+    );
+    // "system" follows the OS live.
+    expect(cherryThemeProviderTemplate).toContain(
+      'media.addEventListener("change", follow)',
+    );
   });
 
   it("never hides the page or freezes transitions while waiting for hydration", () => {
@@ -59,27 +71,74 @@ describe("generated theming", () => {
     );
     expect(themeTemplate).toContain('cssVarTokens("shadow", shadowsLight)');
     expect(themeTemplate).toContain("`var(--${prefix}-${key})`");
-    // The two theme objects must stay identical apart from isDark: anything
-    // else would make the server's render mode visible before hydration.
-    expect(themeTemplate).toContain(
-      "export const themeDark: Theme = {\n  ...theme,\n  isDark: true,\n};",
-    );
+    // One theme object for both modes, with no mode flag: a toggle must not
+    // hand styled-components a new theme, or every component renders again.
+    expect(themeTemplate).not.toContain("themeDark");
+    expect(themeTemplate).not.toMatch(/^\s+isDark: boolean;$/m);
     expect(themeTemplate).not.toContain(
       "colors: buildColors(colorsDark, true)",
     );
     expect(themeTemplate).not.toContain("shadows: shadowsDark");
   });
 
-  it("keeps the provider free of request data and mode guessing", () => {
-    expect(cherryThemeProviderTemplate).toContain("$globalStyles={false}");
-    // Cherry 0.2.15's provider resolves var() color references through
-    // computed styles, so the post-hydration theme-color sync belongs to it
-    // ($themeColor="primary" - the branded chrome Cherry's own site uses)
-    // and the template must not duplicate the meta bookkeeping by hand.
-    expect(cherryThemeProviderTemplate).toContain('$themeColor="primary"');
-    expect(cherryThemeProviderTemplate).not.toContain('name="theme-color"');
+  it("switches modes without handing styled-components a new theme", () => {
+    // The provider passes the one constant theme; the mode lives on <html>.
+    expect(cherryThemeProviderTemplate).toContain(
+      "<ThemeProvider theme={theme}>",
+    );
+    expect(cherryThemeProviderTemplate).not.toContain("ClientThemeProvider");
+    expect(cherryThemeProviderTemplate).toContain("root.dataset.theme = mode");
+    expect(cherryThemeProviderTemplate).toContain(
+      'root.classList.toggle("dark", mode === "dark")',
+    );
+    // Cherry's ThemeToggle keeps working through its context.
+    expect(cherryThemeProviderTemplate).toContain("<ThemeContext.Provider");
+    expect(cherryThemeProviderTemplate).toContain("toggleTheme:");
+    expect(rootLayout).toContain("<CherryThemeProvider>");
+    expect(rootLayout).not.toContain("themeDark");
+    // Cherry's mode-dependent colors are tokens, so none of its components
+    // fall back to the isDark flag the theme no longer has.
+    for (const token of [
+      "link",
+      "onFilled",
+      "primaryTintHover",
+      "primaryTintDrop",
+      "primaryTintActive",
+    ]) {
+      expect(themeTemplate).toContain(`  ${token}: TString;`);
+      expect(
+        globalStylesTemplate.match(new RegExp(`--color-${token}:`, "g")),
+      ).toHaveLength(2);
+    }
+    expect(themeTemplate).toContain("toast: TString;");
+  });
+
+  it("paints a mode switch with transitions off", () => {
+    // Otherwise each control fades on its own and the page changes unevenly.
+    expect(cherryThemeProviderTemplate).toContain(
+      'root.classList.add("theme-switching")',
+    );
+    expect(cherryThemeProviderTemplate).toContain(
+      'root.classList.remove("theme-switching")',
+    );
+    expect(globalStylesTemplate).toContain(".theme-switching *::after {");
+    expect(globalStylesTemplate).toContain("transition: none !important;");
+  });
+
+  it("keeps the provider free of request data", () => {
     expect(cherryThemeProviderTemplate).not.toContain("cookies()");
-    expect(cherryThemeProviderTemplate).not.toContain("$initial");
+    expect(cherryThemeProviderTemplate).not.toContain("headers()");
+  });
+
+  it("only rewrites the script-owned theme-color meta's content", () => {
+    // Safari tints its chrome reliably only from the parser-inserted tag the
+    // blocking script writes; creating, removing or unscoping metas from the
+    // client is what broke the tint before.
+    expect(cherryThemeProviderTemplate).toContain(
+      "if (meta.content !== color) meta.content = color;",
+    );
+    expect(cherryThemeProviderTemplate).not.toContain("createElement");
+    expect(cherryThemeProviderTemplate).not.toContain(".remove()");
   });
 
   it("writes the theme-color meta pre-paint from the resolved mode", () => {
@@ -95,10 +154,13 @@ describe("generated theming", () => {
     expect(rootLayout).not.toContain("themeColor");
     expect(rootLayout).not.toContain("prefers-color-scheme: light");
     expect(rootLayout).not.toContain("content={colorsLight.primary}");
-    // The script and the provider's $themeColor must stay on the same token,
-    // or the chrome color jumps at hydration.
+    // The script and the provider must stay on the same token, or the
+    // chrome color jumps at hydration.
     expect(rootLayout).toContain(
-      'document.write(\'<meta name="theme-color" content="\'+(d?"${colorsDark.primary}":"${colorsLight.primary}")+\'">\');',
+      'document.write(\'<meta name="theme-color" content="\'+(m==="dark"?"${colorsDark.primary}":"${colorsLight.primary}")+\'">\');',
+    );
+    expect(cherryThemeProviderTemplate).toContain(
+      'getPropertyValue("--color-primary")',
     );
     // The layout reads palette values server-side, so the theme module must
     // not be a client module.

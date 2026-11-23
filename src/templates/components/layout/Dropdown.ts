@@ -171,8 +171,7 @@ const DropdownItem = styled.button<{ theme: Theme; $checked?: boolean }>\`
       \${({ theme }) => theme.colors.primaryLight} 10%,
       transparent
     );
-    color: \${({ theme }) =>
-      theme.isDark ? theme.colors.primaryLight : theme.colors.primaryDark};
+    color: \${({ theme }) => theme.colors.accent};
   }
 
   /* Inset so the menu's overflow does not clip it, square so the menu's own

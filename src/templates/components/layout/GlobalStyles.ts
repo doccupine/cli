@@ -32,6 +32,12 @@ const lightVars = [
   \`  --color-accentStrong: color-mix(in srgb, var(--color-primaryDark) 90%, black);\`,
   \`  --color-accentMuted: var(--color-primary);\`,
   \`  --color-surface: var(--color-light);\`,
+  // Cherry's mode-dependent colors (see buildColors in theme.ts).
+  \`  --color-link: var(--color-primary);\`,
+  \`  --color-onFilled: var(--color-light);\`,
+  \`  --color-primaryTintHover: color-mix(in srgb, var(--color-primary) 4%, transparent);\`,
+  \`  --color-primaryTintDrop: color-mix(in srgb, var(--color-primary) 5%, transparent);\`,
+  \`  --color-primaryTintActive: color-mix(in srgb, var(--color-primary) 10%, transparent);\`,
 ].join("\\n");
 
 const darkVars = [
@@ -41,6 +47,11 @@ const darkVars = [
   \`  --color-accentStrong: color-mix(in srgb, var(--color-primaryLight) 90%, white);\`,
   \`  --color-accentMuted: var(--color-grayDark);\`,
   \`  --color-surface: var(--color-dark);\`,
+  \`  --color-link: var(--color-dark);\`,
+  \`  --color-onFilled: var(--color-dark);\`,
+  \`  --color-primaryTintHover: color-mix(in srgb, var(--color-primary) 10%, transparent);\`,
+  \`  --color-primaryTintDrop: color-mix(in srgb, var(--color-primary) 12%, transparent);\`,
+  \`  --color-primaryTintActive: color-mix(in srgb, var(--color-primary) 18%, transparent);\`,
 ].join("\\n");
 
 const diagramVars = [
@@ -67,6 +78,16 @@ const GlobalStyles = createGlobalStyle\`
 :root[data-theme="dark"] {
   color-scheme: dark;
 \${darkVars}
+}
+
+/* Set on <html> by CherryThemeProvider for the frame that paints a light/dark
+   switch, so every color changes at once instead of fading control by
+   control. */
+.theme-switching,
+.theme-switching *,
+.theme-switching *::before,
+.theme-switching *::after {
+  transition: none !important;
 }
 
 html,

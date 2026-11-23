@@ -8,7 +8,15 @@ export const themeTemplate = `import customThemeJson from "@/theme.json";
 // and are not directly overridable.
 type CustomColors = Omit<
   Colors,
-  "accent" | "accentStrong" | "accentMuted" | "surface"
+  | "accent"
+  | "accentStrong"
+  | "accentMuted"
+  | "surface"
+  | "link"
+  | "onFilled"
+  | "primaryTintHover"
+  | "primaryTintDrop"
+  | "primaryTintActive"
 >;
 
 interface CustomTheme {
@@ -95,6 +103,8 @@ export const shadowsLight: Shadows = {
   md: "0px 8px 8px 0px rgba(18, 18, 18, 0.16), 0px 2px 3px 0px rgba(39, 41, 45, 0.06)",
   lg: "0px 16px 24px 0px rgba(18, 18, 18, 0.20), 0px 2px 3px 0px rgba(39, 41, 45, 0.08)",
   xl: "0px 24px 32px 0px rgba(18, 18, 18, 0.24), 0px 2px 3px 0px rgba(39, 41, 45, 0.12)",
+  toast:
+    "0px 4px 4px 0px rgba(18, 18, 18, 0.04), 0px 1px 3px 0px rgba(39, 41, 45, 0.02)",
 };
 
 export const shadowsDark: Shadows = {
@@ -103,6 +113,8 @@ export const shadowsDark: Shadows = {
   md: "0px 8px 8px 0px rgba(255, 255, 255, 0.16), 0px 2px 3px 0px rgba(255, 255, 255, 0.06)",
   lg: "0px 16px 24px 0px rgba(255, 255, 255, 0.20), 0px 2px 3px 0px rgba(255, 255, 255, 0.08)",
   xl: "0px 24px 32px 0px rgba(255, 255, 255, 0.24), 0px 2px 3px 0px rgba(255, 255, 255, 0.12)",
+  toast:
+    "0px 4px 4px 0px rgba(255, 255, 255, 0.08), 0px 1px 3px 0px rgba(255, 255, 255, 0.04)",
 };
 
 const fonts: Fonts = {
@@ -167,6 +179,11 @@ const lineHeights: LineHeights = {
   inputSmall: { xs: "1", lg: "1" },
 };
 
+// \`color\` at \`percent\`% opacity, as native CSS (what Cherry's alpha() writes).
+function tint(color: string, percent: number): string {
+  return \`color-mix(in srgb, \${color} \${percent}%, transparent)\`;
+}
+
 // Builds the full Colors record for a mode: the resolved brand palette plus
 // the semantic tokens derived from it. Used here only as the key template for
 // the CSS-variable theme below; the resolved values themselves are emitted as
@@ -180,6 +197,13 @@ export function buildColors(palette: CustomColors, isDark: boolean): Colors {
     accentStrong: \`color-mix(in srgb, \${accent} 90%, \${isDark ? "white" : "black"})\`,
     accentMuted: isDark ? palette.grayDark : palette.primary,
     surface: isDark ? palette.dark : palette.light,
+    // Cherry's mode-dependent colors, set explicitly so its components never
+    // fall back to branching on a mode flag the theme no longer carries.
+    link: isDark ? palette.dark : palette.primary,
+    onFilled: isDark ? palette.dark : palette.light,
+    primaryTintHover: tint(palette.primary, isDark ? 10 : 4),
+    primaryTintDrop: tint(palette.primary, isDark ? 12 : 5),
+    primaryTintActive: tint(palette.primary, isDark ? 18 : 10),
   };
 }
 
@@ -197,10 +221,12 @@ function cssVarTokens<T extends object>(prefix: string, template: T): T {
 // and dark mode. That is what makes a statically rendered page paint the right
 // theme on its first frame: the data-theme attribute the blocking script in the
 // root layout stamps on <html> before paint selects the variable block, and
-// nothing has to wait for hydration to swap a theme object. \`theme\` and
-// \`themeDark\` therefore differ only in \`isDark\`, which Cherry's
-// ClientThemeProvider reads to persist the choice, and which
-// ThemeModeAttribute mirrors back onto the attribute.
+// nothing has to wait for hydration to swap a theme object. So there is one
+// \`theme\` for both modes and it never changes: a toggle flips the attribute
+// (CherryThemeProvider) and the browser repaints, without styled-components
+// rendering anything again. A style that differs by mode is a token or a
+// \`:root[data-theme="dark"] &\` rule, never a branch in JS; code that needs the
+// mode itself reads \`useColorMode()\` from CherryThemeProvider.
 const colors = cssVarTokens("color", buildColors(colorsLight, false));
 const shadows = cssVarTokens("shadow", shadowsLight);
 
@@ -212,12 +238,6 @@ export const theme: Theme = {
   fonts,
   fontSizes,
   lineHeights,
-  isDark: false,
-};
-
-export const themeDark: Theme = {
-  ...theme,
-  isDark: true,
 };
 
 interface Breakpoints<TNumber = number> {
@@ -275,6 +295,14 @@ interface Colors<TString = string> {
   accentMuted: TString;
   /** Elevated surface color, white-ish in both modes. Was: isDark ? dark : light. */
   surface: TString;
+  /** Link text (Cherry). primary in light mode, dark in dark mode. */
+  link: TString;
+  /** Text on a filled control (Cherry). The palette end contrasting with the mode. */
+  onFilled: TString;
+  /** primary tints Cherry uses for hover / drop / active backgrounds. */
+  primaryTintHover: TString;
+  primaryTintDrop: TString;
+  primaryTintActive: TString;
 }
 
 interface Shadows<TString = string> {
@@ -283,6 +311,8 @@ interface Shadows<TString = string> {
   md: TString;
   lg: TString;
   xl: TString;
+  /** Cherry's toast shadow: xs in light mode, sm in dark mode. */
+  toast: TString;
 }
 
 interface Fonts<TString = string> {
@@ -355,6 +385,5 @@ export interface Theme {
   fonts: Fonts;
   fontSizes: FontSizes;
   lineHeights: LineHeights;
-  isDark: boolean;
 }
 `;
