@@ -3,12 +3,20 @@ export const CHAT_WIDTH = 420;
 
 export const themeTemplate = `import customThemeJson from "@/theme.json";
 
-// Users can only override the brand palette via theme.json — semantic tokens
-// (accent, surface, etc.) are derived in GlobalStyles from the brand colors
+// Users can only override the brand palette via theme.json: semantic tokens
+// (accent, surface, etc.) are derived from the brand colors by buildColors
 // and are not directly overridable.
 type CustomColors = Omit<
   Colors,
-  "accent" | "accentStrong" | "accentMuted" | "surface"
+  | "accent"
+  | "accentStrong"
+  | "accentMuted"
+  | "surface"
+  | "link"
+  | "onFilled"
+  | "primaryTintHover"
+  | "primaryTintDrop"
+  | "primaryTintActive"
 >;
 
 interface CustomTheme {
@@ -39,10 +47,10 @@ const spacing: Spacing = {
   gridGap: { xs: "20px", lg: "40px" },
 };
 
-// Resolved hex palettes for each mode. GlobalStyles emits them as CSS custom
-// properties, one block per mode, and that is where every painted color
-// actually comes from — the theme objects below only reference those variables.
-// Custom theme.json overrides are merged here, so they flow through both.
+// Resolved hex palettes for each mode. Cherry's provider declares them as CSS
+// custom properties, one block per mode, and that is where every painted color
+// comes from. Custom theme.json overrides are merged here, so they flow
+// through both.
 export const colorsLight: CustomColors = {
   primaryLight: "#d1d5db",
   primary: "#556272",
@@ -95,6 +103,8 @@ export const shadowsLight: Shadows = {
   md: "0px 8px 8px 0px rgba(18, 18, 18, 0.16), 0px 2px 3px 0px rgba(39, 41, 45, 0.06)",
   lg: "0px 16px 24px 0px rgba(18, 18, 18, 0.20), 0px 2px 3px 0px rgba(39, 41, 45, 0.08)",
   xl: "0px 24px 32px 0px rgba(18, 18, 18, 0.24), 0px 2px 3px 0px rgba(39, 41, 45, 0.12)",
+  toast:
+    "0px 4px 4px 0px rgba(18, 18, 18, 0.04), 0px 1px 3px 0px rgba(39, 41, 45, 0.02)",
 };
 
 export const shadowsDark: Shadows = {
@@ -103,6 +113,8 @@ export const shadowsDark: Shadows = {
   md: "0px 8px 8px 0px rgba(255, 255, 255, 0.16), 0px 2px 3px 0px rgba(255, 255, 255, 0.06)",
   lg: "0px 16px 24px 0px rgba(255, 255, 255, 0.20), 0px 2px 3px 0px rgba(255, 255, 255, 0.08)",
   xl: "0px 24px 32px 0px rgba(255, 255, 255, 0.24), 0px 2px 3px 0px rgba(255, 255, 255, 0.12)",
+  toast:
+    "0px 4px 4px 0px rgba(255, 255, 255, 0.08), 0px 1px 3px 0px rgba(255, 255, 255, 0.04)",
 };
 
 const fonts: Fonts = {
@@ -167,57 +179,59 @@ const lineHeights: LineHeights = {
   inputSmall: { xs: "1", lg: "1" },
 };
 
+// \`color\` at \`percent\`% opacity, as native CSS (what Cherry's alpha() writes).
+function tint(color: string, percent: number): string {
+  return \`color-mix(in srgb, \${color} \${percent}%, transparent)\`;
+}
+
+// A palette color as the CSS variable Cherry declares for it, so a token built
+// from it follows runtime overrides of that variable (the DemoTheme presets).
+const ref = (key: keyof CustomColors) => \`var(--cherry-color-\${key})\`;
+
 // Builds the full Colors record for a mode: the resolved brand palette plus
-// the semantic tokens derived from it. Used here only as the key template for
-// the CSS-variable theme below; the resolved values themselves are emitted as
-// custom properties by GlobalStyles.
+// the semantic tokens derived from it. The semantic tokens reference the
+// palette's CSS variables rather than copying its values, so overriding
+// --cherry-color-primary* at runtime cascades into them.
 export function buildColors(palette: CustomColors, isDark: boolean): Colors {
-  const accent = isDark ? palette.primaryLight : palette.primaryDark;
+  const accent = ref(isDark ? "primaryLight" : "primaryDark");
   return {
     ...palette,
     accent,
     // accent shifted ~10% toward black (light mode) or white (dark mode).
     accentStrong: \`color-mix(in srgb, \${accent} 90%, \${isDark ? "white" : "black"})\`,
-    accentMuted: isDark ? palette.grayDark : palette.primary,
-    surface: isDark ? palette.dark : palette.light,
+    accentMuted: ref(isDark ? "grayDark" : "primary"),
+    surface: ref(isDark ? "dark" : "light"),
+    // Cherry's mode tokens, stated here so they follow the presets too.
+    link: ref(isDark ? "dark" : "primary"),
+    onFilled: ref(isDark ? "dark" : "light"),
+    primaryTintHover: tint(ref("primary"), isDark ? 10 : 4),
+    primaryTintDrop: tint(ref("primary"), isDark ? 12 : 5),
+    primaryTintActive: tint(ref("primary"), isDark ? 18 : 10),
   };
 }
 
-// Maps every key of a token record to the CSS custom property that holds its
-// value, keeping the record's exact shape. Passing the resolved light objects
-// as templates means a new token can never be forgotten here.
-function cssVarTokens<T extends object>(prefix: string, template: T): T {
-  return Object.fromEntries(
-    Object.keys(template).map((key) => [key, \`var(--\${prefix}-\${key})\`]),
-  ) as T;
-}
-
-// Every painted color and shadow resolves through a CSS custom property rather
-// than a literal, so the CSS styled-components generates is identical in light
-// and dark mode. That is what makes a statically rendered page paint the right
-// theme on its first frame: the data-theme attribute the blocking script in the
-// root layout stamps on <html> before paint selects the variable block, and
-// nothing has to wait for hydration to swap a theme object. \`theme\` and
-// \`themeDark\` therefore differ only in \`isDark\`, which Cherry's
-// ClientThemeProvider reads to persist the choice, and which
-// ThemeModeAttribute mirrors back onto the attribute.
-const colors = cssVarTokens("color", buildColors(colorsLight, false));
-const shadows = cssVarTokens("shadow", shadowsLight);
-
+// The light and dark themes, with real values, for Cherry's ClientThemeProvider
+// (see CherryThemeProvider). Cherry turns them into one theme whose colors and
+// shadows are CSS variables (\`var(--cherry-color-primary)\`), declares the light
+// values on :root and the dark ones on :root.dark, and switches the mode by
+// flipping the \`dark\` class on <html>, so no styled component renders again.
+// The blocking script in the root layout sets that class before the first
+// paint. A style that differs by mode is a token or a \`:root.dark &\` rule,
+// never a branch in JS; code that needs the mode reads Cherry's useColorMode().
 export const theme: Theme = {
   breakpoints,
   spacing,
-  colors,
-  shadows,
+  colors: buildColors(colorsLight, false),
+  shadows: shadowsLight,
   fonts,
   fontSizes,
   lineHeights,
-  isDark: false,
 };
 
 export const themeDark: Theme = {
   ...theme,
-  isDark: true,
+  colors: buildColors(colorsDark, true),
+  shadows: shadowsDark,
 };
 
 interface Breakpoints<TNumber = number> {
@@ -275,6 +289,14 @@ interface Colors<TString = string> {
   accentMuted: TString;
   /** Elevated surface color, white-ish in both modes. Was: isDark ? dark : light. */
   surface: TString;
+  /** Link text (Cherry). primary in light mode, dark in dark mode. */
+  link: TString;
+  /** Text on a filled control (Cherry). The palette end contrasting with the mode. */
+  onFilled: TString;
+  /** primary tints Cherry uses for hover / drop / active backgrounds. */
+  primaryTintHover: TString;
+  primaryTintDrop: TString;
+  primaryTintActive: TString;
 }
 
 interface Shadows<TString = string> {
@@ -283,6 +305,8 @@ interface Shadows<TString = string> {
   md: TString;
   lg: TString;
   xl: TString;
+  /** Cherry's toast shadow: xs in light mode, sm in dark mode. */
+  toast: TString;
 }
 
 interface Fonts<TString = string> {
@@ -355,6 +379,5 @@ export interface Theme {
   fonts: Fonts;
   fontSizes: FontSizes;
   lineHeights: LineHeights;
-  isDark: boolean;
 }
 `;
