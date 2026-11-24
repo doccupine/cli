@@ -35,7 +35,7 @@ export interface PageItem {`,
       `const StyledModal = styled.div<{ theme: Theme; $isClosing: boolean }>\`
   background: \${({ theme }) => theme.colors.light};
   border-radius: \${({ theme }) => \`calc(\${theme.spacing.radius.lg} + 4px)\`};
-  box-shadow: \${({ theme }) => theme.shadows.lg};
+  box-shadow: \${({ theme }) => theme.shadows.xs};
   overflow: hidden;
   width: 100%;
   max-width: 600px;
