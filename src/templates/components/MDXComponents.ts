@@ -69,13 +69,25 @@ export function extractAllTextFromChildren(children: React.ReactNode): string {
   return "";
 }
 
+// Inline code. A value with an unbroken run longer than this (a URL, a long
+// path) is marked data-long, and only those may break anywhere: breaking any
+// code anywhere would also let a table column shrink until short values like
+// \`classic\` split mid-word.
+const LONG_CODE_RUN = 20;
+
+export function InlineCode(props: React.ComponentProps<"code">) {
+  const text = extractAllTextFromChildren(props.children);
+  const isLong = text.split(/\\s+/).some((run) => run.length > LONG_CODE_RUN);
+  return <code {...props} data-long={isLong ? "" : undefined} />;
+}
+
 // Map <pre><code class="language-xyz"> to our <Code /> component
 export function Pre(props: PreProps) {
   const child = React.Children.only(props.children) as React.ReactElement<{
     className?: string;
     children?: React.ReactNode;
   }> | null;
-  if (child && child.type === "code") {
+  if (child && (child.type === "code" || child.type === InlineCode)) {
     const className = child.props.className || "";
     const match = /language-(\\w+)/.exec(className);
     const language = match ? match[1] : undefined;
@@ -175,8 +187,9 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       </div>
     ),
 
-    // Code blocks
+    // Code blocks, and inline code (marks long values, see InlineCode)
     pre: Pre,
+    code: InlineCode,
 
     // Expose your custom components for MDX usage
     Badge,

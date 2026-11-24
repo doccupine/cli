@@ -210,14 +210,6 @@ export const styledTable = css<{ theme: Theme }>\`
       color: \${({ theme }) => theme.colors.grayDark};
       \${({ theme }) => styledSmall(theme)};
     }
-
-    /* Inline code in a cell is usually a value (a key, an option name): keep
-       it whole and let the wrapper scroll sideways instead of breaking it
-       mid-word. Matches the prose rule's selector so it outranks it. */
-    & :is(td, th) code:not([class]) {
-      overflow-wrap: normal;
-      white-space: nowrap;
-    }
   }
 \`;
 

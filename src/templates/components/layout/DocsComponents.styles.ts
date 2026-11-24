@@ -60,8 +60,11 @@ export const StyledDocsContainer = styled.main<{
     hyphens: auto;
   }
 
+  /* A fenced block without a language renders as a plain <pre>: let a long
+     line scroll inside it instead of widening the page. */
   & pre {
     max-width: 100%;
+    overflow-x: auto;
   }
 
   \${styledAnchor};
@@ -83,6 +86,14 @@ export const StyledDocsContainer = styled.main<{
     color: \${({ theme }) => theme.colors.dark};
     padding: 2px 4px;
     border-radius: \${({ theme }) => theme.spacing.radius.xs};
+    /* Short values stay whole (break-word never narrows a table column);
+       long ones, marked data-long by InlineCode, may break anywhere. Code
+       is never hyphenated, even where the prose around it is. */
+    overflow-wrap: break-word;
+    hyphens: none;
+  }
+
+  & code:not([class])[data-long] {
     overflow-wrap: anywhere;
   }
 
