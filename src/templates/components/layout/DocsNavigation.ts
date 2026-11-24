@@ -1,97 +1,16 @@
-import { SIDEBAR_WIDTH, CHAT_WIDTH } from "../../app/theme.js";
-
 export const docsNavigationTemplate = `"use client";
 import { usePathname } from "next/navigation";
 import { useStrings } from "@/components/useStrings";
-import Link from "next/link";
-import styled, { css } from "styled-components";
 import { useChat } from "cherry-styled-components";
 import { Icon } from "@/components/layout/Icon";
-import { mq, Theme } from "@/app/theme";
 import {
-  focusModeColumn,
-  interactiveStyles,
-  sidePanelOffset,
-} from "@/components/layout/SharedStyled";
-
-const StyledNavigationWrapper = styled.div<{
-  $isChatOpen?: boolean;
-}>\`
-  transition: all 0.3s ease;
-  padding: 0 20px 100px 20px;
-  \${mq("lg")} {
-    padding: 0 ${SIDEBAR_WIDTH + 20}px 80px ${SIDEBAR_WIDTH + 20}px;
-    \${({ $isChatOpen }) =>
-      $isChatOpen &&
-      css\`
-        padding: 0 ${CHAT_WIDTH + 20}px 80px ${SIDEBAR_WIDTH + 20}px;
-      \`}
-  }
-
-  \${sidePanelOffset};
-  \${({ $isChatOpen }) => !$isChatOpen && focusModeColumn};
-\`;
-
-const StyledNavigationInner = styled.div\`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
-  max-width: 640px;
-  margin: auto;
-\`;
-
-const StyledNavButton = styled(Link)<{ theme: Theme }>\`
-  \${interactiveStyles};
-  display: flex;
-  flex-direction: column;
-  text-decoration: none;
-  padding: 20px;
-  flex: 50%;
-  max-width: 50%;
-  border-radius: \${({ theme }) => theme.spacing.radius.lg};
-  border: solid 1px \${({ theme }) => theme.colors.grayLight};
-  color: \${({ theme }) => theme.colors.dark};
-
-  &:hover {
-    border-color: \${({ theme }) => theme.colors.primary};
-  }
-
-  &[data-direction="prev"] {
-    align-items: flex-start;
-  }
-
-  &[data-direction="next"] {
-    align-items: flex-end;
-    margin-left: auto;
-    text-align: right;
-  }
-\`;
-
-const StyledNavLabel = styled.span<{ theme: Theme }>\`
-  color: \${({ theme }) => theme.colors.grayDark};
-  display: flex;
-  flex-direction: row;
-  gap: 4px;
-
-  & svg {
-    margin: auto 0;
-  }
-\`;
-
-const StyledNavTitle = styled.span<{ theme: Theme }>\`
-  color: \${({ theme }) => theme.colors.dark};
-  font-weight: 600;
-  margin: 0 0 4px 0;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  max-width: 100%;
-\`;
-
-const StyledSpacer = styled.div\`
-  flex: 1;
-\`;
+  StyledNavigationWrapper,
+  StyledNavigationInner,
+  StyledNavButton,
+  StyledNavLabel,
+  StyledNavTitle,
+  StyledSpacer,
+} from "@/components/layout/DocsNavigation.styles";
 
 interface Page {
   // Optional: nested group nodes may act as headers without their own page.

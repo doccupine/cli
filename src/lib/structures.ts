@@ -1,3 +1,4 @@
+import { DEFAULT_TEMPLATE, type SiteTemplate } from "./templates.js";
 import { envExampleTemplate } from "../templates/env.example.js";
 import { gitignoreTemplate } from "../templates/gitignore.js";
 import { eslintConfigTemplate } from "../templates/eslint.config.js";
@@ -20,6 +21,7 @@ import { chatTemplate } from "../templates/components/Chat.js";
 import { lockBodyScrollTemplate } from "../templates/components/LockBodyScroll.js";
 import { docsTemplate } from "../templates/components/Docs.js";
 import { docsSideBarTemplate } from "../templates/components/DocsSideBar.js";
+import { docsSideBarStylesTemplate } from "../templates/components/DocsSideBar.styles.js";
 import { mdxComponentsTemplate } from "../templates/components/MDXComponents.js";
 import { mermaidPreTemplate } from "../templates/components/MermaidPre.js";
 import { mermaidViewTemplate } from "../templates/components/layout/Mermaid.js";
@@ -32,6 +34,7 @@ import { postHogProviderLazyTemplate } from "../templates/components/PostHogProv
 import { searchDocsTemplate } from "../templates/components/SearchDocs.js";
 import { searchModalContentTemplate } from "../templates/components/SearchModalContent.js";
 import { sideBarTemplate } from "../templates/components/SideBar.js";
+import { sideBarStylesTemplate } from "../templates/components/SideBar.styles.js";
 import { spinnerTemplate } from "../templates/components/Spinner.js";
 
 import { sectionBarTemplate } from "../templates/components/layout/SectionBar.js";
@@ -42,24 +45,34 @@ import { useStringsTemplate } from "../templates/components/useStrings.js";
 import { variantsUtilTemplate } from "../templates/utils/variants.js";
 import { stringsUtilTemplate } from "../templates/utils/strings.js";
 import { accordionTemplate } from "../templates/components/layout/Accordion.js";
+import { accordionStylesTemplate } from "../templates/components/layout/Accordion.styles.js";
 import { actionBarTemplate } from "../templates/components/layout/ActionBar.js";
+import { actionBarStylesTemplate } from "../templates/components/layout/ActionBar.styles.js";
 import { badgeTemplate } from "../templates/components/layout/Badge.js";
 import { buttonTemplate } from "../templates/components/layout/Button.js";
 import { calloutTemplate } from "../templates/components/layout/Callout.js";
+import { calloutStylesTemplate } from "../templates/components/layout/Callout.styles.js";
 import { cardTemplate } from "../templates/components/layout/Card.js";
+import { cardStylesTemplate } from "../templates/components/layout/Card.styles.js";
 import { cherryThemeProviderTemplate } from "../templates/components/layout/CherryThemeProvider.js";
 import { colorSwatchTemplate } from "../templates/components/layout/ColorSwatch.js";
 import { codeTemplate } from "../templates/components/layout/Code.js";
+import { codeStylesTemplate } from "../templates/components/layout/Code.styles.js";
 import { columnsTemplate } from "../templates/components/layout/Columns.js";
 import { demoThemeTemplate } from "../templates/components/layout/DemoTheme.js";
+import { designTokensTemplate } from "../templates/components/layout/designTokens.js";
 import { docsComponentsTemplate } from "../templates/components/layout/DocsComponents.js";
+import { docsComponentsStylesTemplate } from "../templates/components/layout/DocsComponents.styles.js";
 import { docsNavigationTemplate } from "../templates/components/layout/DocsNavigation.js";
+import { docsNavigationStylesTemplate } from "../templates/components/layout/DocsNavigation.styles.js";
 import { fieldTemplate } from "../templates/components/layout/Field.js";
 import { focusModeToggleTemplate } from "../templates/components/layout/FocusModeToggle.js";
 import { footerTemplate } from "../templates/components/layout/Footer.js";
+import { footerStylesTemplate } from "../templates/components/layout/Footer.styles.js";
 import { frameTemplate } from "../templates/components/layout/Frame.js";
 import { globalStylesTemplate } from "../templates/components/layout/GlobalStyles.js";
 import { headerTemplate } from "../templates/components/layout/Header.js";
+import { headerStylesTemplate } from "../templates/components/layout/Header.styles.js";
 import { iconTemplate } from "../templates/components/layout/Icon.js";
 import { pictogramsTemplate } from "../templates/components/layout/Pictograms.js";
 import { promptTemplate } from "../templates/components/layout/Prompt.js";
@@ -70,8 +83,11 @@ import { siteGateComponentTemplate } from "../templates/components/layout/SiteGa
 import { slugTemplate } from "../templates/components/layout/Slug.js";
 import { spaceTemplate } from "../templates/components/layout/Space.js";
 import { staticLinksTemplate } from "../templates/components/layout/StaticLinks.js";
+import { staticLinksStylesTemplate } from "../templates/components/layout/StaticLinks.styles.js";
 import { stepsTemplate } from "../templates/components/layout/Steps.js";
+import { stepsStylesTemplate } from "../templates/components/layout/Steps.styles.js";
 import { tabsTemplate } from "../templates/components/layout/Tabs.js";
+import { tabsStylesTemplate } from "../templates/components/layout/Tabs.styles.js";
 import { tooltipTemplate } from "../templates/components/layout/Tooltip.js";
 import { treeTemplate } from "../templates/components/layout/Tree.js";
 import { treeDataTemplate } from "../templates/components/layout/TreeData.js";
@@ -152,6 +168,7 @@ import { sidePanelMdxTemplate } from "../templates/mdx/side-panel.mdx.js";
 import { spaceMdxTemplate } from "../templates/mdx/space.mdx.js";
 import { stepsMdxTemplate } from "../templates/mdx/steps.mdx.js";
 import { tabsMdxTemplate } from "../templates/mdx/tabs.mdx.js";
+import { templatesMdxTemplate } from "../templates/mdx/templates.mdx.js";
 import { themeMdxTemplate } from "../templates/mdx/theme.mdx.js";
 import { tooltipsMdxTemplate } from "../templates/mdx/tooltips.mdx.js";
 import { treeMdxTemplate } from "../templates/mdx/tree.mdx.js";
@@ -184,6 +201,49 @@ import { platformVersionsMdxTemplate } from "../templates/mdx/platform/versions.
 import { languagesMdxTemplate } from "../templates/mdx/languages.mdx.js";
 import { versionsMdxTemplate } from "../templates/mdx/versions.mdx.js";
 
+import { modernDesignTokensTemplate } from "../templates/modern/components/layout/designTokens.js";
+import { modernChatTemplate } from "../templates/modern/components/Chat.js";
+import { modernSearchModalContentTemplate } from "../templates/modern/components/SearchModalContent.js";
+import { modernHeaderTemplate } from "../templates/modern/components/layout/Header.js";
+import { modernHeaderStylesTemplate } from "../templates/modern/components/layout/Header.styles.js";
+import { modernSectionBarTemplate } from "../templates/modern/components/layout/SectionBar.js";
+import { modernSideBarStylesTemplate } from "../templates/modern/components/SideBar.styles.js";
+import { modernSideBarTemplate } from "../templates/modern/components/SideBar.js";
+import { modernDocsSideBarStylesTemplate } from "../templates/modern/components/DocsSideBar.styles.js";
+import { modernDocsComponentsTemplate } from "../templates/modern/components/layout/DocsComponents.js";
+import { modernDocsComponentsStylesTemplate } from "../templates/modern/components/layout/DocsComponents.styles.js";
+import { modernSharedStyledTemplate } from "../templates/modern/components/layout/SharedStyled.js";
+import { modernActionBarTemplate } from "../templates/modern/components/layout/ActionBar.js";
+import { modernActionBarStylesTemplate } from "../templates/modern/components/layout/ActionBar.styles.js";
+import { modernDocsNavigationStylesTemplate } from "../templates/modern/components/layout/DocsNavigation.styles.js";
+import { modernFooterStylesTemplate } from "../templates/modern/components/layout/Footer.styles.js";
+import { modernStaticLinksStylesTemplate } from "../templates/modern/components/layout/StaticLinks.styles.js";
+import { modernCodeTemplate } from "../templates/modern/components/layout/Code.js";
+import { modernCodeStylesTemplate } from "../templates/modern/components/layout/Code.styles.js";
+import { modernCalloutStylesTemplate } from "../templates/modern/components/layout/Callout.styles.js";
+import { modernCardStylesTemplate } from "../templates/modern/components/layout/Card.styles.js";
+import { modernTabsStylesTemplate } from "../templates/modern/components/layout/Tabs.styles.js";
+import { modernStepsStylesTemplate } from "../templates/modern/components/layout/Steps.styles.js";
+import { modernAccordionStylesTemplate } from "../templates/modern/components/layout/Accordion.styles.js";
+
+// File conventions for the site designs ("templates", see lib/templates.ts):
+//
+// - A component whose look a design may change keeps its behavior in
+//   "<Name>.tsx" and its styled-components definitions in a sibling
+//   "<Name>.styles.ts" (for example components/layout/Callout.tsx and
+//   components/layout/Callout.styles.ts). The .styles file exports every
+//   styled component the .tsx file renders, under the same names, and starts
+//   with "use client". A design restyles the component by replacing only the
+//   .styles file and keeping those export names.
+// - Page geometry (rail widths, content width, header heights, offsets) lives
+//   in components/layout/designTokens.ts. A design changes the frame by
+//   replacing that file with the same exports.
+// - Small, purely presentational components without a .styles sibling
+//   (Badge, SidePanel, ...) are replaced whole.
+//
+// appStructure is the classic design. Another design lists only the files it
+// replaces, keyed by the same output path, and appStructureFor merges them
+// over the classic set, so every design writes exactly the same file list.
 export const appStructure: Record<string, string> = {
   ".env.example": envExampleTemplate,
   ".gitignore": gitignoreTemplate,
@@ -249,6 +309,7 @@ export const appStructure: Record<string, string> = {
   "components/LockBodyScroll.ts": lockBodyScrollTemplate,
   "components/Docs.tsx": docsTemplate,
   "components/DocsSideBar.tsx": docsSideBarTemplate,
+  "components/DocsSideBar.styles.ts": docsSideBarStylesTemplate,
   "components/MDXComponents.tsx": mdxComponentsTemplate,
   "components/MermaidPre.tsx": mermaidPreTemplate,
   "components/SectionNavProvider.tsx": sectionNavProviderTemplate,
@@ -257,34 +318,45 @@ export const appStructure: Record<string, string> = {
   "components/SearchDocs.tsx": searchDocsTemplate,
   "components/SearchModalContent.tsx": searchModalContentTemplate,
   "components/SideBar.tsx": sideBarTemplate,
+  "components/SideBar.styles.ts": sideBarStylesTemplate,
   "components/Spinner.tsx": spinnerTemplate,
   "components/useVariant.ts": useVariantTemplate,
   "components/useStrings.ts": useStringsTemplate,
 
   "components/layout/Accordion.tsx": accordionTemplate,
+  "components/layout/Accordion.styles.ts": accordionStylesTemplate,
   "components/layout/ActionBar.tsx": actionBarTemplate,
+  "components/layout/ActionBar.styles.ts": actionBarStylesTemplate,
   "components/layout/ApiPlayground.tsx": apiPlaygroundTemplate,
   "components/layout/ApiPlaygroundDemo.tsx": apiPlaygroundDemoTemplate,
   "components/layout/Badge.tsx": badgeTemplate,
   "components/layout/Button.tsx": buttonTemplate,
   "components/layout/Callout.tsx": calloutTemplate,
+  "components/layout/Callout.styles.ts": calloutStylesTemplate,
   "components/layout/Card.tsx": cardTemplate,
+  "components/layout/Card.styles.ts": cardStylesTemplate,
   "components/layout/CherryThemeProvider.tsx": cherryThemeProviderTemplate,
   "components/layout/ColorSwatch.tsx": colorSwatchTemplate,
   "components/layout/Code.tsx": codeTemplate,
+  "components/layout/Code.styles.ts": codeStylesTemplate,
   "components/layout/CopyButton.tsx": copyButtonTemplate,
   "components/layout/Columns.tsx": columnsTemplate,
   "components/layout/DemoTheme.tsx": demoThemeTemplate,
+  "components/layout/designTokens.ts": designTokensTemplate,
   "components/layout/DocsComponents.tsx": docsComponentsTemplate,
+  "components/layout/DocsComponents.styles.ts": docsComponentsStylesTemplate,
   "components/layout/Dropdown.tsx": dropdownTemplate,
   "components/layout/DocsNavigation.tsx": docsNavigationTemplate,
+  "components/layout/DocsNavigation.styles.ts": docsNavigationStylesTemplate,
   "components/layout/SectionBar.tsx": sectionBarTemplate,
   "components/layout/Field.tsx": fieldTemplate,
   "components/layout/FocusModeToggle.tsx": focusModeToggleTemplate,
   "components/layout/Footer.tsx": footerTemplate,
+  "components/layout/Footer.styles.ts": footerStylesTemplate,
   "components/layout/Frame.tsx": frameTemplate,
   "components/layout/GlobalStyles.ts": globalStylesTemplate,
   "components/layout/Header.tsx": headerTemplate,
+  "components/layout/Header.styles.ts": headerStylesTemplate,
   "components/layout/Icon.tsx": iconTemplate,
   "components/layout/Mermaid.tsx": mermaidViewTemplate,
   "components/layout/Pictograms.tsx": pictogramsTemplate,
@@ -296,8 +368,11 @@ export const appStructure: Record<string, string> = {
   "components/layout/Slug.ts": slugTemplate,
   "components/layout/Space.tsx": spaceTemplate,
   "components/layout/StaticLinks.tsx": staticLinksTemplate,
+  "components/layout/StaticLinks.styles.ts": staticLinksStylesTemplate,
   "components/layout/Steps.tsx": stepsTemplate,
+  "components/layout/Steps.styles.ts": stepsStylesTemplate,
   "components/layout/Tabs.tsx": tabsTemplate,
+  "components/layout/Tabs.styles.ts": tabsStylesTemplate,
   "components/layout/Tooltip.tsx": tooltipTemplate,
   "components/layout/Tree.tsx": treeTemplate,
   "components/layout/TreeData.ts": treeDataTemplate,
@@ -305,6 +380,63 @@ export const appStructure: Record<string, string> = {
   "components/layout/Update.tsx": updateTemplate,
   "components/layout/VariantSwitchers.tsx": variantSwitchersTemplate,
 };
+
+/**
+ * Files the modern design replaces, keyed by output path. Every key must
+ * already exist in appStructure: a design restyles the classic files, it
+ * never adds or drops one, so switching designs rewrites a fixed file set
+ * and leaves nothing stale behind.
+ */
+export const modernOverrides: Record<string, string> = {
+  "components/Chat.tsx": modernChatTemplate,
+  "components/SearchModalContent.tsx": modernSearchModalContentTemplate,
+  "components/layout/designTokens.ts": modernDesignTokensTemplate,
+  "components/layout/Header.tsx": modernHeaderTemplate,
+  "components/layout/Header.styles.ts": modernHeaderStylesTemplate,
+  "components/layout/SectionBar.tsx": modernSectionBarTemplate,
+  "components/SideBar.tsx": modernSideBarTemplate,
+  "components/SideBar.styles.ts": modernSideBarStylesTemplate,
+  "components/DocsSideBar.styles.ts": modernDocsSideBarStylesTemplate,
+  "components/layout/DocsComponents.tsx": modernDocsComponentsTemplate,
+  "components/layout/DocsComponents.styles.ts":
+    modernDocsComponentsStylesTemplate,
+  "components/layout/SharedStyled.ts": modernSharedStyledTemplate,
+  "components/layout/ActionBar.tsx": modernActionBarTemplate,
+  "components/layout/ActionBar.styles.ts": modernActionBarStylesTemplate,
+  "components/layout/DocsNavigation.styles.ts":
+    modernDocsNavigationStylesTemplate,
+  "components/layout/Footer.styles.ts": modernFooterStylesTemplate,
+  "components/layout/StaticLinks.styles.ts": modernStaticLinksStylesTemplate,
+  "components/layout/Code.tsx": modernCodeTemplate,
+  "components/layout/Code.styles.ts": modernCodeStylesTemplate,
+  "components/layout/Callout.styles.ts": modernCalloutStylesTemplate,
+  "components/layout/Card.styles.ts": modernCardStylesTemplate,
+  "components/layout/Tabs.styles.ts": modernTabsStylesTemplate,
+  "components/layout/Steps.styles.ts": modernStepsStylesTemplate,
+  "components/layout/Accordion.styles.ts": modernAccordionStylesTemplate,
+};
+
+const templateOverrides: Record<SiteTemplate, Record<string, string>> = {
+  classic: {},
+  modern: modernOverrides,
+};
+
+/** The generated app's static files for a design. */
+export function appStructureFor(
+  template: SiteTemplate = DEFAULT_TEMPLATE,
+): Record<string, string> {
+  return { ...appStructure, ...templateOverrides[template] };
+}
+
+/**
+ * The files whose content can differ between designs: every file some design
+ * overrides. Watch mode rewrites these when config.json switches designs.
+ */
+export function templateDependentFiles(): string[] {
+  return [
+    ...new Set(Object.values(templateOverrides).flatMap(Object.keys)),
+  ].sort();
+}
 
 // Files generated by earlier CLI versions that no longer exist in the
 // template set. Unlike app/ (wiped on every run), components/ and friends
@@ -355,6 +487,7 @@ export const startingDocsStructure: Record<string, string> = {
   "space.mdx": spaceMdxTemplate,
   "steps.mdx": stepsMdxTemplate,
   "tabs.mdx": tabsMdxTemplate,
+  "templates.mdx": templatesMdxTemplate,
   "theme.mdx": themeMdxTemplate,
   "tooltips.mdx": tooltipsMdxTemplate,
   "tree.mdx": treeMdxTemplate,

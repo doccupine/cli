@@ -1,16 +1,12 @@
-import { SIDEBAR_WIDTH, CHAT_WIDTH } from "../../app/theme.js";
-
 export const staticLinksTemplate = `"use client";
-import styled, { css } from "styled-components";
 import { useChat } from "cherry-styled-components";
-import { mq, Theme } from "@/app/theme";
-import {
-  focusModeColumn,
-  interactiveStyles,
-  sidePanelOffset,
-} from "@/components/layout/SharedStyled";
 import { Icon } from "@/components/layout/Icon";
 import linksData from "@/links.json";
+import {
+  StyledStaticLinks,
+  StyledStaticLinksContent,
+  StyledLink,
+} from "@/components/layout/StaticLinks.styles";
 
 interface LinkProps {
   title: string;
@@ -19,79 +15,6 @@ interface LinkProps {
 }
 
 const links = linksData as LinkProps[];
-
-const StyledStaticLinks = styled.div<{ theme: Theme; $isChatOpen: boolean }>\`
-  display: flex;
-  margin: 0 auto;
-  transition: all 0.3s ease;
-  padding: 0 20px;
-  margin-bottom: 20px;
-
-  \${mq("lg")} {
-    margin: 0;
-    padding: 0 ${SIDEBAR_WIDTH + 20}px 20px ${SIDEBAR_WIDTH + 20}px;
-
-    \${({ $isChatOpen }) =>
-      $isChatOpen &&
-      css\`
-        padding: 0 ${CHAT_WIDTH + 20}px 20px ${SIDEBAR_WIDTH + 20}px;
-      \`}
-  }
-
-  \${sidePanelOffset};
-  \${({ $isChatOpen }) => !$isChatOpen && focusModeColumn};
-\`;
-
-const StyledStaticLinksContent = styled.div\`
-  max-width: 640px;
-  margin: auto 0;
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-  width: 100%;
-  margin: 0 auto;
-\`;
-
-const StyledLink = styled.a<{ theme: Theme; $hasIcon?: boolean }>\`
-  position: relative;
-  text-decoration: none;
-  font-size: \${({ theme }) => theme.fontSizes.small.lg};
-  line-height: 1;
-  color: \${({ theme }) => theme.colors.accent};
-  padding: 0;
-  display: flex;
-  gap: 6px;
-  transition: all 0.3s ease;
-  font-weight: 600;
-  white-space: nowrap;
-  min-width: fit-content;
-  background: \${({ theme }) =>
-    \`color-mix(in srgb, \${theme.colors.primaryLight} 10%, transparent)\`};
-  padding: 6px 8px;
-  border-radius: \${({ theme }) => theme.spacing.radius.xs};
-  \${interactiveStyles};
-
-  \${({ $hasIcon }) =>
-    $hasIcon &&
-    css\`
-      padding-left: 30px;
-    \`}
-
-  & * {
-    margin: auto 0;
-  }
-
-  & svg {
-    position: absolute;
-    top: 50%;
-    left: 8px;
-    transform: translateY(-50%);
-  }
-
-  &:hover {
-    color: \${({ theme }) => theme.colors.accent};
-  }
-\`;
 
 function StaticLinks() {
   const { isOpen } = useChat();

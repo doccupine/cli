@@ -14,7 +14,8 @@ import {
   resolveLucideIconName,
   toPascalIconName,
 } from "./icon-registry.js";
-import { appStructure } from "./structures.js";
+import { appStructure, appStructureFor } from "./structures.js";
+import { SITE_TEMPLATES } from "./templates.js";
 
 describe("resolveLucideIconName", () => {
   it("accepts kebab-case ids and PascalCase export names", () => {
@@ -131,11 +132,15 @@ describe("collectTemplateIconNames", () => {
   });
 
   it("resolves every icon the generated components draw", () => {
-    const builtin = [
-      ...collectTemplateIconNames(appStructure),
-      ...INDIRECT_TEMPLATE_ICON_NAMES,
-    ];
-    expect(builtin.filter((name) => !resolveLucideIconName(name))).toEqual([]);
+    for (const template of SITE_TEMPLATES) {
+      const builtin = [
+        ...collectTemplateIconNames(appStructureFor(template)),
+        ...INDIRECT_TEMPLATE_ICON_NAMES,
+      ];
+      expect(builtin.filter((name) => !resolveLucideIconName(name))).toEqual(
+        [],
+      );
+    }
     expect(collectTemplateIconNames(appStructure)).toEqual(
       expect.arrayContaining([
         "ChevronDown",

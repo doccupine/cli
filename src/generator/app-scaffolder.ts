@@ -2,11 +2,16 @@ import fs from "fs-extra";
 import path from "node:path";
 
 import {
-  appStructure,
+  appStructureFor,
   obsoleteFiles,
   startingDocsStructure,
+  templateDependentFiles,
 } from "../lib/structures.js";
-import { resolveOutputPath } from "../lib/output-safety.js";
+import type { SiteTemplate } from "../lib/templates.js";
+import {
+  readOutputFileIfPresent,
+  resolveOutputPath,
+} from "../lib/output-safety.js";
 import type { AnalyticsConfig } from "../lib/types.js";
 import { writeFileAtomic } from "../lib/utils.js";
 import { robotsTemplate } from "../templates/app/robots.js";
@@ -37,6 +42,7 @@ export class AppScaffolder {
 
   async createNextJsStructure(
     analyticsConfig: AnalyticsConfig | null,
+    template: SiteTemplate,
     callbacks: AppStructureCallbacks,
   ): Promise<void> {
     // Render the layouts before touching the output: both read the docs
@@ -55,7 +61,7 @@ export class AppScaffolder {
     );
 
     const structure: Record<string, string> = {
-      ...appStructure,
+      ...appStructureFor(template),
       "next.config.ts": nextConfigTemplate(analyticsConfig),
       "pnpm-workspace.yaml": pnpmWorkspaceTemplate,
       "proxy.ts": proxyTemplate(analyticsConfig),
@@ -82,6 +88,26 @@ export class AppScaffolder {
     await callbacks.updateSitemap();
     await callbacks.updateLlmsFiles();
     await callbacks.updateIconRegistry();
+  }
+
+  /**
+   * Rewrites the files that differ between designs after config.json switched
+   * to `template`. Files whose content already matches are left alone, so the
+   * dev server only rebuilds what changed. Returns the paths written.
+   */
+  async writeTemplateFiles(template: SiteTemplate): Promise<string[]> {
+    const structure = appStructureFor(template);
+    const written: string[] = [];
+    for (const filePath of templateDependentFiles()) {
+      const content = structure[filePath];
+      const current = await readOutputFileIfPresent(this.outputDir, filePath);
+      if (current === content) continue;
+      const fullPath = this.outputPath(filePath);
+      await fs.ensureDir(path.dirname(fullPath));
+      await writeFileAtomic(fullPath, content);
+      written.push(filePath);
+    }
+    return written;
   }
 
   async createStartingDocs(callbacks: StarterDocumentCallbacks): Promise<void> {

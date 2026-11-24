@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import { rootLayoutTemplate } from "../lib/layout.js";
+import { appStructureFor } from "../lib/structures.js";
+import { SITE_TEMPLATES } from "../lib/templates.js";
 import { themeTemplate } from "./app/theme.js";
 import { cardTemplate } from "./components/layout/Card.js";
-import { badgeTemplate } from "./components/layout/Badge.js";
-import { calloutTemplate } from "./components/layout/Callout.js";
+import { calloutStylesTemplate } from "./components/layout/Callout.styles.js";
 import { cherryThemeProviderTemplate } from "./components/layout/CherryThemeProvider.js";
-import { codeTemplate } from "./components/layout/Code.js";
+import { codeStylesTemplate } from "./components/layout/Code.styles.js";
 import { demoThemeTemplate } from "./components/layout/DemoTheme.js";
 import { globalStylesTemplate } from "./components/layout/GlobalStyles.js";
 import { stepsTemplate } from "./components/layout/Steps.js";
@@ -41,19 +42,18 @@ describe("generated theming", () => {
 
   it("keys every mode-specific style off the dark class", () => {
     // Cherry only sets the class; a data-theme selector would never match.
-    for (const template of [
-      globalStylesTemplate,
-      calloutTemplate,
-      codeTemplate,
-      badgeTemplate,
-      cherryThemeProviderTemplate,
-    ]) {
-      expect(template).not.toContain("data-theme");
+    // Every generated file of every design, so a new design's styles are
+    // held to the same rule.
+    for (const template of SITE_TEMPLATES) {
+      for (const [file, content] of Object.entries(appStructureFor(template))) {
+        expect(content, `${template}: ${file}`).not.toContain("data-theme");
+      }
     }
     expect(globalStylesTemplate).toContain(":root.dark {");
     expect(globalStylesTemplate).toContain(":root.dark .light-only {");
     expect(globalStylesTemplate).toContain(":root:not(.dark) .dark-only {");
-    expect(calloutTemplate).toContain(":root.dark & {");
+    expect(calloutStylesTemplate).toContain(":root.dark & {");
+    expect(codeStylesTemplate).toContain(":root.dark & {");
   });
 
   it("never hides the page while waiting for hydration", () => {
@@ -151,7 +151,17 @@ describe("generated theming", () => {
   it("tints icons in CSS, since var() does not resolve in SVG attributes", () => {
     for (const template of [cardTemplate, stepsTemplate]) {
       expect(template).not.toContain("color={theme.colors.primary}");
-      expect(template).toContain("& > svg.lucide {");
+    }
+    for (const template of SITE_TEMPLATES) {
+      const structure = appStructureFor(template);
+      for (const file of [
+        "components/layout/Card.styles.ts",
+        "components/layout/Steps.styles.ts",
+      ]) {
+        expect(structure[file], `${template}: ${file}`).toContain(
+          "& > svg.lucide {",
+        );
+      }
     }
   });
 });

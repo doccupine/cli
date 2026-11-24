@@ -1,47 +1,10 @@
 export const cardTemplate = `"use client";
-import Link from "next/link";
-import styled, { css } from "styled-components";
-import { styledText } from "cherry-styled-components";
-import { Theme } from "@/app/theme";
 import { Icon, IconProps } from "@/components/layout/Icon";
-import { interactiveStyles } from "@/components/layout/SharedStyled";
-
-const cardStyles = css<{ theme: Theme }>\`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background: \${({ theme }) => theme.colors.light};
-  border: solid 1px \${({ theme }) => theme.colors.grayLight};
-  border-radius: \${({ theme }) => theme.spacing.radius.lg};
-  padding: 20px;
-  margin: 0;
-  \${({ theme }) => styledText(theme)}
-  color: \${({ theme }) => theme.colors.grayDark};
-
-  /* Tints the optional leading icon. Set here rather than through lucide's
-     color prop, because that becomes an SVG presentation attribute and CSS
-     custom properties do not resolve in those. */
-  & > svg.lucide {
-    color: \${({ theme }) => theme.colors.primary};
-  }
-\`;
-
-const StyledCard = styled.div<{ theme: Theme }>\`
-  \${cardStyles}
-\`;
-
-const StyledCardLink = styled(Link)<{ theme: Theme }>\`
-  \${interactiveStyles};
-  \${cardStyles}
-  text-decoration: none;
-\`;
-
-const StyledCardTitle = styled.p<{ theme: Theme }>\`
-  font-weight: bold;
-  margin: 0;
-  color: \${({ theme }) => theme.colors.dark};
-  \${({ theme }) => styledText(theme)};
-\`;
+import {
+  StyledCard,
+  StyledCardLink,
+  StyledCardTitle,
+} from "@/components/layout/Card.styles";
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;

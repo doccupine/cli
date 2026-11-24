@@ -1,6 +1,3 @@
-export const SIDEBAR_WIDTH = 280;
-export const CHAT_WIDTH = 420;
-
 export const themeTemplate = `import customThemeJson from "@/theme.json";
 
 // Users can only override the brand palette via theme.json: semantic tokens

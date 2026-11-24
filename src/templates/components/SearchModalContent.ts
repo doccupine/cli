@@ -103,7 +103,6 @@ const StyledModal = styled.div<{ theme: Theme; $isClosing: boolean }>\`
   display: flex;
   flex-direction: column;
   border: solid 1px \${({ theme }) => theme.colors.grayLight};
-  padding-bottom: 8px;
   animation: \${({ $isClosing }) => ($isClosing ? modalOut : modalIn)}
     \${ANIMATION_MS}ms ease forwards;
 
@@ -224,8 +223,12 @@ const StyledReturnGlyph = styled.span\`
 const StyledResults = styled.ul<{ theme: Theme }>\`
   list-style: none;
   position: relative;
-  margin: 8px 0 0 0;
-  padding: 0 8px;
+  /* The scroll area runs from the input row's rule to the modal's bottom
+     edge, and its inset is padding inside the scrolled content, so rows
+     scroll out under the rule and the bottom edge instead of being clipped
+     8px short of them. */
+  margin: 0;
+  padding: 8px;
   overflow-y: auto;
   flex: 1;
   min-height: 0;
@@ -323,7 +326,7 @@ const StyledSnippet = styled.span<{ theme: Theme }>\`
 \`;
 
 const StyledEmpty = styled.div<{ theme: Theme }>\`
-  padding: 20px 20px 12px;
+  padding: 20px;
   min-height: 40px;
   display: flex;
   align-items: center;

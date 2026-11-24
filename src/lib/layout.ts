@@ -3,6 +3,7 @@ import {
   DEFAULT_OG_IMAGE,
   DEFAULT_SITE_NAME,
 } from "./constants.js";
+import { DEFAULT_TEMPLATE, type SiteTemplate } from "./templates.js";
 import type { FontConfig, LanguageConfig, SectionConfig } from "./types.js";
 import {
   defaultLanguage,
@@ -175,11 +176,15 @@ const THEME_INIT_SCRIPT = `(function(){try{var r=document.documentElement,o=wind
  * NO request-time data (cookies/headers) so pages stay statically renderable —
  * the SITE_PASSWORD gate is enforced in the middleware (proxy.ts), which
  * rewrites locked page requests to "/gate".
+ *
+ * `template` is the site design (config.json); the shell is the same for
+ * every design today, and a design that needs different markup branches on it.
  */
 export const rootLayoutTemplate = (
   fontConfig: FontConfig | null,
   analyticsEnabled: boolean = false,
   languages: LanguageConfig[] | null = null,
+  template: SiteTemplate = DEFAULT_TEMPLATE,
 ): string => {
   // A single root layout serves every language, so the server-rendered
   // <html lang> is the default language's. The pre-paint script corrects it
@@ -275,17 +280,29 @@ ${
  * URL-transparent "(site)" route group so it wraps the docs but NOT the gate
  * screen at "/gate", which renders under the root shell alone. Renders inside
  * the root layout's providers, so it needs no html/body or theme provider.
+ *
+ * `template` is the site design (config.json), passed through so a design
+ * can change the chrome's markup. The modern design hands DocsWrapper the
+ * page list, which its page header reads for the current page's category.
  */
 export const siteLayoutTemplate = (
   pages: PageData[],
   sectionsConfig: SectionConfig[] | null = null,
   variants: VariantSet | null = null,
+  template: SiteTemplate = DEFAULT_TEMPLATE,
 ): string => {
   const hasSections = sectionsConfig !== null && sectionsConfig.length > 0;
+  const docsWrapperOpen = docsWrapperTag(template);
   const chtOpen = `<ChtProvider isChatActive={process.env.LLM_PROVIDER ? true : false}>`;
 
   if (variants) {
-    return variantSiteLayout(pages, sectionsConfig, variants, chtOpen);
+    return variantSiteLayout(
+      pages,
+      sectionsConfig,
+      variants,
+      chtOpen,
+      docsWrapperOpen,
+    );
   }
 
   return `import dynamic from "next/dynamic";
@@ -352,7 +369,7 @@ ${
           <SectionBar sections={doccupineSections} />
         </Header>
         {process.env.LLM_PROVIDER && <Chat />}
-        <DocsWrapper>
+        ${docsWrapperOpen}
           <SectionNavProvider
             sections={doccupineSections}
             allPages={pages}
@@ -394,7 +411,7 @@ ${
         <Header />
         {process.env.LLM_PROVIDER && <Chat />}
         <SectionBarProvider hasSectionBar={false}>
-          <DocsWrapper>
+          ${docsWrapperOpen}
             <SideBar result={result.length ? result : defaultResults} />
             {children}
             <DocsNavigation result={result.length ? result : defaultResults} />
@@ -411,6 +428,17 @@ ${
 };
 
 /**
+ * Opening tag of the docs chrome wrapper. The modern design passes the page
+ * list so the page header can show the current page's category; classic
+ * renders the bare wrapper.
+ */
+function docsWrapperTag(template: SiteTemplate): string {
+  return template === "modern"
+    ? "<DocsWrapper pages={pages}>"
+    : "<DocsWrapper>";
+}
+
+/**
  * The docs chrome layout of a site with languages or versions. Always routes
  * the sidebar through SectionNavProvider, which scopes sections and pages to
  * the current language/version prefix and hands the sidebar the full page list
@@ -422,6 +450,7 @@ function variantSiteLayout(
   sectionsConfig: SectionConfig[] | null,
   variants: VariantSet,
   chtOpen: string,
+  docsWrapperOpen: string,
 ): string {
   const hasSections = sectionsConfig !== null && sectionsConfig.length > 0;
   const { languages, versions } = variants;
@@ -480,7 +509,7 @@ export default function SiteLayout({
         <LlmsDirective />
         <Header${hasSections ? `>${sectionBar}</Header>` : " />"}
         {process.env.LLM_PROVIDER && <Chat />}
-        <DocsWrapper>
+        ${docsWrapperOpen}
           <SectionNavProvider
             sections={${hasSections ? "doccupineSections" : "[]"}}
             allPages={pages}
