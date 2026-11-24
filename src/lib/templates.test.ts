@@ -247,6 +247,53 @@ describe("the modern design", () => {
     );
   });
 
+  it("draws the sidebar footer controls like the page header's", () => {
+    const sideBar = modern["components/SideBar.tsx"];
+    const sideBarStyles = modern["components/SideBar.styles.ts"];
+    const shared = modern["components/layout/SharedStyled.ts"];
+    const actionBarStyles = modern["components/layout/ActionBar.styles.ts"];
+    const focusToggle = modern["components/layout/FocusModeToggle.tsx"];
+
+    // The theme toggle is the site's own switch, not Cherry's ThemeToggle.
+    expect(sideBar).not.toMatch(/<ThemeToggle|import \{[^}]*ThemeToggle/);
+    expect(sideBar).toContain("<ThemeSwitch />");
+    // It flips the mode through Cherry, keeps Cherry's Cmd/Ctrl+Shift+L
+    // chord, and reports its state as a switch.
+    expect(sideBar).toContain("const { mode, toggleTheme } = useColorMode();");
+    expect(sideBar).toContain("onClick={toggleTheme}");
+    expect(sideBar).toContain('if (e.key.toLowerCase() !== "l") return;');
+    expect(sideBar).toMatch(/role="switch"\s+aria-checked=\{mode === "dark"\}/);
+    // The knob follows the dark class in CSS, so it never waits on React.
+    expect(sideBarStyles).toMatch(
+      /StyledThemeSwitch = styled\.button<\{ theme: Theme \}>`[^`]*pillSwitchStyles[^`]*:root\.dark & \{\s*\$\{pillSwitchKnobEnd\};/,
+    );
+
+    // The view toggle and the theme toggle share one switch style; the
+    // markdown link and the focus-mode toggle share one round style.
+    expect(shared).toContain("export const pillSwitchStyles");
+    expect(shared).toContain("export const roundControlStyles");
+    expect(actionBarStyles).toMatch(
+      /StyledToggle[^;]*;[\s\S]*pillSwitchStyles/,
+    );
+    expect(actionBarStyles).toMatch(
+      /StyledMarkdownLink[\s\S]*roundControlStyles/,
+    );
+    expect(focusToggle).toContain("${roundControlStyles};");
+    expect(focusToggle).not.toContain("theme.colors.primary");
+    // The focus toggle keeps its behavior and fixed placement.
+    expect(focusToggle).toContain("position: fixed;");
+    expect(focusToggle).toContain("aria-pressed={isFocusMode}");
+    expect(focusToggle).toContain('root.setAttribute("data-focus-mode", "")');
+
+    // Classic keeps Cherry's ThemeToggle and the outlined focus button.
+    expect(appStructure["components/SideBar.tsx"]).toContain(
+      "<ThemeToggle $shortcut />",
+    );
+    expect(appStructure["components/layout/FocusModeToggle.tsx"]).toContain(
+      "${interactiveStyles};",
+    );
+  });
+
   it("hands the page list to DocsWrapper in every layout shape", () => {
     const pages: Parameters<typeof siteLayoutTemplate>[0] = [];
     const sections = [{ label: "Guides", slug: "guides" }];

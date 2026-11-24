@@ -108,6 +108,57 @@ export const pillControlStyles = css<{ theme: Theme }>\`
   }
 \`;
 
+/** An icon-only pill control: a 32px circle (the page's markdown link, the
+    focus-mode toggle). Pair it with resetButton on a button. */
+export const roundControlStyles = css<{ theme: Theme }>\`
+  \${pillControlStyles};
+  width: 32px;
+  padding: 0;
+  justify-content: center;
+\`;
+
+/** A two-icon pill switch (the page's view toggle, the theme toggle): 60px
+    wide, with a soft 24px knob behind the first icon. Add
+    \`pillSwitchKnobEnd\` for the state that puts the knob behind the second.
+    Pair it with resetButton on a button. */
+export const pillSwitchStyles = css<{ theme: Theme }>\`
+  \${pillControlStyles};
+  width: 60px;
+  justify-content: space-between;
+  padding: 0 8px;
+  position: relative;
+
+  & svg {
+    position: relative;
+    z-index: 1;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: \${({ theme }) =>
+      \`color-mix(in srgb, \${theme.colors.dark} 7%, transparent)\`};
+    transition: transform 0.2s ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      transition: none;
+    }
+  }
+\`;
+
+export const pillSwitchKnobEnd = css\`
+  &::after {
+    transform: translateX(28px);
+  }
+\`;
+
 /* Content links: accent text over a faint underline that strengthens on
    hover. The resting underline stays so links never rely on color alone. */
 export const styledAnchor = css<{ theme: Theme }>\`

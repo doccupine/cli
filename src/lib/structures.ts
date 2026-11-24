@@ -213,6 +213,7 @@ import { modernDocsSideBarStylesTemplate } from "../templates/modern/components/
 import { modernDocsComponentsTemplate } from "../templates/modern/components/layout/DocsComponents.js";
 import { modernDocsComponentsStylesTemplate } from "../templates/modern/components/layout/DocsComponents.styles.js";
 import { modernSharedStyledTemplate } from "../templates/modern/components/layout/SharedStyled.js";
+import { modernFocusModeToggleTemplate } from "../templates/modern/components/layout/FocusModeToggle.js";
 import { modernActionBarTemplate } from "../templates/modern/components/layout/ActionBar.js";
 import { modernActionBarStylesTemplate } from "../templates/modern/components/layout/ActionBar.styles.js";
 import { modernDocsNavigationStylesTemplate } from "../templates/modern/components/layout/DocsNavigation.styles.js";
@@ -401,6 +402,7 @@ export const modernOverrides: Record<string, string> = {
   "components/layout/DocsComponents.styles.ts":
     modernDocsComponentsStylesTemplate,
   "components/layout/SharedStyled.ts": modernSharedStyledTemplate,
+  "components/layout/FocusModeToggle.tsx": modernFocusModeToggleTemplate,
   "components/layout/ActionBar.tsx": modernActionBarTemplate,
   "components/layout/ActionBar.styles.ts": modernActionBarStylesTemplate,
   "components/layout/DocsNavigation.styles.ts":

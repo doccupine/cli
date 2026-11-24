@@ -3,7 +3,11 @@ import styled, { css } from "styled-components";
 import { Button, resetButton } from "cherry-styled-components";
 import Link from "next/link";
 import { mq, Theme } from "@/app/theme";
-import { focusModeHide } from "@/components/layout/SharedStyled";
+import {
+  focusModeHide,
+  pillSwitchKnobEnd,
+  pillSwitchStyles,
+} from "@/components/layout/SharedStyled";
 import { Badge } from "@/components/layout/Badge";
 import {
   COLUMN_GUTTER,
@@ -95,10 +99,10 @@ export const StyledSidebar = styled.nav<SidebarStyleProps>\`
   }
 \`;
 
-// One row of 30px controls: the focus-mode toggle, the language and version
+// One row of controls: the 32px focus-mode toggle, the language and version
 // switchers, then the theme toggle. The focus toggle is fixed rather than a
 // child (it outlives the sidebar in focus mode), so on the rail the row's own
-// padding leaves its 30px plus a gap free at the left. No rule above it: a
+// padding leaves its 20px offset, its 32px and an 8px gap free at the left. No rule above it: a
 // short fade masks the list scrolling underneath instead.
 export const StyledSidebarFooter = styled.div\`
   display: flex;
@@ -127,7 +131,7 @@ export const StyledSidebarFooter = styled.div\`
 
   \${mq("lg")} {
     margin-right: -16px;
-    padding: 16px 16px 16px 58px;
+    padding: 16px 16px 16px 60px;
   }
 \`;
 
@@ -144,6 +148,18 @@ export const StyledSidebarFooterToggle = styled.div\`
   \${mq("lg")} {
     flex: 0 0 auto;
     margin-left: auto;
+  }
+\`;
+
+// The light/dark switch, drawn like the page header's view toggle (sun, then
+// moon). The knob follows the dark class on <html>, so it is right from the
+// first paint, before React knows the mode.
+export const StyledThemeSwitch = styled.button<{ theme: Theme }>\`
+  \${resetButton};
+  \${pillSwitchStyles};
+
+  :root.dark & {
+    \${pillSwitchKnobEnd};
   }
 \`;
 

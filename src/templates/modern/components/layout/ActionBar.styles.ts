@@ -5,6 +5,9 @@ import { resetButton } from "cherry-styled-components";
 import {
   StyledSmallButton,
   pillControlStyles,
+  pillSwitchKnobEnd,
+  pillSwitchStyles,
+  roundControlStyles,
 } from "@/components/layout/SharedStyled";
 import { CONTENT_WIDTH } from "@/components/layout/designTokens";
 
@@ -123,47 +126,18 @@ export const StyledRssLink = styled(StyledSmallButton)<{ theme: Theme }>\`
 
 export const StyledMarkdownLink = styled.a<{ theme: Theme }>\`
   \${resetButton}
-  \${actionPillStyles};
-  width: 32px;
-  padding: 0;
-  justify-content: center;
+  \${roundControlStyles};
 \`;
 
 // Two-icon switch between the rendered page and its MDX source. The current
-// view's icon sits on a soft knob.
+// view's icon sits on a soft knob. The sidebar's theme toggle shares the look.
 export const StyledToggle = styled.button<{
   theme: Theme;
   $isActive?: boolean;
 }>\`
   \${resetButton}
-  \${actionPillStyles};
-  width: 60px;
-  justify-content: space-between;
-  padding: 0 8px;
-  position: relative;
-
-  & svg {
-    position: relative;
-    z-index: 1;
-  }
-
-  &::after {
-    content: "";
-    position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: \${({ theme }) =>
-      \`color-mix(in srgb, \${theme.colors.dark} 7%, transparent)\`};
-    transition: transform 0.2s ease;
-    \${({ $isActive }) =>
-      !$isActive &&
-      css\`
-        transform: translateX(28px);
-      \`}
-  }
+  \${pillSwitchStyles};
+  \${({ $isActive }) => !$isActive && pillSwitchKnobEnd};
 \`;
 
 // The raw-content view renders a full-viewport textarea. That rule is scoped to
