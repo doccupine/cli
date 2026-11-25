@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Document the Site settings page's new Template picker on the starter Site Settings page: it writes `template` to `config.json` (Modern, the default, or Classic) and links to the Templates page
+
 ## 0.1.2
 
 - Drop the tag icon from the version switcher: the pill shows only the version label and its chevron

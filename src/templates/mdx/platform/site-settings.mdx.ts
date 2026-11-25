@@ -1,6 +1,6 @@
 export const platformSiteSettingsMdxTemplate = `---
 title: "Site Settings"
-description: "Configure your documentation site's name, description, icon, and image."
+description: "Configure your documentation site's name, description, template, icon, and image."
 date: "2026-02-19"
 category: "Configuration"
 categoryOrder: 2
@@ -22,6 +22,10 @@ The name of your documentation site. This appears in the site header and browser
 
 A short description of your documentation. Used in meta tags for search engine optimization and social media previews.
 
+### Template
+
+The design of your site: \`Modern\` (the default) or \`Classic\`, the original design. The template changes the header, sidebar, page layout, and the look of the built-in components; your content, navigation, colors, and fonts stay the same. Picking Modern leaves the \`template\` field out of \`config.json\`, unless the file already sets it. See [Templates](/templates) for what each one looks like.
+
 ### Favicon
 
 Upload a favicon image that appears in browser tabs. Supported formats include PNG, ICO, and SVG. Use the file upload button to select an image from your computer.
@@ -40,7 +44,7 @@ The public URL of your deployed documentation site, such as \`https://docs.examp
 
 ## How it works
 
-Behind the scenes, the Site settings page reads and writes \`config.json\` in your repository. You can also edit this file directly in the file editor if you prefer. See the [Globals](/globals) page for the full configuration reference.
+Behind the scenes, the Site settings page reads and writes \`config.json\` in your repository. You can also edit this file directly in the file editor if you prefer: keys the Site settings page does not manage are kept when you save there. See the [Globals](/globals) page for the full configuration reference.
 
 \`\`\`json
 {
@@ -48,6 +52,7 @@ Behind the scenes, the Site settings page reads and writes \`config.json\` in yo
   "description": "Documentation for my project",
   "icon": "/favicon.png",
   "image": "/preview.png",
-  "url": "https://docs.example.com"
+  "url": "https://docs.example.com",
+  "template": "classic"
 }
 \`\`\``;
