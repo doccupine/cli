@@ -55,16 +55,36 @@ export const footerStyles: DesignStyles = {
   max-width: var(--layout-content-width);
   display: flex;
   flex-wrap: wrap;
+  gap: 4px 20px;
   width: 100%;
   margin: 0 auto;
 }
 
+/* Plain muted text links with an optional leading icon. */
 .dcp-links__link {
-  display: flex;
+  display: inline-flex;
+  align-items: center;
   gap: 6px;
+  padding: 4px 0;
   white-space: nowrap;
   min-width: fit-content;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--color-grayDark);
   text-decoration: none;
+  border-radius: 6px;
+  transition: color 0.2s ease;
+}
+
+.dcp-links__link svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.dcp-links__link:hover {
+  color: var(--color-dark);
 }
 
 .dcp-footer {
@@ -157,77 +177,5 @@ export const footerStyles: DesignStyles = {
   .dcp-footer-space {
     display: none;
   }
-}`,
-  classic: `.dcp-links__content {
-  gap: 16px;
-}
-
-/* Tinted chips with the interactive ring (dcp-interactive's rules). */
-.dcp-links__link {
-  position: relative;
-  font-size: 14px;
-  line-height: 1;
-  color: var(--color-accent);
-  transition: all 0.3s ease;
-  font-weight: 600;
-  background: color-mix(in srgb, var(--color-primaryLight) 10%, transparent);
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: solid 1px transparent;
-  box-shadow: 0 0 0 0px var(--color-primary);
-}
-
-.dcp-links__link:hover {
-  border-color: var(--color-primary);
-}
-
-.dcp-links__link:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--color-primaryLight);
-}
-
-.dcp-links__link[data-has-icon] {
-  padding-left: 30px;
-}
-
-.dcp-links__link * {
-  margin: auto 0;
-}
-
-.dcp-links__link svg {
-  position: absolute;
-  top: 50%;
-  left: 8px;
-  transform: translateY(-50%);
-}
-
-.dcp-links__link:hover {
-  color: var(--color-accent);
-}`,
-  modern: `.dcp-links__content {
-  gap: 4px 20px;
-}
-
-/* Plain muted text links with an optional leading icon. */
-.dcp-links__link {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 0;
-  font-size: 13px;
-  line-height: 20px;
-  font-weight: 500;
-  color: var(--color-grayDark);
-  border-radius: 6px;
-  transition: color 0.2s ease;
-}
-
-.dcp-links__link svg {
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-}
-
-.dcp-links__link:hover {
-  color: var(--color-dark);
 }`,
 };
