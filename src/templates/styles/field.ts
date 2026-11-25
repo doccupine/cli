@@ -32,7 +32,9 @@ export const fieldStyles: DesignStyles = {
 }
 
 .dcp-field__value {
-  color: var(--color-primary);
+  /* The text-safe primary: the raw primary fails AA as 14px text on the dark
+     default palette. */
+  color: var(--color-primary-text);
   font-family: "Roboto Mono", monospace;
   font-weight: 600;
 }

@@ -431,7 +431,7 @@ button:hover > .dcp-switcher__content svg {
   text-align: left;
   font-family: inherit;
   font-size: 12px;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;

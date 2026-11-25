@@ -4,6 +4,7 @@
 
 - Render Mermaid diagrams again: since 0.1.0, fenced `mermaid` blocks showed as plain code blocks, because the diagram handler did not recognise the code element once inline code got its own component
 - Document the Site settings page's new Template picker on the starter Site Settings page: it writes `template` to `config.json` (Modern, the default, or Classic) and links to the Templates page
+- Draw `<Field>` names, the classic table of contents' current and hovered links, the classic selected and hovered `<Tabs>` labels and `<Accordion>` titles, the dropdown menu entries (the language and version switchers), and the "Skip to content" link in the contrast-safe primary text color (`--color-primary-text`): in dark mode the raw primary fell short of WCAG AA on the default palette
 
 ## 0.1.2
 
