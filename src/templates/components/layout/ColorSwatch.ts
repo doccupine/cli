@@ -40,10 +40,38 @@ function ColorSwatch({ token, value }: ColorSwatchProps) {
 
 interface ColorSwatchGroupProps {
   children: React.ReactNode;
+  cols?: number | string;
 }
 
-function ColorSwatchGroup({ children }: ColorSwatchGroupProps) {
-  return <div className="dcp-swatch-group">{children}</div>;
+// The widest grid a group can ask for; more columns than this leaves the
+// swatches too narrow for their hex value in the article column.
+const MAX_SWATCH_COLUMNS = 6;
+
+function ColorSwatchGroup({ children, cols }: ColorSwatchGroupProps) {
+  // cols arrives as a number (cols={4}) or a string (cols="4"); anything
+  // that is not a whole number from 1 up keeps the default grid.
+  const count = Number(cols);
+  const columns =
+    Number.isInteger(count) && count >= 1
+      ? Math.min(count, MAX_SWATCH_COLUMNS)
+      : undefined;
+
+  return (
+    <div
+      className="dcp-swatch-group"
+      style={
+        columns
+          ? ({
+              "--dcp-swatch-columns-sm": Math.min(columns, 2),
+              "--dcp-swatch-columns-md": Math.min(columns, 3),
+              "--dcp-swatch-columns-lg": columns,
+            } as React.CSSProperties)
+          : undefined
+      }
+    >
+      {children}
+    </div>
+  );
 }
 
 export { ColorSwatch, ColorSwatchGroup };
