@@ -83,8 +83,8 @@ const rules = `.dcp-playground {
   font-family: Inter;
   font-weight: 600;
   font-size: 14px;
-  color: var(--color-surface);
-  background: var(--color-primary);
+  color: var(--color-on-primary);
+  background: var(--color-primary-fill);
   padding: 8px 14px;
   border-radius: 6px;
   transition: all 0.3s ease;
@@ -94,7 +94,13 @@ const rules = `.dcp-playground {
 
 .dcp-playground__send:hover {
   border-color: var(--color-primary);
-  background: var(--color-primaryDark);
+  background: var(--color-primary-fill-hover);
+  color: var(--color-on-primary-hover);
+}
+
+.dcp-playground__send:hover svg {
+  color: var(--color-on-primary-hover);
+  stroke: var(--color-on-primary-hover);
 }
 
 .dcp-playground__send:focus-visible {
@@ -103,8 +109,8 @@ const rules = `.dcp-playground {
 }
 
 .dcp-playground__send svg {
-  color: var(--color-surface);
-  stroke: var(--color-surface);
+  color: var(--color-on-primary);
+  stroke: var(--color-on-primary);
 }
 
 .dcp-playground__send:disabled {
@@ -381,8 +387,8 @@ const rules = `.dcp-playground {
 }
 
 .dcp-playground__toggle[data-active] {
-  background: var(--color-primary);
-  color: var(--color-surface);
+  background: var(--color-primary-fill);
+  color: var(--color-on-primary);
 }
 
 .dcp-playground__card {
@@ -467,26 +473,27 @@ const rules = `.dcp-playground {
   width: 100%;
   font-size: 12px;
   line-height: 1.7;
-  color: var(--color-gray);
+  color: var(--color-text-muted);
 }
 
 .dcp-playground__status {
   font-family: "Roboto Mono", monospace;
   font-weight: 700;
-  color: var(--color-surface);
-  background: var(--color-error);
+  color: var(--color-on-error);
+  background: var(--color-error-fill);
   padding: 0 4px;
   border-radius: 6px;
 }
 
 .dcp-playground__status[data-ok] {
-  background: var(--color-success);
+  color: var(--color-on-success);
+  background: var(--color-success-fill);
 }
 
 .dcp-playground__meta {
   font-size: 12px;
   line-height: 1.7;
-  color: var(--color-gray);
+  color: var(--color-text-muted);
 }
 
 .dcp-playground__placeholder {
@@ -501,7 +508,7 @@ const rules = `.dcp-playground {
   text-align: center;
   font-size: 12px;
   line-height: 1.7;
-  color: var(--color-gray);
+  color: var(--color-text-muted);
 }
 
 /* Holds the response (or the placeholder) and lets the loading layer sit on
@@ -603,7 +610,7 @@ const rules = `.dcp-playground {
 
 .dcp-input::placeholder,
 .dcp-textarea::placeholder {
-  color: var(--color-gray);
+  color: var(--color-text-muted);
 }
 
 .dcp-input:hover:not([disabled]),

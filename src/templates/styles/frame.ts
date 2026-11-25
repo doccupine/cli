@@ -65,7 +65,7 @@ const css = `.dcp-frame {
 .dcp-frame__caption {
   font-size: 12px;
   line-height: 1.7;
-  color: var(--color-gray);
+  color: var(--color-text-muted);
   text-align: center;
   margin: 0;
 }

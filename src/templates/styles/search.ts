@@ -269,7 +269,7 @@ export const searchStyles: DesignStyles = {
 }
 
 .dcp-search__input::placeholder {
-  color: var(--color-gray);
+  color: var(--color-text-muted);
 }
 
 /* type="search" gets the platform clear button, which duplicates the
@@ -375,7 +375,7 @@ export const searchStyles: DesignStyles = {
 
 .dcp-search__result-meta {
   font-size: 14px;
-  color: var(--color-gray);
+  color: var(--color-text-muted);
   display: block;
   margin-top: 2px;
 }
@@ -391,9 +391,11 @@ export const searchStyles: DesignStyles = {
   white-space: nowrap;
 }
 
+/* Matched words in the body text color: the snippet's grayDark falls under
+   AA on the primaryLight wash in dark palettes. */
 .dcp-search__snippet mark {
   background: color-mix(in srgb, var(--color-primaryLight) 35%, transparent);
-  color: inherit;
+  color: var(--color-dark);
   border-radius: 4px;
   padding: 0 1px;
 }
@@ -409,7 +411,7 @@ export const searchStyles: DesignStyles = {
   gap: 8px;
   text-align: center;
   font-size: 14px;
-  color: var(--color-gray);
+  color: var(--color-text-muted);
 }`,
   classic: `${searchButtonRules}
 
@@ -442,7 +444,7 @@ ${squareButtonRules(".dcp-search__close")}
 }
 
 .dcp-search__result[data-active] > span:first-of-type {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }`,
   modern: `${searchButtonRules}
 

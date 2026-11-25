@@ -120,6 +120,7 @@ Every color and shadow is a CSS variable. Light values sit on \`:root\` and dark
 
 - \`--color-<key>\`: one per \`theme.json\` key, such as \`--color-primary\` and \`--color-grayDark\`.
 - \`--color-accent\`, \`--color-accentStrong\`, \`--color-accentMuted\`, \`--color-surface\`, \`--color-link\`: derived from the palette for each mode.
+- \`--color-<key>-fill\`, \`--color-on-<key>\`, \`--color-<key>-text\` (for \`primary\`, \`secondary\`, \`tertiary\`, \`success\`, \`warning\`, \`error\`, \`info\`), their \`-hover\` forms, and \`--color-text-muted\`: colors computed from your palette to reach WCAG AA contrast (4.5:1). \`--color-primary-fill\` is the primary color as a filled surface (buttons, solid badges) and \`--color-on-primary\` its label: white on the color nudged slightly darker, or the color itself with dark text when white would need it much darker (amber, yellow, light green, pastels). \`--color-primary-text\` is the primary color as text on the page, and \`--color-text-muted\` is \`gray\` adjusted for small text. Colors that already pass are used as they are.
 - \`--shadow-xs\` through \`--shadow-xl\`.
 - \`--mermaid-bg\`, \`--mermaid-fg\`, \`--mermaid-line\`, \`--mermaid-accent\`, \`--mermaid-muted\`, \`--mermaid-surface\`, \`--mermaid-border\`: the diagram colors (see Mermaid).
 

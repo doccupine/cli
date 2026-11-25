@@ -17,7 +17,10 @@ interface ColorSwatchProps {
 }
 
 function ColorSwatch({ token, value }: ColorSwatchProps) {
-  const useLightText = luminance(value) < 0.4;
+  // White or black label, whichever contrasts more with the color (WCAG
+  // ratio): the better of the two is at least 4.58:1 on any opaque color.
+  const lum = luminance(value);
+  const useLightText = 1.05 / (lum + 0.05) >= (lum + 0.05) / 0.05;
 
   return (
     <div className="dcp-swatch">

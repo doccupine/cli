@@ -237,8 +237,8 @@ export const chatStyles: DesignStyles = {
 }
 
 .dcp-chat-message[data-role="user"] .dcp-chat-message__content {
-  background: var(--color-primary);
-  color: var(--color-onFilled);
+  background: var(--color-primary-fill);
+  color: var(--color-on-primary);
   padding: 9px 14px;
   border-radius: 16px 16px 4px 16px;
   margin-left: auto;
@@ -867,7 +867,7 @@ export const chatStyles: DesignStyles = {
 }
 
 .dcp-chat-input__textarea::placeholder {
-  color: var(--color-gray);
+  color: var(--color-text-muted);
 }
 
 .dcp-chat-input__textarea:disabled {
@@ -915,15 +915,16 @@ export const chatStyles: DesignStyles = {
 }
 
 .dcp-chat-send:not(:disabled) {
-  color: var(--color-onFilled);
-  background: var(--color-primary);
-  border: solid 2px var(--color-primary);
+  color: var(--color-on-primary);
+  background: var(--color-primary-fill);
+  border: solid 2px var(--color-primary-fill);
   box-shadow: 0 0 0 0px var(--color-primary);
 }
 
 .dcp-chat-send:not(:disabled):hover {
-  background: var(--color-primaryDark);
-  border-color: var(--color-primaryDark);
+  background: var(--color-primary-fill-hover);
+  border-color: var(--color-primary-fill-hover);
+  color: var(--color-on-primary-hover);
 }
 
 .dcp-chat-send:not(:disabled):focus-visible {

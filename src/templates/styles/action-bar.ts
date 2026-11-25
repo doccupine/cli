@@ -129,7 +129,7 @@ export const actionBarStyles: DesignStyles = {
 }
 
 .dcp-raw-source__textarea::placeholder {
-  color: var(--color-gray);
+  color: var(--color-text-muted);
 }
 
 .dcp-raw-source__textarea:hover:not([disabled]) {
