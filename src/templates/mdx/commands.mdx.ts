@@ -21,7 +21,7 @@ npx doccupine
 
 Once you run the command, Doccupine will ask you to select a directory to store your MDX files. Choose the directory where you want to create your documentation files.
 After selecting the directory, Doccupine will ask you to enter the name of the directory for the generated website. Enter the name of the directory where you want to create your website.
-Finally, Doccupine will ask for an optional path to an OpenAPI document. Leave it blank to skip, or point it at a \`.yaml\`, \`.yml\`, or \`.json\` spec to generate an interactive [API Playground](/api-playground) from your API.
+Finally, Doccupine will ask for an optional path to an OpenAPI document. Leave it blank to skip, or point it at a \`.yaml\`, \`.yml\`, or \`.json\` spec to generate an interactive [API playground](/api-playground) from your API.
 
 This will start the development server on port 3000. Open your browser and navigate to http://localhost:3000 to view your documentation.
 

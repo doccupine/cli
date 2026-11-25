@@ -1,5 +1,5 @@
 export const apiPlaygroundMdxTemplate = `---
-title: "API Playground"
+title: "API playground"
 description: "Turn an OpenAPI document into an interactive API reference where readers send real requests and see live responses, right inside your docs."
 date: "2026-07-25"
 updated: "2026-07-31"
@@ -7,7 +7,7 @@ category: "Components"
 categoryOrder: 1
 order: 25
 ---
-# API Playground
+# API playground
 
 Point Doccupine at an OpenAPI document and it generates a complete, interactive API reference: one page per endpoint, grouped by tag in the sidebar, each with a "Send request" panel that makes real calls and shows the live response - plus copy-pasteable code snippets.
 

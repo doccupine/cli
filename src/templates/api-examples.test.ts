@@ -200,3 +200,12 @@ describe("Right rail in the modern design", () => {
     expect(designStylesheet("classic")).not.toContain("border-left: none;");
   });
 });
+
+describe("API playground naming", () => {
+  it("writes API playground with a lowercase p in user-facing text", () => {
+    for (const [name, page] of Object.entries(startingDocsStructure)) {
+      expect(page, name).not.toContain("API Playground");
+    }
+    expect(componentsMdxTemplate).toContain('<Card title="API playground"');
+  });
+});

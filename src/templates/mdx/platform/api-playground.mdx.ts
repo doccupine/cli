@@ -1,5 +1,5 @@
 export const platformApiPlaygroundMdxTemplate = `---
-title: "API Playground"
+title: "API playground"
 description: "Register an OpenAPI spec and turn it into an interactive API reference with a live request playground."
 date: "2026-07-26"
 updated: "2026-07-31"
@@ -8,13 +8,13 @@ categoryOrder: 3
 order: 2
 section: "Platform"
 ---
-# API Playground
+# API playground
 
-The API Playground settings page turns an OpenAPI spec in your repository into an interactive API reference. Any page can embed a live "try it" playground for a single endpoint, and you can generate a full reference with one page per operation.
+The API playground settings page turns an OpenAPI spec in your repository into an interactive API reference. Any page can embed a live "try it" playground for a single endpoint, and you can generate a full reference with one page per operation.
 
 ## Registering a spec
 
-Open the **API Playground** settings page and choose your OpenAPI file with the **OpenAPI spec file** picker. It searches your repository for YAML and JSON files - start typing to filter, or type a path to use one that is not listed yet. The path is stored, relative to \`doccupine.json\`, as the \`openapi\` field:
+Open the **API playground** settings page and choose your OpenAPI file with the **OpenAPI spec file** picker. It searches your repository for YAML and JSON files - start typing to filter, or type a path to use one that is not listed yet. The path is stored, relative to \`doccupine.json\`, as the \`openapi\` field:
 
 \`\`\`json
 {

@@ -50,7 +50,7 @@ Doccupine asks where your MDX files live (default `docs`) and where to put the g
 - **Components.** Callouts, tabs, steps, cards, code blocks, Mermaid diagrams and more, ready to use in MDX.
   - [Components](https://docs.doccupine.com/components)
 - **API reference.** Point it at an OpenAPI spec and get a page per endpoint with a live playground.
-  - [API Playground](https://docs.doccupine.com/api-playground)
+  - [API playground](https://docs.doccupine.com/api-playground)
 - **AI chat assistant.** Visitors ask questions and get answers from your docs, using OpenAI, Anthropic or Google.
   - [AI Assistant](https://docs.doccupine.com/ai-assistant)
 - **MCP server.** AI tools like Claude, Cursor and VS Code can search your docs directly.

@@ -84,7 +84,7 @@ Doccupine includes a rich set of built-in components you can use directly in you
   <Card title="Fields" icon="text-cursor-input" href="/fields">
     Property and parameter documentation blocks.
   </Card>
-  <Card title="API Playground" icon="square-terminal" href="/api-playground">
+  <Card title="API playground" icon="square-terminal" href="/api-playground">
     Interactive API reference where readers send real requests and see live responses.
   </Card>
   <Card title="API Examples" icon="arrow-left-right" href="/api-examples">
