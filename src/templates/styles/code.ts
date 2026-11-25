@@ -1,4 +1,5 @@
 import type { DesignStyles } from "./index.js";
+import { squareButtonRules } from "./controls.js";
 
 // Code blocks and <CodeTabs> (components/layout/Code.tsx): the window, its
 // top bar, the copy button and the syntax palettes.
@@ -127,7 +128,9 @@ const classic = `.dcp-code {
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
   border-bottom: solid 1px var(--color-grayLight);
-  height: 33px;
+  /* The modern design's header height, so both designs' code windows have
+     the same bar (and room for the 32px copy button). */
+  height: 40px;
   width: 100%;
   display: flex;
   justify-content: space-between;
@@ -152,44 +155,27 @@ const classic = `.dcp-code {
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* Icon-only copy button: the border highlight on hover and the focus and
-   active rings, the icon in success green once copied. */
+/* Icon-only copy button: the shared 32px ghost square, like the dialogs'
+   close buttons, success-tinted once copied. */
+${squareButtonRules(".dcp-code__copy")}
+
 .dcp-code__copy {
-  box-sizing: border-box;
-  appearance: none;
+  flex-shrink: 0;
   margin: 0 -6px 0 0;
-  cursor: pointer;
-  outline: none;
-  transition: all 0.3s ease;
-  border: solid 1px var(--color-grayLight);
-  box-shadow: 0 0 0 0px var(--color-primary);
-  background: var(--color-light);
-  border-radius: 6px;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-.dcp-code__copy:hover {
-  border-color: var(--color-primary);
-}
-
-.dcp-code__copy:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px var(--color-primaryLight);
-}
-
-.dcp-code__copy:active {
-  box-shadow: 0 0 0 2px var(--color-primaryLight);
-}
-
+/* svg.lucide outranks the article's own icon color (.dcp-docs .lucide). */
 .dcp-code__copy svg.lucide {
   margin: 0;
   color: var(--color-grayDark);
 }
 
-.dcp-code__copy:where([data-copied]) svg.lucide {
+.dcp-code__copy:hover svg.lucide {
+  color: var(--color-dark);
+}
+
+.dcp-code__copy:where([data-copied]) svg.lucide,
+.dcp-code__copy:where([data-copied]):hover svg.lucide {
   color: var(--color-success);
 }
 
@@ -402,54 +388,27 @@ const modern = `/* The body is the page surface in light mode and a faint ink li
   border-bottom: solid 1px var(--code-rule);
 }
 
-/* Icon-only copy button: a 32px ghost square centered in the 40px header,
-   success-tinted once copied. */
+/* Icon-only copy button: the shared 32px ghost square, centered in the 40px
+   header, success-tinted once copied. */
+${squareButtonRules(".dcp-code__copy")}
+
 .dcp-code__copy {
-  box-sizing: border-box;
-  appearance: none;
-  border: none;
-  padding: 0;
-  margin: 0;
-  outline: none;
-  width: 32px;
-  height: 32px;
   flex-shrink: 0;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
 }
 
+/* svg.lucide outranks the article's own icon color (.dcp-docs .lucide). */
 .dcp-code__copy svg.lucide {
-  width: 15px;
-  height: 15px;
   margin: 0;
   color: var(--color-grayDark);
-  transition: color 0.2s ease;
-}
-
-.dcp-code__copy:where([data-copied]) svg.lucide {
-  color: var(--color-success);
-}
-
-.dcp-code__copy:hover {
-  background: color-mix(in srgb, var(--color-dark) 6%, transparent);
 }
 
 .dcp-code__copy:hover svg.lucide {
   color: var(--color-dark);
 }
 
+.dcp-code__copy:where([data-copied]) svg.lucide,
 .dcp-code__copy:where([data-copied]):hover svg.lucide {
   color: var(--color-success);
-}
-
-.dcp-code__copy:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--color-primaryLight);
 }
 
 /* The block's label: its file name when the fence names one, otherwise its

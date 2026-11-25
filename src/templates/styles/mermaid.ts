@@ -139,12 +139,8 @@ const mermaid = `.dcp-mermaid {
   border-color: var(--color-primary);
 }
 
-.dcp-mermaid__control:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px var(--color-primaryLight);
-}
-
-.dcp-mermaid__control:active {
+.dcp-mermaid__control:focus-visible {
+  outline: none;
   box-shadow: 0 0 0 2px var(--color-primaryLight);
 }
 

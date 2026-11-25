@@ -71,12 +71,8 @@ const css = `.dcp-prompt {
   border-color: var(--color-primary);
 }
 
-.dcp-prompt__cursor:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px var(--color-primaryLight);
-}
-
-.dcp-prompt__cursor:active {
+.dcp-prompt__cursor:focus-visible {
+  outline: none;
   box-shadow: 0 0 0 2px var(--color-primaryLight);
 }
 

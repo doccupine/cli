@@ -91,11 +91,8 @@ export const tabsStyles: DesignStyles = {
   border-color: var(--color-primaryDark);
 }
 
-.dcp-tabs__tab:focus {
-  box-shadow: 0 0 0 4px var(--color-primaryLight);
-}
-
-.dcp-tabs__tab:active {
+.dcp-tabs__tab:focus-visible {
+  outline: none;
   box-shadow: 0 0 0 2px var(--color-primaryLight);
 }
 

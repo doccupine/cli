@@ -106,12 +106,8 @@ export const pagerStyles: DesignStyles = {
   border-color: var(--color-primary);
 }
 
-.dcp-pager__link:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px var(--color-primaryLight);
-}
-
-.dcp-pager__link:active {
+.dcp-pager__link:focus-visible {
+  outline: none;
   box-shadow: 0 0 0 2px var(--color-primaryLight);
 }
 

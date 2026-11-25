@@ -156,12 +156,8 @@ export const siteGateStyles: DesignStyles = {
 }
 
 .dcp-gate__input:focus:not([disabled]) {
-  box-shadow: 0 0 0 4px var(--color-primaryLight);
-  border-color: var(--color-primary);
-}
-
-.dcp-gate__input:active:not([disabled]) {
   box-shadow: 0 0 0 2px var(--color-primaryLight);
+  border-color: var(--color-primary);
 }
 
 .dcp-gate__input[aria-invalid="true"] {
@@ -194,12 +190,8 @@ export const siteGateStyles: DesignStyles = {
   border-color: var(--color-primary);
 }
 
-.dcp-gate__theme-toggle:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px var(--color-primaryLight);
-}
-
-.dcp-gate__theme-toggle:active {
+.dcp-gate__theme-toggle:focus-visible {
+  outline: none;
   box-shadow: 0 0 0 2px var(--color-primaryLight);
 }
 

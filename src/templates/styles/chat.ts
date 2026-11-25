@@ -185,12 +185,8 @@ export const chatStyles: DesignStyles = {
   color: var(--color-primary);
 }
 
-.dcp-icon-button:focus {
-  box-shadow: 0 0 0 4px var(--color-primaryLight);
-  border-color: var(--color-primary);
-}
-
-.dcp-icon-button:active {
+.dcp-icon-button:focus-visible {
+  outline: none;
   box-shadow: 0 0 0 2px var(--color-primaryLight);
 }
 
@@ -617,12 +613,8 @@ export const chatStyles: DesignStyles = {
   border-color: var(--color-primary);
 }
 
-.dcp-chat-source:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px var(--color-primaryLight);
-}
-
-.dcp-chat-source:active {
+.dcp-chat-source:focus-visible {
+  outline: none;
   box-shadow: 0 0 0 2px var(--color-primaryLight);
 }
 
@@ -934,11 +926,8 @@ export const chatStyles: DesignStyles = {
   border-color: var(--color-primaryDark);
 }
 
-.dcp-chat-send:not(:disabled):focus {
-  box-shadow: 0 0 0 4px var(--color-primaryLight);
-}
-
-.dcp-chat-send:not(:disabled):active {
+.dcp-chat-send:not(:disabled):focus-visible {
+  outline: none;
   box-shadow: 0 0 0 2px var(--color-primaryLight);
 }
 

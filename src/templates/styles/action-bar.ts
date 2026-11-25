@@ -91,12 +91,8 @@ export const actionBarStyles: DesignStyles = {
   border-color: var(--color-primary);
 }
 
-.dcp-action-button:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px var(--color-primaryLight);
-}
-
-.dcp-action-button:active {
+.dcp-action-button:focus-visible {
+  outline: none;
   box-shadow: 0 0 0 2px var(--color-primaryLight);
 }
 
@@ -141,12 +137,8 @@ export const actionBarStyles: DesignStyles = {
 }
 
 .dcp-raw-source__textarea:focus:not([disabled]) {
-  box-shadow: 0 0 0 4px var(--color-primaryLight);
-  border-color: var(--color-primary);
-}
-
-.dcp-raw-source__textarea:active:not([disabled]) {
   box-shadow: 0 0 0 2px var(--color-primaryLight);
+  border-color: var(--color-primary);
 }`,
   classic: `.dcp-action-button svg.lucide {
   color: inherit;

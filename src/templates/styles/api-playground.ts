@@ -97,12 +97,8 @@ const rules = `.dcp-playground {
   background: var(--color-primaryDark);
 }
 
-.dcp-playground__send:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px var(--color-primaryLight);
-}
-
-.dcp-playground__send:active {
+.dcp-playground__send:focus-visible {
+  outline: none;
   box-shadow: 0 0 0 2px var(--color-primaryLight);
 }
 
@@ -216,12 +212,8 @@ const rules = `.dcp-playground {
   color: var(--color-primary);
 }
 
-.dcp-playground-modal__close:focus {
-  box-shadow: 0 0 0 4px var(--color-primaryLight);
-  border-color: var(--color-primary);
-}
-
-.dcp-playground-modal__close:active {
+.dcp-playground-modal__close:focus-visible {
+  outline: none;
   box-shadow: 0 0 0 2px var(--color-primaryLight);
 }
 
@@ -383,12 +375,8 @@ const rules = `.dcp-playground {
   border-color: var(--color-primary);
 }
 
-.dcp-playground__toggle:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px var(--color-primaryLight);
-}
-
-.dcp-playground__toggle:active {
+.dcp-playground__toggle:focus-visible {
+  outline: none;
   box-shadow: 0 0 0 2px var(--color-primaryLight);
 }
 
@@ -625,13 +613,8 @@ const rules = `.dcp-playground {
 
 .dcp-input:focus:not([disabled]),
 .dcp-textarea:focus:not([disabled]) {
-  box-shadow: 0 0 0 4px var(--color-primaryLight);
-  border-color: var(--color-primary);
-}
-
-.dcp-input:active:not([disabled]),
-.dcp-textarea:active:not([disabled]) {
   box-shadow: 0 0 0 2px var(--color-primaryLight);
+  border-color: var(--color-primary);
 }`;
 
 // The dialog's close button is the shared 32px ghost square (like the chat

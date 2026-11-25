@@ -47,19 +47,9 @@ export const cardStyles: DesignStyles = {
   border-color: var(--color-primary);
 }
 
-.dcp-card:where([data-link]):focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px var(--color-primaryLight);
-}
-
-.dcp-card:where([data-link]):active {
-  box-shadow: 0 0 0 2px var(--color-primaryLight);
-}
-
-/* The site-wide link focus ring (base.css) rounds a focused link to 6px; it
-   used to win over the card's own radius, so the card keeps that look. */
 .dcp-card:where([data-link]):focus-visible {
-  border-radius: 6px;
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primaryLight);
 }
 
 .dcp-card__title {
@@ -118,9 +108,6 @@ export const cardStyles: DesignStyles = {
 
 .dcp-card:where([data-link]):focus-visible {
   outline: none;
-  /* The site-wide link focus ring (base.css) rounds a focused link to 6px;
-     it used to win over the card's own radius, so the card keeps that look. */
-  border-radius: 6px;
   box-shadow: 0 0 0 2px var(--color-primaryLight);
 }
 

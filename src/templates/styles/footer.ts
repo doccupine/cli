@@ -131,12 +131,8 @@ export const footerStyles: DesignStyles = {
   border-color: var(--color-primary);
 }
 
-.dcp-links__link:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px var(--color-primaryLight);
-}
-
-.dcp-links__link:active {
+.dcp-links__link:focus-visible {
+  outline: none;
   box-shadow: 0 0 0 2px var(--color-primaryLight);
 }
 

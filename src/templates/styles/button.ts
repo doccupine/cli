@@ -58,11 +58,8 @@ const css = `.dcp-button {
   border-color: var(--color-primaryDark);
 }
 
-.dcp-button:where([data-variant="primary"]):focus {
-  box-shadow: 0 0 0 4px var(--color-primaryLight);
-}
-
-.dcp-button:where([data-variant="primary"]):active {
+.dcp-button:where([data-variant="primary"]):focus-visible {
+  outline: none;
   box-shadow: 0 0 0 2px var(--color-primaryLight);
 }
 
@@ -88,11 +85,8 @@ const css = `.dcp-button {
   border-color: var(--color-secondaryDark);
 }
 
-.dcp-button:where([data-variant="secondary"]):focus {
-  box-shadow: 0 0 0 4px var(--color-secondaryLight);
-}
-
-.dcp-button:where([data-variant="secondary"]):active {
+.dcp-button:where([data-variant="secondary"]):focus-visible {
+  outline: none;
   box-shadow: 0 0 0 2px var(--color-secondaryLight);
 }
 
@@ -117,11 +111,8 @@ const css = `.dcp-button {
   border-color: var(--color-tertiaryDark);
 }
 
-.dcp-button:where([data-variant="tertiary"]):focus {
-  box-shadow: 0 0 0 4px var(--color-tertiaryLight);
-}
-
-.dcp-button:where([data-variant="tertiary"]):active {
+.dcp-button:where([data-variant="tertiary"]):focus-visible {
+  outline: none;
   box-shadow: 0 0 0 2px var(--color-tertiaryLight);
 }
 
@@ -146,11 +137,8 @@ const css = `.dcp-button {
   border-color: color-mix(in srgb, var(--color-error) 90%, black);
 }
 
-.dcp-button:where([data-error]):focus {
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-error) 90%, white);
-}
-
-.dcp-button:where([data-error]):active {
+.dcp-button:where([data-error]):focus-visible {
+  outline: none;
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-error) 90%, white);
 }
 

@@ -317,7 +317,18 @@ export const headerStyles: DesignStyles = {
    accessible name is its aria-label. Use with dcp-pill. */
 .dcp-header__ask {
   flex-shrink: 0;
-  padding: 0 9px;
+  /* Icon-only: an exact 32px circle, like the search button. */
+  width: 32px;
+  padding: 0;
+  justify-content: center;
+}
+
+/* Hover like the search button: a primary border on the page background, no
+   fill (also while the chat is open). Doubled to outrank the pill's own. */
+.dcp-header__ask.dcp-header__ask:hover,
+.dcp-header__ask.dcp-header__ask[aria-expanded="true"] {
+  border-color: var(--color-primary);
+  background: var(--color-light);
 }
 
 .dcp-header__ask-label {
@@ -326,7 +337,9 @@ export const headerStyles: DesignStyles = {
 
 @media screen and (min-width: 390px) {
   .dcp-header__ask {
+    width: auto;
     padding: 0 11px;
+    justify-content: flex-start;
   }
 
   .dcp-header__ask-label {

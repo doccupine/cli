@@ -64,13 +64,19 @@ ${primaryIconRules([".dcp-search__ask"])}
 
 const searchButtonRules = `${pillRules([".dcp-search-button"], [], [])}
 
+/* Below "lg" the shortcut hint is hidden and only the icon is left: an exact
+   32px circle. */
 .dcp-search-button {
-  padding: 0 9px;
+  width: 32px;
+  padding: 0;
+  justify-content: center;
 }
 
 @media screen and (min-width: 992px) {
   .dcp-search-button {
+    width: auto;
     padding: 0 6px 0 11px;
+    justify-content: flex-start;
   }
 }
 

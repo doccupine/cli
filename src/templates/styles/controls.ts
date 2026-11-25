@@ -19,8 +19,13 @@ const linkFocusRing = `/* Keyboard-focus ring for links: keyboard only (:focus-v
    adds no specificity, so a component's own :focus-visible rule wins. */
 a:focus-visible:where(:not(.button-link)) {
   outline: none;
-  border-radius: 6px;
   box-shadow: 0 0 0 2px var(--color-primaryLight);
+}
+
+/* The ring's radius for links that have none of their own (inline links).
+   No specificity, so a card or pill keeps its own radius around the ring. */
+:where(a:focus-visible:not(.button-link)) {
+  border-radius: 6px;
 }`;
 
 // The pill controls. Modern applies them through the .dcp-pill classes;
@@ -142,6 +147,9 @@ ${sel(switches, '[data-knob="end"]::after')} {
 export function squareButtonRules(selector: string): string {
   return `${selector} {
   box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 32px;
   height: 32px;
   min-width: 32px;
@@ -282,12 +290,8 @@ export const controlStyles: DesignStyles = {
   border-color: var(--color-primary);
 }
 
-.dcp-interactive:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px var(--color-primaryLight);
-}
-
-.dcp-interactive:active {
+.dcp-interactive:focus-visible {
+  outline: none;
   box-shadow: 0 0 0 2px var(--color-primaryLight);
 }`,
   classic: linkFocusRing,
