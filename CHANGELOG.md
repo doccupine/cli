@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5
+
+- Add a `cols` prop to `<ColorSwatchGroup>`: `cols={4}` sets how many swatches sit side by side on wide screens, from 1 to 6 (higher values are capped at 6). Smaller screens show at most two columns, or three from 768px, so the swatches never get too narrow, and `cols={1}` stays one column everywhere. Without it the grid is unchanged. Documented in a new "Columns" section on the starter Color Swatches page
+
 ## 0.1.4
 
 - Open same-page anchor links such as `[Icon files](#icon-files)` in the current tab: Markdown links starting with `#` were treated as external and opened in a new tab

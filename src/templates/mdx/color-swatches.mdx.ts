@@ -60,6 +60,34 @@ Text color automatically adapts based on the background luminance, so dark swatc
   <ColorSwatch token="white" value="#FFFFFF" />
 </ColorSwatchGroup>
 
+## Columns
+
+Set \`cols\` to choose how many swatches sit side by side, from 1 to 6. Wide screens show the full count; smaller screens show at most two columns, or three from tablet width, so the swatches never get too narrow:
+
+\`\`\`html
+<ColorSwatchGroup cols={4}>
+  <ColorSwatch token="primary" value="#6366F1" />
+  <ColorSwatch token="secondary" value="#EC4899" />
+  <ColorSwatch token="success" value="#10B981" />
+  <ColorSwatch token="warning" value="#F59E0B" />
+  <ColorSwatch token="danger" value="#EF4444" />
+  <ColorSwatch token="info" value="#3B82F6" />
+  <ColorSwatch token="dark" value="#1E1E2E" />
+  <ColorSwatch token="light" value="#F9FAFB" />
+</ColorSwatchGroup>
+\`\`\`
+
+<ColorSwatchGroup cols={4}>
+  <ColorSwatch token="primary" value="#6366F1" />
+  <ColorSwatch token="secondary" value="#EC4899" />
+  <ColorSwatch token="success" value="#10B981" />
+  <ColorSwatch token="warning" value="#F59E0B" />
+  <ColorSwatch token="danger" value="#EF4444" />
+  <ColorSwatch token="info" value="#3B82F6" />
+  <ColorSwatch token="dark" value="#1E1E2E" />
+  <ColorSwatch token="light" value="#F9FAFB" />
+</ColorSwatchGroup>
+
 ## ColorSwatch Properties
 
 <Field value="token" type="string" required>
@@ -74,4 +102,8 @@ Text color automatically adapts based on the background luminance, so dark swatc
 
 <Field value="children" type="node" required>
   One or more \`ColorSwatch\` components to display in a responsive grid.
+</Field>
+
+<Field value="cols" type="number">
+  How many columns the grid shows on wide screens, from 1 to 6. Smaller screens show at most two columns, or three from tablet width. Without it, the grid shows two columns, and three from tablet width.
 </Field>`;
