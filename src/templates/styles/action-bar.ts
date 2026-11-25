@@ -9,7 +9,8 @@ const primaryIcons = primaryIconRules([
 // The page action bar at the top of the article and the content area under
 // it (components/layout/ActionBar.tsx).
 //
-//   .dcp-action-bar              the row; data-rss when it has an RSS link
+//   .dcp-action-bar              the row; data-rss when it has an RSS link,
+//                                data-views when it holds the view selector
 //   .dcp-action-bar__eyebrow     the page's category (modern)
 //   .dcp-action-bar__group       the copy (and RSS) buttons
 //   .dcp-action-bar__actions     the markdown link and the view toggle
@@ -182,7 +183,8 @@ export const actionBarStyles: DesignStyles = {
 }
 
 @media screen and (max-width: 343px) {
-  [data-rss] .dcp-action-bar__label {
+  [data-rss] .dcp-action-bar__label,
+  [data-views] .dcp-action-bar__label {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -298,6 +300,25 @@ ${labelledPills}
     overflow: hidden;
     clip: rect(0 0 0 0);
     border: 0;
+  }
+}
+
+/* The view selector takes as much room as the RSS link and more. */
+@media screen and (max-width: 519px) {
+  [data-views] .dcp-action-bar__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    border: 0;
+  }
+
+  [data-views] .dcp-action-bar__copy,
+  [data-views] .dcp-action-bar__rss {
+    padding: 0 9px;
   }
 }
 

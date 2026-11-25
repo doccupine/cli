@@ -15,11 +15,17 @@ Doccupine includes a rich set of built-in components you can use directly in you
   <Card title="Headers and Text" icon="heading" href="/headers-and-text">
     Headings, paragraphs, bold, italic, links, and other text formatting.
   </Card>
+  <Card title="Keyboard Shortcuts" icon="keyboard" href="/keyboard-shortcuts">
+    Key caps that match the reader's keyboard, with Mac and Windows variants.
+  </Card>
   <Card title="Lists and Tables" icon="list" href="/lists-and-tables">
     Ordered lists, unordered lists, and data tables.
   </Card>
   <Card title="Code" icon="code" href="/code">
     Inline code, fenced code blocks, and syntax highlighting.
+  </Card>
+  <Card title="Install" icon="package" href="/install">
+    Install commands for npm, pnpm, yarn, and bun, in the reader's package manager.
   </Card>
   <Card title="Prompt" icon="sparkles" href="/prompt">
     Pre-built AI prompts readers can copy or open in Cursor.
@@ -33,6 +39,9 @@ Doccupine includes a rich set of built-in components you can use directly in you
   <Card title="Tabs" icon="panel-top" href="/tabs">
     Tabbed interfaces for grouping related content.
   </Card>
+  <Card title="Views" icon="layers" href="/views">
+    One page for several frameworks or languages, with a selector readers remember.
+  </Card>
   <Card title="Steps" icon="footprints" href="/steps">
     Numbered step-by-step guides and walkthroughs.
   </Card>
@@ -41,6 +50,9 @@ Doccupine includes a rich set of built-in components you can use directly in you
   </Card>
   <Card title="Cards" icon="square" href="/cards">
     Visual containers for content, icons, and links.
+  </Card>
+  <Card title="GitHub Card" icon="git-fork" href="/github-card">
+    A repository's description, stars, and forks, fetched at build time.
   </Card>
   <Card title="Buttons" icon="mouse-pointer-click" href="/buttons">
     Action components with variants, sizes, and icons.
@@ -57,6 +69,9 @@ Doccupine includes a rich set of built-in components you can use directly in you
   <Card title="Frames" icon="frame" href="/frames">
     Bordered containers with captions for images, videos, and diagrams.
   </Card>
+  <Card title="Preview" icon="app-window" href="/preview">
+    Live examples on a stage, with their source code underneath.
+  </Card>
   <Card title="Icons" icon="smile" href="/icons">
     Lucide icons you can use anywhere in your docs.
   </Card>
@@ -72,6 +87,9 @@ Doccupine includes a rich set of built-in components you can use directly in you
   <Card title="API Playground" icon="square-terminal" href="/api-playground">
     Interactive API reference where readers send real requests and see live responses.
   </Card>
+  <Card title="API Examples" icon="arrow-left-right" href="/api-examples">
+    Request and response examples pinned beside a hand-written API page.
+  </Card>
   <Card title="Update" icon="bell" href="/update">
     Changelog blocks with a subscribable RSS feed.
   </Card>
@@ -80,6 +98,9 @@ Doccupine includes a rich set of built-in components you can use directly in you
   </Card>
   <Card title="Mermaid" icon="workflow" href="/mermaid">
     Flowcharts, sequence diagrams, and other visualizations from Mermaid syntax.
+  </Card>
+  <Card title="Visibility" icon="eye-off" href="/visibility">
+    Content only for readers of the page, or only for AI tools.
   </Card>
   <Card title="Space" icon="move-vertical" href="/space">
     Precise vertical or horizontal gaps, with per-breakpoint control.

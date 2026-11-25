@@ -142,6 +142,12 @@ function fontDeclLine(fontConfig: FontConfig | null): string {
 // that persists a choice, so it decides. The cookie is kept in step with the
 // resolved mode either way.
 //
+// It also marks Apple devices with data-os="mac" on <html>, so <Kbd> shows
+// the Mac key caps (the command symbol for Mod) from the first paint; the
+// markup carries both caps and CSS picks one, so nothing hydrates differently.
+// And it restores the reader's <View> pick on <html data-view>, so a page's
+// views show the remembered title from the first paint (see Docs.tsx).
+//
 // The script also emits the theme-color meta for the resolved mode through
 // document.write, which hands the tag to the HTML parser itself: Safari only
 // tints its chrome reliably from a parser-inserted tag - one created through
@@ -164,7 +170,7 @@ function fontDeclLine(fontConfig: FontConfig | null): string {
 // generated layout, at app build time, from the imported theme palettes. The
 // token must match the one ColorModeSync syncs (primary), so the chrome color
 // does not change at hydration.
-const THEME_INIT_SCRIPT = `(function(){try{var r=document.documentElement,o=window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light",k=document.cookie.split(";").map(function(s){return s.trim();}).find(function(s){return s.indexOf("theme=")===0;}),c=k?k.split("=")[1]:null,m;try{var p=localStorage.getItem("themePreference"),t=localStorage.getItem("theme");m=p==="light"||p==="dark"?p:p!=="system"&&(t==="light"||t==="dark")?t:o;}catch(e){m=c==="light"||c==="dark"?c:o;}if(c!==m){document.cookie="theme="+m+";path=/;max-age=31536000;SameSite=Lax";}r.classList.toggle("dark",m==="dark");document.write('<meta name="theme-color" content="'+(m==="dark"?"\${colorsDark.primary}":"\${colorsLight.primary}")+'">');}catch(e){}})();`;
+const THEME_INIT_SCRIPT = `(function(){try{var r=document.documentElement,o=window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light",k=document.cookie.split(";").map(function(s){return s.trim();}).find(function(s){return s.indexOf("theme=")===0;}),c=k?k.split("=")[1]:null,m;try{var p=localStorage.getItem("themePreference"),t=localStorage.getItem("theme");m=p==="light"||p==="dark"?p:p!=="system"&&(t==="light"||t==="dark")?t:o;}catch(e){m=c==="light"||c==="dark"?c:o;}if(c!==m){document.cookie="theme="+m+";path=/;max-age=31536000;SameSite=Lax";}r.classList.toggle("dark",m==="dark");if(/Mac|iPhone|iPad|iPod/.test(navigator.platform||navigator.userAgent))r.setAttribute("data-os","mac");try{var w=localStorage.getItem("doccupine:choice:view");if(w)r.setAttribute("data-view",w);}catch(e){}document.write('<meta name="theme-color" content="'+(m==="dark"?"\${colorsDark.primary}":"\${colorsLight.primary}")+'">');}catch(e){}})();`;
 
 /**
  * Root layout ("app/layout.tsx"). Minimal shell: html/body, fonts, the site
@@ -313,7 +319,8 @@ ${
     ? ""
     : `import { Footer } from "@/components/layout/Footer";
 `
-}import { Header } from "@/components/layout/Header";
+}import { Banner } from "@/components/layout/Banner";
+import { Header } from "@/components/layout/Header";
 import {
   DocsWrapper,
   LlmsDirective,
@@ -370,6 +377,7 @@ ${
       <SearchProvider pages={pages} sections={doccupineSections}>
         <SkipLink />
         <LlmsDirective />
+        <Banner />
         <Header>
           <SectionBar sections={doccupineSections} />
         </Header>
@@ -414,6 +422,7 @@ ${
       <SearchProvider pages={pages}>
         <SkipLink />
         <LlmsDirective />
+        <Banner />
         <Header />
         {process.env.LLM_PROVIDER && <Chat />}
         <SectionBarProvider hasSectionBar={false}>
@@ -485,6 +494,7 @@ function variantSiteLayout(
   return `import dynamic from "next/dynamic";
 import { ChtProvider } from "@/components/Chat";
 import { SearchProvider } from "@/components/SearchDocs";
+import { Banner } from "@/components/layout/Banner";
 import { Header } from "@/components/layout/Header";
 import {
   DocsWrapper,
@@ -518,6 +528,7 @@ export default function SiteLayout({
       <SearchProvider pages={pages}${hasSections ? " sections={doccupineSections}" : ""}>
         <SkipLink />
         <LlmsDirective />
+        <Banner />
         <Header${hasSections ? `>${sectionBar}</Header>` : " />"}
         {process.env.LLM_PROVIDER && <Chat />}
         ${docsWrapperOpen}

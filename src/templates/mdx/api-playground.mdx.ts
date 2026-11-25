@@ -5,7 +5,7 @@ date: "2026-07-25"
 updated: "2026-07-31"
 category: "Components"
 categoryOrder: 1
-order: 20
+order: 25
 ---
 # API Playground
 
@@ -14,6 +14,8 @@ Point Doccupine at an OpenAPI document and it generates a complete, interactive 
 <Callout type="note">
 The playground is driven entirely by your OpenAPI document. There is nothing to wire up by hand - add one line of config and every endpoint becomes a documented, runnable page.
 </Callout>
+
+Writing an API page by hand instead? Pin its request and response examples to the right column with [\`<RequestExample>\` and \`<ResponseExample>\`](/api-examples).
 
 ## Try it
 

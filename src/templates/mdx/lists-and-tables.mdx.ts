@@ -4,7 +4,7 @@ description: "Present structured information using lists or tables."
 date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
-order: 2
+order: 3
 ---
 # Lists and Tables
 

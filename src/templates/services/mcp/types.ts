@@ -2,7 +2,11 @@ export const mcpTypesTemplate = `export interface DocsResource {
   uri: string;
   name: string;
   path: string;
+  /** The page as AI reads it (no <Visibility for="humans"> blocks). */
   content: string;
+  /** The page as readers see it, for the site search; only present when it
+   *  differs from \`content\`. Never handed to agents. */
+  searchContent?: string;
   /** Language code and version slug; present only on sites that configure
    *  languages.json / versions.json. */
   locale?: string;

@@ -4,7 +4,7 @@ description: "Show contextual definitions and explanations when readers hover ov
 date: "2026-07-27"
 category: "Components"
 categoryOrder: 1
-order: 13
+order: 17
 ---
 # Tooltips
 

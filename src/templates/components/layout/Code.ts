@@ -6,6 +6,7 @@ import rehypeHighlight from "rehype-highlight";
 import rehypeStringify from "rehype-stringify";
 import { Icon } from "@/components/layout/Icon";
 import { useStrings } from "@/components/useStrings";
+import { useChoice } from "@/components/useChoice";
 
 // Styles: app/styles/design.css (.dcp-code, see src/templates/styles/code.ts
 // in the CLI).
@@ -24,6 +25,12 @@ interface CodeTab {
 
 interface CodeTabsProps extends React.HTMLAttributes<HTMLDivElement> {
   tabs: CodeTab[];
+  /**
+   * Remember the picked tab by its label under this key, and follow picks
+   * made in every other block with the same key (useChoice). <Install>
+   * uses it so every install command shows the reader's package manager.
+   */
+  syncKey?: string;
 }
 
 const escapeHtml = (unsafe: string): string => {
@@ -104,13 +111,20 @@ function Code({ code, language = "javascript", title, className }: CodeProps) {
 /* Multi-variant code block (npm / pnpm / yarn, etc). Tabs replace the macOS
    dots in the TopBar as a keyboard-accessible tablist; the copy button copies
    whichever tab is active and resets its copied state when the tab changes. */
-function CodeTabs({ tabs, className }: CodeTabsProps) {
+function CodeTabs({ tabs, className, syncKey }: CodeTabsProps) {
   const baseId = useId();
   const [active, setActive] = useState(0);
   const [copied, setCopied] = useState(false);
   const t = useStrings();
+  // Without a syncKey the choice store is read under an empty key nothing
+  // ever writes, so it stays null and the local state decides.
+  const [chosen, setChosen] = useChoice(syncKey ?? "");
+  const chosenIndex = syncKey
+    ? tabs.findIndex((tab) => tab.label === chosen)
+    : -1;
 
-  const safeActive = active < tabs.length ? active : 0;
+  const current = chosenIndex >= 0 ? chosenIndex : active;
+  const safeActive = current < tabs.length ? current : 0;
   const activeTab = tabs[safeActive];
 
   const highlightedCode = useMemo(
@@ -121,10 +135,14 @@ function CodeTabs({ tabs, className }: CodeTabsProps) {
     [activeTab],
   );
 
-  const handleSelect = useCallback((index: number) => {
-    setActive(index);
-    setCopied(false);
-  }, []);
+  const handleSelect = useCallback(
+    (index: number) => {
+      setActive(index);
+      setCopied(false);
+      if (syncKey && tabs[index]) setChosen(tabs[index].label);
+    },
+    [setChosen, syncKey, tabs],
+  );
 
   const handleCopy = useCallback(async () => {
     if (!activeTab) return;

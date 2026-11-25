@@ -4,7 +4,7 @@ description: "Replace a page's table of contents with your own content, pinned t
 date: "2026-07-27"
 category: "Components"
 categoryOrder: 1
-order: 18
+order: 23
 ---
 # Side Panel
 

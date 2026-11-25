@@ -4,7 +4,7 @@ description: "Learn how to display inline code and code blocks in documentation.
 date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
-order: 3
+order: 4
 ---
 # Code
 
@@ -82,7 +82,7 @@ Add a \`title\` to a code block to display a file name in the window bar, styled
 
 ## Tabbed Code Blocks
 
-Use \`<CodeTabs />\` to show several variants of the same snippet - for example the same install command across package managers. Each tab is a keyboard-accessible button, and the copy button copies whichever tab is active. Each tab may set a \`language\` for highlighting (defaults to \`bash\`).
+Use \`<CodeTabs />\` to show several variants of the same snippet - for example the same install command across package managers. Each tab is a keyboard-accessible button, and the copy button copies whichever tab is active. Each tab may set a \`language\` for highlighting (defaults to \`bash\`). For package install commands, [\`<Install>\`](/install) writes the tabs for you and remembers the reader's package manager.
 
 \`\`\`html
 <CodeTabs tabs={[{ label: "npm", code: "npm install doccupine" }, { label: "pnpm", code: "pnpm add doccupine" }, { label: "yarn", code: "yarn add doccupine" }]} />

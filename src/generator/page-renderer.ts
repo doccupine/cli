@@ -8,6 +8,7 @@ import { parseUpdateBlocks } from "../lib/rss.js";
 import type { MDXFile } from "../lib/types.js";
 import { escapeTemplateContent, toJsStringLiteral } from "../lib/utils.js";
 import { toOgLocale } from "../lib/variants.js";
+import { forAudience, hasVisibilityBlocks } from "../lib/visibility.js";
 import { rssRouteTemplate } from "../templates/app/rssRoute.js";
 
 export interface RenderPageOptions {
@@ -30,6 +31,25 @@ function languageAttributes(locale: string | undefined): {
   return {
     docsAttr: locale ? [`lang=${JSON.stringify(locale)}`] : [],
     ogLocale: locale ? toOgLocale(locale) : undefined,
+  };
+}
+
+/**
+ * A page's MDX as its readers see it (<Visibility for="agents"> blocks
+ * removed), and, when the page has Visibility blocks, the agents' version
+ * as a second constant for the "Copy content" button.
+ */
+function audienceContent(mdx: string): {
+  content: string;
+  declaration: string;
+  attrs: string[];
+} {
+  const content = forAudience(mdx, "humans");
+  if (!hasVisibilityBlocks(mdx)) return { content, declaration: "", attrs: [] };
+  return {
+    content,
+    declaration: `\nconst agentContent = \`${escapeTemplateContent(forAudience(mdx, "agents"))}\`;`,
+    attrs: ["agentContent={agentContent}"],
   };
 }
 
@@ -82,7 +102,8 @@ export function renderMdxPage(
   const fm = mdxFile.frontmatter;
   const apiOperation = options?.apiOperation;
   const isSynthetic = mdxFile.path.startsWith("@openapi/");
-  const updates = isSynthetic ? [] : parseUpdateBlocks(mdxFile.content);
+  const page = audienceContent(mdxFile.content);
+  const updates = isSynthetic ? [] : parseUpdateBlocks(page.content);
   const hasFeed = updates.length > 0;
   const feedPath = `/${mdxFile.slug}/rss.xml`;
   const language = languageAttributes(mdxFile.locale);
@@ -124,13 +145,14 @@ export function renderMdxPage(
   const showRssButton = hasFeed && fm.rss === true && !apiOperation;
   const docsAttrs = [
     `content={content}`,
+    ...page.attrs,
     `sourcePath={${sourcePathLiteral}}`,
     ...language.docsAttr,
     ...(showRssButton ? [`rssHref={${JSON.stringify(feedPath)}}`] : []),
   ];
   const inlineDocs = `<Docs ${docsAttrs.join(" ")} />`;
   const docsElement = apiOperation
-    ? `<Docs ${["content={content}", ...language.docsAttr].join(" ")}>
+    ? `<Docs ${["content={content}", ...page.attrs, ...language.docsAttr].join(" ")}>
         <ApiPlayground operation={operation} />
       </Docs>`
     : inlineDocs.length + 6 <= 80
@@ -142,7 +164,7 @@ export function renderMdxPage(
 import { Docs } from "@/components/Docs";
 import { config } from "@/utils/config";${iconsImport}${apiImport}
 
-const content = \`${escapeTemplateContent(mdxFile.content)}\`;
+const content = \`${escapeTemplateContent(page.content)}\`;${page.declaration}
 ${apiConst}
 ${metadataBlock}
 
@@ -202,7 +224,8 @@ export function renderHomepage(
   apiOperation?: OperationDescriptor,
   options: RenderVariantOptions = {},
 ): RenderedPage {
-  const updates = indexMDX ? parseUpdateBlocks(indexMDX.content) : [];
+  const home = indexMDX ? audienceContent(indexMDX.content) : null;
+  const updates = home ? parseUpdateBlocks(home.content) : [];
   const hasFeed = updates.length > 0;
   const feedPath = "/rss.xml";
   const language = languageAttributes(options.locale);
@@ -240,6 +263,7 @@ export function renderHomepage(
   const showRssButton = hasFeed && indexMDX?.rss === true && !apiOperation;
   const homeAttrs = [
     `content={content}`,
+    ...(home?.attrs ?? []),
     `sourcePath="index.mdx"`,
     ...language.docsAttr,
   ];
@@ -257,7 +281,7 @@ export function renderHomepage(
 import { Docs } from "@/components/Docs";
 import { config } from "@/utils/config";${iconsImport}${apiImport}
 
-${indexMDX ? `const content = \`${escapeTemplateContent(indexMDX.content)}\`;` : `const content = null;`}
+${home ? `const content = \`${escapeTemplateContent(home.content)}\`;${home.declaration}` : `const content = null;`}
 ${apiConst}
 ${metadataBlock}
 
@@ -305,7 +329,8 @@ export function renderSectionPage(
   sourcePath?: string,
   options: RenderVariantOptions = {},
 ): RenderedPage {
-  const updates = parseUpdateBlocks(mdxContent);
+  const section = audienceContent(mdxContent);
+  const updates = parseUpdateBlocks(section.content);
   const hasFeed = updates.length > 0;
   const feedPath = `/${routeSlug}/rss.xml`;
   const showRssButton = hasFeed && frontmatter.rss === true;
@@ -342,6 +367,7 @@ export function renderSectionPage(
 
   const docsAttrs = [
     `content={content}`,
+    ...section.attrs,
     `sourcePath={${JSON.stringify(sourcePath ?? `${routeSlug}/index.mdx`)}}`,
     ...language.docsAttr,
     ...(showRssButton ? [`rssHref={${JSON.stringify(feedPath)}}`] : []),
@@ -360,7 +386,7 @@ export function renderSectionPage(
 import { Docs } from "@/components/Docs";
 import { config } from "@/utils/config";${iconsImport}
 
-const content = \`${escapeTemplateContent(mdxContent)}\`;
+const content = \`${escapeTemplateContent(section.content)}\`;${section.declaration}
 
 ${metadataBlock}
 

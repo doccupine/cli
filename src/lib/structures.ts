@@ -63,6 +63,24 @@ import { fieldTemplate } from "../templates/components/layout/Field.js";
 import { focusModeToggleTemplate } from "../templates/components/layout/FocusModeToggle.js";
 import { footerTemplate } from "../templates/components/layout/Footer.js";
 import { frameTemplate } from "../templates/components/layout/Frame.js";
+import { installTemplate } from "../templates/components/layout/Install.js";
+import { kbdTemplate } from "../templates/components/layout/Kbd.js";
+import { visibilityTemplate } from "../templates/components/layout/Visibility.js";
+import { apiExampleTemplate } from "../templates/components/layout/ApiExample.js";
+import { viewTemplate } from "../templates/components/layout/View.js";
+import { bannerTemplate } from "../templates/components/layout/Banner.js";
+import { gitHubCardTemplate } from "../templates/components/layout/GitHubCard.js";
+import { githubCardMdxTemplate } from "../templates/mdx/github-card.mdx.js";
+import { bannerControlsTemplate } from "../templates/components/layout/BannerControls.js";
+import { inlineMarkdownTemplate } from "../templates/components/layout/InlineMarkdown.js";
+import { viewSelectorTemplate } from "../templates/components/layout/ViewSelector.js";
+import { viewsMdxTemplate } from "../templates/mdx/views.mdx.js";
+import { apiExamplesTemplate } from "../templates/utils/apiExamples.js";
+import { apiExamplesMdxTemplate } from "../templates/mdx/api-examples.mdx.js";
+import { useChoiceTemplate } from "../templates/components/useChoice.js";
+import { previewTemplate } from "../templates/components/layout/Preview.js";
+import { previewCodeTemplate } from "../templates/components/layout/PreviewCode.js";
+import { previewDataTemplate } from "../templates/components/layout/PreviewData.js";
 import { headerTemplate } from "../templates/components/layout/Header.js";
 import { iconTemplate } from "../templates/components/layout/Icon.js";
 import { pictogramsTemplate } from "../templates/components/layout/Pictograms.js";
@@ -152,6 +170,10 @@ import { imagesAndEmbedsMdxTemplate } from "../templates/mdx/images-and-embeds.m
 import { indexMdxTemplate } from "../templates/mdx/index.mdx.js";
 import { footerLinksMdxTemplate } from "../templates/mdx/footer-links.mdx.js";
 import { framesMdxTemplate } from "../templates/mdx/frames.mdx.js";
+import { previewMdxTemplate } from "../templates/mdx/preview.mdx.js";
+import { installMdxTemplate } from "../templates/mdx/install.mdx.js";
+import { keyboardShortcutsMdxTemplate } from "../templates/mdx/keyboard-shortcuts.mdx.js";
+import { visibilityMdxTemplate } from "../templates/mdx/visibility.mdx.js";
 import { listsAndTablesMdxTemplate } from "../templates/mdx/lists-and-tables.mdx.js";
 import { mediaAndAssetsMdxTemplate } from "../templates/mdx/media-and-assets.mdx.js";
 import { mermaidMdxTemplate } from "../templates/mdx/mermaid.mdx.js";
@@ -278,6 +300,7 @@ export const appStructure: Record<string, string> = {
   "utils/ssrfGuard.ts": ssrfGuardTemplate,
   "utils/apiSnippets.ts": apiSnippetsTemplate,
   "utils/apiPlayground.ts": apiPlaygroundUtilsTemplate,
+  "utils/apiExamples.ts": apiExamplesTemplate,
   "utils/requestBody.ts": requestBodyTemplate,
 
   "components/Chat.tsx": chatTemplate,
@@ -301,14 +324,18 @@ export const appStructure: Record<string, string> = {
   "components/Spinner.tsx": spinnerTemplate,
   "components/useVariant.ts": useVariantTemplate,
   "components/useStrings.ts": useStringsTemplate,
+  "components/useChoice.ts": useChoiceTemplate,
   "components/useColorMode.ts": useColorModeTemplate,
   "components/useOnClickOutside.ts": useOnClickOutsideTemplate,
 
   "components/layout/Accordion.tsx": accordionTemplate,
   "components/layout/ActionBar.tsx": actionBarTemplate,
+  "components/layout/ApiExample.tsx": apiExampleTemplate,
   "components/layout/ApiPlayground.tsx": apiPlaygroundTemplate,
   "components/layout/ApiPlaygroundDemo.tsx": apiPlaygroundDemoTemplate,
   "components/layout/Badge.tsx": badgeTemplate,
+  "components/layout/Banner.tsx": bannerTemplate,
+  "components/layout/BannerControls.tsx": bannerControlsTemplate,
   "components/layout/Button.tsx": buttonTemplate,
   "components/layout/Callout.tsx": calloutTemplate,
   "components/layout/Card.tsx": cardTemplate,
@@ -325,10 +352,17 @@ export const appStructure: Record<string, string> = {
   "components/layout/FocusModeToggle.tsx": focusModeToggleTemplate,
   "components/layout/Footer.tsx": footerTemplate,
   "components/layout/Frame.tsx": frameTemplate,
+  "components/layout/GitHubCard.tsx": gitHubCardTemplate,
   "components/layout/Header.tsx": headerTemplate,
   "components/layout/Icon.tsx": iconTemplate,
+  "components/layout/InlineMarkdown.tsx": inlineMarkdownTemplate,
+  "components/layout/Install.tsx": installTemplate,
+  "components/layout/Kbd.tsx": kbdTemplate,
   "components/layout/Mermaid.tsx": mermaidViewTemplate,
   "components/layout/Pictograms.tsx": pictogramsTemplate,
+  "components/layout/Preview.tsx": previewTemplate,
+  "components/layout/PreviewCode.tsx": previewCodeTemplate,
+  "components/layout/PreviewData.ts": previewDataTemplate,
   "components/layout/Prompt.tsx": promptTemplate,
   "components/layout/SidePanel.tsx": sidePanelTemplate,
   "components/layout/NotFound.tsx": notFoundComponentTemplate,
@@ -343,6 +377,9 @@ export const appStructure: Record<string, string> = {
   "components/layout/TreeData.ts": treeDataTemplate,
   "components/layout/Update.tsx": updateTemplate,
   "components/layout/VariantSwitchers.tsx": variantSwitchersTemplate,
+  "components/layout/View.tsx": viewTemplate,
+  "components/layout/ViewSelector.tsx": viewSelectorTemplate,
+  "components/layout/Visibility.tsx": visibilityTemplate,
 };
 
 /**
@@ -420,6 +457,7 @@ export const startingDocsStructure: Record<string, string> = {
   "accordion.mdx": accordionMdxTemplate,
   "ai-assistant.mdx": aiAssistantMdxTemplate,
   "analytics.mdx": analyticsMdxTemplate,
+  "api-examples.mdx": apiExamplesMdxTemplate,
   "api-playground.mdx": apiPlaygroundMdxTemplate,
   "authentication.mdx": authenticationMdxTemplate,
   "badges.mdx": badgesMdxTemplate,
@@ -434,11 +472,14 @@ export const startingDocsStructure: Record<string, string> = {
   "deployment-and-hosting.mdx": deploymentAndHostingMdxTemplate,
   "fields.mdx": fieldsMdxTemplate,
   "fonts.mdx": fontsMdxTemplate,
+  "github-card.mdx": githubCardMdxTemplate,
   "globals.mdx": globalsMdxTemplate,
   "headers-and-text.mdx": headersAndTextMdxTemplate,
   "icons.mdx": iconsMdxTemplate,
   "images-and-embeds.mdx": imagesAndEmbedsMdxTemplate,
   "index.mdx": indexMdxTemplate,
+  "install.mdx": installMdxTemplate,
+  "keyboard-shortcuts.mdx": keyboardShortcutsMdxTemplate,
   "footer-links.mdx": footerLinksMdxTemplate,
   "frames.mdx": framesMdxTemplate,
   "lists-and-tables.mdx": listsAndTablesMdxTemplate,
@@ -446,10 +487,13 @@ export const startingDocsStructure: Record<string, string> = {
   "mermaid.mdx": mermaidMdxTemplate,
   "model-context-protocol.mdx": mcpMdxTemplate,
   "navigation.mdx": navigationMdxTemplate,
+  "preview.mdx": previewMdxTemplate,
   "prompt.mdx": promptMdxTemplate,
   "sections.mdx": sectionsMdxTemplate,
   "languages.mdx": languagesMdxTemplate,
   "versions.mdx": versionsMdxTemplate,
+  "views.mdx": viewsMdxTemplate,
+  "visibility.mdx": visibilityMdxTemplate,
   "side-panel.mdx": sidePanelMdxTemplate,
   "space.mdx": spaceMdxTemplate,
   "steps.mdx": stepsMdxTemplate,

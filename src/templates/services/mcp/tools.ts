@@ -214,7 +214,10 @@ export async function getDoc(
     );
   });
 
-  return doc ? { ...doc } : null;
+  if (!doc) return null;
+  // The readers' version is for the site search only.
+  const { searchContent: _searchContent, ...resource } = doc;
+  return resource;
 }
 
 /**

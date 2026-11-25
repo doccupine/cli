@@ -96,6 +96,12 @@ import { spinnerStyles } from "./spinner.js";
 import { codeStyles } from "./code.js";
 import { copyButtonStyles } from "./copy-button.js";
 import { mermaidStyles } from "./mermaid.js";
+import { previewStyles } from "./preview.js";
+import { kbdStyles } from "./kbd.js";
+import { apiExamplesStyles } from "./api-examples.js";
+import { viewsStyles } from "./views.js";
+import { bannerStyles } from "./banner.js";
+import { githubCardStyles } from "./github-card.js";
 import { treeStyles } from "./tree.js";
 import { apiPlaygroundStyles } from "./api-playground.js";
 
@@ -194,6 +200,14 @@ const AREAS: DesignStyles[] = [
   spinnerStyles,
   codeStyles,
   copyButtonStyles,
+  // After the code block, whose rules the preview's code panel overrides.
+  previewStyles,
+  kbdStyles,
+  apiExamplesStyles,
+  viewsStyles,
+  githubCardStyles,
+  // Last: its offsets win over the rails' own rules.
+  bannerStyles,
   mermaidStyles,
   treeStyles,
   apiPlaygroundStyles,

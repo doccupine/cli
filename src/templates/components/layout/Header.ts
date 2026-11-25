@@ -42,7 +42,9 @@ function Header({ children }: HeaderProps) {
       const header = headerRef.current;
       const shell = shellRef.current;
       if (!header || !shell) return;
-      const pinned = window.scrollY > 0;
+      // Pinned once the header reaches the top: at once, or after a site
+      // banner above it has scrolled away (the shell's offset).
+      const pinned = window.scrollY > shell.offsetTop;
       if (pinned) {
         // Measure before pinning: fixed takes the header out of the flow.
         if (!header.hasAttribute("data-pinned")) {

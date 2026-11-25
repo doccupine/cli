@@ -40,8 +40,32 @@ All fields are optional. Doccupine uses sensible defaults when a field is not se
 - **description**: A concise summary of your project, used in site metadata (e.g., HTML meta description) and social previews when not overridden.
 - **icon**: The favicon for your site. You can provide a full URL or a relative path to an asset in your project. Dropping an \`icon.png\` file at the project root (see [Icon files](#icon-files)) takes precedence over this field.
 - **image**: The Open Graph image used when links to your docs are shared on social platforms. Accepts a full URL or a relative path.
+- **banner**: A site-wide announcement shown above the header. See [Banner](#banner).
 - **template**: The site design, \`modern\` (the default) or \`classic\`. See [Templates](/templates).
 - **url**: The public URL of your deployed site. Used as the base URL for \`sitemap.xml\` and \`robots.txt\`. When omitted, \`/sitemap.xml\` is served but empty and \`robots.txt\` omits its sitemap reference. Can be overridden at deploy time with the \`NEXT_PUBLIC_SITE_URL\` environment variable.
+
+## Banner
+
+Add a \`banner\` to show an announcement above the header on every page, such as a new release or an upcoming change.
+
+\`\`\`json
+{
+  "name": "Doccupine",
+  "banner": {
+    "content": "**v2 is out.** Read the [upgrade guide](/upgrade) to move your site over.",
+    "dismissible": true
+  }
+}
+\`\`\`
+
+- **content** (required): The announcement, at most 500 characters. It accepts links, \`**bold**\`, \`*italic*\`, and inline code in backticks. Links to a path starting with \`/\` stay on the site, and other links open in a new tab. HTML is shown as plain text, never rendered.
+- **dismissible** (optional): \`true\` adds a close button. A reader who closes the banner does not see it again on this browser, until you change its \`content\`. Defaults to \`false\`.
+
+The banner scrolls away with the page, and the header stays pinned to the top once it is gone. A dismissed banner is hidden before the page first paints, so it never flashes.
+
+<Callout type="note">
+  An invalid \`banner\` (no \`content\`, or \`dismissible\` that is not \`true\` or \`false\`) is reported when the site is generated, and the site builds without a banner.
+</Callout>
 
 ## Icon files
 

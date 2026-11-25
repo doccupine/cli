@@ -4,7 +4,7 @@ description: "Highlight statuses, version labels, and metadata inline with color
 date: "2026-07-27"
 category: "Components"
 categoryOrder: 1
-order: 12
+order: 16
 ---
 # Badges
 
