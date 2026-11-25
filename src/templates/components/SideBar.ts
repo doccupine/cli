@@ -231,8 +231,25 @@ function SideBar({ result, pages = [] }: SideBarProps) {
   const sidebarId = useId();
   const navRef = useRef<HTMLElement>(null);
   const footerRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
 
   useLockBodyScroll(isMobileMenuOpen);
+
+  // Escape closes the open drawer and returns focus to the menu button.
+  // Left alone when a dialog (search, chat) handles it first.
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      if (e.target instanceof Element && e.target.closest("dialog[open]")) {
+        return;
+      }
+      setIsMobileMenuOpen(false);
+      toggleRef.current?.focus();
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isMobileMenuOpen]);
 
   // Bring the current page's link into view within the sidebar's own scroll
   // area when it starts off-screen (deep pages, in-content links, search).
@@ -282,6 +299,7 @@ function SideBar({ result, pages = [] }: SideBarProps) {
       <button
         type="button"
         className="dcp-sidebar-toggle"
+        ref={toggleRef}
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         aria-label={isMobileMenuOpen ? t.closeNavigation : t.openNavigation}
         aria-expanded={isMobileMenuOpen}
