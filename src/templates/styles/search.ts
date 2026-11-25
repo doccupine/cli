@@ -13,7 +13,7 @@ import { pillRules, primaryIconRules, squareButtonRules } from "./controls.js";
 // fill change on hover, and a ring on keyboard focus only.
 // The search window's "Ask AI" button: the same pill as the header's search
 // button in both designs, desktop only (it advertises Option+Enter), with
-// its key hints as the same small rounded chips as the header's shortcut.
+// its key hints as plain text, like the header's shortcut.
 const askRules = `${pillRules([".dcp-search__ask"], [], [])}
 
 .dcp-search__ask {
@@ -50,14 +50,13 @@ ${primaryIconRules([".dcp-search__ask"])}
   font-size: 11px;
   font-weight: 500;
   line-height: 1;
-  min-width: 20px;
   height: 20px;
-  padding: 0 5px;
+  padding: 0 1px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: solid 1px var(--color-grayLight);
+  border: none;
   color: var(--color-grayDark);
   border-radius: 30px;
 }`;
@@ -82,7 +81,7 @@ const searchButtonRules = `${pillRules([".dcp-search-button"], [], [])}
 
 .dcp-search-button kbd {
   background: transparent;
-  border: solid 1px var(--color-grayLight);
+  border: none;
   color: var(--color-grayDark);
   font-weight: 500;
   padding: 1px 6px;

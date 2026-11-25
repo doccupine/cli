@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Drop the tag icon from the version switcher: the pill shows only the version label and its chevron
+- Show the search button's shortcut hint (⌘K) and the search window's Ask AI key hints as plain text, without a border around them
+
 ## 0.1.1
 
 - Color the built-in logo with the theme's primary color in the modern design, as in classic: it took the text color, so in dark mode it turned white and its white mark disappeared
