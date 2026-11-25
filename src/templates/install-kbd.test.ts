@@ -10,9 +10,12 @@ import { codeTemplate } from "./components/layout/Code.js";
 import { installTemplate } from "./components/layout/Install.js";
 import { kbdTemplate } from "./components/layout/Kbd.js";
 import { aiAssistantMdxTemplate } from "./mdx/ai-assistant.mdx.js";
+import { commandsMdxTemplate } from "./mdx/commands.mdx.js";
 import { componentsMdxTemplate } from "./mdx/components.mdx.js";
+import { indexMdxTemplate } from "./mdx/index.mdx.js";
 import { installMdxTemplate } from "./mdx/install.mdx.js";
 import { keyboardShortcutsMdxTemplate } from "./mdx/keyboard-shortcuts.mdx.js";
+import { whatIsDoccupineMdxTemplate } from "./mdx/what-is-doccupine.mdx.js";
 import { modernCodeTemplate } from "./modern/components/layout/Code.js";
 import { designStylesheet } from "./styles/index.js";
 
@@ -150,5 +153,38 @@ describe("Install and Kbd registration", () => {
     expect(aiAssistantMdxTemplate).toContain("<Kbd>Mod+I</Kbd>");
     expect(installMdxTemplate).toContain('<Field value="exec"');
     expect(installMdxTemplate).toContain("needs Yarn 2 or later");
+  });
+});
+
+describe("Starter pages run Doccupine through <Install exec>", () => {
+  it("shows every run-this-command block for each package manager", () => {
+    expect(indexMdxTemplate).toContain("<Install exec>doccupine</Install>");
+    expect(whatIsDoccupineMdxTemplate).toContain(
+      "<Install exec>doccupine</Install>",
+    );
+    for (const command of [
+      "doccupine",
+      "doccupine --verbose",
+      "doccupine build",
+      "doccupine config --show",
+      "doccupine config --reset",
+    ]) {
+      expect(commandsMdxTemplate).toContain(
+        `<Install exec>${command}</Install>`,
+      );
+    }
+    for (const page of [
+      indexMdxTemplate,
+      whatIsDoccupineMdxTemplate,
+      commandsMdxTemplate,
+    ]) {
+      expect(page).not.toMatch(/```bash\nnpx doccupine/);
+    }
+  });
+
+  it("ends the home page with the Doccupine repository card", () => {
+    expect(indexMdxTemplate.trimEnd()).toMatch(
+      /<GitHubCard repo="doccupine\/cli" \/>$/,
+    );
   });
 });

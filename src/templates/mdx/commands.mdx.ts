@@ -15,9 +15,7 @@ In this page, you can find all the commands available in Doccupine CLI.
 
 Create a new directory for your project and navigate to it in your terminal. Run the following command to create a new Doccupine project:
 
-\`\`\`bash
-npx doccupine
-\`\`\`
+<Install exec>doccupine</Install>
 
 Once you run the command, Doccupine will ask you to select a directory to store your MDX files. Choose the directory where you want to create your documentation files.
 After selecting the directory, Doccupine will ask you to enter the name of the directory for the generated website. Enter the name of the directory where you want to create your website.
@@ -89,9 +87,7 @@ ALLOWED_DEV_ORIGINS=my-machine.tailnet-name.ts.net
 
 ## Verbose mode
 
-\`\`\`bash
-npx doccupine --verbose
-\`\`\`
+<Install exec>doccupine --verbose</Install>
 
 <Callout type="note">
   This will show Next.js output in the terminal, providing detailed logs useful for debugging during development.
@@ -99,24 +95,18 @@ npx doccupine --verbose
 
 ## Generate the website
 
-\`\`\`bash
-npx doccupine build
-\`\`\`
+<Install exec>doccupine build</Install>
 
 You can also use the equivalent \`npx doccupine generate\` command. These commands scaffold the Next.js app from your MDX files without installing dependencies or starting the development server. To produce a production build, install dependencies and run the generated app's \`build\` script.
 
 ## Show current configuration
 
-\`\`\`bash
-npx doccupine config --show
-\`\`\`
+<Install exec>doccupine config --show</Install>
 
 This will show the current configuration for Doccupine.
 
 ## Reset configuration
 
-\`\`\`bash
-npx doccupine config --reset
-\`\`\`
+<Install exec>doccupine config --reset</Install>
 
 This will reset the current configuration for Doccupine.`;
