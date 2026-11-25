@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Document the `small` button size on the starter Buttons page: `<Button size="small">` was already supported but only `default` and `big` were listed
+
 ## 0.1.1
 
 - Color the built-in logo with the theme's primary color in the modern design, as in classic: it took the text color, so in dark mode it turned white and its white mark disappeared

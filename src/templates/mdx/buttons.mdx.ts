@@ -29,10 +29,12 @@ You can use the Button component directly within your MDX files without any impo
 ### Sizes
 
 \`\`\`html
+<Button size="small">Small size</Button>
 <Button size="default">Default size</Button>
 <Button size="big">Big size</Button>
 \`\`\`
 
+<Button size="small">Small size</Button>
 <Button size="default">Default size</Button>
 <Button size="big">Big size</Button>
 
@@ -94,6 +96,7 @@ Buttons can render as links when you provide an \`href\`.
   Controls the size of the button.
 </Field>
 
+- **small**
 - **default**
 - **big**
 
