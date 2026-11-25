@@ -1,12 +1,7 @@
 export const staticLinksTemplate = `"use client";
-import { useChat } from "cherry-styled-components";
+import { useChat } from "@/components/chat/ChatProvider";
 import { Icon } from "@/components/layout/Icon";
 import linksData from "@/links.json";
-import {
-  StyledStaticLinks,
-  StyledStaticLinksContent,
-  StyledLink,
-} from "@/components/layout/StaticLinks.styles";
 
 interface LinkProps {
   title: string;
@@ -25,22 +20,23 @@ function StaticLinks() {
 
   return (
     <>
-      <StyledStaticLinks $isChatOpen={isOpen}>
-        <StyledStaticLinksContent>
+      <div className="dcp-links" data-chat-open={isOpen || undefined}>
+        <div className="dcp-links__content">
           {links.map((link, index) => (
-            <StyledLink
+            <a
               key={index}
+              className="dcp-links__link"
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              $hasIcon={link.icon ? true : false}
+              data-has-icon={link.icon ? true : undefined}
             >
               {link.icon && <Icon name={link.icon} size={16} />}
               <span>{link.title}</span>
-            </StyledLink>
+            </a>
           ))}
-        </StyledStaticLinksContent>
-      </StyledStaticLinks>
+        </div>
+      </div>
     </>
   );
 }

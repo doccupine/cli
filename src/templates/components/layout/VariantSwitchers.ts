@@ -1,8 +1,6 @@
 export const variantSwitchersTemplate = `"use client";
 import { useRouter } from "next/navigation";
-import styled, { css } from "styled-components";
 import { Check, ChevronDown, Languages, Tag } from "lucide-react";
-import { mq, Theme } from "@/app/theme";
 import { Dropdown, DropdownItem } from "@/components/layout/Dropdown";
 import { useStrings } from "@/components/useStrings";
 import { useVariant } from "@/components/useVariant";
@@ -19,127 +17,11 @@ import {
 } from "@/utils/variants";
 
 // The switchers share the footer row with the focus-mode toggle at its left
-// end and the theme toggle at its right. A lone pill claims only the width
+// end and the theme control at its right. A lone pill claims only the width
 // its label needs; a pair grows from its labels' widths into the rail's free
-// width and gives up characters, never height, when that is not enough.
-const StyledSwitchers = styled.div<{ $dense: boolean }>\`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-
-  \${({ $dense }) =>
-    $dense &&
-    css\`
-      \${mq("lg")} {
-        flex: 1;
-      }
-    \`}
-\`;
-
-// One pill: its trigger carries the Lucide glyph, the current label, and a
-// chevron that turns while open.
-const StyledSwitcher = styled.div<{ $dense: boolean }>\`
-  display: flex;
-  min-width: 0;
-
-  \${({ $dense }) =>
-    $dense &&
-    css\`
-      \${mq("lg")} {
-        flex: 1 1 auto;
-      }
-    \`}
-\`;
-
-const truncatedLabel = css\`
-  flex: 1;
-  overflow: hidden;
-  text-align: left;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-\`;
-
-// Fills the trigger so the label takes the width and the chevron keeps the
-// right edge when the pill is stretched across the rail.
-const StyledTriggerContent = styled.span<{ theme: Theme }>\`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-  min-width: 0;
-  font-size: \${({ theme }) => theme.fontSizes.small.xs};
-  font-weight: 600;
-  line-height: 1;
-  color: \${({ theme }) => theme.colors.accentStrong};
-
-  /* The glyphs sit at the toggles' own resting color and pick up the accent
-     on hover, so all four controls of the row light up the same way. */
-  & svg {
-    flex-shrink: 0;
-    color: \${({ theme }) => theme.colors.primary};
-    transition: color 0.3s ease;
-  }
-
-  & > svg:last-child {
-    transition:
-      color 0.3s ease,
-      transform 0.3s ease;
-  }
-
-  button:hover > & svg {
-    color: \${({ theme }) => theme.colors.accent};
-  }
-
-  [aria-expanded="true"] > & > svg:last-child {
-    transform: rotate(180deg);
-  }
-\`;
-
-// Below "lg" the sidebar is the full-width mobile menu, so every trigger shows
-// its glyph and full label there. On the rail the two of them share about
-// 130px beside the toggles: a lone switcher still spells its label out, while
-// a pair drops to the glyphless short form (a language's code, a version's
-// own label) rather than truncating both.
-const StyledTriggerIcon = styled.span<{ $dense: boolean }>\`
-  display: flex;
-
-  \${({ $dense }) =>
-    $dense &&
-    css\`
-      \${mq("lg")} {
-        display: none;
-      }
-    \`}
-\`;
-
-const StyledTriggerLabel = styled.span<{ $dense: boolean }>\`
-  \${truncatedLabel};
-
-  \${({ $dense }) =>
-    $dense &&
-    css\`
-      \${mq("lg")} {
-        display: none;
-      }
-    \`}
-\`;
-
-const StyledTriggerShortLabel = styled.span\`
-  \${truncatedLabel};
-  display: none;
-
-  \${mq("lg")} {
-    display: block;
-  }
-\`;
-
-// Keeps every label aligned whether or not the entry carries the check mark.
-const StyledItemMark = styled.span\`
-  display: flex;
-  flex-shrink: 0;
-  width: 14px;
-\`;
+// width and gives up characters, never height, when that is not enough. On
+// the rail a pair shows the short labels. Styles: app/styles
+// (.dcp-switchers).
 
 interface SwitcherOption {
   value: string;
@@ -175,7 +57,7 @@ function VariantSwitcher({
   const current = options.find((option) => option.value === value);
   const currentLabel = current?.label ?? label;
   return (
-    <StyledSwitcher $dense={dense}>
+    <div className="dcp-switcher">
       <Dropdown
         role="menu"
         label={label}
@@ -185,18 +67,16 @@ function VariantSwitcher({
         compact
         fullWidth={dense}
         trigger={
-          <StyledTriggerContent>
-            <StyledTriggerIcon $dense={dense}>{icon}</StyledTriggerIcon>
-            <StyledTriggerLabel $dense={dense}>
-              {currentLabel}
-            </StyledTriggerLabel>
+          <span className="dcp-switcher__content">
+            <span className="dcp-switcher__icon">{icon}</span>
+            <span className="dcp-switcher__label">{currentLabel}</span>
             {dense && (
-              <StyledTriggerShortLabel>
+              <span className="dcp-switcher__short">
                 {current?.short ?? currentLabel}
-              </StyledTriggerShortLabel>
+              </span>
             )}
             <ChevronDown size={12} aria-hidden="true" />
-          </StyledTriggerContent>
+          </span>
         }
       >
         {options.map((option) => (
@@ -205,17 +85,17 @@ function VariantSwitcher({
             type="button"
             role="menuitemradio"
             aria-checked={option.value === value}
-            $checked={option.value === value}
+            checked={option.value === value}
             onClick={() => onSelect(option.value)}
           >
-            <StyledItemMark aria-hidden="true">
+            <span className="dcp-switcher__mark" aria-hidden="true">
               {option.value === value && <Check size={14} />}
-            </StyledItemMark>
+            </span>
             {option.label}
           </DropdownItem>
         ))}
       </Dropdown>
-    </StyledSwitcher>
+    </div>
   );
 }
 
@@ -275,7 +155,7 @@ function VariantSwitchers({ pages }: VariantSwitchersProps) {
   const dense = showLanguages && showVersions;
 
   return (
-    <StyledSwitchers $dense={dense}>
+    <div className="dcp-switchers" data-dense={dense || undefined}>
       {showLanguages && languages && (
         <VariantSwitcher
           label={t.language}
@@ -305,7 +185,7 @@ function VariantSwitchers({ pages }: VariantSwitchersProps) {
           }))}
         />
       )}
-    </StyledSwitchers>
+    </div>
   );
 }
 

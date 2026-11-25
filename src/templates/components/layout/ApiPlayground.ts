@@ -1,14 +1,14 @@
 export const apiPlaygroundTemplate = `"use client";
-import React, { useCallback, useMemo, useRef, useState } from "react";
-import styled, { css } from "styled-components";
-import {
-  styledSmall,
-  interactiveStyles,
-  Input,
-  Textarea,
-  Modal,
-} from "cherry-styled-components";
-import { mq, Theme } from "@/app/theme";
+import React, {
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import { createPortal } from "react-dom";
+import { X } from "lucide-react";
 import { Code, CodeTabs } from "@/components/layout/Code";
 import { Icon } from "@/components/layout/Icon";
 import { Accordion } from "@/components/layout/Accordion";
@@ -35,6 +35,143 @@ import {
 import type { BuiltRequest, PlaygroundResponse } from "@/utils/apiPlayground";
 import type { OperationDescriptor, ParameterDescriptor } from "@/types/openapi";
 
+// Styles: app/styles/design.css (.dcp-playground, .dcp-playground-modal,
+// .dcp-input, .dcp-textarea).
+
+/* ---------- form controls ---------- */
+
+// A full-width text input and textarea, adapted from cherry-styled-components
+// (MIT): the same wrapper markup, so they lay out exactly as before.
+function TextInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <span className="dcp-input-wrap">
+      <span className="dcp-input-box">
+        <input {...props} className="dcp-input" />
+      </span>
+    </span>
+  );
+}
+
+function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <span className="dcp-input-wrap">
+      <textarea {...props} className="dcp-textarea" />
+    </span>
+  );
+}
+
+/* ---------- modal ---------- */
+
+// Hydration-safe client detection, so the portal only renders after
+// hydration (the server render has no document.body to portal into).
+const emptySubscribe = () => () => {};
+function useIsClient() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
+}
+
+interface PlaygroundModalProps {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+}
+
+// The request dialog: a native modal <dialog> (top layer, the rest of the
+// page inert, focus moved onto the card and handed back to the opener on
+// close),
+// portaled to <body> so the article's prose rules do not reach it. It mounts
+// on open and unmounts once its exit animation ends, so the form resets
+// between openings. Escape and a press outside the card close it. Adapted
+// from cherry-styled-components' Modal (MIT).
+function PlaygroundModal({
+  open,
+  onClose,
+  title,
+  children,
+}: PlaygroundModalProps) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
+  const isClient = useIsClient();
+  // Stays true while the exit animation plays; flips in the animationend
+  // handler, an event callback rather than an effect.
+  const [shouldRender, setShouldRender] = useState(open);
+  if (open && !shouldRender) setShouldRender(true);
+  const isClosing = !open && shouldRender;
+
+  const finish = useCallback(() => {
+    const dialog = dialogRef.current;
+    if (dialog?.open) dialog.close();
+    setShouldRender(false);
+    const opener = openerRef.current;
+    openerRef.current = null;
+    if (opener?.isConnected) opener.focus();
+  }, []);
+
+  useLayoutEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (open && !dialog.open) {
+      openerRef.current =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null;
+      dialog.showModal();
+      // Focus the card itself rather than its first control, so opening
+      // draws no focus ring; Tab then moves through the dialog.
+      cardRef.current?.focus({ preventScroll: true });
+    }
+    // Nothing animates (reduced motion forced off, or no layout): close now.
+    if (!open && dialog.getAnimations().length === 0) finish();
+  }, [open, shouldRender, finish]);
+
+  if (!isClient || !shouldRender) return null;
+
+  return createPortal(
+    // A press on the tinted layer (the dialog itself, outside the card)
+    // closes it; keyboard users have Escape and the close button.
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
+    <dialog
+      ref={dialogRef}
+      className="dcp-playground-modal"
+      data-closing={isClosing || undefined}
+      aria-label={title}
+      onCancel={(event) => {
+        // Escape: run the animated close instead of the instant one.
+        event.preventDefault();
+        if (open) onClose();
+      }}
+      onMouseDown={(event) => {
+        if (open && event.target === event.currentTarget) onClose();
+      }}
+      onAnimationEnd={(event) => {
+        // Only the overlay's own fade marks the end of the exit.
+        if (event.target === event.currentTarget && isClosing) finish();
+      }}
+    >
+      <div ref={cardRef} tabIndex={-1} className="dcp-playground-modal__inner">
+        <span>
+          <button
+            type="button"
+            className="dcp-playground-modal__close"
+            aria-label="Close Modal"
+            onClick={onClose}
+          >
+            <X aria-hidden="true" />
+          </button>
+        </span>
+        <h2 className="dcp-playground-modal__title">{title}</h2>
+        <div className="dcp-playground-modal__content">{children}</div>
+      </div>
+    </dialog>,
+    document.body,
+  );
+}
+
 export interface ApiPlaygroundProps {
   operation: OperationDescriptor;
   defaultMode?: "proxy" | "direct";
@@ -47,319 +184,16 @@ export interface ApiPlaygroundProps {
 }
 
 function renderPath(path: string): React.ReactNode {
-  return path
-    .split(/(\\{[^}]+\\})/g)
-    .map((part, index) =>
-      part.startsWith("{") ? (
-        <PathParam key={index}>{part}</PathParam>
-      ) : (
-        <span key={index}>{part}</span>
-      ),
-    );
+  return path.split(/(\\{[^}]+\\})/g).map((part, index) =>
+    part.startsWith("{") ? (
+      <span key={index} className="dcp-playground__param">
+        {part}
+      </span>
+    ) : (
+      <span key={index}>{part}</span>
+    ),
+  );
 }
-
-/* ---------- compact bar ---------- */
-
-const CompactBar = styled.div\`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0;
-  padding: 8px 8px 8px 12px;
-  border: solid 1px \${({ theme }: { theme: Theme }) => theme.colors.grayLight};
-  border-radius: \${({ theme }: { theme: Theme }) => theme.spacing.radius.lg};
-  background: \${({ theme }: { theme: Theme }) => theme.colors.light};
-\`;
-
-// The method chip is Badge's mono+solid variation; only bar-layout metrics
-// are adjusted here.
-const MethodBadge = styled(Badge)\`
-  flex-shrink: 0;
-  padding: 0 4px;
-  border: none;
-\`;
-
-const PathText = styled.span\`
-  flex: 1;
-  min-width: 0;
-  font-family: \${({ theme }: { theme: Theme }) => theme.fonts.mono};
-  font-weight: 600;
-  font-size: 14px;
-  color: \${({ theme }: { theme: Theme }) => theme.colors.dark};
-  overflow-x: auto;
-  white-space: nowrap;
-  &::-webkit-scrollbar {
-    display: none;
-  }
-\`;
-
-const PathParam = styled.span\`
-  font-family: \${({ theme }: { theme: Theme }) => theme.fonts.mono};
-  background: \${({ theme }: { theme: Theme }) =>
-    \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
-  color: \${({ theme }: { theme: Theme }) => theme.colors.dark};
-  padding: 2px 4px;
-  border-radius: \${({ theme }: { theme: Theme }) => theme.spacing.radius.xs};
-  overflow-wrap: anywhere;
-\`;
-
-const AccentButton = styled.button<{ theme: Theme }>\`
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-  font-family: \${({ theme }: { theme: Theme }) => theme.fonts.text};
-  font-weight: 600;
-  font-size: 14px;
-  color: \${({ theme }: { theme: Theme }) => theme.colors.surface};
-  background: \${({ theme }: { theme: Theme }) => theme.colors.primary};
-  border: none;
-  padding: 8px 14px;
-  border-radius: \${({ theme }: { theme: Theme }) => theme.spacing.radius.xs};
-  \${interactiveStyles};
-
-  & svg {
-    color: \${({ theme }: { theme: Theme }) => theme.colors.surface};
-    stroke: \${({ theme }: { theme: Theme }) => theme.colors.surface};
-  }
-
-  &:hover {
-    background: \${({ theme }: { theme: Theme }) => theme.colors.primaryDark};
-  }
-  &:disabled {
-    opacity: 0.6;
-    cursor: default;
-  }
-\`;
-
-/* ---------- modal ---------- */
-
-const DialogHeader = styled.div\`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin: 5px 0 0 0;
-\`;
-
-const PathBar = styled.div\`
-  flex: 1;
-  min-width: 200px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 8px 8px 12px;
-  border: solid 1px \${({ theme }: { theme: Theme }) => theme.colors.grayLight};
-  border-radius: \${({ theme }: { theme: Theme }) => theme.spacing.radius.xs};
-  background: \${({ theme }: { theme: Theme }) => theme.colors.light};
-\`;
-
-const DialogBody = styled.div\`
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
-  padding: 0;
-  margin: 20px 0 0 0;
-
-  \${mq("lg")} {
-    grid-template-columns: 1fr 1fr;
-  }
-\`;
-
-const Column = styled.div\`
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  min-width: 0;
-\`;
-
-const Description = styled.p\`
-  margin: 0;
-  \${({ theme }: { theme: Theme }) => styledSmall(theme)};
-  color: \${({ theme }: { theme: Theme }) => theme.colors.grayDark};
-\`;
-
-const Toolbar = styled.div\`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-\`;
-
-const Toggle = styled.button<{ theme: Theme; $active?: boolean }>\`
-  position: relative;
-  cursor: pointer;
-  text-decoration: none;
-  font-size: \${({ theme }) => theme.fontSizes.small.lg};
-  line-height: 1;
-  color: \${({ theme }) => theme.colors.accent};
-  display: flex;
-  gap: 6px;
-  transition: all 0.3s ease;
-  font-weight: 600;
-  white-space: nowrap;
-  min-width: fit-content;
-  background: \${({ theme }) =>
-    \`color-mix(in srgb, \${theme.colors.primaryLight} 10%, transparent)\`};
-  padding: 6px 8px;
-  border: none;
-  border-radius: \${({ theme }) => theme.spacing.radius.xs};
-  \${interactiveStyles};
-
-  \${({ $active, theme }) =>
-    $active &&
-    css\`
-      background: \${theme.colors.primary};
-      color: \${theme.colors.surface};
-    \`}
-\`;
-
-/* ---------- collapsible card ---------- */
-
-const Card = styled.div\`
-  border: solid 1px \${({ theme }: { theme: Theme }) => theme.colors.grayLight};
-  border-radius: \${({ theme }: { theme: Theme }) => theme.spacing.radius.lg};
-  overflow: hidden;
-\`;
-
-const CardHead = styled.button\`
-  cursor: pointer;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 12px 20px;
-  border: none;
-  background: transparent;
-  color: \${({ theme }: { theme: Theme }) => theme.colors.dark};
-  \${({ theme }: { theme: Theme }) => styledSmall(theme)};
-\`;
-
-const Inline = styled.span\`
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-\`;
-
-const CardBody = styled.div\`
-  padding: 0 20px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-\`;
-
-/* ---------- fields ---------- */
-
-// Wraps an accordion section's content and insets it, so full-width inputs'
-// focus rings (a 4px box-shadow) are not clipped by the accordion's own
-// overflow. Keeps the accordion component untouched.
-const SectionInner = styled.div\`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 4px;
-\`;
-
-const Field = styled.div\`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-\`;
-
-const FieldHead = styled.div\`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  \${({ theme }: { theme: Theme }) => styledSmall(theme)};
-\`;
-
-const FieldName = styled.span\`
-  font-family: \${({ theme }: { theme: Theme }) => theme.fonts.mono};
-  font-weight: 600;
-  color: \${({ theme }: { theme: Theme }) => theme.colors.dark};
-\`;
-
-const TypeChip = styled.span\`
-  font-family: \${({ theme }: { theme: Theme }) => theme.fonts.mono};
-  color: \${({ theme }: { theme: Theme }) => theme.colors.grayDark};
-  background: \${({ theme }: { theme: Theme }) =>
-    \`color-mix(in srgb, \${theme.colors.gray} 15%, transparent)\`};
-  padding: 0 4px;
-  border-radius: \${({ theme }: { theme: Theme }) => theme.spacing.radius.xs};
-\`;
-
-const RequiredChip = styled.span\`
-  font-family: \${({ theme }: { theme: Theme }) => theme.fonts.mono};
-  color: \${({ theme }: { theme: Theme }) => theme.colors.error};
-\`;
-
-const FieldDesc = styled.p\`
-  margin: 0;
-  width: 100%;
-  \${({ theme }: { theme: Theme }) => styledSmall(theme)};
-  color: \${({ theme }: { theme: Theme }) => theme.colors.gray};
-\`;
-
-/* ---------- response ---------- */
-
-const StatusPill = styled.span<{ theme: Theme; $ok: boolean }>\`
-  font-family: \${({ theme }) => theme.fonts.mono};
-  font-weight: 700;
-  color: \${({ theme }) => theme.colors.surface};
-  background: \${({ theme, $ok }) =>
-    $ok ? theme.colors.success : theme.colors.error};
-  padding: 0 4px;
-  border-radius: \${({ theme }) => theme.spacing.radius.xs};
-\`;
-
-const Meta = styled.span\`
-  \${({ theme }: { theme: Theme }) => styledSmall(theme)};
-  color: \${({ theme }: { theme: Theme }) => theme.colors.gray};
-\`;
-
-const Placeholder = styled.div\`
-  border: dashed 1px \${({ theme }: { theme: Theme }) => theme.colors.grayLight};
-  border-radius: \${({ theme }: { theme: Theme }) => theme.spacing.radius.lg};
-  padding: 24px;
-  min-height: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  text-align: center;
-  \${({ theme }: { theme: Theme }) => styledSmall(theme)};
-  color: \${({ theme }: { theme: Theme }) => theme.colors.gray};
-\`;
-
-// Holds the response (or empty placeholder) and lets the loading spinner sit on
-// top of it, so a re-send keeps the previous content in place instead of
-// collapsing and jumping the layout.
-const ResponseArea = styled.div\`
-  position: relative;
-\`;
-
-const LoadingOverlay = styled.div\`
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: solid 1px \${({ theme }: { theme: Theme }) => theme.colors.grayLight};
-  border-radius: \${({ theme }: { theme: Theme }) => theme.spacing.radius.lg};
-  color: \${({ theme }: { theme: Theme }) => theme.colors.grayDark};
-  background: \${({ theme }: { theme: Theme }) =>
-    \`color-mix(in srgb, \${theme.colors.light} 60%, transparent)\`};
-  backdrop-filter: blur(1px);
-\`;
-
-const ResponseMedia = styled.img\`
-  max-width: 100%;
-  border-radius: \${({ theme }: { theme: Theme }) => theme.spacing.radius.xs};
-\`;
 
 export function ApiPlayground({
   operation,
@@ -623,15 +457,20 @@ export function ApiPlayground({
       : "";
 
   const renderParamField = (param: ParameterDescriptor) => (
-    <Field key={param.anchorId}>
-      <FieldHead>
-        <FieldName>{param.name}</FieldName>
-        <TypeChip>{schemaTypeLabel(param.schema)}</TypeChip>
-        {param.required ? <RequiredChip>required</RequiredChip> : null}
-      </FieldHead>
-      {param.description ? <FieldDesc>{param.description}</FieldDesc> : null}
-      <Input
-        $fullWidth
+    <div className="dcp-playground__field" key={param.anchorId}>
+      <div className="dcp-playground__field-head">
+        <span className="dcp-playground__field-name">{param.name}</span>
+        <span className="dcp-playground__type">
+          {schemaTypeLabel(param.schema)}
+        </span>
+        {param.required ? (
+          <span className="dcp-playground__required">required</span>
+        ) : null}
+      </div>
+      {param.description ? (
+        <p className="dcp-playground__field-desc">{param.description}</p>
+      ) : null}
+      <TextInput
         type="text"
         aria-label={param.name}
         placeholder={
@@ -647,105 +486,120 @@ export function ApiPlayground({
           }))
         }
       />
-    </Field>
+    </div>
   );
 
   return (
     <>
-      <CompactBar>
-        <MethodBadge
+      <div className="dcp-playground">
+        <Badge
+          className="dcp-playground__method"
           mono
           solid
           size="sm"
           color={httpMethodBadgeColor(operation.method)}
         >
           {operation.method}
-        </MethodBadge>
-        <PathText>{renderPath(operation.path)}</PathText>
+        </Badge>
+        <span className="dcp-playground__path">
+          {renderPath(operation.path)}
+        </span>
         <CopyButton
           text={operation.method.toUpperCase() + " " + operation.path}
           label="Copy endpoint"
           size={16}
         />
-        <AccentButton type="button" onClick={() => setOpen(true)}>
+        <button
+          className="dcp-playground__send"
+          type="button"
+          onClick={() => setOpen(true)}
+        >
           Try it
           <Icon name="play" size={14} />
-        </AccentButton>
-      </CompactBar>
+        </button>
+      </div>
 
-      <Modal
-        $isOpen={open}
-        $onClose={() => setOpen(false)}
-        $width={1120}
-        $title={
+      <PlaygroundModal
+        open={open}
+        onClose={() => setOpen(false)}
+        title={
           operation.summary ??
           operation.method.toUpperCase() + " " + operation.path
         }
       >
-        <DialogHeader>
-          <PathBar>
-            <MethodBadge
+        <div className="dcp-playground__header">
+          <div className="dcp-playground__path-bar">
+            <Badge
+              className="dcp-playground__method"
               mono
               solid
               size="sm"
               color={httpMethodBadgeColor(operation.method)}
             >
               {operation.method}
-            </MethodBadge>
-            <PathText>{renderPath(operation.path)}</PathText>
-            <AccentButton
+            </Badge>
+            <span className="dcp-playground__path">
+              {renderPath(operation.path)}
+            </span>
+            <button
+              className="dcp-playground__send"
               type="button"
               onClick={() => void send()}
               disabled={loading}
             >
               Send
               {loading ? <Spinner size={14} /> : <Icon name="play" size={14} />}
-            </AccentButton>
-          </PathBar>
-        </DialogHeader>
+            </button>
+          </div>
+        </div>
 
-        <DialogBody>
-          <Column>
+        <div className="dcp-playground__body">
+          <div className="dcp-playground__column">
             {operation.description || operation.summary ? (
-              <Description>
+              <p className="dcp-playground__description">
                 {operation.description ?? operation.summary}
-              </Description>
+              </p>
             ) : null}
 
-            <Toolbar>
+            <div className="dcp-playground__toolbar">
               {operation.servers.length > 0 ? (
-                <Meta>{serverBase(operation.servers[0])}</Meta>
+                <span className="dcp-playground__meta">
+                  {serverBase(operation.servers[0])}
+                </span>
               ) : null}
               {allowDirect ? (
                 <>
-                  <Toggle
+                  <button
                     type="button"
-                    $active={mode === "proxy"}
+                    className="dcp-playground__toggle"
+                    data-active={mode === "proxy" || undefined}
                     onClick={() => setMode("proxy")}
                   >
                     Proxy
-                  </Toggle>
-                  <Toggle
+                  </button>
+                  <button
                     type="button"
-                    $active={mode === "direct"}
+                    className="dcp-playground__toggle"
+                    data-active={mode === "direct" || undefined}
                     onClick={() => setMode("direct")}
                   >
                     Direct
-                  </Toggle>
+                  </button>
                 </>
               ) : null}
-              <Toggle
+              <button
                 type="button"
-                $active={showSecrets}
+                className="dcp-playground__toggle"
+                data-active={showSecrets || undefined}
                 onClick={() => setShowSecrets((v) => !v)}
               >
                 {showSecrets ? "Hide secrets" : "Show secrets"}
-              </Toggle>
-            </Toolbar>
+              </button>
+            </div>
 
             {operation.security.length > 0 ? (
               <Accordion title="Authorization" defaultOpen>
-                <SectionInner>
+                <div className="dcp-playground__section">
                   {operation.security.map((requirement) => {
                     const scheme = requirement.scheme;
                     if (
@@ -754,13 +608,17 @@ export function ApiPlayground({
                       scheme.scheme === "basic"
                     ) {
                       return (
-                        <Field key={requirement.schemeName}>
-                          <FieldHead>
-                            <FieldName>{requirement.schemeName}</FieldName>
-                            <TypeChip>basic</TypeChip>
-                          </FieldHead>
-                          <Input
-                            $fullWidth
+                        <div
+                          className="dcp-playground__field"
+                          key={requirement.schemeName}
+                        >
+                          <div className="dcp-playground__field-head">
+                            <span className="dcp-playground__field-name">
+                              {requirement.schemeName}
+                            </span>
+                            <span className="dcp-playground__type">basic</span>
+                          </div>
+                          <TextInput
                             type="text"
                             aria-label={requirement.schemeName + " username"}
                             placeholder="username"
@@ -775,8 +633,7 @@ export function ApiPlayground({
                               }))
                             }
                           />
-                          <Input
-                            $fullWidth
+                          <TextInput
                             type={showSecrets ? "text" : "password"}
                             aria-label={requirement.schemeName + " password"}
                             placeholder="password"
@@ -791,7 +648,7 @@ export function ApiPlayground({
                               }))
                             }
                           />
-                        </Field>
+                        </div>
                       );
                     }
                     const chip =
@@ -801,14 +658,20 @@ export function ApiPlayground({
                           ? "bearer"
                           : (scheme?.type ?? "token");
                     return (
-                      <Field key={requirement.schemeName}>
-                        <FieldHead>
-                          <FieldName>{requirement.schemeName}</FieldName>
-                          <TypeChip>{chip}</TypeChip>
-                          <RequiredChip>required</RequiredChip>
-                        </FieldHead>
-                        <Input
-                          $fullWidth
+                      <div
+                        className="dcp-playground__field"
+                        key={requirement.schemeName}
+                      >
+                        <div className="dcp-playground__field-head">
+                          <span className="dcp-playground__field-name">
+                            {requirement.schemeName}
+                          </span>
+                          <span className="dcp-playground__type">{chip}</span>
+                          <span className="dcp-playground__required">
+                            required
+                          </span>
+                        </div>
+                        <TextInput
                           type={showSecrets ? "text" : "password"}
                           aria-label={requirement.schemeName}
                           placeholder={
@@ -824,10 +687,10 @@ export function ApiPlayground({
                             }))
                           }
                         />
-                      </Field>
+                      </div>
                     );
                   })}
-                </SectionInner>
+                </div>
               </Accordion>
             ) : null}
 
@@ -837,9 +700,9 @@ export function ApiPlayground({
                 title={LOCATION_TITLES[group.location]}
                 defaultOpen={!hasAuth && index === 0}
               >
-                <SectionInner>
+                <div className="dcp-playground__section">
                   {group.params.map(renderParamField)}
-                </SectionInner>
+                </div>
               </Accordion>
             ))}
 
@@ -850,52 +713,74 @@ export function ApiPlayground({
                 title="Body"
                 defaultOpen={!hasAuth && groupedParams.length === 0}
               >
-                <SectionInner>
-                  <Textarea
-                    $fullWidth
+                <div className="dcp-playground__section">
+                  <TextArea
                     rows={8}
                     aria-label="Request body"
                     spellCheck={false}
                     value={bodyText}
                     onChange={(e) => setBodyText(e.target.value)}
                   />
-                </SectionInner>
+                </div>
               </Accordion>
             ) : null}
 
             {error ? (
-              <Field>
+              <div className="dcp-playground__field">
                 <Callout type="danger">
                   <p>{error}</p>
                 </Callout>
                 {corsRetry ? (
-                  <Toggle type="button" onClick={retryViaProxy}>
+                  <button
+                    type="button"
+                    className="dcp-playground__toggle"
+                    onClick={retryViaProxy}
+                  >
                     Retry via proxy
-                  </Toggle>
+                  </button>
                 ) : null}
-              </Field>
+              </div>
             ) : null}
-          </Column>
+          </div>
 
-          <Column>
-            <ResponseArea>
+          <div className="dcp-playground__column">
+            <div className="dcp-playground__response">
               {response ? (
-                <Card>
-                  <CardHead as="div">
-                    <Inline>
-                      <StatusPill
-                        $ok={response.status >= 200 && response.status < 400}
+                <div className="dcp-playground__card">
+                  <div className="dcp-playground__card-head">
+                    <span className="dcp-playground__inline">
+                      <span
+                        className="dcp-playground__status"
+                        data-ok={
+                          (response.status >= 200 && response.status < 400) ||
+                          undefined
+                        }
                       >
                         {response.status} {response.statusText}
-                      </StatusPill>
-                      <Meta>{response.durationMs}ms</Meta>
-                      <Meta>{response.byteLength} bytes</Meta>
-                      {response.truncated ? <Meta>(truncated)</Meta> : null}
-                    </Inline>
-                  </CardHead>
-                  <CardBody>
+                      </span>
+                      <span className="dcp-playground__meta">
+                        {response.durationMs}ms
+                      </span>
+                      <span className="dcp-playground__meta">
+                        {response.byteLength} bytes
+                      </span>
+                      {response.truncated ? (
+                        <span className="dcp-playground__meta">
+                          (truncated)
+                        </span>
+                      ) : null}
+                    </span>
+                  </div>
+                  <div className="dcp-playground__card-body">
                     {responseKind === "image" ? (
-                      <ResponseMedia src={mediaSrc} alt="Response" />
+                      // A data: URL built in the browser, which
+                      // next/image cannot optimize.
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        className="dcp-playground__media"
+                        src={mediaSrc}
+                        alt="Response"
+                      />
                     ) : responseKind === "video" ? (
                       <video
                         controls
@@ -914,24 +799,24 @@ export function ApiPlayground({
                         code={prettyBody(response.contentType, response.body)}
                       />
                     )}
-                  </CardBody>
-                </Card>
+                  </div>
+                </div>
               ) : (
-                <Placeholder>
+                <div className="dcp-playground__placeholder">
                   Send the request to see the live response here.
-                </Placeholder>
+                </div>
               )}
               {loading ? (
-                <LoadingOverlay>
+                <div className="dcp-playground__loading">
                   <Spinner size={22} />
-                </LoadingOverlay>
+                </div>
               ) : null}
-            </ResponseArea>
+            </div>
 
             {snippets.length > 0 ? <CodeTabs tabs={snippets} /> : null}
-          </Column>
-        </DialogBody>
-      </Modal>
+          </div>
+        </div>
+      </PlaygroundModal>
     </>
   );
 }

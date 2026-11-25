@@ -15,7 +15,10 @@ import { eslintConfigTemplate } from "./eslint.config.js";
 
 describe("generated accessibility behavior", () => {
   it("gives search one modal aria-activedescendant combobox model", () => {
-    expect(searchModalContentTemplate).toContain('role="dialog"');
+    // A native modal <dialog> (showModal): the browser makes the rest of the
+    // page inert and puts the window in the top layer.
+    expect(searchModalContentTemplate).toContain("<dialog");
+    expect(searchModalContentTemplate).toContain("showModal()");
     expect(searchModalContentTemplate).toContain('aria-modal="true"');
     expect(searchModalContentTemplate).toContain('role="combobox"');
     expect(searchModalContentTemplate).toContain('role="listbox"');
@@ -30,12 +33,13 @@ describe("generated accessibility behavior", () => {
     expect(searchModalContentTemplate).not.toContain(
       "tabIndex={index === activeIndex ? 0 : -1}",
     );
-    expect(searchModalContentTemplate).toContain(
-      '<StyledLiveStatus role="status"',
+    // The live region is rendered before the results, so it exists before
+    // the first announcement.
+    const liveStatus = searchModalContentTemplate.indexOf('role="status"');
+    expect(liveStatus).toBeGreaterThan(-1);
+    expect(liveStatus).toBeLessThan(
+      searchModalContentTemplate.indexOf('className="dcp-search__results'),
     );
-    expect(
-      searchModalContentTemplate.indexOf("<StyledLiveStatus"),
-    ).toBeLessThan(searchModalContentTemplate.indexOf("<StyledResults"));
     expect(searchDocsTemplate).toContain(
       "const opener = closeSearchImmediately(false)",
     );
@@ -118,8 +122,10 @@ describe("generated accessibility behavior", () => {
     expect(sideBarTemplate).toContain("aria-hidden={!isOpen}");
     expect(sideBarTemplate).toContain("inert={!isOpen}");
     for (const template of SITE_TEMPLATES) {
+      const structure = appStructureFor(template);
       expect(
-        appStructureFor(template)["components/SideBar.styles.ts"],
+        structure["app/styles/components.css"] +
+          structure["app/styles/design.css"],
       ).toContain("visibility: hidden");
     }
   });
@@ -138,9 +144,9 @@ describe("generated accessibility behavior", () => {
     expect(tabsTemplate).not.toContain("ArrowDown");
     expect(tabsTemplate).toContain('aria-orientation="horizontal"');
     for (const template of SITE_TEMPLATES) {
-      expect(
-        appStructureFor(template)["components/layout/Tabs.styles.ts"],
-      ).toContain("&:focus-visible");
+      expect(appStructureFor(template)["app/styles/design.css"]).toMatch(
+        /\.dcp-tabs__tab(\.dcp-tabs__tab)?:focus-visible \{/,
+      );
     }
   });
 
@@ -179,21 +185,25 @@ describe("generated accessibility behavior", () => {
     // Focus lands on the current entry, and the ring is drawn inset so the
     // menu's overflow clipping cannot hide it.
     expect(dropdownTemplate).toContain('[aria-checked="true"]');
-    expect(dropdownTemplate).toContain("&:focus-visible");
-    expect(dropdownTemplate).toContain("box-shadow: inset 0 0 0 2px");
+    expect(appStructureFor("classic")["app/styles/components.css"]).toMatch(
+      /\.dcp-dropdown__item:focus-visible \{[^}]*box-shadow: inset 0 0 0 2px/,
+    );
     // Every button in the sidebar footer is decorated with an accessible
     // name, so the glyphs beside them stay decorative.
     expect(variantSwitchersTemplate).toContain('aria-hidden="true"');
   });
 
-  it("resets inherited Cherry heights on compact custom controls", () => {
+  it("resets inherited button heights on compact custom controls", () => {
     for (const template of SITE_TEMPLATES) {
       const structure = appStructureFor(template);
-      expect(structure["components/SideBar.styles.ts"]).toMatch(
-        /StyledSidebarGroupButton[\s\S]*?height: auto;[\s\S]*?min-height: 0;/,
+      expect(
+        structure["app/styles/components.css"] +
+          structure["app/styles/design.css"],
+      ).toMatch(
+        /\.dcp-sidebar__group-button[^{]*\{[^}]*height: auto;\s*min-height: 0;/,
       );
-      expect(structure["components/layout/Tabs.styles.ts"]).toMatch(
-        /const TabButton[\s\S]*?height: auto;[\s\S]*?min-height: 0;/,
+      expect(structure["app/styles/design.css"]).toMatch(
+        /\.dcp-tabs__tab \{[^}]*height: auto;\s*min-height: 0;/,
       );
     }
   });
@@ -219,6 +229,40 @@ describe("generated accessibility behavior", () => {
   it("enables the complete jsx-a11y recommended rule set", () => {
     expect(eslintConfigTemplate).toContain(
       "...jsxA11yPlugin.configs.recommended.rules",
+    );
+  });
+  it("passes the axe landmark, keyboard and skip-link checks", () => {
+    for (const template of SITE_TEMPLATES) {
+      const files = appStructureFor(template);
+      const docs = files["components/layout/DocsComponents.tsx"];
+      // A skip link first, jumping to the article.
+      expect(docs).toContain('<a className="dcp-skip-link" href="#content">');
+      expect(docs).toMatch(
+        /<main\s+className="dcp-docs"\s+id="content"\s+tabIndex=\{-1\}/,
+      );
+      // The llms.txt pointer is for agents: hidden and out of the tab order.
+      expect(docs).toContain('aria-hidden="true"');
+      expect(docs.match(/tabIndex=\{-1\}/g)?.length).toBeGreaterThanOrEqual(3);
+      // Every nav landmark has its own name.
+      expect(files["components/SideBar.tsx"]).toContain(
+        "aria-label={t.navigation}",
+      );
+      expect(files["components/layout/SectionBar.tsx"]).toContain(
+        "aria-label={t.sections}",
+      );
+      expect(files["components/DocsSideBar.tsx"]).toContain(
+        '<nav className="dcp-toc-nav" aria-label={t.onThisPage}>',
+      );
+      expect(files["components/layout/DocsNavigation.tsx"]).toContain(
+        "aria-label={t.pageNavigation}",
+      );
+      // Code blocks scroll sideways, so keyboard users can reach them.
+      expect(files["components/layout/Code.tsx"]).toContain(
+        '<pre tabindex="0">',
+      );
+    }
+    expect(siteLayoutTemplate([], null).indexOf("<SkipLink />")).toBeLessThan(
+      siteLayoutTemplate([], null).indexOf("<Header"),
     );
   });
 });

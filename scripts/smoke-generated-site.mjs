@@ -170,17 +170,22 @@ try {
   await run(packageManager, ["run", "format:check"], siteDir);
   await run(packageManager, ["run", "build"], siteDir);
 
-  // A prop-mapping wrapper fails silently: a name that never reaches Cherry
-  // renders an empty span rather than an error, so the gap has to be read back
-  // out of the prerendered page. Each size is distinct so it can only come
-  // from one prop: 40px from size, 80px from its md override, 24px from the
-  // $-prefixed form pages were written with before the wrapper existed.
+  // A prop-mapping wrapper fails silently: a name it drops renders an empty
+  // span rather than an error, so the gap has to be read back out of the
+  // prerendered page, where Space writes each size as an inline custom
+  // property. Each size is distinct so it can only come from one prop: 40px
+  // from size, 80px from its md override, 24px from the $-prefixed form pages
+  // were written with before the wrapper existed.
   const guideHtml = await fs.readFile(
     path.join(siteDir, ".next", "server", "app", "guides", "guide.html"),
     "utf8",
   );
-  for (const gap of [40, 80, 24]) {
-    if (!new RegExp(`min-height:\\s*${gap}px`).test(guideHtml)) {
+  for (const [property, gap] of [
+    ["--dcp-space", 40],
+    ["--dcp-space-md", 80],
+    ["--dcp-space", 24],
+  ]) {
+    if (!new RegExp(`${property}:\\s*${gap}px`).test(guideHtml)) {
       throw new Error(`Space did not render a ${gap}px gap into the page`);
     }
   }

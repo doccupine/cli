@@ -20,4 +20,7 @@ navigation.json
 sections.json
 theme.json
 versions.json
+
+# Generated from theme.json on every run.
+app/styles/tokens.css
 `;

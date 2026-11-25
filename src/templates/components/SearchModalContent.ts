@@ -1,16 +1,9 @@
 export const searchModalContentTemplate = `"use client";
 import React from "react";
-import styled, { css, keyframes } from "styled-components";
 import { Search, X } from "lucide-react";
-import { IconButton } from "cherry-styled-components";
-import { mq, Theme } from "@/app/theme";
 import { Spinner } from "@/components/Spinner";
 import { useStrings } from "@/components/useStrings";
 import { withCount } from "@/utils/strings";
-import {
-  interactiveStyles,
-  thinScrollbar,
-} from "@/components/layout/SharedStyled";
 
 export interface PageItem {
   slug: string;
@@ -50,307 +43,6 @@ export interface SearchModalContentProps {
   returnFocusTo: HTMLElement | null;
 }
 
-const ANIMATION_MS = 300;
-
-const backdropIn = keyframes\`
-  from { opacity: 0; }
-  to { opacity: 1; }
-\`;
-
-const backdropOut = keyframes\`
-  from { opacity: 1; }
-  to { opacity: 0; }
-\`;
-
-const modalIn = keyframes\`
-  from { opacity: 0; transform: scale(0.96) translateY(-8px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
-\`;
-
-const modalOut = keyframes\`
-  from { opacity: 1; transform: scale(1) translateY(0); }
-  to { opacity: 0; transform: scale(0.96) translateY(-8px); }
-\`;
-
-const StyledBackdrop = styled.div<{ theme: Theme; $isClosing: boolean }>\`
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  /* Backdrop is intentionally near-black in both modes — covers everything
-     behind the modal regardless of the user's theme. */
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 20px;
-  animation: \${({ $isClosing }) => ($isClosing ? backdropOut : backdropIn)}
-    \${ANIMATION_MS}ms ease forwards;
-
-  \${mq("lg")} {
-    padding: 120px 20px 20px 20px;
-  }
-\`;
-
-const StyledModal = styled.div<{ theme: Theme; $isClosing: boolean }>\`
-  background: \${({ theme }) => theme.colors.light};
-  border-radius: \${({ theme }) => theme.spacing.radius.lg};
-  box-shadow: \${({ theme }) => theme.shadows.xs};
-  width: 100%;
-  max-width: 560px;
-  max-height: calc(100dvh - 40px);
-  display: flex;
-  flex-direction: column;
-  border: solid 1px \${({ theme }) => theme.colors.grayLight};
-  animation: \${({ $isClosing }) => ($isClosing ? modalOut : modalIn)}
-    \${ANIMATION_MS}ms ease forwards;
-
-  \${mq("lg")} {
-    max-height: calc(100dvh - 240px);
-  }
-\`;
-
-const StyledInputWrapper = styled.div<{ theme: Theme }>\`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  flex-shrink: 0;
-  border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
-
-  & svg.lucide {
-    color: \${({ theme }) => theme.colors.gray};
-    flex-shrink: 0;
-  }
-\`;
-
-const StyledInput = styled.input<{ theme: Theme }>\`
-  flex: 1;
-  padding: 0;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: \${({ theme }) => theme.fontSizes.text.lg};
-  line-height: \${({ theme }) => theme.lineHeights.text.lg};
-  color: \${({ theme }) => theme.colors.dark};
-  font-family: inherit;
-
-  &::placeholder {
-    color: \${({ theme }) => theme.colors.gray};
-  }
-
-  /* type="search" gets the platform clear button, which duplicates the modal's
-     own close control and sits at a size and color we do not control. */
-  &::-webkit-search-cancel-button,
-  &::-webkit-search-decoration {
-    -webkit-appearance: none;
-    appearance: none;
-  }
-\`;
-
-// "Ask AI" affordance shown before the close button when the AI chat is
-// enabled. Desktop-only (like the header's Cmd+K hint) since it advertises the
-// Option+Enter shortcut; mobile users reach the assistant from the header CTA.
-const StyledAskAssistant = styled.button<{ theme: Theme }>\`
-  \${interactiveStyles};
-  display: none;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-  border: solid 1px \${({ theme }) => theme.colors.grayLight};
-  background: \${({ theme }) => theme.colors.light};
-  color: \${({ theme }) => theme.colors.grayDark};
-  border-radius: \${({ theme }) => theme.spacing.radius.xs};
-  padding: 5px 4px 5px 8px;
-  font-family: inherit;
-  font-size: \${({ theme }) => theme.fontSizes.small.lg};
-  font-weight: 500;
-  line-height: 1;
-  white-space: nowrap;
-  cursor: pointer;
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: default;
-
-    &:hover {
-      border-color: \${({ theme }) => theme.colors.grayLight};
-    }
-
-    &:focus,
-    &:active {
-      outline: none;
-      box-shadow: 0 0 0 0 \${({ theme }) => theme.colors.primaryLight};
-    }
-  }
-
-  \${mq("lg")} {
-    display: inline-flex;
-  }
-\`;
-
-const StyledAskKeys = styled.span\`
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-\`;
-
-const StyledAskKbd = styled.kbd<{ theme: Theme }>\`
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 4px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: \${({ theme }) => theme.colors.grayLight};
-  color: \${({ theme }) => theme.colors.grayDark};
-  border-radius: 4px;
-\`;
-
-// The return glyph's ink sits high in its em box, so it reads top-aligned even
-// when the keycap flex-centers it. Nudge just the character (not the pill) down
-// a pixel so it optically centers and lines up with the option glyph.
-const StyledReturnGlyph = styled.span\`
-  display: inline-block;
-  transform: translateY(1.5px);
-\`;
-
-const StyledResults = styled.ul<{ theme: Theme }>\`
-  list-style: none;
-  position: relative;
-  /* The scroll area runs from the input row's rule to the modal's bottom
-     edge, and its inset is padding inside the scrolled content, so rows
-     scroll out under the rule and the bottom edge instead of being clipped
-     8px short of them. */
-  margin: 0;
-  padding: 8px;
-  overflow-y: auto;
-  flex: 1;
-  min-height: 0;
-  -webkit-overflow-scrolling: touch;
-  \${thinScrollbar};
-
-  &[hidden] {
-    display: none;
-  }
-\`;
-
-// Single indicator that slides between result items instead of each item
-// fading its own background in and out. Positioned/sized from the active item's
-// measured offset (see the layout effect below); the transition on
-// transform + height produces the up/down glide as the active item changes.
-const StyledHighlight = styled.div<{
-  theme: Theme;
-  $top: number;
-  $height: number;
-}>\`
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  top: 0;
-  z-index: 0;
-  pointer-events: none;
-  border-radius: \${({ theme }) => theme.spacing.radius.xs};
-  background: \${({ theme }) =>
-    \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
-  transition:
-    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
-    height 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform, height;
-  transform: translateY(\${({ $top }) => $top}px);
-  height: \${({ $height }) => $height}px;
-
-  @media (prefers-reduced-motion: reduce) {
-    transition: none;
-  }
-\`;
-
-const StyledResultItem = styled.li<{ theme: Theme; $isActive: boolean }>\`
-  position: relative;
-  z-index: 1;
-  padding: 10px 12px;
-  border-radius: \${({ theme }) => theme.spacing.radius.xs};
-  cursor: pointer;
-
-  &:focus-visible {
-    outline: none;
-    box-shadow: inset 0 0 0 2px \${({ theme }) => theme.colors.primaryLight};
-  }
-
-  \${({ $isActive, theme }) =>
-    $isActive &&
-    css\`
-      & > span:first-of-type {
-        color: \${theme.colors.primary};
-      }
-    \`}
-\`;
-
-const StyledResultTitle = styled.span<{ theme: Theme }>\`
-  font-size: \${({ theme }) => theme.fontSizes.text.lg};
-  font-weight: 500;
-  color: \${({ theme }) => theme.colors.dark};
-  display: block;
-  transition: color 0.15s ease;
-\`;
-
-const StyledResultMeta = styled.span<{ theme: Theme }>\`
-  font-size: \${({ theme }) => theme.fontSizes.small.lg};
-  color: \${({ theme }) => theme.colors.gray};
-  display: block;
-  margin-top: 2px;
-\`;
-
-const StyledSnippet = styled.span<{ theme: Theme }>\`
-  font-size: \${({ theme }) => theme.fontSizes.small.lg};
-  color: \${({ theme }) => theme.colors.grayDark};
-  display: block;
-  margin-top: 4px;
-  line-height: 1.4;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-
-  & mark {
-    background: \${({ theme }) =>
-      \`color-mix(in srgb, \${theme.colors.primaryLight} 35%, transparent)\`};
-    color: inherit;
-    border-radius: 4px;
-    padding: 0 1px;
-  }
-\`;
-
-const StyledEmpty = styled.div<{ theme: Theme }>\`
-  padding: 20px;
-  min-height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* Separates the spinner from "Searching documentation..."; the whitespace
-     between them in the markup collapses away as an anonymous flex item. */
-  gap: 8px;
-  text-align: center;
-  font-size: \${({ theme }) => theme.fontSizes.small.lg};
-  color: \${({ theme }) => theme.colors.gray};
-\`;
-
-const StyledLiveStatus = styled.div\`
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  border: 0;
-\`;
-
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
@@ -370,6 +62,14 @@ function highlightMatch(snippet: string, query: string): string {
   return escaped.replace(regex, "<mark>$1</mark>");
 }
 
+/**
+ * The search window: a native modal <dialog> (styled in app/styles, see
+ * .dcp-search) covering the page, with the panel inside it. The browser keeps
+ * the rest of the page inert and the dialog on top; this component adds the
+ * exit animation (data-closing, unmounted by SearchDocs when it ends), the combobox keyboard model, and focus
+ * handling: the input takes focus on open, Tab cycles inside the window, and
+ * focus returns to the opener on close.
+ */
 export function SearchModalContent({
   isClosing,
   closeSearch,
@@ -389,7 +89,7 @@ export function SearchModalContent({
   shouldRestoreFocus,
   returnFocusTo,
 }: SearchModalContentProps) {
-  const dialogRef = React.useRef<HTMLDivElement | null>(null);
+  const dialogRef = React.useRef<HTMLDialogElement | null>(null);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const previouslyFocusedRef = React.useRef<HTMLElement | null>(
     returnFocusTo?.isConnected === true
@@ -402,13 +102,18 @@ export function SearchModalContent({
   const optionId = (index: number) => listboxId + "-option-" + index;
   const t = useStrings();
 
+  // Open as a modal before the first paint, so the layout effect below
+  // measures the rows of a rendered window.
+  React.useLayoutEffect(() => {
+    const dialog = dialogRef.current;
+    if (dialog && !dialog.open) dialog.showModal();
+  }, []);
+
   React.useEffect(() => {
+    const dialog = dialogRef.current;
     const previouslyFocused = previouslyFocusedRef.current;
     const containFocus = (event: FocusEvent) => {
-      if (
-        event.target instanceof Node &&
-        !dialogRef.current?.contains(event.target)
-      ) {
+      if (event.target instanceof Node && !dialog?.contains(event.target)) {
         inputRef.current?.focus();
       }
     };
@@ -424,7 +129,9 @@ export function SearchModalContent({
     };
   }, [shouldRestoreFocus]);
 
-  const handleDialogKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleDialogKeyDown = (
+    event: React.KeyboardEvent<HTMLDialogElement>,
+  ) => {
     if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();
@@ -503,32 +210,46 @@ export function SearchModalContent({
   }, [activeIndex, merged, resultsRef]);
 
   return (
-    <StyledBackdrop
-      $isClosing={isClosing}
-      onClick={closeSearch}
+    // The click handler only closes on the dimmed layer around the panel;
+    // the keyboard closes the window with Esc (handleDialogKeyDown).
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
+    <dialog
+      ref={dialogRef}
+      className="dcp-search"
+      data-closing={isClosing || undefined}
+      aria-modal="true"
+      aria-label={t.searchDialog}
+      data-search-dialog
+      onKeyDownCapture={handleDialogKeyDown}
+      onClick={(e) => {
+        // A click on the dimmed layer around the panel.
+        if (e.target === e.currentTarget) closeSearch();
+      }}
+      onCancel={(e) => {
+        // Esc: run the animated close instead of the browser's instant one.
+        e.preventDefault();
+        closeSearch();
+      }}
+      onClose={() => {
+        // The browser closed the dialog without the animation (a repeated
+        // Esc it would not let us cancel): finish closing right away.
+        if (!isClosing) closeSearch();
+        onCloseAnimationEnd();
+      }}
       onAnimationEnd={(e) => {
-        // animationend bubbles, so this handler also fires for animations
-        // completing on descendants (the inner modal, icons, result items).
-        // Only the backdrop's own exit animation should trigger the unmount -
-        // otherwise a child finishing its animation first tears the modal down
-        // before the close animation plays, making it vanish instantly.
-        if (e.target === e.currentTarget) onCloseAnimationEnd();
+        // animationend bubbles, so this also fires for animations ending on
+        // descendants. Only the dialog's own exit animation unmounts it;
+        // otherwise a child finishing first would tear the window down
+        // before the close animation plays.
+        if (e.target === e.currentTarget && isClosing) onCloseAnimationEnd();
       }}
     >
-      <StyledModal
-        ref={dialogRef}
-        $isClosing={isClosing}
-        role="dialog"
-        aria-modal="true"
-        aria-label={t.searchDialog}
-        data-search-dialog
-        onKeyDownCapture={handleDialogKeyDown}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <StyledInputWrapper>
+      <div className="dcp-search__panel">
+        <div className="dcp-search__input-row">
           <Search size={18} />
-          <StyledInput
+          <input
             ref={inputRef}
+            className="dcp-search__input"
             type="search"
             value={query}
             onChange={(e) => {
@@ -550,31 +271,39 @@ export function SearchModalContent({
             }
           />
           {canAskAssistant && (
-            <StyledAskAssistant
+            <button
               type="button"
+              className="dcp-search__ask"
               onClick={onAskAssistant}
               disabled={!query.trim()}
               aria-label={t.askAi}
               title={t.askAi}
             >
               {t.askAi}
-              <StyledAskKeys aria-hidden="true">
-                <StyledAskKbd>&#8997;</StyledAskKbd>
-                <StyledAskKbd>
-                  <StyledReturnGlyph>&#8629;</StyledReturnGlyph>
-                </StyledAskKbd>
-              </StyledAskKeys>
-            </StyledAskAssistant>
+              <span className="dcp-search__ask-keys" aria-hidden="true">
+                <kbd className="dcp-search__kbd">&#8997;</kbd>
+                <kbd className="dcp-search__kbd">
+                  <span className="dcp-search__return-glyph">&#8629;</span>
+                </kbd>
+              </span>
+            </button>
           )}
-          <IconButton
+          <button
+            type="button"
+            className="dcp-search__close"
             onClick={closeSearch}
             aria-label={t.closeSearch}
             title={t.closeSearch}
           >
             <X />
-          </IconButton>
-        </StyledInputWrapper>
-        <StyledLiveStatus role="status" aria-live="polite" aria-atomic="true">
+          </button>
+        </div>
+        <div
+          className="dcp-visually-hidden"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
           {isSearching
             ? t.searching
             : merged.length === 0
@@ -582,9 +311,10 @@ export function SearchModalContent({
               : merged.length === 1
                 ? t.resultAvailable
                 : withCount(t.resultsAvailable, merged.length)}
-        </StyledLiveStatus>
-        <StyledResults
+        </div>
+        <ul
           ref={resultsRef}
+          className="dcp-search__results dcp-thin-scrollbar"
           id={listboxId}
           role="listbox"
           aria-label={t.searchResults}
@@ -592,41 +322,52 @@ export function SearchModalContent({
           hidden={merged.length === 0}
         >
           {indicator && (
-            <StyledHighlight
+            <div
+              className="dcp-search__highlight"
               aria-hidden="true"
-              $top={indicator.top}
-              $height={indicator.height}
+              style={
+                {
+                  "--dcp-highlight-top": \`\${indicator.top}px\`,
+                  "--dcp-highlight-height": \`\${indicator.height}px\`,
+                } as React.CSSProperties
+              }
             />
           )}
           {merged.map((result, index) => (
-            <StyledResultItem
+            // The combobox input drives the keyboard (aria-activedescendant).
+            // eslint-disable-next-line jsx-a11y/click-events-have-key-events
+            <li
               key={result.page.slug + result.page.section}
+              className="dcp-search__result"
               id={optionId(index)}
               role="option"
               aria-selected={index === activeIndex}
-              $isActive={index === activeIndex}
+              data-active={index === activeIndex || undefined}
               onClick={(e) => navigate(result.page.slug, e)}
               onMouseEnter={() => setActiveIndex(index)}
             >
-              <StyledResultTitle>{result.page.title}</StyledResultTitle>
-              <StyledResultMeta>
+              <span className="dcp-search__result-title">
+                {result.page.title}
+              </span>
+              <span className="dcp-search__result-meta">
                 {result.page.section
                   ? \`\${sectionLabels[result.page.section] || result.page.section} / \`
                   : ""}
                 {result.page.category}
-              </StyledResultMeta>
+              </span>
               {result.snippet && (
-                <StyledSnippet
+                <span
+                  className="dcp-search__snippet"
                   dangerouslySetInnerHTML={{
                     __html: highlightMatch(result.snippet, query),
                   }}
                 />
               )}
-            </StyledResultItem>
+            </li>
           ))}
-        </StyledResults>
+        </ul>
         {merged.length === 0 && (
-          <StyledEmpty aria-hidden="true">
+          <div className="dcp-search__empty" aria-hidden="true">
             {isSearching ? (
               <>
                 <Spinner size={18} /> {t.searching}...
@@ -634,10 +375,10 @@ export function SearchModalContent({
             ) : (
               t.noResults
             )}
-          </StyledEmpty>
+          </div>
         )}
-      </StyledModal>
-    </StyledBackdrop>
+      </div>
+    </dialog>
   );
 }
 `;

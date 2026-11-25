@@ -150,7 +150,8 @@ export function collectTemplateIconNames(
  * Template icons that reach `<Icon>` through a variable rather than a literal
  * `name`, so the template scan cannot see them: Callout's per-type defaults
  * and the "rocket" category icon of the placeholder navigation shown before
- * any page exists (SectionNavProvider, site layout).
+ * any page exists (SectionNavProvider, site layout), and DemoTheme's mode
+ * buttons, which pass theirs through Button's `icon` prop.
  */
 export const INDIRECT_TEMPLATE_ICON_NAMES: readonly string[] = [
   "CircleAlert",
@@ -159,6 +160,8 @@ export const INDIRECT_TEMPLATE_ICON_NAMES: readonly string[] = [
   "OctagonAlert",
   "Check",
   "rocket",
+  "sun",
+  "moon-star",
 ];
 
 const PRINT_WIDTH = 80;

@@ -1,15 +1,5 @@
-export const stepsTemplate = `"use client";
-import React from "react";
-import { useTheme } from "styled-components";
-import { Theme } from "@/app/theme";
+export const stepsTemplate = `import React from "react";
 import { Icon, IconProps } from "@/components/layout/Icon";
-import {
-  StyledStepsContainer,
-  StyledStep,
-  StepNumber,
-  StyledStepTitle,
-  StepContent,
-} from "@/components/layout/Steps.styles";
 
 interface StepProps extends React.HTMLAttributes<HTMLDivElement> {
   title?: string;
@@ -26,32 +16,30 @@ interface StepsProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 function Steps({ children }: StepsProps) {
-  const theme = useTheme() as Theme;
-
   const steps = React.Children.toArray(children).filter(
     (child): child is React.ReactElement<StepProps> =>
       React.isValidElement(child),
   );
 
   return (
-    <StyledStepsContainer theme={theme}>
+    <div className="dcp-steps">
       {steps.map((step, index) => {
         const { title, children: stepContent, icon } = step.props;
 
         return (
-          <StyledStep key={index} theme={theme}>
-            <StepNumber theme={theme}>{index + 1}</StepNumber>
+          <div key={index} className="dcp-steps__step">
+            <div className="dcp-steps__number">{index + 1}</div>
             {(title || icon) && (
-              <StyledStepTitle theme={theme}>
+              <div className="dcp-steps__title">
                 {icon && <Icon name={icon} />}
                 {title}
-              </StyledStepTitle>
+              </div>
             )}
-            <StepContent theme={theme}>{stepContent}</StepContent>
-          </StyledStep>
+            <div className="dcp-steps__content">{stepContent}</div>
+          </div>
         );
       })}
-    </StyledStepsContainer>
+    </div>
   );
 }
 

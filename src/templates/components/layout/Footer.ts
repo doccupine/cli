@@ -1,13 +1,8 @@
 export const footerTemplate = `"use client";
 import { useStrings } from "@/components/useStrings";
-import { Space, useChat } from "cherry-styled-components";
+import { useChat } from "@/components/chat/ChatProvider";
 import { GitHubLogo } from "@/components/layout/Pictograms";
 import linksData from "@/links.json";
-import {
-  StyledFooter,
-  StyledFooterInner,
-  StyledFooterFlex,
-} from "@/components/layout/Footer.styles";
 
 interface LinkProps {
   title: string;
@@ -21,12 +16,16 @@ function Footer({ hideBranding }: { hideBranding?: boolean }) {
   const { isOpen } = useChat();
   const t = useStrings();
 
-  if (hideBranding) return <Space $xs={80} $lg="none" />;
+  if (hideBranding) return <span className="dcp-footer-space" />;
 
   return (
-    <StyledFooter $isChatOpen={isOpen} $hasLinks={links.length > 0}>
-      <StyledFooterInner>
-        <StyledFooterFlex>
+    <footer
+      className="dcp-footer"
+      data-chat-open={isOpen || undefined}
+      data-has-links={links.length > 0 || undefined}
+    >
+      <div className="dcp-footer__inner">
+        <div className="dcp-footer__row">
           <span>
             {t.poweredBy}{" "}
             <a
@@ -45,9 +44,9 @@ function Footer({ hideBranding }: { hideBranding?: boolean }) {
           >
             <GitHubLogo />
           </a>
-        </StyledFooterFlex>
-      </StyledFooterInner>
-    </StyledFooter>
+        </div>
+      </div>
+    </footer>
   );
 }
 

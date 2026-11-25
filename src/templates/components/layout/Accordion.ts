@@ -1,11 +1,6 @@
 export const accordionTemplate = `"use client";
 import { useId, useState } from "react";
 import { Icon } from "@/components/layout/Icon";
-import {
-  StyledAccordion,
-  StyledAccordionTitle,
-  StyledAccordionContent,
-} from "@/components/layout/Accordion.styles";
 
 interface AccordionProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
@@ -19,28 +14,28 @@ function Accordion({ children, title, defaultOpen = false }: AccordionProps) {
   const titleId = useId();
 
   return (
-    <StyledAccordion>
-      <StyledAccordionTitle
+    <div className="dcp-accordion">
+      <button
+        className="dcp-accordion__title"
         id={titleId}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        $isOpen={isOpen}
         aria-expanded={isOpen}
         aria-controls={contentId}
       >
         {title} <Icon name="ChevronDown" />
-      </StyledAccordionTitle>
-      <StyledAccordionContent
+      </button>
+      <div
+        className="dcp-accordion__content"
         id={contentId}
         role="region"
         aria-labelledby={titleId}
         aria-hidden={!isOpen}
         inert={!isOpen}
-        $isOpen={isOpen}
       >
         {children}
-      </StyledAccordionContent>
-    </StyledAccordion>
+      </div>
+    </div>
   );
 }
 

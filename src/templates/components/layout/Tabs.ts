@@ -1,12 +1,6 @@
 export const tabsTemplate = `"use client";
 import React, { ReactNode, useId, useRef, useState } from "react";
 import { Icon } from "@/components/layout/Icon";
-import {
-  TabsContainer,
-  TabsList,
-  TabButton,
-  TabPanel,
-} from "@/components/layout/Tabs.styles";
 
 interface TabContentProps {
   title: string;
@@ -64,8 +58,9 @@ const Tabs: React.FC<TabsProps> = ({ children }) => {
   };
 
   return (
-    <TabsContainer>
-      <TabsList
+    <div className="dcp-tabs">
+      <div
+        className="dcp-tabs__list"
         role="tablist"
         aria-label="Content tabs"
         aria-orientation="horizontal"
@@ -74,8 +69,9 @@ const Tabs: React.FC<TabsProps> = ({ children }) => {
           const tabId = tabsId + "-tab-" + index;
           const panelId = tabsId + "-panel-" + index;
           return (
-            <TabButton
+            <button
               key={tabId}
+              className="dcp-tabs__tab"
               ref={(element) => {
                 tabRefs.current[index] = element;
               }}
@@ -84,30 +80,30 @@ const Tabs: React.FC<TabsProps> = ({ children }) => {
               aria-selected={activeTab === index}
               aria-controls={panelId}
               tabIndex={activeTab === index ? 0 : -1}
-              $isActive={activeTab === index}
               onClick={() => setActiveTab(index)}
               onKeyDown={(event) => handleTabKeyDown(event, index)}
               type="button"
             >
               {tab.props.icon && <Icon name={tab.props.icon} size={18} />}
               {tab.props.title}
-            </TabButton>
+            </button>
           );
         })}
-      </TabsList>
+      </div>
       {tabs.map((tab, index) => (
-        <TabPanel
+        <div
           key={tabsId + "-panel-" + index}
           id={tabsId + "-panel-" + index}
+          className="dcp-tabs__panel"
           role="tabpanel"
           aria-labelledby={tabsId + "-tab-" + index}
           tabIndex={activeTab === index ? 0 : -1}
           hidden={activeTab !== index}
         >
           {tab.props.children}
-        </TabPanel>
+        </div>
       ))}
-    </TabsContainer>
+    </div>
   );
 };
 

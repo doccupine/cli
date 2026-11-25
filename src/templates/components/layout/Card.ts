@@ -1,10 +1,5 @@
-export const cardTemplate = `"use client";
+export const cardTemplate = `import Link from "next/link";
 import { Icon, IconProps } from "@/components/layout/Icon";
-import {
-  StyledCard,
-  StyledCardLink,
-  StyledCardTitle,
-} from "@/components/layout/Card.styles";
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
@@ -17,7 +12,7 @@ function Card({ children, title, icon, href }: CardProps) {
   const content = (
     <>
       {icon && <Icon name={icon} />}
-      {title && <StyledCardTitle>{title}</StyledCardTitle>}
+      {title && <p className="dcp-card__title">{title}</p>}
       {children}
     </>
   );
@@ -25,17 +20,19 @@ function Card({ children, title, icon, href }: CardProps) {
   if (href) {
     const isExternal = /^(https?:)?\\/\\//i.test(href);
     return (
-      <StyledCardLink
+      <Link
+        className="dcp-card"
+        data-link
         href={href}
         target={isExternal ? "_blank" : undefined}
         rel={isExternal ? "noopener noreferrer" : undefined}
       >
         {content}
-      </StyledCardLink>
+      </Link>
     );
   }
 
-  return <StyledCard>{content}</StyledCard>;
+  return <div className="dcp-card">{content}</div>;
 }
 
 export { Card };

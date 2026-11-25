@@ -1,9 +1,5 @@
-export const frameTemplate = `"use client";
-import React from "react";
+export const frameTemplate = `import React from "react";
 import Link from "next/link";
-import styled from "styled-components";
-import { styledSmall } from "cherry-styled-components";
-import { Theme } from "@/app/theme";
 
 // Captions and hints accept a deliberately small slice of Markdown: links,
 // bold, italic and inline code. Everything is parsed into React elements -
@@ -124,80 +120,28 @@ function withVideoDefaults(
   });
 }
 
-const StyledFrameWrapper = styled.div\`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-width: 100%;
-\`;
-
-const StyledFrameHint = styled.p<{ theme: Theme }>\`
-  \${({ theme }) => styledSmall(theme)};
-  color: \${({ theme }) => theme.colors.grayDark};
-  margin: 0;
-\`;
-
-const StyledFrame = styled.figure<{ theme: Theme }>\`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 0;
-  padding: 8px;
-  border: solid 1px \${({ theme }) => theme.colors.grayLight};
-  border-radius: \${({ theme }) => theme.spacing.radius.lg};
-  background: \${({ theme }) =>
-    \`color-mix(in srgb, \${theme.colors.grayLight} 25%, transparent)\`};
-\`;
-
-const StyledFrameContent = styled.div<{ theme: Theme }>\`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 15px;
-
-  & > * {
-    max-width: 100%;
-  }
-
-  & p {
-    margin: 0;
-  }
-
-  & img,
-  & video,
-  & iframe {
-    display: block;
-    max-width: 100%;
-    height: auto;
-    border-radius: \${({ theme }) => theme.spacing.radius.xs};
-  }
-\`;
-
-const StyledFrameCaption = styled.figcaption<{ theme: Theme }>\`
-  \${({ theme }) => styledSmall(theme)};
-  color: \${({ theme }) => theme.colors.gray};
-  text-align: center;
-  margin: 0;
-\`;
-
 interface FrameProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   caption?: string;
   hint?: string;
 }
 
-function Frame({ children, caption, hint, ...props }: FrameProps) {
+function Frame({ children, caption, hint, className, ...props }: FrameProps) {
   return (
-    <StyledFrameWrapper {...props}>
-      {hint && <StyledFrameHint>{renderInline(hint)}</StyledFrameHint>}
-      <StyledFrame>
-        <StyledFrameContent>{withVideoDefaults(children)}</StyledFrameContent>
+    <div
+      {...props}
+      className={className ? \`dcp-frame \${className}\` : "dcp-frame"}
+    >
+      {hint && <p className="dcp-frame__hint">{renderInline(hint)}</p>}
+      <figure className="dcp-frame__figure">
+        <div className="dcp-frame__content">{withVideoDefaults(children)}</div>
         {caption && (
-          <StyledFrameCaption>{renderInline(caption)}</StyledFrameCaption>
+          <figcaption className="dcp-frame__caption">
+            {renderInline(caption)}
+          </figcaption>
         )}
-      </StyledFrame>
-    </StyledFrameWrapper>
+      </figure>
+    </div>
   );
 }
 

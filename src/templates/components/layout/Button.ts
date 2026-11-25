@@ -1,133 +1,117 @@
-export const buttonTemplate = `"use client";
-import Link from "next/link";
-import styled from "styled-components";
-import {
-  theme as localTheme,
-  ButtonProps,
-  buttonStyles,
-} from "cherry-styled-components";
+export const buttonTemplate = `import Link from "next/link";
 import { Icon } from "@/components/layout/Icon";
 
-interface LinkButtonProps extends ButtonProps {
+type ButtonVariant = "primary" | "secondary" | "tertiary";
+type ButtonSize = "default" | "big" | "small";
+
+interface LinkButtonProps extends Omit<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  "type"
+> {
+  children?: React.ReactNode;
+  type?: "button" | "submit" | "reset";
   href?: string;
   target?: "_blank" | "_self" | "_parent" | "_top";
   rel?: string;
-  variant?: "primary" | "secondary" | "tertiary";
-  size?: "default" | "big";
+  variant?: ButtonVariant;
+  size?: ButtonSize;
   outline?: boolean;
   fullWidth?: boolean;
   icon?: string;
   iconPosition?: "left" | "right";
-  theme?: typeof localTheme;
+  /** Accepted for compatibility; the look comes from app/styles. */
+  theme?: unknown;
+  // The "$"-prefixed props of the original Cherry-based Button, still
+  // accepted from MDX: the plain props above win when both are set.
+  $variant?: ButtonVariant;
+  $size?: ButtonSize;
+  $outline?: boolean;
+  $fullWidth?: boolean;
+  $error?: boolean;
+  $icon?: React.ReactNode;
+  $iconPosition?: "left" | "right";
 }
 
-// Cherry's buttonStyles picks filled-button text from the theme object, which
-// this app keeps on the light mode for static rendering, so pin it to
-// \`surface\` instead: that token resolves through a CSS variable and is the
-// readable-on-brand color in both modes. Filled, non-disabled case only.
-// The "button-link" class opts this anchor out of the global a:focus-visible
-// ring (see GlobalStyles) so Cherry's buttonStyles owns the button's focus look.
-const StyledLinkButton = styled(Link).attrs({
-  className: "button-link",
-})<LinkButtonProps>\`
-  \${({ theme, $variant, $size, $outline, $fullWidth, $error, disabled }) =>
-    buttonStyles(
-      theme,
-      $variant,
-      $size,
-      $outline,
-      $fullWidth,
-      $error,
-      disabled,
-    )}
-
-  \${({ theme, $outline, disabled }) =>
-    !disabled && !$outline && \`color: \${theme.colors.surface};\`}
-
-  & p {
-    color: inherit !important;
-  }
-
-  & svg.lucide {
-    margin: auto 0;
-    min-width: min-content;
-    color: inherit;
-  }
-\`;
-
-const ButtonBase = styled.button<ButtonProps>\`
-  \${({ theme, $variant, $size, $outline, $fullWidth, $error, disabled }) =>
-    buttonStyles(
-      theme,
-      $variant,
-      $size,
-      $outline,
-      $fullWidth,
-      $error,
-      disabled,
-    )}
-
-  \${({ theme, $outline, disabled }) =>
-    !disabled && !$outline && \`color: \${theme.colors.surface};\`}
-
-  & p {
-    color: inherit !important;
-  }
-
-  & svg.lucide {
-    margin: auto 0;
-    min-width: min-content;
-    color: inherit;
-  }
-\`;
-
+/**
+ * The MDX button: a <button>, or a link when it has an href. The look is
+ * .dcp-button in app/styles; links also carry "button-link", which opts them
+ * out of the base link focus ring so the button draws its own.
+ */
 function Button({
-  variant = "primary",
+  variant,
   size,
   outline,
   fullWidth,
   icon,
   iconPosition = "left",
-  theme: _theme = localTheme,
+  theme: _theme,
   href,
   target,
   rel,
+  $variant,
+  $size,
+  $outline,
+  $fullWidth,
+  $error,
+  $icon: _icon,
+  $iconPosition: _iconPosition,
+  className,
+  disabled,
+  children,
   ...props
 }: LinkButtonProps) {
-  const isExternal = typeof href === "string" && /^(https?:)?\\/\\//i.test(href);
-  const resolvedTarget = target ?? (isExternal ? "_blank" : undefined);
-  const resolvedRel =
-    rel ?? (resolvedTarget === "_blank" ? "noopener noreferrer" : undefined);
-  return href ? (
+  const isOutline = outline ?? $outline ?? false;
+  const data = {
+    "data-variant": disabled ? undefined : (variant ?? $variant ?? "primary"),
+    "data-outline": isOutline || undefined,
+    "data-error": (!disabled && $error) || undefined,
+    "data-size": size ?? $size ?? "default",
+    "data-full-width": (fullWidth ?? $fullWidth) || undefined,
+    "data-disabled": disabled || undefined,
+  };
+  const content = (
+    <>
+      {iconPosition === "left" && icon && <Icon name={icon} size={16} />}
+      {children}
+      {iconPosition === "right" && icon && <Icon name={icon} size={16} />}
+    </>
+  );
+  if (href) {
+    const isExternal = /^(https?:)?\\/\\//i.test(href);
+    const resolvedTarget = target ?? (isExternal ? "_blank" : undefined);
+    const resolvedRel =
+      rel ?? (resolvedTarget === "_blank" ? "noopener noreferrer" : undefined);
+    return (
+      <div>
+        <Link
+          {...(props as Omit<
+            React.AnchorHTMLAttributes<HTMLAnchorElement>,
+            "href"
+          >)}
+          href={href}
+          target={resolvedTarget}
+          rel={resolvedRel}
+          aria-disabled={disabled || undefined}
+          className={["dcp-button", "button-link", className]
+            .filter(Boolean)
+            .join(" ")}
+          {...data}
+        >
+          {content}
+        </Link>
+      </div>
+    );
+  }
+  return (
     <div>
-      <StyledLinkButton
+      <button
         {...props}
-        href={href}
-        target={resolvedTarget}
-        rel={resolvedRel}
-        $variant={variant}
-        $size={size}
-        $outline={outline}
-        $fullWidth={fullWidth}
+        disabled={disabled}
+        className={className ? \`dcp-button \${className}\` : "dcp-button"}
+        {...data}
       >
-        {iconPosition === "left" && icon && <Icon name={icon} size={16} />}
-        {props.children}
-        {iconPosition === "right" && icon && <Icon name={icon} size={16} />}
-      </StyledLinkButton>
-    </div>
-  ) : (
-    <div>
-      <ButtonBase
-        {...props}
-        $variant={variant}
-        $size={size}
-        $outline={outline}
-        $fullWidth={fullWidth}
-      >
-        {iconPosition === "left" && icon && <Icon name={icon} size={16} />}
-        {props.children}
-        {iconPosition === "right" && icon && <Icon name={icon} size={16} />}
-      </ButtonBase>
+        {content}
+      </button>
     </div>
   );
 }

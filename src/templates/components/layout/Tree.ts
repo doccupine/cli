@@ -1,9 +1,6 @@
 export const treeTemplate = `"use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import styled, { css } from "styled-components";
-import { Theme } from "@/app/theme";
 import { Icon } from "@/components/layout/Icon";
-import { thinScrollbar } from "@/components/layout/SharedStyled";
 import type { TreeNode } from "@/components/layout/TreeData";
 
 const TYPE_AHEAD_RESET_MS = 600;
@@ -13,108 +10,7 @@ interface FlatItem {
   parentId: string | null;
 }
 
-// The prose container styles every descendant "ul li" (bullet dots, padding,
-// min-height) at (0,1,2)+ specificity, so the tree's own lists and items use
-// && to reach (0,2,0) and win.
-const StyledTree = styled.ul<{ theme: Theme }>\`
-  && {
-    background: \${({ theme }) => theme.colors.light};
-    border: solid 1px \${({ theme }) => theme.colors.grayLight};
-    border-radius: \${({ theme }) => theme.spacing.radius.lg};
-    padding: 12px;
-    margin: 0;
-    width: 100%;
-    list-style: none;
-    overflow-x: auto;
-    \${thinScrollbar};
-  }
-\`;
-
-const StyledTreeGroup = styled.ul<{ theme: Theme }>\`
-  && {
-    list-style: none;
-    margin: 0 0 0 13px;
-    padding: 0 0 0 9px;
-    border-left: solid 1px \${({ theme }) => theme.colors.grayLight};
-  }
-\`;
-
-const StyledTreeRow = styled.span<{ theme: Theme; $isInteractive: boolean }>\`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 6px;
-  border-radius: \${({ theme }) => theme.spacing.radius.xs};
-  transition: background 0.2s ease;
-
-  \${({ $isInteractive, theme }) =>
-    $isInteractive &&
-    css\`
-      cursor: pointer;
-
-      &:hover {
-        background: \${theme.colors.grayLight};
-      }
-    \`}
-\`;
-
-const StyledTreeItem = styled.li<{ theme: Theme }>\`
-  && {
-    display: block;
-    padding: 0;
-    margin: 0;
-    min-height: 0;
-    outline: none;
-  }
-
-  &&::before {
-    content: none;
-  }
-
-  &:focus-visible > \${StyledTreeRow} {
-    box-shadow: 0 0 0 2px \${({ theme }) => theme.colors.primaryLight};
-  }
-\`;
-
-const StyledTreeChevron = styled.span<{ theme: Theme; $isOpen: boolean }>\`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-  color: \${({ theme }) => theme.colors.gray};
-  transition: transform 0.2s ease;
-
-  \${({ $isOpen }) =>
-    $isOpen &&
-    css\`
-      transform: rotate(90deg);
-    \`}
-\`;
-
-const StyledTreeSpacer = styled.span\`
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-\`;
-
-const StyledTreeIcon = styled.span<{ theme: Theme }>\`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  color: \${({ theme }) => theme.colors.gray};
-\`;
-
-const StyledTreeName = styled.span<{ theme: Theme; $isFolder: boolean }>\`
-  font-family: \${({ theme }) => theme.fonts.mono};
-  font-size: 14px;
-  line-height: 1.6;
-  white-space: nowrap;
-  color: \${({ theme, $isFolder }) =>
-    $isFolder ? theme.colors.dark : theme.colors.grayDark};
-\`;
+// Styles: .dcp-tree in app/styles/design.css.
 
 interface TreeProps {
   nodes: TreeNode[];
@@ -254,8 +150,12 @@ function Tree({ nodes }: TreeProps) {
       const open = node.isFolder && isOpen(node);
       const isInteractive = node.isFolder && node.openable;
       return (
-        <StyledTreeItem
+        <li
+          className="dcp-tree__item"
           key={node.id}
+          // A file tree, not a selection widget: nothing is "selected", so
+          // the items carry no aria-selected.
+          // eslint-disable-next-line jsx-a11y/role-has-required-aria-props
           role="treeitem"
           aria-level={level}
           aria-setsize={list.length}
@@ -274,9 +174,14 @@ function Tree({ nodes }: TreeProps) {
           }}
         >
           {/* Safari does not reliably focus the item on click, so focus is
-              set explicitly before toggling. */}
-          <StyledTreeRow
-            $isInteractive={isInteractive}
+              set explicitly before toggling. Keyboard users drive the tree
+              through the treeitems' roving focus (handleKeyDown on the
+              tree); the row's click is the pointer shortcut for the same
+              toggle. */}
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+          <span
+            className="dcp-tree__row"
+            data-interactive={isInteractive || undefined}
             onClick={(event) => {
               event.stopPropagation();
               focusItem(node.id);
@@ -284,37 +189,49 @@ function Tree({ nodes }: TreeProps) {
             }}
           >
             {isInteractive ? (
-              <StyledTreeChevron $isOpen={open} aria-hidden>
+              <span
+                className="dcp-tree__chevron"
+                data-open={open || undefined}
+                aria-hidden
+              >
                 <Icon name="ChevronRight" size={14} />
-              </StyledTreeChevron>
+              </span>
             ) : (
-              <StyledTreeSpacer aria-hidden />
+              <span className="dcp-tree__spacer" aria-hidden />
             )}
-            <StyledTreeIcon aria-hidden>
+            <span className="dcp-tree__icon" aria-hidden>
               <Icon
                 name={node.isFolder ? (open ? "FolderOpen" : "Folder") : "File"}
                 size={16}
               />
-            </StyledTreeIcon>
-            <StyledTreeName $isFolder={node.isFolder}>
+            </span>
+            <span
+              className="dcp-tree__name"
+              data-folder={node.isFolder || undefined}
+            >
               {node.name}
-            </StyledTreeName>
-          </StyledTreeRow>
+            </span>
+          </span>
           {node.isFolder && open && node.children.length > 0 && (
-            <StyledTreeGroup role="group">
+            <ul className="dcp-tree__group" role="group">
               {renderItems(node.children, level + 1)}
-            </StyledTreeGroup>
+            </ul>
           )}
-        </StyledTreeItem>
+        </li>
       );
     });
 
   if (nodes.length === 0) return null;
 
   return (
-    <StyledTree role="tree" aria-label="File tree" onKeyDown={handleKeyDown}>
+    <ul
+      className="dcp-tree"
+      role="tree"
+      aria-label="File tree"
+      onKeyDown={handleKeyDown}
+    >
       {renderItems(nodes, 1)}
-    </StyledTree>
+    </ul>
   );
 }
 

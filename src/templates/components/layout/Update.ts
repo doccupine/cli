@@ -1,64 +1,4 @@
-export const updateTemplate = `"use client";
-import styled from "styled-components";
-import { styledSmall } from "cherry-styled-components";
-import { mq, Theme } from "@/app/theme";
-import { slugify } from "@/components/layout/Slug";
-
-const StyledUpdate = styled.div<{ theme: Theme; $columns?: number }>\`
-  position: relative;
-  display: flex;
-  gap: 20px;
-  flex-direction: column;
-
-  \${mq("lg")} {
-    margin: 20px 0;
-    flex-direction: row;
-  }
-\`;
-
-const StyledUpdateLabel = styled.a<{ theme: Theme }>\`
-  display: inline-block;
-  width: fit-content;
-  background: \${({ theme }) =>
-    \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
-  color: \${({ theme }) => theme.colors.primary};
-  padding: 2px 4px;
-  border-radius: \${({ theme }) => theme.spacing.radius.xs};
-  font-weight: 600;
-  text-decoration: none;
-  \${({ theme }) => styledSmall(theme)};
-
-  &:hover {
-    background: \${({ theme }) =>
-      \`color-mix(in srgb, \${theme.colors.primaryLight} 35%, transparent)\`};
-  }
-\`;
-
-const StyledUpdateDescription = styled.div<{ theme: Theme }>\`
-  \${({ theme }) => styledSmall(theme)};
-  color: \${({ theme }) => theme.colors.gray};
-\`;
-
-const StyledUpdateSidebar = styled.div\`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-
-  \${mq("lg")} {
-    position: sticky;
-    top: 80px;
-    align-self: flex-start;
-    min-width: 160px;
-  }
-\`;
-
-const StyledUpdateChildren = styled.div<{ theme: Theme }>\`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  color: \${({ theme }) => theme.colors.gray};
-\`;
+export const updateTemplate = `import { slugify } from "@/components/layout/Slug";
 
 interface UpdateProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
@@ -77,17 +17,19 @@ function Update({ children, label = "Label", description, id }: UpdateProps) {
   // global scroll-padding-top).
   const anchor = id ?? slugify(label);
   return (
-    <StyledUpdate id={anchor}>
-      <StyledUpdateSidebar>
+    <div className="dcp-update" id={anchor}>
+      <div className="dcp-update__sidebar">
         <div>
-          <StyledUpdateLabel href={\`#\${anchor}\`}>{label}</StyledUpdateLabel>
+          <a className="dcp-update__label" href={\`#\${anchor}\`}>
+            {label}
+          </a>
         </div>
         {description && (
-          <StyledUpdateDescription>{description}</StyledUpdateDescription>
+          <div className="dcp-update__description">{description}</div>
         )}
-      </StyledUpdateSidebar>
-      <StyledUpdateChildren>{children}</StyledUpdateChildren>
-    </StyledUpdate>
+      </div>
+      <div className="dcp-update__body">{children}</div>
+    </div>
   );
 }
 

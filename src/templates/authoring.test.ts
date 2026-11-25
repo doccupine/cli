@@ -16,26 +16,33 @@ const SPACE_PROPS = [
   "horizontal",
 ];
 
-// Cherry marks its styling props transient with a $ prefix, which is how
-// styled-components keeps them off the DOM node - an implementation detail of
-// the library underneath, not something an MDX author should have to know.
-// Every component Doccupine hands to authors therefore takes plain prop names.
-// Space is the one that used to be re-exported straight from Cherry, so these
-// tests pin the wrapper that keeps the prefix out of the authoring API, and
-// pin the compatibility path that keeps already-written pages rendering.
+// Space used to be Cherry's component, whose styling props carried a $
+// prefix (styled-components' transient props), an implementation detail an
+// MDX author should never have to know. Every component Doccupine hands to
+// authors takes plain prop names; these tests pin that, and the
+// compatibility path that keeps pages written with the prefix rendering.
 describe("MDX authoring API", () => {
-  it("hands authors the Space wrapper rather than Cherry's own component", () => {
+  it("hands authors the site's own Space component", () => {
     expect(mdxComponentsTemplate).toContain(
       'import { Space } from "@/components/layout/Space";',
     );
     expect(mdxComponentsTemplate).not.toContain("cherry-styled-components");
   });
 
-  it("maps every unprefixed Space prop onto Cherry's transient prop", () => {
+  it("reads every unprefixed Space prop first, then its $ name", () => {
     for (const prop of SPACE_PROPS) {
-      expect(spaceTemplate).toContain(`${prop}?:`);
-      expect(spaceTemplate).toContain(`$${prop}={${prop} ?? $${prop}}`);
+      expect(spaceTemplate).toContain(`  ${prop}?:`);
     }
+    expect(spaceTemplate).toContain(
+      "const horizontal = props.horizontal ?? props.$horizontal ?? false;",
+    );
+    expect(spaceTemplate).toContain("const size = props.size ?? props.$size;");
+    expect(spaceTemplate).toContain(
+      "props[breakpoint] ?? props[`$${breakpoint}`],",
+    );
+    // The $ props never reach the DOM: the span only gets a class, a data
+    // flag and inline custom properties.
+    expect(spaceTemplate).not.toContain("{...props}");
   });
 
   it("still accepts the $ props existing pages were written with", () => {

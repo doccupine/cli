@@ -1,9 +1,6 @@
 export const tooltipTemplate = `"use client";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
-import styled, { css } from "styled-components";
-import { styledSmall } from "cherry-styled-components";
-import { Theme } from "@/app/theme";
 
 // Layout cannot be measured during SSR; fall back to useEffect there so
 // prerendering stays warning-free while the browser still measures before
@@ -12,94 +9,6 @@ const useIsomorphicLayoutEffect =
   typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 const VIEWPORT_MARGIN = 8;
-
-const StyledTooltip = styled.span\`
-  position: relative;
-  display: inline-block;
-\`;
-
-const StyledTooltipTrigger = styled.span<{ theme: Theme }>\`
-  cursor: help;
-  text-decoration: underline dotted 1.5px;
-  text-decoration-color: \${({ theme }) => theme.colors.gray};
-  text-underline-offset: 4px;
-  border-radius: \${({ theme }) => theme.spacing.radius.xs};
-
-  &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 2px \${({ theme }) => theme.colors.primaryLight};
-  }
-\`;
-
-// The gap between trigger and bubble is padding on the positioner (not a
-// margin) so the pointer never crosses empty space on its way to the CTA
-// link, which would fire mouseleave and close the tooltip early.
-const StyledTooltipBubble = styled.span<{
-  theme: Theme;
-  $isOpen: boolean;
-  $placement: "top" | "bottom";
-  $shift: number;
-}>\`
-  position: absolute;
-  left: 50%;
-  transform: translateX(calc(-50% + \${({ $shift }) => $shift}px));
-  width: max-content;
-  max-width: min(260px, calc(100vw - 16px));
-  z-index: 10;
-  opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity 0.2s ease,
-    visibility 0.2s ease;
-
-  \${({ $placement }) =>
-    $placement === "top"
-      ? css\`
-          bottom: 100%;
-          padding-bottom: 8px;
-        \`
-      : css\`
-          top: 100%;
-          padding-top: 8px;
-        \`}
-
-  \${({ $isOpen }) =>
-    $isOpen &&
-    css\`
-      opacity: 1;
-      visibility: visible;
-    \`}
-\`;
-
-const StyledTooltipContent = styled.span<{ theme: Theme }>\`
-  display: block;
-  background: \${({ theme }) => theme.colors.light};
-  border: solid 1px \${({ theme }) => theme.colors.grayLight};
-  border-radius: \${({ theme }) => theme.spacing.radius.lg};
-  padding: 10px 14px;
-  \${({ theme }) => styledSmall(theme)};
-  color: \${({ theme }) => theme.colors.grayDark};
-  text-align: left;
-\`;
-
-const StyledTooltipHeadline = styled.span<{ theme: Theme }>\`
-  display: block;
-  font-weight: 700;
-  color: \${({ theme }) => theme.colors.dark};
-\`;
-
-const StyledTooltipCta = styled.a<{ theme: Theme }>\`
-  display: block;
-  margin-top: 5px;
-  font-weight: 700;
-  color: \${({ theme }) => theme.colors.primary};
-  text-decoration: none;
-  transition: color 0.3s ease;
-
-  &:hover {
-    color: \${({ theme }) => theme.colors.primaryDark};
-  }
-\`;
 
 interface TooltipProps {
   children: React.ReactNode;
@@ -163,8 +72,13 @@ function Tooltip({ children, tip, headline, cta, href }: TooltipProps) {
       document.removeEventListener("pointerdown", closeOnOutsidePointer);
   }, [isOpen]);
 
+  // The wrapper only listens for hover and focus moving within it, and the
+  // trigger is a focusable phrase whose role comes from aria-describedby;
+  // keyboard users open it by focusing it, so neither needs a widget role.
   return (
-    <StyledTooltip
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
+    <span
+      className="dcp-tooltip"
       ref={wrapperRef}
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
@@ -177,44 +91,49 @@ function Tooltip({ children, tip, headline, cta, href }: TooltipProps) {
       {/* Click opens but never toggles closed: on touch, a tap can fire
           focus and click in the same gesture, and a toggle would close the
           tooltip the instant it opened. */}
-      <StyledTooltipTrigger
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+      <span
+        className="dcp-tooltip__trigger"
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
         tabIndex={0}
         aria-describedby={tooltipId}
         onClick={() => setIsOpen(true)}
       >
         {children}
-      </StyledTooltipTrigger>
-      <StyledTooltipBubble
+      </span>
+      <span
+        className="dcp-tooltip__bubble"
         ref={bubbleRef}
         id={tooltipId}
         role="tooltip"
-        $isOpen={isOpen}
-        $placement={placement}
-        $shift={shift}
+        data-open={isOpen || undefined}
+        data-placement={placement}
+        style={{ "--dcp-tooltip-shift": \`\${shift}px\` } as React.CSSProperties}
       >
-        <StyledTooltipContent>
+        <span className="dcp-tooltip__content">
           {headline && (
-            <StyledTooltipHeadline>{headline}</StyledTooltipHeadline>
+            <span className="dcp-tooltip__headline">{headline}</span>
           )}
           {tip}
           {cta &&
             href &&
             (href.startsWith("/") ? (
-              <StyledTooltipCta as={Link} href={href}>
+              <Link className="dcp-tooltip__cta" href={href}>
                 {cta}
-              </StyledTooltipCta>
+              </Link>
             ) : (
-              <StyledTooltipCta
+              <a
+                className="dcp-tooltip__cta"
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 {cta}
-              </StyledTooltipCta>
+              </a>
             ))}
-        </StyledTooltipContent>
-      </StyledTooltipBubble>
-    </StyledTooltip>
+        </span>
+      </span>
+    </span>
   );
 }
 

@@ -16,22 +16,12 @@ import {
 import { configTemplate } from "../templates/utils/config.js";
 import { siteLayoutTemplate } from "./layout.js";
 
-// Every component with its look split into a sibling .styles file.
-const STYLE_FILES = [
-  "components/DocsSideBar.styles.ts",
-  "components/SideBar.styles.ts",
-  "components/layout/Accordion.styles.ts",
-  "components/layout/ActionBar.styles.ts",
-  "components/layout/Callout.styles.ts",
-  "components/layout/Card.styles.ts",
-  "components/layout/Code.styles.ts",
-  "components/layout/DocsComponents.styles.ts",
-  "components/layout/DocsNavigation.styles.ts",
-  "components/layout/Footer.styles.ts",
-  "components/layout/Header.styles.ts",
-  "components/layout/StaticLinks.styles.ts",
-  "components/layout/Steps.styles.ts",
-  "components/layout/Tabs.styles.ts",
+// The site's stylesheets: every design writes the same ones.
+const STYLESHEETS = [
+  "app/styles/reset.css",
+  "app/styles/base.css",
+  "app/styles/components.css",
+  "app/styles/design.css",
 ];
 
 describe("resolveTemplate", () => {
@@ -85,12 +75,24 @@ describe("resolveTemplate", () => {
 });
 
 describe("appStructureFor", () => {
-  it("is the classic structure, with the style files and tokens", () => {
+  it("is the classic structure, with the stylesheets and style files", () => {
     expect(appStructureFor("classic")).toEqual(appStructure);
     // The default design is modern: the classic structure plus its overrides.
     expect(appStructureFor()).toEqual(appStructureFor("modern"));
-    for (const file of [...STYLE_FILES, "components/layout/designTokens.ts"]) {
+    for (const file of STYLESHEETS) {
       expect(appStructure[file], file).toBeTypeOf("string");
+    }
+    // tokens.css is generated from theme.json, not a static template.
+    expect(appStructure["app/styles/tokens.css"]).toBeUndefined();
+  });
+
+  it("declares the layer order before any layer, in the first stylesheet", () => {
+    for (const template of SITE_TEMPLATES) {
+      const structure = appStructureFor(template);
+      expect(structure["app/styles/reset.css"]).toContain(
+        "@layer reset, tokens, base, components, design, utilities;",
+      );
+      expect(structure["app/styles/design.css"]).toContain("--layout-gutter:");
     }
   });
 
@@ -106,22 +108,18 @@ describe("appStructureFor", () => {
     }
   });
 
-  it("keeps each style file a client module the logic file imports", () => {
+  it("ships no styled-components or Cherry", () => {
     for (const template of SITE_TEMPLATES) {
-      const structure = appStructureFor(template);
-      for (const file of STYLE_FILES) {
-        expect(structure[file].startsWith('"use client";\n'), file).toBe(true);
-        const logicFile = Object.keys(structure).find(
-          (candidate) =>
-            candidate === file.replace(/\.styles\.ts$/, ".tsx") ||
-            candidate === file.replace(/\.styles\.ts$/, ".ts"),
+      for (const [file, content] of Object.entries(appStructureFor(template))) {
+        expect(content, `${template}: ${file}`).not.toMatch(
+          /from "(styled-components|cherry-styled-components)/,
         );
-        expect(logicFile, file).toBeDefined();
-        expect(structure[logicFile!]).toContain(
-          `from "@/${file.replace(/\.ts$/, "")}";`,
-        );
+        expect(file, `${template}: ${file}`).not.toMatch(/\.styles\.ts$/);
       }
     }
+    const pkg = JSON.parse(appStructure["package.json"]);
+    expect(pkg.dependencies["styled-components"]).toBeUndefined();
+    expect(pkg.dependencies["cherry-styled-components"]).toBeUndefined();
   });
 
   it("reports the files a design switch has to rewrite", () => {
@@ -150,11 +148,24 @@ function exportedNames(source: string): string[] {
 describe("the modern design", () => {
   const modern = appStructureFor("modern");
 
-  it("replaces the chrome and content block styles", () => {
-    for (const file of [...STYLE_FILES, "components/layout/designTokens.ts"]) {
-      expect(modernOverrides[file], file).toBeTypeOf("string");
-      expect(modern[file], file).not.toBe(appStructure[file]);
+  it("replaces the design stylesheet", () => {
+    expect(modern["app/styles/design.css"]).not.toBe(
+      appStructure["app/styles/design.css"],
+    );
+    // Everything else about the look is shared.
+    for (const file of [
+      "app/styles/reset.css",
+      "app/styles/base.css",
+      "app/styles/components.css",
+    ]) {
+      expect(modernOverrides[file], file).toBeUndefined();
     }
+    expect(modern["app/styles/design.css"]).toContain(
+      "--layout-sidebar-width: 264px;",
+    );
+    expect(appStructure["app/styles/design.css"]).toContain(
+      "--layout-sidebar-width: 280px;",
+    );
   });
 
   it("keeps every name the classic file exports", () => {
@@ -168,11 +179,13 @@ describe("the modern design", () => {
 
   it("derives its logic files from classic with only the markup it needs", () => {
     expect(modern["components/layout/Header.tsx"]).toContain(
-      "data-pinned={isPinned || undefined}",
+      'header.setAttribute("data-pinned", "")',
     );
-    expect(modern["components/layout/Code.tsx"]).not.toContain("<Dot");
+    expect(modern["components/layout/Code.tsx"]).not.toContain(
+      "dcp-code__dots",
+    );
     expect(modern["components/layout/Code.tsx"]).toContain(
-      "<TopBarTitle theme={theme}>{title || language}</TopBarTitle>",
+      '<span className="dcp-code__title">{title || language}</span>',
     );
     expect(modern["components/layout/DocsComponents.tsx"]).toContain(
       "function DocsWrapper({ children, pages = [] }: DocsWrapperProps)",
@@ -180,12 +193,9 @@ describe("the modern design", () => {
     expect(modern["components/layout/ActionBar.tsx"]).toContain(
       "const category = useCurrentPage()?.category;",
     );
-    expect(modern["components/layout/SharedStyled.ts"]).toContain(
-      "export const inkMix",
-    );
   });
 
-  it("opens the chat from its own header pill, like Cherry's launcher", () => {
+  it("opens the chat from its own header pill, like the classic launcher", () => {
     const header = modern["components/layout/Header.tsx"];
     expect(header).not.toContain("ChatLauncher");
     expect(header).toContain("onClick={toggleChat}");
@@ -194,104 +204,111 @@ describe("the modern design", () => {
   });
 
   it("gives the header and page actions one pill control style", () => {
-    expect(modern["components/layout/SharedStyled.ts"]).toContain(
-      "export const pillControlStyles",
+    const css = modern["app/styles/design.css"];
+    expect(css).toContain(".dcp-pill {");
+    expect(css).toContain(".dcp-pill-round {");
+    expect(css).toContain(".dcp-pill-switch {");
+    expect(modern["components/layout/Header.tsx"]).toContain(
+      'className="dcp-reset-button dcp-pill dcp-header__ask"',
     );
-    expect(modern["components/layout/Header.styles.ts"]).toContain(
-      "${pillControlStyles};",
+    const actionBar = modern["components/layout/ActionBar.tsx"];
+    expect(actionBar).toContain(
+      "dcp-pill dcp-pill-round dcp-action-bar__markdown",
     );
-    expect(modern["components/layout/ActionBar.styles.ts"]).toContain(
-      "export const actionPillStyles = pillControlStyles;",
+    expect(actionBar).toContain(
+      "dcp-pill dcp-pill-switch dcp-action-bar__toggle",
+    );
+    // Classic does not style the pill classes.
+    expect(appStructure["app/styles/design.css"]).not.toContain(".dcp-pill {");
+    expect(appStructure["app/styles/components.css"]).not.toContain(
+      ".dcp-pill {",
     );
   });
 
-  it("fits the search dialog to the modern controls", () => {
+  it("opens search as a native modal dialog", () => {
     const search = modern["components/SearchModalContent.tsx"];
-    expect(search).toContain("${pillControlStyles};");
-    expect(search).toContain("&& > button:last-child {");
-    expect(search).toContain(
-      "`color-mix(in srgb, ${theme.colors.accent} 7%, transparent)`",
-    );
-    // Same dialog semantics as classic.
-    expect(search).toContain('role="dialog"');
+    // The markup is shared; the modern look is CSS only.
+    expect(search).toBe(appStructure["components/SearchModalContent.tsx"]);
+    expect(search).toContain("<dialog");
+    expect(search).toContain("showModal()");
     expect(search).toContain('aria-modal="true"');
   });
 
   it("restyles the chat panel without dropping the composer glow", () => {
     const chat = modern["components/Chat.tsx"];
-    expect(chat).toContain("<StyledChatShell");
-    expect(chat).toContain("display: contents;");
-    expect(chat).toContain("min-height: ${HEADER_HEIGHT + 1}px;");
-    expect(chat).toMatch(/<ChatInput\s+\$glow/);
+    expect(chat).toContain('className="dcp-chat-shell"');
     // The panel opens under a still cursor; its buttons wait for a real
     // pointer move before showing hover.
     expect(chat).toContain("data-pointer-moved={pointerMoved}");
-    expect(chat).toContain(
-      '&&[data-pointer-moved="false"] .chat-header-actions button:hover',
+    const css = modern["app/styles/design.css"];
+    expect(css).toContain('.dcp-chat-shell[data-pointer-moved="false"]');
+    // The glow is shared by both designs.
+    expect(modern["app/styles/components.css"]).toContain(
+      "@property --dcp-gradient-angle",
     );
     // The fullscreen chat's close button sits where the menu button does.
-    expect(modern["components/SideBar.styles.ts"]).toContain(
-      'html:has([data-chat-panel][aria-hidden="false"]) & {',
+    expect(css).toContain(
+      'html:has([data-chat-panel][aria-hidden="false"]) .dcp-sidebar-toggle {',
     );
   });
 
   it("keeps the header in normal flow until the page scrolls", () => {
-    const styles = modern["components/layout/Header.styles.ts"];
-    expect(styles).toMatch(/position: relative;[\s\S]*position: fixed;/);
-    expect(styles.indexOf("position: relative;")).toBeLessThan(
-      styles.indexOf("position: fixed;"),
-    );
+    const header = modern["components/layout/Header.tsx"];
+    // Pinning is a direct DOM write in the scroll handler (no React state),
+    // so it lands in the same frame as the scroll and the header never
+    // scrolls off screen on a fast scroll.
+    expect(header).toContain('header.setAttribute("data-pinned", "")');
+    expect(header).not.toContain("setIsPinned");
+    const css = modern["app/styles/components.css"];
+    const relative = css.indexOf("position: relative;");
+    expect(relative).toBeGreaterThan(-1);
+    expect(css).toMatch(/\.dcp-header\[data-pinned\] \{\s+position: fixed;/);
     // The menu button over the header is only fixed once the header pins.
-    expect(modern["components/SideBar.styles.ts"]).toContain(
-      "html:has(#header[data-pinned]) & {\n    position: fixed;",
+    expect(modern["app/styles/design.css"]).toMatch(
+      /html:has\(#header\[data-pinned\]\) \.dcp-sidebar-toggle \{\s+position: fixed;/,
     );
   });
 
   it("draws the sidebar footer controls like the page header's", () => {
     const sideBar = modern["components/SideBar.tsx"];
-    const sideBarStyles = modern["components/SideBar.styles.ts"];
-    const shared = modern["components/layout/SharedStyled.ts"];
-    const actionBarStyles = modern["components/layout/ActionBar.styles.ts"];
+    const css = modern["app/styles/design.css"];
     const focusToggle = modern["components/layout/FocusModeToggle.tsx"];
 
-    // The theme toggle is the site's own switch, not Cherry's ThemeToggle.
-    expect(sideBar).not.toMatch(/<ThemeToggle|import \{[^}]*ThemeToggle/);
+    // The theme toggle is the site's own switch.
+    expect(sideBar).not.toContain('from "cherry-styled-components"');
     expect(sideBar).toContain("<ThemeSwitch />");
-    // It flips the mode through Cherry, keeps Cherry's Cmd/Ctrl+Shift+L
+    // It flips the mode through the local store, keeps the Cmd/Ctrl+Shift+L
     // chord, and reports its state as a switch.
-    expect(sideBar).toContain("const { mode, toggleTheme } = useColorMode();");
+    expect(sideBar).toContain(
+      'import { useColorMode } from "@/components/useColorMode";',
+    );
     expect(sideBar).toContain("onClick={toggleTheme}");
     expect(sideBar).toContain('if (e.key.toLowerCase() !== "l") return;');
     expect(sideBar).toMatch(/role="switch"\s+aria-checked=\{mode === "dark"\}/);
+    expect(sideBar).toContain("dcp-pill dcp-pill-switch dcp-theme-switch");
     // The knob follows the dark class in CSS, so it never waits on React.
-    expect(sideBarStyles).toMatch(
-      /StyledThemeSwitch = styled\.button<\{ theme: Theme \}>`[^`]*pillSwitchStyles[^`]*:root\.dark & \{\s*\$\{pillSwitchKnobEnd\};/,
-    );
+    expect(css).toContain(":root.dark .dcp-theme-switch::after {");
 
-    // The view toggle and the theme toggle share one switch style; the
-    // markdown link and the focus-mode toggle share one round style.
-    expect(shared).toContain("export const pillSwitchStyles");
-    expect(shared).toContain("export const roundControlStyles");
-    expect(actionBarStyles).toMatch(
-      /StyledToggle[^;]*;[\s\S]*pillSwitchStyles/,
-    );
-    expect(actionBarStyles).toMatch(
-      /StyledMarkdownLink[\s\S]*roundControlStyles/,
-    );
-    expect(focusToggle).toContain("${roundControlStyles};");
-    expect(focusToggle).not.toContain("theme.colors.primary");
-    // The focus toggle keeps its behavior and fixed placement.
-    expect(focusToggle).toContain("position: fixed;");
+    // The markdown link and the focus-mode toggle share one round style.
+    expect(focusToggle).toContain("dcp-pill dcp-pill-round dcp-focus-toggle");
     expect(focusToggle).toContain("aria-pressed={isFocusMode}");
     expect(focusToggle).toContain('root.setAttribute("data-focus-mode", "")');
 
-    // Classic keeps Cherry's ThemeToggle and the outlined focus button.
-    expect(appStructure["components/SideBar.tsx"]).toContain(
-      "<ThemeToggle $shortcut />",
+    // Classic renders the same switch and focus button, styled by the same
+    // pill rules applied to them directly, with primary icons in both.
+    const classicSideBar = appStructure["components/SideBar.tsx"];
+    const classicCss = appStructure["app/styles/design.css"];
+    expect(classicSideBar).toBe(sideBar);
+    expect(appStructure["components/layout/FocusModeToggle.tsx"]).toBe(
+      focusToggle,
     );
-    expect(appStructure["components/layout/FocusModeToggle.tsx"]).toContain(
-      "${interactiveStyles};",
-    );
+    expect(classicCss).toContain(":root.dark .dcp-theme-switch::after {");
+    expect(classicCss).not.toContain(".dcp-theme-toggle");
+    for (const designCss of [css, classicCss]) {
+      expect(designCss).toMatch(
+        /\.dcp-theme-switch svg\.lucide,\s+\.dcp-focus-toggle svg\.lucide \{\s+color: var\(--color-primary\);/,
+      );
+    }
   });
 
   it("hands the page list to DocsWrapper in every layout shape", () => {

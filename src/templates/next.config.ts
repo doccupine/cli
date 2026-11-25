@@ -22,9 +22,6 @@ const allowedDevOrigins = (process.env.ALLOWED_DEV_ORIGINS ?? "")
 
 const nextConfig: NextConfig = {
   ...(allowedDevOrigins.length > 0 ? { allowedDevOrigins } : {}),
-  compiler: {
-    styledComponents: true,
-  },
   // Type-checking runs through TypeScript 6's compiler API (the \`typescript\`
   // dependency is aliased to @typescript/typescript6, whose only binary is
   // \`tsc6\`). Next 16.3 defaults experimental.useTypeScriptCli to true, and
@@ -83,9 +80,6 @@ const allowedDevOrigins = (process.env.ALLOWED_DEV_ORIGINS ?? "")
 
 const nextConfig: NextConfig = {
   ...(allowedDevOrigins.length > 0 ? { allowedDevOrigins } : {}),
-  compiler: {
-    styledComponents: true,
-  },
   // Type-checking runs through TypeScript 6's compiler API (the \`typescript\`
   // dependency is aliased to @typescript/typescript6, whose only binary is
   // \`tsc6\`). Next 16.3 defaults experimental.useTypeScriptCli to true, and

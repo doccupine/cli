@@ -10,10 +10,7 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import styled from "styled-components";
-import { useChat } from "cherry-styled-components";
-import { mq, Theme } from "@/app/theme";
-import { interactiveStyles } from "@/components/layout/SharedStyled";
+import { useChat } from "@/components/chat/ChatProvider";
 import { ChatContext } from "@/components/Chat";
 import { useVariant } from "@/components/useVariant";
 import type { PageItem, MergedResult } from "@/components/SearchModalContent";
@@ -49,49 +46,21 @@ const SearchContext = createContext<SearchContextValue>({
   openSearch: () => {},
 });
 
-const StyledKbd = styled.kbd<{ theme: Theme }>\`
-  font-size: 11px;
-  font-family: inherit;
-  background: \${({ theme }) => theme.colors.grayLight};
-  color: \${({ theme }) => theme.colors.grayDark};
-  padding: 2px 6px;
-  border-radius: 4px;
-  margin-left: auto;
-  font-weight: 600;
-  display: none;
+/** The shortcut hint inside the header's search button (desktop only). */
+function SearchKbd(props: React.ComponentProps<"kbd">) {
+  return <kbd {...props} className="dcp-search-kbd" />;
+}
 
-  \${mq("lg")} {
-    display: initial;
-  }
-\`;
-
-const StyledSearchButton = styled.button<{ theme: Theme }>\`
-  \${interactiveStyles};
-  border: solid 1px \${({ theme }) => theme.colors.grayLight};
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  /* Pinned to the 30px compact header-control tier, matching Cherry's
-     ChatLauncher, so the height cannot drift with platform font metrics
-     and the header controls always align exactly. */
-  box-sizing: border-box;
-  height: 30px;
-  background: \${({ theme }) => theme.colors.light};
-  color: \${({ theme }) => theme.colors.primary};
-  border-radius: \${({ theme }) => theme.spacing.radius.xs};
-  padding: 0 8px;
-  font-family: inherit;
-  cursor: pointer;
-
-  & svg.lucide {
-    color: inherit;
-    min-width: 14px;
-  }
-
-  \${mq("lg")} {
-    padding: 0 4px 0 8px;
-  }
-\`;
+/** The header's search button. Styled in app/styles (.dcp-search-button). */
+function SearchButton(props: React.ComponentProps<"button">) {
+  return (
+    <button
+      type="button"
+      {...props}
+      className="dcp-reset-button dcp-search-button"
+    />
+  );
+}
 
 function SearchProvider({
   pages: allPages,
@@ -419,7 +388,9 @@ function SearchProvider({
 export {
   SearchProvider,
   SearchContext,
-  StyledKbd as SearchKbd,
-  StyledSearchButton,
+  SearchKbd,
+  SearchButton,
+  // The name the header imported while the button was a styled component.
+  SearchButton as StyledSearchButton,
 };
 `;
