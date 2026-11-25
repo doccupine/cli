@@ -191,3 +191,12 @@ describe("Nested fields", () => {
     expect(fieldsMdxTemplate).toContain('<Accordion title="Show properties">');
   });
 });
+
+describe("Right rail in the modern design", () => {
+  it("draws no rule beside the side panel and the API examples rail", () => {
+    expect(designStylesheet("modern")).toMatch(
+      /@media screen and \(min-width: 992px\) \{\s*\.dcp-side-panel \{\s*border-left: none;/,
+    );
+    expect(designStylesheet("classic")).not.toContain("border-left: none;");
+  });
+});

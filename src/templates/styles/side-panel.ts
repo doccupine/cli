@@ -59,4 +59,12 @@ export const sidePanelStyles: DesignStyles = {
     pointer-events: none;
   }
 }`,
+  // The modern rails draw no rules (its sidebar and table of contents have
+  // none either): the panel's own space and the page surface set it apart.
+  // It covers <SidePanel> and the API examples rail, which share these rules.
+  modern: `@media screen and (min-width: 992px) {
+  .dcp-side-panel {
+    border-left: none;
+  }
+}`,
 };
