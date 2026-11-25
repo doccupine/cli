@@ -33,6 +33,10 @@ jobs:
     needs: guard
     if: needs.guard.outputs.publish == 'true'
     runs-on: ubuntu-latest
+    # Waits for a maintainer to approve the deployment on GitHub before
+    # anything is published: the npm environment's required reviewer. The
+    # environment also only accepts runs from main.
+    environment: npm
 
     permissions:
       contents: write # create the tag and the GitHub release
