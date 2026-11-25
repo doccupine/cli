@@ -1,17 +1,37 @@
-<p align="center">
-  <a href="https://docs.doccupine.com/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/header/graph.svg?subtitle=Documentation+made+simple.+Open+source.+AI-ready.&amp;logo=https%3A%2F%2Ffiles.riangle.com%2Fdoccupine%2Fpictogram.png&amp;size=wide&amp;mode=dark&amp;font=geist&amp;image=http%3A%2F%2Ffiles.riangle.com%2Fdoccupine%2Fcover.png&amp;overlay=0" /><img alt="Doccupine" src="https://shieldcn.dev/header/graph.svg?subtitle=Documentation+made+simple.+Open+source.+AI-ready.&amp;logo=https%3A%2F%2Ffiles.riangle.com%2Fdoccupine%2Fpictogram.png&amp;size=wide&amp;mode=light&amp;font=geist&amp;image=http%3A%2F%2Ffiles.riangle.com%2Fdoccupine%2Fcover.png&amp;overlay=0" /></picture></a>
-</p>
+<div align="center">
+  <a href="https://docs.doccupine.com/">
+    <img src=".github/assets/icon.svg" alt="Doccupine" width="120" height="120" />
+  </a>
 
-<p align="center">
-  <a href="https://www.npmjs.com/package/doccupine"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/npm/doccupine.svg" /><img alt="badge" src="https://shieldcn.dev/npm/doccupine.svg?mode=light" /></picture></a>
-  <a href="https://github.com/doccupine/cli"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/doccupine/cli/stars.svg" /><img alt="badge" src="https://shieldcn.dev/github/doccupine/cli/stars.svg?mode=light" /></picture></a>
-  <a href="https://docs.doccupine.com/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/Docs.svg" /><img alt="badge" src="https://shieldcn.dev/badge/Docs.svg?mode=light" /></picture></a>
-  <a href="https://doccupine.com/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/Website.svg" /><img alt="badge" src="https://shieldcn.dev/badge/Website.svg?mode=light" /></picture></a>
-</p>
+  <h1>Doccupine</h1>
 
-# Doccupine
+  <p><strong>Documentation made simple. Open source. AI-ready.</strong></p>
 
-Turn a folder of MDX files into a fast, good-looking documentation site, with AI chat and an MCP server built in. One command, no config to start.
+  <p>
+    Turn a folder of MDX files into a fast, good-looking documentation site,<br />
+    with AI chat and an MCP server built in. One command, no config to start.
+  </p>
+
+  <p>
+    <a href="https://www.npmjs.com/package/doccupine"><img src="https://img.shields.io/npm/v/doccupine.svg?style=flat" alt="npm version" /></a>
+    <a href="https://github.com/doccupine/cli"><img src="https://img.shields.io/github/stars/doccupine/cli.svg?style=flat" alt="GitHub stars" /></a>
+  </p>
+
+  <p>
+    <code>npx doccupine</code>
+  </p>
+
+  <p>
+    <a href="https://docs.doccupine.com/">Docs</a> ·
+    <a href="#what-you-get">What you get</a> ·
+    <a href="#commands">Commands</a> ·
+    <a href="#deploy">Deploy</a> ·
+    <a href="https://doccupine.com/">Website</a> ·
+    <a href="./CHANGELOG.md">Changelog</a>
+  </p>
+</div>
+
+## Get started
 
 ```bash
 npx doccupine
@@ -37,8 +57,8 @@ Doccupine asks where your MDX files live (default `docs`) and where to put the g
   - [Model Context Protocol](https://docs.doccupine.com/model-context-protocol)
 - **Languages and versions.** Translate your docs and keep older releases online.
   - [Languages](https://docs.doccupine.com/languages) · [Versions](https://docs.doccupine.com/versions)
-- **Theming.** Light and dark mode, your colors and fonts.
-  - [Theme](https://docs.doccupine.com/theme) · [Fonts](https://docs.doccupine.com/fonts)
+- **Templates and theming.** Pick the modern or classic design, then add light and dark mode, your colors and fonts.
+  - [Templates](https://docs.doccupine.com/templates) · [Theme](https://docs.doccupine.com/theme) · [Fonts](https://docs.doccupine.com/fonts)
 - **Password protection.** Gate the whole site behind a shared password.
   - [Authentication](https://docs.doccupine.com/authentication)
 - **Built for search engines and AI.** Sitemap, `robots.txt`, `llms.txt` and a Markdown copy of every page are generated for you.
