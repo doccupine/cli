@@ -157,6 +157,13 @@ describe("generated accessibility behavior", () => {
     expect(sideBarTemplate).toContain("id={sidebarId}");
   });
 
+  it("closes the mobile menu on Escape and returns focus to its button", () => {
+    expect(sideBarTemplate).toContain('e.key !== "Escape"');
+    expect(sideBarTemplate).toContain("setIsMobileMenuOpen(false);");
+    expect(sideBarTemplate).toContain("toggleRef.current?.focus();");
+    expect(sideBarTemplate).toContain("ref={toggleRef}");
+  });
+
   it("gives the language and version switchers real controls", () => {
     // Buttons, not a select: each switcher is the platform's dropdown, a
     // disclosure trigger over a labelled radio menu, so both are reachable

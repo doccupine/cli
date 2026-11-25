@@ -206,7 +206,7 @@ export const headerStyles: DesignStyles = {
   font-size: 14px;
   line-height: 1.7;
   padding: 16px 10px;
-  color: var(--color-gray);
+  color: var(--color-text-muted);
   border-bottom: solid 2px transparent;
 }
 

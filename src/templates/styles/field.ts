@@ -47,7 +47,7 @@ export const fieldStyles: DesignStyles = {
 
 .dcp-field__required {
   background: color-mix(in srgb, var(--color-error) 20%, transparent);
-  color: var(--color-error);
+  color: var(--color-error-text);
   padding: 0 4px;
   font-family: "Roboto Mono", monospace;
   border-radius: 6px;

@@ -9,6 +9,7 @@ import {
   type PaletteKey,
   type ShadowKey,
 } from "./palette.js";
+import { contrastTokens } from "../../lib/contrast.js";
 
 // app/styles/tokens.css: the site's color and shadow tokens as CSS custom
 // properties, generated from theme.json. Light values sit on :root and dark
@@ -22,6 +23,11 @@ import {
 //                         onFilled, primaryTintHover/Drop/Active, derived from
 //                         the palette variables so a runtime override of a
 //                         palette variable (the DemoTheme presets) cascades
+//   --color-<key>-fill, --color-on-<key>, --color-<key>-fill-hover,
+//   --color-on-<key>-hover, --color-<key>-text, --color-<key>-text-hover,
+//   --color-text-muted
+//                         text colors computed from the palette to pass
+//                         WCAG AA (contrastTokens, src/lib/contrast.ts)
 //   --shadow-<size>       xs, sm, md, lg, xl, toast
 //   --mermaid-*           the diagram colors (see the Mermaid docs)
 
@@ -40,7 +46,7 @@ function semanticTokens(isDark: boolean): [string, string][] {
     ],
     ["accentMuted", ref(isDark ? "grayDark" : "primary")],
     ["surface", ref(isDark ? "dark" : "light")],
-    ["link", ref(isDark ? "dark" : "primary")],
+    ["link", isDark ? ref("dark") : "var(--color-primary-text)"],
     ["onFilled", ref(isDark ? "dark" : "light")],
     ["primaryTintHover", tint(isDark ? 10 : 4)],
     ["primaryTintDrop", tint(isDark ? 12 : 5)],
@@ -197,6 +203,9 @@ function modeBlock(
       declaration(`--color-${key}`, palette[key], indent),
     ),
     ...semanticTokens(scheme === "dark").map(([key, value]) =>
+      declaration(`--color-${key}`, value, indent),
+    ),
+    ...contrastTokens(palette).map(([key, value]) =>
       declaration(`--color-${key}`, value, indent),
     ),
     ...SHADOW_KEYS.map((key) =>

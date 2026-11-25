@@ -164,7 +164,7 @@ Set \`mono\` for a monospace, uppercase label. Combining \`mono\`, \`solid\`, an
 
 ## Disabled state
 
-Set \`disabled\` to indicate inactive or unavailable states with reduced opacity:
+Set \`disabled\` to indicate inactive or unavailable states with a neutral, muted look:
 
 \`\`\`html
 <Badge disabled icon="lock" color="gray">Badge</Badge>
@@ -227,7 +227,7 @@ All properties compose freely:
 </Field>
 
 <Field value="disabled" type="boolean">
-  Display the badge in a disabled state with reduced opacity. Defaults to \`false\`.
+  Display the badge in a disabled state: a neutral chip with muted text. Defaults to \`false\`.
 </Field>
 
 <Field value="className" type="string">

@@ -1,3 +1,4 @@
+import { fillFor } from "../../lib/contrast.js";
 import type { DesignStyles } from "./index.js";
 
 // Badge (components/layout/Badge.tsx): a small label.
@@ -19,6 +20,11 @@ import type { DesignStyles } from "./index.js";
 // label-semantic and independent of theme.json (as Callout's alert tints);
 // the semantic colors (info, success, warning, error) and the surface
 // variants read theme tokens, so they follow theme.json and the mode.
+// Labels meet WCAG AA (4.5:1): a solid badge has white on its color nudged
+// slightly toward black, or its own color with a dark label when white would
+// need more (fillFor, computed here for the hex colors; --color-<key>-fill
+// and --color-on-<key> from tokens.css for the semantic ones). Tinted and
+// outlined badges use --color-<key>-text.
 
 interface Swatch {
   background: string;
@@ -155,12 +161,18 @@ const TOKENS = ["info", "success", "warning", "error"];
 function tokenPalettes(token: string): Record<string, Pair> {
   const value = `var(--color-${token})`;
   return {
-    solid: same(swatch(value, "var(--color-surface)", "transparent")),
-    stroke: same(swatch("transparent", value, value)),
+    solid: same(
+      swatch(
+        `var(--color-${token}-fill)`,
+        `var(--color-on-${token})`,
+        "transparent",
+      ),
+    ),
+    stroke: same(swatch("transparent", `var(--color-${token}-text)`, value)),
     filled: same(
       swatch(
         `color-mix(in srgb, ${value} 15%, transparent)`,
-        value,
+        `var(--color-${token}-text)`,
         "transparent",
       ),
     ),
@@ -197,8 +209,9 @@ for (const color of Object.keys(FILLED)) {
   palettes.push(colorRules(color, "stroke", STROKE[color]));
   const solid = SOLID[color];
   if (solid) {
+    const { fill, on } = fillFor(solid) ?? { fill: solid, on: "#ffffff" };
     palettes.push(
-      colorRules(color, "solid", same(swatch(solid, "#ffffff", "transparent"))),
+      colorRules(color, "solid", same(swatch(fill, on, "transparent"))),
     );
   }
 }
@@ -276,8 +289,18 @@ ${icon}
 
 ${palettes.join("\n\n")}
 
-.dcp-badge:where([data-disabled]) {
-  opacity: 0.5;
+/* Disabled: a neutral chip with the muted text color, as a disabled Button,
+   so the label keeps AA contrast (half opacity took it under). Listed under
+   :root.dark too, to win over the dark color rules. */
+.dcp-badge:where([data-disabled]),
+:root.dark .dcp-badge:where([data-disabled]) {
+  color: var(--color-text-muted);
+  border-color: var(--color-grayLight);
+}
+
+.dcp-badge:where([data-disabled]:not([data-variant="stroke"])),
+:root.dark .dcp-badge:where([data-disabled]:not([data-variant="stroke"])) {
+  background: var(--color-grayLight);
 }`,
   classic: icon,
   modern: icon,

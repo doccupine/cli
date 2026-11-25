@@ -48,14 +48,15 @@ const css = `.dcp-button {
 }
 
 .dcp-button:where([data-variant="primary"]) {
-  background: var(--color-primary);
-  border: solid 2px var(--color-primary);
+  background: var(--color-primary-fill);
+  border: solid 2px var(--color-primary-fill);
   box-shadow: 0 0 0 0px var(--color-primary);
 }
 
 .dcp-button:where([data-variant="primary"]):hover {
-  background: var(--color-primaryDark);
-  border-color: var(--color-primaryDark);
+  background: var(--color-primary-fill-hover);
+  border-color: var(--color-primary-fill-hover);
+  color: var(--color-on-primary-hover);
 }
 
 .dcp-button:where([data-variant="primary"]):focus-visible {
@@ -64,25 +65,27 @@ const css = `.dcp-button {
 }
 
 .dcp-button:where([data-variant="primary"][data-outline]) {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   background: transparent;
+  border-color: var(--color-primary);
 }
 
 .dcp-button:where([data-variant="primary"][data-outline]):hover {
   background: transparent;
   border-color: var(--color-primaryDark);
-  color: var(--color-primaryDark);
+  color: var(--color-primary-text-hover);
 }
 
 .dcp-button:where([data-variant="secondary"]) {
-  background: var(--color-secondary);
-  border: solid 2px var(--color-secondary);
+  background: var(--color-secondary-fill);
+  border: solid 2px var(--color-secondary-fill);
   box-shadow: 0 0 0 0px var(--color-secondary);
 }
 
 .dcp-button:where([data-variant="secondary"]):hover {
-  background: var(--color-secondaryDark);
-  border-color: var(--color-secondaryDark);
+  background: var(--color-secondary-fill-hover);
+  border-color: var(--color-secondary-fill-hover);
+  color: var(--color-on-secondary-hover);
 }
 
 .dcp-button:where([data-variant="secondary"]):focus-visible {
@@ -91,24 +94,26 @@ const css = `.dcp-button {
 }
 
 .dcp-button:where([data-variant="secondary"][data-outline]) {
-  color: var(--color-secondary);
+  color: var(--color-secondary-text);
   background: transparent;
+  border-color: var(--color-secondary);
 }
 
 .dcp-button:where([data-variant="secondary"][data-outline]):hover {
   background: transparent;
-  color: var(--color-secondaryDark);
+  color: var(--color-secondary-text-hover);
 }
 
 .dcp-button:where([data-variant="tertiary"]) {
-  background: var(--color-tertiary);
-  border: solid 2px var(--color-tertiary);
+  background: var(--color-tertiary-fill);
+  border: solid 2px var(--color-tertiary-fill);
   box-shadow: 0 0 0 0px var(--color-tertiary);
 }
 
 .dcp-button:where([data-variant="tertiary"]):hover {
-  background: var(--color-tertiaryDark);
-  border-color: var(--color-tertiaryDark);
+  background: var(--color-tertiary-fill-hover);
+  border-color: var(--color-tertiary-fill-hover);
+  color: var(--color-on-tertiary-hover);
 }
 
 .dcp-button:where([data-variant="tertiary"]):focus-visible {
@@ -117,24 +122,26 @@ const css = `.dcp-button {
 }
 
 .dcp-button:where([data-variant="tertiary"][data-outline]) {
-  color: var(--color-tertiary);
+  color: var(--color-tertiary-text);
   background: transparent;
+  border-color: var(--color-tertiary);
 }
 
 .dcp-button:where([data-variant="tertiary"][data-outline]):hover {
   background: transparent;
-  color: var(--color-tertiaryDark);
+  color: var(--color-tertiary-text-hover);
 }
 
 .dcp-button:where([data-error]) {
-  background: var(--color-error);
-  border: solid 2px var(--color-error);
+  background: var(--color-error-fill);
+  border: solid 2px var(--color-error-fill);
   box-shadow: 0 0 0 0px var(--color-error);
 }
 
 .dcp-button:where([data-error]):hover {
-  background: color-mix(in srgb, var(--color-error) 90%, black);
-  border-color: color-mix(in srgb, var(--color-error) 90%, black);
+  background: var(--color-error-fill-hover);
+  border-color: var(--color-error-fill-hover);
+  color: var(--color-on-error-hover);
 }
 
 .dcp-button:where([data-error]):focus-visible {
@@ -143,13 +150,14 @@ const css = `.dcp-button {
 }
 
 .dcp-button:where([data-error][data-outline]) {
-  color: var(--color-error);
+  color: var(--color-error-text);
   background: transparent;
+  border-color: var(--color-error);
 }
 
 .dcp-button:where([data-error][data-outline]):hover {
   background: transparent;
-  color: color-mix(in srgb, var(--color-error) 90%, black);
+  color: var(--color-error-text-hover);
 }
 
 .dcp-button:where([data-size="default"]) {
@@ -183,9 +191,23 @@ const css = `.dcp-button {
   width: 100%;
 }
 
-/* A filled button's label reads on the brand fill in both modes. */
-.dcp-button:where([data-variant]:not([data-outline])) {
-  color: var(--color-surface);
+/* A filled button's fill and label, and their hover pair: the colors
+   tokens.css computes so the label reaches WCAG AA (--color-<key>-fill,
+   --color-on-<key>, --color-<key>-fill-hover, --color-on-<key>-hover). */
+.dcp-button:where([data-variant="primary"]:not([data-outline])) {
+  color: var(--color-on-primary);
+}
+
+.dcp-button:where([data-variant="secondary"]:not([data-outline])) {
+  color: var(--color-on-secondary);
+}
+
+.dcp-button:where([data-variant="tertiary"]:not([data-outline])) {
+  color: var(--color-on-tertiary);
+}
+
+.dcp-button:where([data-error]:not([data-outline])) {
+  color: var(--color-on-error);
 }
 
 .dcp-button p {

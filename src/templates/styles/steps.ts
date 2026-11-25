@@ -46,8 +46,8 @@ export const stepsStyles: DesignStyles = {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--color-primary);
-  color: var(--color-light);
+  background: var(--color-primary-fill);
+  color: var(--color-on-primary);
   display: flex;
   align-items: center;
   justify-content: center;

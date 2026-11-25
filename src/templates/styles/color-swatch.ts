@@ -6,8 +6,9 @@ import type { DesignStyles } from "./index.js";
 //   .dcp-swatch-group         the grid of swatches
 //   .dcp-swatch               one swatch
 //   .dcp-swatch__color        the sample, painted from the inline
-//                             --dcp-swatch-color; data-light-text on dark
-//                             colors
+//                             --dcp-swatch-color, opaque so the label's
+//                             contrast is the color's own; data-light-text
+//                             when white contrasts more than black
 //   .dcp-swatch__label        the token name row
 //
 // In the design layer after the article prose (docs.ts), competing with it
@@ -33,7 +34,6 @@ const css = `.dcp-swatch-group {
   color: #000000;
   font-size: 12px;
   font-family: monospace;
-  opacity: 0.8;
   border-bottom: solid 1px var(--color-grayLight);
 }
 

@@ -148,7 +148,7 @@ export const siteGateStyles: DesignStyles = {
 }
 
 .dcp-gate__input::placeholder {
-  color: var(--color-gray);
+  color: var(--color-text-muted);
 }
 
 .dcp-gate__input:hover:not([disabled]) {

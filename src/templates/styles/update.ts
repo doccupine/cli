@@ -21,7 +21,7 @@ const css = `.dcp-update {
   display: inline-block;
   width: fit-content;
   background: color-mix(in srgb, var(--color-primaryLight) 20%, transparent);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   padding: 2px 4px;
   border-radius: 6px;
   font-weight: 600;
@@ -37,7 +37,7 @@ const css = `.dcp-update {
 .dcp-update__description {
   font-size: 12px;
   line-height: 1.7;
-  color: var(--color-gray);
+  color: var(--color-text-muted);
 }
 
 .dcp-update__sidebar {
