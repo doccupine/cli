@@ -250,6 +250,13 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
           </Link>
         );
       }
+      if (href && href.startsWith("#")) {
+        return (
+          <a href={href} {...props}>
+            {children}
+          </a>
+        );
+      }
       return (
         <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
           {children}

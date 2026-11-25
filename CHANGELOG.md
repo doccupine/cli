@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4
+
+- Open same-page anchor links such as `[Icon files](#icon-files)` in the current tab: Markdown links starting with `#` were treated as external and opened in a new tab
+
 ## 0.1.3
 
 - Render Mermaid diagrams again: since 0.1.0, fenced `mermaid` blocks showed as plain code blocks, because the diagram handler did not recognise the code element once inline code got its own component

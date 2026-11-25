@@ -230,24 +230,30 @@ ${labelledPills}
   transition: all 0.3s ease;
 }
 
-/* The source view's textarea fills the viewport. Scoped to data-raw so it
-   never reaches textareas inside page content. */
+/* The source view's textarea fills the viewport and leaves the same 20px
+   gap under it as above it. Scoped to data-raw so it never reaches
+   textareas inside page content.
+
+   Above the textarea: the header and its 1px border, the 57px bar (12px
+   padding each side of the 32px controls, 1px border), the 20px gap. Below
+   it: 20px. The section bar sits under the header below 992px and inside
+   the header row from 992px. */
 .dcp-action-bar__content[data-raw] textarea {
   max-width: var(--layout-content-width);
   margin: auto;
   width: 100%;
   height: 100%;
-  min-height: calc(100vh - 160px);
+  min-height: calc(100vh - var(--layout-header-height) - 98px);
 }
 
 .dcp-action-bar__content[data-raw][data-section-bar] textarea {
-  min-height: calc(100vh - 202px);
+  min-height: calc(100vh - var(--layout-header-height-with-sections) - 98px);
 }
 
 @media screen and (min-width: 992px) {
   .dcp-action-bar__content[data-raw] textarea,
   .dcp-action-bar__content[data-raw][data-section-bar] textarea {
-    min-height: calc(100vh - 159px);
+    min-height: calc(100vh - var(--layout-header-height) - 98px);
   }
 }`,
   modern: `.dcp-action-button svg.lucide {
@@ -372,8 +378,14 @@ ${labelledPills}
   padding-top: 8px;
 }
 
-/* The source view's textarea fills the viewport. Scoped to data-raw so it
-   never reaches textareas inside page content. */
+/* The source view's textarea fills the viewport and leaves the same gap
+   under it as the article's top padding above the bar. Scoped to data-raw
+   so it never reaches textareas inside page content.
+
+   Above the textarea: the header and its 1px border, the article's top
+   padding (24px, 32px from 992px), the 32px bar, the 16px gap. Below it:
+   the article's top padding again. The section bar sits under the header
+   below 992px and inside the header row from 992px. */
 .dcp-action-bar__content[data-raw] {
   padding-top: 16px;
 }
@@ -383,17 +395,17 @@ ${labelledPills}
   margin: auto;
   width: 100%;
   height: 100%;
-  min-height: calc(100vh - 180px);
+  min-height: calc(100vh - var(--layout-header-height) - 97px);
 }
 
 .dcp-action-bar__content[data-raw][data-section-bar] textarea {
-  min-height: calc(100vh - 220px);
+  min-height: calc(100vh - var(--layout-header-height-with-sections) - 97px);
 }
 
 @media screen and (min-width: 992px) {
   .dcp-action-bar__content[data-raw] textarea,
   .dcp-action-bar__content[data-raw][data-section-bar] textarea {
-    min-height: calc(100vh - 180px);
+    min-height: calc(100vh - var(--layout-header-height) - 113px);
   }
 }
 
