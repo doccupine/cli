@@ -7,6 +7,8 @@ import { httpMethodBadgeColor } from "@/components/layout/Badge";
 import {
   DocsSidebar,
   SectionBarContext,
+} from "@/components/layout/DocsComponents";
+import {
   StyledSidebar,
   StyledSidebarList,
   StyledSidebarListItem,
@@ -22,7 +24,7 @@ import {
   StyledSidebarFooterToggle,
   StyleMobileBar,
   StyledMobileBurger,
-} from "@/components/layout/DocsComponents";
+} from "@/components/SideBar.styles";
 import { FocusModeToggle } from "@/components/layout/FocusModeToggle";
 import { Icon } from "@/components/layout/Icon";
 import { VariantSwitchers } from "@/components/layout/VariantSwitchers";
@@ -165,7 +167,12 @@ function SidebarNavLink({
           <Icon name="chevron-right" size={16} />
         </StyledSidebarGroupButton>
       )}
-      <StyledSidebarGroupContent id={groupContentId} $isOpen={isOpen}>
+      <StyledSidebarGroupContent
+        id={groupContentId}
+        aria-hidden={!isOpen}
+        inert={!isOpen}
+        $isOpen={isOpen}
+      >
         {children.map((child: NavItemLink, index: number) => (
           <SidebarNavLink
             key={index}

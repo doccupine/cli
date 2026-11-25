@@ -1,18 +1,21 @@
-import { CHAT_WIDTH, SIDEBAR_WIDTH } from "../../app/theme.js";
-
 export const sidePanelTemplate = `"use client";
 import React from "react";
 import styled from "styled-components";
 import { mq, Theme } from "@/app/theme";
 import { focusModeHide } from "@/components/layout/SharedStyled";
+import {
+  CHAT_WIDTH,
+  RAIL_TOP_OFFSET,
+  TOC_WIDTH,
+} from "@/components/layout/designTokens";
 
 // Below "lg" the panel stays in the document flow, rendering inline exactly
 // where it sits in the MDX source. From "lg" up it is lifted out of the flow
-// into the fixed right rail, at the ${SIDEBAR_WIDTH}px width the table of
-// contents it replaces would have used - the content column already reserves
-// exactly that much, so nothing has to move. Only from "xl", where there is
-// room to spare, does it widen to the chat panel's ${CHAT_WIDTH}px and pull
-// the other columns left with it (see sidePanelOffset, keyed off the data
+// into the fixed right rail, at the width (TOC_WIDTH) the table of contents
+// it replaces would have used - the content column already reserves exactly
+// that much, so nothing has to move. Only from "xl", where there is room to
+// spare, does it widen to the chat panel's width (CHAT_WIDTH) and pull the
+// other columns left with it (see sidePanelOffset, keyed off the data
 // attribute below).
 const StyledSidePanel = styled.aside<{ theme: Theme }>\`
   display: flex;
@@ -28,11 +31,11 @@ const StyledSidePanel = styled.aside<{ theme: Theme }>\`
     top: 0;
     right: 0;
     z-index: 1;
-    width: ${SIDEBAR_WIDTH}px;
+    width: \${TOC_WIDTH}px;
     height: 100dvh;
     overflow-y: auto;
     gap: 15px;
-    padding: 82px 20px 20px 20px;
+    padding: \${RAIL_TOP_OFFSET}px 20px 20px 20px;
     border-left: solid 1px \${({ theme }) => theme.colors.grayLight};
     border-radius: 0;
     background: \${({ theme }) => theme.colors.light};
@@ -44,7 +47,7 @@ const StyledSidePanel = styled.aside<{ theme: Theme }>\`
   }
 
   \${mq("xl")} {
-    width: ${CHAT_WIDTH}px;
+    width: \${CHAT_WIDTH}px;
   }
 
   \${focusModeHide("right")};

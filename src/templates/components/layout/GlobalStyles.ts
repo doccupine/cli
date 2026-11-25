@@ -1,6 +1,7 @@
 export const globalStylesTemplate = `"use client";
 import { createGlobalStyle } from "styled-components";
 import { theme } from "@/app/theme";
+import { SCROLL_PADDING_TOP } from "@/components/layout/designTokens";
 
 // The theme's colors and shadows are CSS variables Cherry's provider declares,
 // light on :root and dark on :root.dark (--cherry-color-primary, ...). The
@@ -48,7 +49,7 @@ body {
   padding: 0;
   min-height: 100%;
   background-color: var(--cherry-color-light);
-  scroll-padding-top: 80px;
+  scroll-padding-top: \${SCROLL_PADDING_TOP}px;
 }
 
 html:has(:target) {

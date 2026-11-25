@@ -40,6 +40,7 @@ All fields are optional. Doccupine uses sensible defaults when a field is not se
 - **description**: A concise summary of your project, used in site metadata (e.g., HTML meta description) and social previews when not overridden.
 - **icon**: The favicon for your site. You can provide a full URL or a relative path to an asset in your project. Dropping an \`icon.png\` file at the project root (see [Icon files](#icon-files)) takes precedence over this field.
 - **image**: The Open Graph image used when links to your docs are shared on social platforms. Accepts a full URL or a relative path.
+- **template**: The site design, \`modern\` (the default) or \`classic\`. See [Templates](/templates).
 - **url**: The public URL of your deployed site. Used as the base URL for \`sitemap.xml\` and \`robots.txt\`. When omitted, \`/sitemap.xml\` is served but empty and \`robots.txt\` omits its sitemap reference. Can be overridden at deploy time with the \`NEXT_PUBLIC_SITE_URL\` environment variable.
 
 ## Icon files

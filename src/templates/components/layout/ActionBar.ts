@@ -2,16 +2,20 @@ export const actionBarTemplate = `"use client";
 import { useContext, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useStrings } from "@/components/useStrings";
-import styled, { css } from "styled-components";
 import { Icon } from "@/components/layout/Icon";
-import { mq, Theme } from "@/app/theme";
-import {
-  interactiveStyles,
-  resetButton,
-  Textarea,
-} from "cherry-styled-components";
+import { Textarea } from "cherry-styled-components";
 import { SectionBarContext } from "@/components/layout/DocsComponents";
-import { StyledSmallButton } from "@/components/layout/SharedStyled";
+import {
+  StyledActionBar,
+  StyledActionBarContent,
+  StyledCopyButton,
+  StyledActionBarGroup,
+  StyledActionLabel,
+  StyledRssLink,
+  StyledMarkdownLink,
+  StyledToggle,
+  StyledContent,
+} from "@/components/layout/ActionBar.styles";
 
 interface ActionBarProps {
   children: React.ReactNode;
@@ -20,169 +24,6 @@ interface ActionBarProps {
   // copy pill.
   rssHref?: string;
 }
-
-const StyledActionBar = styled.div<{
-  theme: Theme;
-  $isChatOpen?: boolean;
-}>\`
-  border-bottom: solid 1px \${({ theme }) => theme.colors.grayLight};
-  left: 0;
-  padding: 12px 0;
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  max-width: 640px;
-  margin: auto;
-  transition: all 0.3s ease;
-
-  \${mq("lg")} {
-    padding: 12px 0;
-  }
-\`;
-
-const StyledActionBarContent = styled.div\`
-  display: flex;
-  gap: 12px;
-  margin: auto 0;
-\`;
-
-const StyledCopyButton = styled(StyledSmallButton)<{
-  theme: Theme;
-  $copied: boolean;
-}>\`
-  border: solid 1px
-    \${({ theme, $copied }) =>
-      $copied ? theme.colors.success : theme.colors.grayLight};
-  color: \${({ theme, $copied }) =>
-    $copied ? theme.colors.success : theme.colors.primary};
-
-  & svg.lucide {
-    color: \${({ theme, $copied }) =>
-      $copied ? theme.colors.success : theme.colors.primary};
-  }
-\`;
-
-// StyledSmallButton carries a -6px right margin for edge alignment; inside
-// the pill group that would eat into the gap, so it is neutralized here.
-const StyledActionBarGroup = styled.div\`
-  display: flex;
-  gap: 12px;
-
-  & > * {
-    margin-right: 0;
-  }
-\`;
-
-const StyledRssLink = styled(StyledSmallButton)<{ theme: Theme }>\`
-  text-decoration: none;
-  color: \${({ theme }) => theme.colors.primary};
-  padding: 2px 8px;
-
-  & svg.lucide {
-    color: \${({ theme }) => theme.colors.primary};
-  }
-\`;
-
-// Mirrors the geometry and interaction of Cherry's ThemeToggle so every pill
-// on this side of the bar looks identical: interactiveStyles supplies the
-// border highlight + focus/active rings (no scale effect), and the 30px
-// height with a fully rounded radius matches the toggle's knob track.
-const actionPillStyles = (theme: Theme) => css\`
-  height: 30px;
-  border-radius: 30px;
-  display: flex;
-  align-items: center;
-  margin: auto 0;
-  background: \${theme.colors.light};
-  border-color: \${theme.colors.grayLight};
-
-  & svg {
-    width: 16px;
-    height: 16px;
-    object-fit: contain;
-    transition: all 0.3s ease;
-    position: relative;
-    z-index: 2;
-  }
-
-  & svg[stroke] {
-    stroke: \${theme.colors.primary};
-  }
-
-  &:hover svg[stroke] {
-    stroke: \${theme.colors.accent};
-  }
-\`;
-
-const StyledMarkdownLink = styled.a<{ theme: Theme }>\`
-  \${resetButton}
-  \${interactiveStyles}
-  \${({ theme }) => actionPillStyles(theme)}
-  width: 30px;
-  justify-content: center;
-  text-decoration: none;
-\`;
-
-// The space-between layout with 6px padding puts each 16px icon's center
-// exactly where the 24px knob's center sits in its resting (left: 2px) and
-// active (translateX(26px)) positions.
-const StyledToggle = styled.button<{ theme: Theme; $isActive?: boolean }>\`
-  \${resetButton}
-  \${interactiveStyles}
-  \${({ theme }) => actionPillStyles(theme)}
-  width: 56px;
-  justify-content: space-between;
-  padding: 0 6px;
-  position: relative;
-
-  &::after {
-    content: "";
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: \${({ theme }) =>
-      \`color-mix(in srgb, \${theme.colors.primaryLight} 20%, transparent)\`};
-    transition: all 0.3s ease;
-    z-index: 1;
-    \${({ $isActive }) =>
-      !$isActive &&
-      css\`
-        transform: translateX(26px);
-      \`}
-  }
-\`;
-
-// The raw-content view renders a full-viewport textarea. That rule is scoped to
-// the raw view (\`$raw\`) so it never leaks into textareas rendered inside page
-// content - e.g. the API playground's request-body editor, which sits inside
-// this same ActionBar in the normal (view) mode.
-const StyledContent = styled.div<{
-  theme: Theme;
-  $hasSectionBar?: boolean;
-  $raw?: boolean;
-}>\`
-  padding-top: 20px;
-  transition: all 0.3s ease;
-
-  \${({ $raw, $hasSectionBar }) =>
-    $raw &&
-    css\`
-      & textarea {
-        max-width: 640px;
-        margin: auto;
-        width: 100%;
-        height: 100%;
-        min-height: calc(100vh - \${$hasSectionBar ? 202 : 160}px);
-
-        \${mq("lg")} {
-          min-height: calc(100vh - 159px);
-        }
-      }
-    \`}
-\`;
 
 // Every page ships a static markdown mirror under public/: "/" serves
 // "/index.md" and "/{slug}" serves "/{slug}.md".
@@ -210,25 +51,25 @@ function ActionBar({ children, content, rssHref }: ActionBarProps) {
 
   return (
     <>
-      <StyledActionBar data-markdown-ignore>
+      <StyledActionBar data-markdown-ignore data-rss={rssHref ? "" : undefined}>
         <StyledActionBarGroup>
           <StyledCopyButton onClick={handleCopyContent} $copied={copied}>
             {copied ? (
               <>
                 <Icon name="check" size={16} />
-                {t.copied}
+                <StyledActionLabel>{t.copied}</StyledActionLabel>
               </>
             ) : (
               <>
                 <Icon name="copy" size={16} />
-                {t.copyContent}
+                <StyledActionLabel>{t.copyContent}</StyledActionLabel>
               </>
             )}
           </StyledCopyButton>
           {rssHref && (
             <StyledRssLink as="a" href={rssHref} aria-label={t.rssFeed}>
               <Icon name="rss" size={16} />
-              {t.rss}
+              <StyledActionLabel>{t.rss}</StyledActionLabel>
             </StyledRssLink>
           )}
         </StyledActionBarGroup>

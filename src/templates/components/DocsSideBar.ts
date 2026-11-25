@@ -7,7 +7,7 @@ import {
   StyledIndexSidebarLink,
   StyledIndexSidebarLabel,
   StyledIndexSidebarLi,
-} from "@/components/layout/DocsComponents";
+} from "@/components/DocsSideBar.styles";
 
 interface Heading {
   id: string;

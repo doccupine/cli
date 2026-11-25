@@ -1,9 +1,7 @@
 export const docsTemplate = `import React from "react";
 import { Flex } from "cherry-styled-components";
-import {
-  DocsContainer,
-  StyledMarkdownContainer,
-} from "@/components/layout/DocsComponents";
+import { DocsContainer } from "@/components/layout/DocsComponents";
+import { StyledMarkdownContainer } from "@/components/layout/DocsComponents.styles";
 import { Callout } from "@/components/layout/Callout";
 import { compileMDX } from "next-mdx-remote/rsc";
 import remarkGfm from "remark-gfm";

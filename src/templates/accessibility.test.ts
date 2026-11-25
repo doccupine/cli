@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import { siteLayoutTemplate } from "../lib/layout.js";
-import { appStructure } from "../lib/structures.js";
+import { appStructure, appStructureFor } from "../lib/structures.js";
+import { SITE_TEMPLATES } from "../lib/templates.js";
 import { chatTemplate } from "./components/Chat.js";
 import { searchDocsTemplate } from "./components/SearchDocs.js";
 import { searchModalContentTemplate } from "./components/SearchModalContent.js";
 import { sideBarTemplate } from "./components/SideBar.js";
 import { accordionTemplate } from "./components/layout/Accordion.js";
-import { docsComponentsTemplate } from "./components/layout/DocsComponents.js";
 import { tabsTemplate } from "./components/layout/Tabs.js";
 import { variantSwitchersTemplate } from "./components/layout/VariantSwitchers.js";
 import { dropdownTemplate } from "./components/layout/Dropdown.js";
@@ -113,9 +113,15 @@ describe("generated accessibility behavior", () => {
   it("hides collapsed accordion and sidebar-group descendants", () => {
     expect(accordionTemplate).toContain("inert={!isOpen}");
     expect(accordionTemplate).toContain("aria-hidden={!isOpen}");
-    expect(docsComponentsTemplate).toContain('"aria-hidden": !$isOpen');
-    expect(docsComponentsTemplate).toContain("inert: !$isOpen");
-    expect(docsComponentsTemplate).toContain("visibility: hidden");
+    // Set in the component, not the styles, so a design's styles file can
+    // never drop them.
+    expect(sideBarTemplate).toContain("aria-hidden={!isOpen}");
+    expect(sideBarTemplate).toContain("inert={!isOpen}");
+    for (const template of SITE_TEMPLATES) {
+      expect(
+        appStructureFor(template)["components/SideBar.styles.ts"],
+      ).toContain("visibility: hidden");
+    }
   });
 
   it("implements the horizontal ARIA tabs keyboard pattern", () => {
@@ -131,7 +137,11 @@ describe("generated accessibility behavior", () => {
     expect(tabsTemplate).not.toContain("ArrowUp");
     expect(tabsTemplate).not.toContain("ArrowDown");
     expect(tabsTemplate).toContain('aria-orientation="horizontal"');
-    expect(tabsTemplate).toContain("&:focus-visible");
+    for (const template of SITE_TEMPLATES) {
+      expect(
+        appStructureFor(template)["components/layout/Tabs.styles.ts"],
+      ).toContain("&:focus-visible");
+    }
   });
 
   it("connects sidebar toggles to their controlled regions", () => {
@@ -177,12 +187,15 @@ describe("generated accessibility behavior", () => {
   });
 
   it("resets inherited Cherry heights on compact custom controls", () => {
-    expect(docsComponentsTemplate).toMatch(
-      /StyledSidebarGroupButton[\s\S]*?height: auto;[\s\S]*?min-height: 0;/,
-    );
-    expect(tabsTemplate).toMatch(
-      /const TabButton[\s\S]*?height: auto;[\s\S]*?min-height: 0;/,
-    );
+    for (const template of SITE_TEMPLATES) {
+      const structure = appStructureFor(template);
+      expect(structure["components/SideBar.styles.ts"]).toMatch(
+        /StyledSidebarGroupButton[\s\S]*?height: auto;[\s\S]*?min-height: 0;/,
+      );
+      expect(structure["components/layout/Tabs.styles.ts"]).toMatch(
+        /const TabButton[\s\S]*?height: auto;[\s\S]*?min-height: 0;/,
+      );
+    }
   });
 
   it("does not emit a stale lint suppression in no-sections layouts", () => {

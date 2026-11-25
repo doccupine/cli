@@ -7,6 +7,11 @@ import chalk from "chalk";
 import { ICON_CONFIG_FILES } from "./lib/icon-registry.js";
 import { rootLayoutTemplate, siteLayoutTemplate } from "./lib/layout.js";
 import {
+  DEFAULT_TEMPLATE,
+  resolveTemplateFromSource,
+  type SiteTemplate,
+} from "./lib/templates.js";
+import {
   normalizeOpenApiConfig,
   validateConfig,
 } from "./lib/config-manager.js";
@@ -56,7 +61,10 @@ import {
   ICON_SOURCE_FILES,
   IconAssetManager,
 } from "./generator/icon-asset-manager.js";
-import { IconRegistryGenerator } from "./generator/icon-registry-generator.js";
+import {
+  IconRegistryGenerator,
+  builtinIconNames,
+} from "./generator/icon-registry-generator.js";
 import { WatchCoordinator } from "./generator/watch-coordinator.js";
 import { SectionIndexGenerator } from "./generator/section-index-generator.js";
 import {
@@ -102,6 +110,8 @@ export class MDXToNextJSGenerator {
   private sectionsConfig: SectionConfig[] | null = null;
   private languagesConfig: LanguageConfig[] | null = null;
   private versionsConfig: VersionConfig[] | null = null;
+  /** The site design config.json selects ("template"). */
+  private siteTemplate: SiteTemplate = DEFAULT_TEMPLATE;
   /** Guards against recursive reprocessing when maybeUpdateSections() triggers processAllMDXFiles() */
   private isReprocessing = false;
   /** OpenAPI specs (build config) that drive the generated API reference. */
@@ -136,7 +146,9 @@ export class MDXToNextJSGenerator {
     this.artifacts = new GeneratedArtifacts(this.outputDir);
     this.sourceFs = new SecureSourceFs(this.watchDir, this.rootDir);
     this.appScaffolder = new AppScaffolder(this.outputDir);
-    this.iconRegistryGenerator = new IconRegistryGenerator(this.outputDir);
+    this.iconRegistryGenerator = new IconRegistryGenerator(this.outputDir, () =>
+      builtinIconNames(this.siteTemplate),
+    );
     this.apiReferenceGenerator = new ApiReferenceGenerator(
       this.outputDir,
       this.artifacts,
@@ -357,6 +369,7 @@ export class MDXToNextJSGenerator {
         this.sectionsConfig,
       );
       this.analyticsConfig = await this.loadAnalyticsConfig();
+      this.siteTemplate = await this.loadSiteTemplate();
 
       if (this.analyticsConfig) {
         console.log(
@@ -395,13 +408,42 @@ export class MDXToNextJSGenerator {
   }
 
   async createNextJSStructure() {
-    return this.appScaffolder.createNextJsStructure(this.analyticsConfig, {
-      generateRootLayout: () => this.generateRootLayout(),
-      generateSiteLayout: () => this.generateSiteLayout(),
-      updateSitemap: () => this.updateSitemap(),
-      updateLlmsFiles: () => this.updateLlmsFiles(),
-      updateIconRegistry: () => this.iconRegistryGenerator.ensurePresent(),
-    });
+    return this.appScaffolder.createNextJsStructure(
+      this.analyticsConfig,
+      this.siteTemplate,
+      {
+        generateRootLayout: () => this.generateRootLayout(),
+        generateSiteLayout: () => this.generateSiteLayout(),
+        updateSitemap: () => this.updateSitemap(),
+        updateLlmsFiles: () => this.updateLlmsFiles(),
+        updateIconRegistry: () => this.iconRegistryGenerator.ensurePresent(),
+      },
+    );
+  }
+
+  /** Reads config.json's "template"; an unknown name warns and falls back. */
+  async loadSiteTemplate(): Promise<SiteTemplate> {
+    const { template, warning } = resolveTemplateFromSource(
+      await this.projectConfigRepository.readConfigFile(),
+    );
+    if (warning) console.warn(chalk.yellow(`⚠️ ${warning}`));
+    return template;
+  }
+
+  /**
+   * Applies a design switch after config.json changed or was deleted: the
+   * design's component files, both layouts, and the icon registry (a design
+   * can draw icons of its own). Nothing is written when the design is
+   * unchanged.
+   */
+  private async reloadSiteTemplate(): Promise<void> {
+    const template = await this.loadSiteTemplate();
+    if (template === this.siteTemplate) return;
+    this.siteTemplate = template;
+    await this.appScaffolder.writeTemplateFiles(template);
+    await this.updateRootLayout();
+    await this.iconRegistryGenerator.refresh();
+    console.log(chalk.green(`🎨 Switched the site design to "${template}"`));
   }
 
   async createStartingDocs() {
@@ -617,6 +659,7 @@ export class MDXToNextJSGenerator {
         }
 
         if (fileName === "config.json") {
+          await this.reloadSiteTemplate();
           await this.updateSitemap();
           await this.updateRobots();
           await this.updateLlmsFiles();
@@ -650,6 +693,7 @@ export class MDXToNextJSGenerator {
         }
 
         if (fileName === "config.json") {
+          await this.reloadSiteTemplate();
           await this.updateSitemap();
           await this.updateRobots();
           await this.updateLlmsFiles();
@@ -842,6 +886,7 @@ export class MDXToNextJSGenerator {
       fontConfig,
       analyticsEnabled,
       this.languagesConfig,
+      this.siteTemplate,
     );
   }
 
@@ -851,6 +896,7 @@ export class MDXToNextJSGenerator {
       resolvedPages,
       this.sectionsConfig,
       this.configuredVariants,
+      this.siteTemplate,
     );
   }
 

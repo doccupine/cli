@@ -44,6 +44,7 @@ Doccupine works with no configuration, but when you're ready to customize, every
 
 - [Global settings](/globals) - Site name, description, favicon, and preview image via \`config.json\`
 - [Navigation](/navigation) - Override the auto-generated sidebar with \`navigation.json\`
+- [Templates](/templates) - Pick the site design, \`modern\` or \`classic\`, via \`config.json\`
 - [Theme](/theme) - Colors, logos, and dark mode palette via \`theme.json\`
 - [Fonts](/fonts) - Google Fonts or local font files via \`fonts.json\`
 - [Languages](/languages) - Translate your docs, one folder per language, via \`languages.json\`

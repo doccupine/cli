@@ -15,14 +15,20 @@ import {
   readOutputFileIfPresent,
   resolveOutputPath,
 } from "../lib/output-safety.js";
-import { appStructure } from "../lib/structures.js";
+import { appStructureFor } from "../lib/structures.js";
+import { DEFAULT_TEMPLATE, type SiteTemplate } from "../lib/templates.js";
 import type { PageMeta } from "../lib/types.js";
 import { writeFileAtomic } from "../lib/utils.js";
 
-/** Icon names the generated components use on their own, whatever the docs say. */
-export function builtinIconNames(): string[] {
+/**
+ * Icon names the generated components of a design use on their own, whatever
+ * the docs say.
+ */
+export function builtinIconNames(
+  template: SiteTemplate = DEFAULT_TEMPLATE,
+): string[] {
   return [
-    ...collectTemplateIconNames(appStructure),
+    ...collectTemplateIconNames(appStructureFor(template)),
     ...INDIRECT_TEMPLATE_ICON_NAMES,
   ];
 }
@@ -42,7 +48,8 @@ export class IconRegistryGenerator {
 
   constructor(
     private readonly outputDir: string,
-    private readonly builtinNames: readonly string[] = builtinIconNames(),
+    private readonly getBuiltinNames: () => readonly string[] = () =>
+      builtinIconNames(),
   ) {}
 
   /** Called after every MDX pass with the published pages and their sources. */
@@ -81,7 +88,7 @@ export class IconRegistryGenerator {
   private collectReferences(
     configs: ReadonlyMap<string, string | null>,
   ): IconReference[] {
-    const references: IconReference[] = this.builtinNames.map((name) => ({
+    const references: IconReference[] = this.getBuiltinNames().map((name) => ({
       name,
       source: "",
     }));
