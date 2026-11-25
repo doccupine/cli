@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.3
 
 - Render Mermaid diagrams again: since 0.1.0, fenced `mermaid` blocks showed as plain code blocks, because the diagram handler did not recognise the code element once inline code got its own component
 - Document the Site settings page's new Template picker on the starter Site Settings page: it writes `template` to `config.json` (Modern, the default, or Classic) and links to the Templates page
