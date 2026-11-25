@@ -1,19 +1,21 @@
 export const apiPlaygroundMdxTemplate = `---
-title: "API Playground"
+title: "API playground"
 description: "Turn an OpenAPI document into an interactive API reference where readers send real requests and see live responses, right inside your docs."
 date: "2026-07-25"
 updated: "2026-07-31"
 category: "Components"
 categoryOrder: 1
-order: 20
+order: 25
 ---
-# API Playground
+# API playground
 
 Point Doccupine at an OpenAPI document and it generates a complete, interactive API reference: one page per endpoint, grouped by tag in the sidebar, each with a "Send request" panel that makes real calls and shows the live response - plus copy-pasteable code snippets.
 
 <Callout type="note">
 The playground is driven entirely by your OpenAPI document. There is nothing to wire up by hand - add one line of config and every endpoint becomes a documented, runnable page.
 </Callout>
+
+Writing an API page by hand instead? Pin its request and response examples to the right column with [\`<RequestExample>\` and \`<ResponseExample>\`](/api-examples).
 
 ## Try it
 

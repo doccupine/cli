@@ -113,7 +113,7 @@ export const tocStyles: DesignStyles = {
 }
 
 .dcp-toc__link[data-active] {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   font-weight: 600;
 }
 
@@ -125,7 +125,7 @@ export const tocStyles: DesignStyles = {
 }
 
 .dcp-toc__link:hover {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }`,
   modern: `.dcp-toc {
   padding: var(--layout-rail-top) 24px 24px 12px;

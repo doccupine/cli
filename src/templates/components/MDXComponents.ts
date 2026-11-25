@@ -10,9 +10,27 @@ import { Accordion } from "@/components/layout/Accordion";
 import { Tabs, TabContent } from "@/components/layout/Tabs";
 import { Callout } from "@/components/layout/Callout";
 import { Icon } from "@/components/layout/Icon";
+import { Install } from "@/components/layout/Install";
+import { Kbd } from "@/components/layout/Kbd";
+import { Visibility } from "@/components/layout/Visibility";
+import { View } from "@/components/layout/View";
+import { GitHubCard } from "@/components/layout/GitHubCard";
 import { Columns } from "@/components/layout/Columns";
 import { Field } from "@/components/layout/Field";
 import { Frame } from "@/components/layout/Frame";
+import {
+  Preview as PreviewLayout,
+  type PreviewProps,
+} from "@/components/layout/Preview";
+import {
+  collectFences,
+  splitPreviewChildren,
+} from "@/components/layout/PreviewData";
+import {
+  ApiExample,
+  type ApiExampleProps,
+} from "@/components/layout/ApiExample";
+import { DEFAULT_STRINGS, type UiStrings } from "@/utils/strings";
 import { Prompt } from "@/components/layout/Prompt";
 import { SidePanel } from "@/components/layout/SidePanel";
 import { Space } from "@/components/layout/Space";
@@ -102,6 +120,65 @@ export function Pre(props: PreProps) {
     }
   }
   return <pre {...props} />;
+}
+
+// A fence's <code> arrives as the components map's \`code\` (InlineCode
+// below), or as the plain tag where nothing maps it.
+function isCodeType(type: unknown): boolean {
+  return type === "code" || type === InlineCode;
+}
+
+// <Preview>: the first fenced code block among the children becomes the code
+// panel, the rest is the stage. Split here, where InlineCode is in scope, so
+// the layout component stays free of this module.
+export function Preview({ children, ...props }: PreviewProps) {
+  const { stage, source } = splitPreviewChildren(children, isCodeType);
+  return (
+    <PreviewLayout {...props} source={source}>
+      {stage}
+    </PreviewLayout>
+  );
+}
+
+// <RequestExample> and <ResponseExample>: their fenced code blocks become the
+// example's code, split here for the same reason as <Preview>. Docs passes
+// the page language's strings for the default labels.
+type LocalizedApiExampleProps = ApiExampleProps & { strings?: UiStrings };
+
+export function RequestExample({
+  children,
+  strings = DEFAULT_STRINGS,
+  ...props
+}: LocalizedApiExampleProps) {
+  const { sources, rest } = collectFences(children, isCodeType);
+  return (
+    <ApiExample
+      {...props}
+      kind="request"
+      label={strings.requestExample}
+      sources={sources}
+    >
+      {rest}
+    </ApiExample>
+  );
+}
+
+export function ResponseExample({
+  children,
+  strings = DEFAULT_STRINGS,
+  ...props
+}: LocalizedApiExampleProps) {
+  const { sources, rest } = collectFences(children, isCodeType);
+  return (
+    <ApiExample
+      {...props}
+      kind="response"
+      label={strings.responseExample}
+      sources={sources}
+    >
+      {rest}
+    </ApiExample>
+  );
 }
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
@@ -201,10 +278,15 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     TabContent,
     Callout,
     Icon,
+    Install,
+    Kbd,
     Columns,
     Field,
     Frame,
+    Preview,
     Prompt,
+    RequestExample,
+    ResponseExample,
     SidePanel,
     // Share the heading slugger so an <Update> label anchor stays unique and
     // in document order alongside the surrounding headings. Only consume a
@@ -223,6 +305,9 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     Tree,
     FileTree,
     Space,
+    Visibility,
+    View,
+    GitHubCard,
     ...components,
   };
 }

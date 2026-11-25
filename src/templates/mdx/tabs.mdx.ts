@@ -4,13 +4,13 @@ description: "Use the Tabs component to display different content sections in a 
 date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
-order: 7
+order: 9
 ---
 # Tabs
 
 Use the Tabs component to display different content sections in a switchable panel layout.
 
-Tabs are useful for grouping related information while keeping the interface tidy. You can create as many tabs as needed, and each one can hold other components, text, or code snippets.
+Tabs are useful for grouping related information while keeping the interface tidy. You can create as many tabs as needed, and each one can hold other components, text, or code snippets. When the same choice (a framework, a language) runs through a whole page, use [views](/views) instead: one selector switches every part of the page and is remembered.
 
 ## Tabs Usage
 

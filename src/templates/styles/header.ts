@@ -51,7 +51,10 @@ export const headerStyles: DesignStyles = {
   .dcp-header:not([data-pinned]) {
     animation: dcp-header-hold linear both;
     animation-timeline: scroll(root block);
-    animation-range: 0px 10000px;
+    /* A site banner above the header scrolls away first: the hold starts
+       once the header reaches the top (--dcp-banner-height, 0 without one). */
+    animation-range: var(--dcp-banner-height, 0px)
+      calc(var(--dcp-banner-height, 0px) + 10000px);
   }
 }
 

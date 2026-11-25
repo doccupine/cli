@@ -1,3 +1,4 @@
+import { BANNER_MAX_LENGTH } from "../../lib/banner.js";
 import { SITE_TEMPLATES } from "../../lib/templates.js";
 
 // `template` picks the site design at generation time; the generator has
@@ -13,6 +14,15 @@ const configSchema = z.object({
   image: z.string().optional(),
   url: z.string().url().optional(),
   template: z.enum([${SITE_TEMPLATES.map((name) => JSON.stringify(name)).join(", ")}]).optional().catch(undefined),
+  // A site-wide announcement above the header. An invalid value is dropped
+  // (the generator warns about it) rather than failing the build.
+  banner: z
+    .object({
+      content: z.string().trim().min(1).max(${BANNER_MAX_LENGTH}),
+      dismissible: z.boolean().optional(),
+    })
+    .optional()
+    .catch(undefined),
 });
 
 type Config = z.infer<typeof configSchema>;

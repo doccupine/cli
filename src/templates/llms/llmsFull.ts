@@ -1,7 +1,10 @@
 import type { PageMeta, SectionConfig } from "../../lib/types.js";
 
 export interface PageWithBody extends PageMeta {
+  /** The MDX body as AI reads it (<Visibility for="humans"> removed). */
   body: string;
+  /** The body as readers see it, when <Visibility> blocks make it differ. */
+  humanBody?: string;
 }
 
 export interface LlmsFullArgs {

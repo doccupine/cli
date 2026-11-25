@@ -4,10 +4,16 @@ import { usePathname } from "next/navigation";
 import { useStrings } from "@/components/useStrings";
 import { Icon } from "@/components/layout/Icon";
 import { SectionBarContext } from "@/components/layout/DocsComponents";
+import { ViewSelector } from "@/components/layout/ViewSelector";
 
 interface ActionBarProps {
   children: React.ReactNode;
   content: string;
+  // What "Copy content" copies when it differs from the source shown: the
+  // page as AI reads it (<Visibility> blocks for agents only).
+  copyContent?: string;
+  // The page's <View> titles, when it has several: the view selector.
+  views?: string[];
   // When set, an RSS button linking to this page's feed renders next to the
   // copy pill.
   rssHref?: string;
@@ -23,7 +29,13 @@ function toMarkdownHref(pathname: string) {
   return \`\${base === "" ? "/index" : base}.md\`;
 }
 
-function ActionBar({ children, content, rssHref }: ActionBarProps) {
+function ActionBar({
+  children,
+  content,
+  copyContent,
+  rssHref,
+  views,
+}: ActionBarProps) {
   const [isView, setIsView] = useState(true);
   const [copied, setCopied] = useState(false);
   const hasSectionBar = useContext(SectionBarContext);
@@ -32,7 +44,7 @@ function ActionBar({ children, content, rssHref }: ActionBarProps) {
 
   const handleCopyContent = async () => {
     try {
-      await navigator.clipboard.writeText(content);
+      await navigator.clipboard.writeText(copyContent ?? content);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -45,6 +57,7 @@ function ActionBar({ children, content, rssHref }: ActionBarProps) {
       <div
         className="dcp-action-bar"
         data-markdown-ignore
+        data-views={views ? "" : undefined}
         data-rss={rssHref ? "" : undefined}
       >
         <div className="dcp-action-bar__group">
@@ -76,6 +89,7 @@ function ActionBar({ children, content, rssHref }: ActionBarProps) {
               <span className="dcp-action-bar__label">{t.rss}</span>
             </a>
           )}
+          {views && <ViewSelector titles={views} />}
         </div>
         <div className="dcp-action-bar__actions">
           <a

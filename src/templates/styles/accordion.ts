@@ -41,7 +41,7 @@ export const accordionStyles: DesignStyles = {
   font-size: 14px;
   line-height: 1.7;
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   transition: color 0.3s ease;
   position: relative;
 }
@@ -54,7 +54,7 @@ export const accordionStyles: DesignStyles = {
 }
 
 .dcp-accordion__title:hover {
-  color: var(--color-primaryDark);
+  color: var(--color-primary-text-hover);
 }
 
 .dcp-accordion__title:focus-visible {

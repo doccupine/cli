@@ -4,7 +4,7 @@ description: "Display re-usable AI prompts that readers can copy or open directl
 date: "2026-07-27"
 category: "Components"
 categoryOrder: 1
-order: 4
+order: 6
 ---
 # Prompt
 

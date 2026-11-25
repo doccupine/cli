@@ -4,7 +4,7 @@ description: "Add a precise vertical or horizontal gap between blocks, with per-
 date: "2026-07-30"
 category: "Components"
 categoryOrder: 1
-order: 24
+order: 31
 ---
 # Space
 

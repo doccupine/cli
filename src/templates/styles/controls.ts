@@ -230,7 +230,7 @@ export const controlStyles: DesignStyles = {
   padding: 8px 14px;
   border-radius: 30px;
   background: var(--color-light);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   border: solid 1px var(--color-primary);
   font-size: 14px;
   font-weight: 600;

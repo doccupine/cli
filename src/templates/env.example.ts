@@ -63,4 +63,10 @@ GOOGLE_API_KEY=your_google_api_key_here
 # Lower = smaller index, slightly lower recall. Values >= the model's native
 # dimension keep full precision. Rebuild after changing this.
 # LLM_EMBEDDING_DIMS=512
+
+# Optional: A GitHub token for <GitHubCard> blocks. Without one, GitHub allows
+# 60 API requests an hour per IP, which a large build can use up (the cards
+# then show without star and fork counts). A fine-grained token with no
+# permissions is enough for public repositories. Used at build time only.
+# GITHUB_TOKEN=
 `;

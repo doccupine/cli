@@ -84,7 +84,10 @@ async function ensureIndex(): Promise<MiniSearch<IndexedDoc>> {
         .split("/")
         .filter((seg) => !(seg.startsWith("(") && seg.endsWith(")")))
         .join("/");
-      const cleanContent = toPlainText(doc.content.replace(/\\r\\n/g, "\\n"))
+      // Search follows the rendered page: the readers' version when the
+      // page has <Visibility> blocks, else the one shared content.
+      const source = doc.searchContent ?? doc.content;
+      const cleanContent = toPlainText(source.replace(/\\r\\n/g, "\\n"))
         .replace(/\\n{3,}/g, "\\n\\n")
         .slice(0, 200_000);
       return {

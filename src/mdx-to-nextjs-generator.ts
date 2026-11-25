@@ -4,6 +4,7 @@ import path from "path";
 
 import chalk from "chalk";
 
+import { bannerWarningFromSource } from "./lib/banner.js";
 import { ICON_CONFIG_FILES } from "./lib/icon-registry.js";
 import { rootLayoutTemplate, siteLayoutTemplate } from "./lib/layout.js";
 import {
@@ -424,12 +425,17 @@ export class MDXToNextJSGenerator {
     );
   }
 
-  /** Reads config.json's "template"; an unknown name warns and falls back. */
+  /**
+   * Reads config.json's "template"; an unknown name warns and falls back. An
+   * invalid "banner" is reported here too, since this runs whenever
+   * config.json is read or changes.
+   */
   async loadSiteTemplate(): Promise<SiteTemplate> {
-    const { template, warning } = resolveTemplateFromSource(
-      await this.projectConfigRepository.readConfigFile(),
-    );
+    const source = await this.projectConfigRepository.readConfigFile();
+    const { template, warning } = resolveTemplateFromSource(source);
     if (warning) console.warn(chalk.yellow(`⚠️ ${warning}`));
+    const banner = bannerWarningFromSource(source);
+    if (banner) console.warn(chalk.yellow(`⚠️ ${banner}`));
     return template;
   }
 

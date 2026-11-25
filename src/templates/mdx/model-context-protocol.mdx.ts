@@ -234,7 +234,7 @@ These are some of the ways you can help your users connect to your MCP server:
       </Step>
       <Step title="Publish your MCP server URL for your users.">
         Create a guide for your users that includes your MCP server URL and the steps to connect it to Cursor.
-        1. Use <kbd>Command</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> (<kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> on Windows) to open the command palette.
+        1. Use <Kbd>Mod+Shift+P</Kbd> to open the command palette.
         2. Search for "Open MCP settings".
         3. Select **Add custom MCP**. This opens the \`mcp.json\` file.
         4. In \`mcp.json\`, configure your server:

@@ -4,7 +4,7 @@ description: "Display hierarchical file and folder structures with collapsible n
 date: "2026-07-27"
 category: "Components"
 categoryOrder: 1
-order: 9
+order: 12
 ---
 # Tree
 

@@ -9,6 +9,7 @@ import type {
   VersionConfig,
 } from "../lib/types.js";
 import { isMdxPath, safeMatter, writeFileAtomic } from "../lib/utils.js";
+import { forAudience, hasVisibilityBlocks } from "../lib/visibility.js";
 import {
   buildLanguageAlternates,
   joinVariantSlug,
@@ -232,8 +233,13 @@ export async function collectPageBodies(
         return { ...page, body: readOpenApiBody(page.slug) ?? "" };
       }
       const { content: raw } = await readMdxSource(page.path);
-      const { content: body } = safeMatter(raw, page.path);
-      return { ...page, body };
+      const { content } = safeMatter(raw, page.path);
+      if (!hasVisibilityBlocks(content)) return { ...page, body: content };
+      return {
+        ...page,
+        body: forAudience(content, "agents"),
+        humanBody: forAudience(content, "humans"),
+      };
     }),
   );
 }
@@ -284,6 +290,10 @@ export async function writeLlmsFiles(
       name: page.title,
       path: pagePath,
       content: page.body,
+      // The site search follows the rendered page.
+      ...(page.humanBody !== undefined
+        ? { searchContent: page.humanBody }
+        : {}),
       // Present only on sites that configure languages.json / versions.json.
       ...(page.locale !== undefined ? { locale: page.locale } : {}),
       ...(page.version !== undefined ? { version: page.version } : {}),

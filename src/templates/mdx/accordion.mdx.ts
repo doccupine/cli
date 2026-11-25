@@ -4,7 +4,7 @@ description: "Interactive panels for toggling visibility of content."
 date: "2026-02-19"
 category: "Components"
 categoryOrder: 1
-order: 6
+order: 8
 ---
 # Accordion
 
@@ -55,6 +55,10 @@ Pass \`defaultOpen\` to have the panel expanded on first render instead of colla
 <Accordion title="Read me first" defaultOpen>
   This panel starts expanded.
 </Accordion>
+
+## Inside a field
+
+Placed inside a [\`<Field>\`](/fields#nested-fields), an accordion becomes a compact toggle for the field's own properties.
 
 ## Properties
 

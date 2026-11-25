@@ -13,9 +13,7 @@ order: 0
 
 Doccupine turns a directory of MDX files into a beautiful, production-ready documentation website. Write in standard Markdown, use any of the built-in components, and get a fully themed site with AI-powered search and automatic navigation - all from one command.
 
-\`\`\`bash
-npx doccupine
-\`\`\`
+<Install exec>doccupine</Install>
 
 That's it. Doccupine prompts you for a source directory, generates your site, and starts a dev server at \`http://localhost:3000\`. Every edit rebuilds instantly.
 
@@ -50,4 +48,10 @@ Doccupine works with no configuration, but when you're ready to customize, every
 - [Languages](/languages) - Translate your docs, one folder per language, via \`languages.json\`
 - [Versions](/versions) - Keep older releases online, one folder per version, via \`versions.json\`
 - [AI Assistant](/ai-assistant) - Enable the built-in chat with your own API key
-- [MCP Server](/model-context-protocol) - Let AI tools search your docs through \`/api/mcp\``;
+- [MCP Server](/model-context-protocol) - Let AI tools search your docs through \`/api/mcp\`
+
+## Open source
+
+Doccupine is open source on GitHub.
+
+<GitHubCard repo="doccupine/cli" />`;

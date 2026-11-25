@@ -4,7 +4,7 @@ description: "Show contextual definitions and explanations when readers hover ov
 date: "2026-07-27"
 category: "Components"
 categoryOrder: 1
-order: 13
+order: 17
 ---
 # Tooltips
 
@@ -29,10 +29,10 @@ Every <Tooltip tip="Application Programming Interface: a set of protocols that l
 Add a bold headline above the tip text with \`headline\`, and append a link with \`cta\` and \`href\`. Internal links open in the same tab; external links open in a new one.
 
 \`\`\`html
-Try the <Tooltip headline="API Playground" tip="An interactive API reference where readers send real requests and inspect live responses." cta="Open the API Playground guide" href="/api-playground">interactive playground</Tooltip> to explore your endpoints.
+Try the <Tooltip headline="API playground" tip="An interactive API reference where readers send real requests and inspect live responses." cta="Open the API playground guide" href="/api-playground">interactive playground</Tooltip> to explore your endpoints.
 \`\`\`
 
-Try the <Tooltip headline="API Playground" tip="An interactive API reference where readers send real requests and inspect live responses." cta="Open the API Playground guide" href="/api-playground">interactive playground</Tooltip> to explore your endpoints.
+Try the <Tooltip headline="API playground" tip="An interactive API reference where readers send real requests and inspect live responses." cta="Open the API playground guide" href="/api-playground">interactive playground</Tooltip> to explore your endpoints.
 
 ## Properties
 

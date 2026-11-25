@@ -431,7 +431,7 @@ button:hover > .dcp-switcher__content svg {
   text-align: left;
   font-family: inherit;
   font-size: 12px;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
@@ -490,7 +490,10 @@ button:hover > .dcp-switcher__content svg {
   line-height: 1;
   position: absolute;
   z-index: 1001;
-  top: calc((var(--layout-header-height) - 32px) / 2);
+  /* Below a site banner until the header pins (--dcp-banner-height). */
+  top: calc(
+    var(--dcp-banner-height, 0px) + (var(--layout-header-height) - 32px) / 2
+  );
   right: var(--layout-gutter);
   width: 32px;
   height: 32px;
@@ -529,6 +532,7 @@ button:hover > .dcp-switcher__content svg {
 
 html:has(#header[data-pinned]) .dcp-sidebar-toggle {
   position: fixed;
+  top: calc((var(--layout-header-height) - 32px) / 2);
 }
 
 /* The chat panel opens fullscreen below "lg" and its own header holds the

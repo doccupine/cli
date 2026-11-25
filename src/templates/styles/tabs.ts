@@ -82,7 +82,7 @@ export const tabsStyles: DesignStyles = {
 }
 
 .dcp-tabs__tab:where([aria-selected="true"]) {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   border-bottom-color: var(--color-primary);
 }
 
@@ -97,7 +97,7 @@ export const tabsStyles: DesignStyles = {
 }
 
 .dcp-tabs__tab:where(:not([aria-selected="true"])):hover {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   background-color: color-mix(
     in srgb,
     var(--color-primaryLight) 10%,
