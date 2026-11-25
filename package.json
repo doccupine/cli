@@ -48,22 +48,22 @@
     "commander": "^15.1.0",
     "fs-extra": "^11.4.1",
     "gray-matter": "^4.0.3",
-    "lucide-react": "^1.78.0",
+    "lucide-react": "^1.80.0",
     "next": "^16.4.6",
     "prompts": "^2.4.2",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
   "devDependencies": {
-    "@langchain/core": "^1.5.0",
+    "@langchain/core": "^1.5.1",
     "@modelcontextprotocol/client": "^2.4.0",
     "@modelcontextprotocol/sdk": "^1.32.2",
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^26.6.6",
+    "@types/node": "^26.6.10",
     "@types/prompts": "^2.4.9",
     "prettier": "^3.10.1",
     "typescript": "^7.0.2",
-    "vitest": "^5.1.1"
+    "vitest": "^5.1.2"
   },
   "files": [
     "dist/**/*"

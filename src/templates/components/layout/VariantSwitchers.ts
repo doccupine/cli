@@ -1,6 +1,6 @@
 export const variantSwitchersTemplate = `"use client";
 import { useRouter } from "next/navigation";
-import { Check, ChevronDown, Languages, Tag } from "lucide-react";
+import { Check, ChevronDown, Languages } from "lucide-react";
 import { Dropdown, DropdownItem } from "@/components/layout/Dropdown";
 import { useStrings } from "@/components/useStrings";
 import { useVariant } from "@/components/useVariant";
@@ -32,7 +32,8 @@ interface SwitcherOption {
 
 interface VariantSwitcherProps {
   label: string;
-  icon: React.ReactNode;
+  /** Leading icon; the version switcher has none. */
+  icon?: React.ReactNode;
   options: SwitcherOption[];
   value: string;
   /** Which edge of the trigger the menu hangs from, so it opens into the
@@ -68,7 +69,7 @@ function VariantSwitcher({
         fullWidth={dense}
         trigger={
           <span className="dcp-switcher__content">
-            <span className="dcp-switcher__icon">{icon}</span>
+            {icon && <span className="dcp-switcher__icon">{icon}</span>}
             <span className="dcp-switcher__label">{currentLabel}</span>
             {dense && (
               <span className="dcp-switcher__short">
@@ -174,7 +175,6 @@ function VariantSwitchers({ pages }: VariantSwitchersProps) {
       {showVersions && versions && (
         <VariantSwitcher
           label={t.version}
-          icon={<Tag size={16} aria-hidden="true" />}
           value={currentVersion}
           align={dense ? "right" : "left"}
           dense={dense}
