@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.2
+## Unreleased
 
 - Document the `small` button size on the starter Buttons page: `<Button size="small">` was already supported but only `default` and `big` were listed
 
