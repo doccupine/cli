@@ -464,6 +464,126 @@ button:hover > .dcp-switcher__content svg {
 .dcp-dropdown__item:focus-visible {
   outline: none;
   box-shadow: inset 0 0 0 2px var(--color-primaryLight);
+}
+
+/* The menu button sits at the right end of the header's top row. It is not
+   part of the header (the sidebar owns the menu state), so it is placed over
+   it: absolute against the page while the header is in normal flow, fixed
+   only once the header pins. Nothing fixed touches the top edge at scroll
+   position zero, which iPad Safari needs to color its toolbar. */
+.dcp-sidebar-toggle {
+  box-sizing: border-box;
+  appearance: none;
+  margin: 0;
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+  hyphens: auto;
+  text-decoration: none;
+  text-align: center;
+  gap: 10px;
+  text-overflow: ellipsis;
+  box-shadow: 0 0 0 0px var(--color-primary);
+  font-size: 16px;
+  line-height: 1;
+  position: absolute;
+  z-index: 1001;
+  top: calc((var(--layout-header-height) - 32px) / 2);
+  right: var(--layout-gutter);
+  width: 32px;
+  height: 32px;
+  min-height: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: solid 1px var(--color-grayLight);
+  background: var(--color-light);
+  color: var(--color-dark);
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+/* Doubled to outrank the filled button's own fill and rings on hover, focus
+   and press: this control stays a quiet outlined circle. */
+.dcp-sidebar-toggle.dcp-sidebar-toggle:hover,
+.dcp-sidebar-toggle.dcp-sidebar-toggle:focus,
+.dcp-sidebar-toggle.dcp-sidebar-toggle:active {
+  background: var(--color-light);
+  box-shadow: none;
+}
+
+/* Like the header's search button: a primary border on hover, no fill. */
+.dcp-sidebar-toggle.dcp-sidebar-toggle:hover {
+  border-color: var(--color-primary);
+}
+
+.dcp-sidebar-toggle.dcp-sidebar-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primaryLight);
+}
+
+html:has(#header[data-pinned]) .dcp-sidebar-toggle {
+  position: fixed;
+}
+
+/* The chat panel opens fullscreen below "lg" and its own header holds the
+   close button where this one sits, so the menu button steps aside. */
+html:has([data-chat-panel][aria-hidden="false"]) .dcp-sidebar-toggle {
+  visibility: hidden;
+}
+
+@media screen and (min-width: 992px) {
+  .dcp-sidebar-toggle {
+    display: none;
+  }
+}
+
+.dcp-sidebar-toggle__burger {
+  display: block;
+  width: 14px;
+  height: 10px;
+  position: relative;
+}
+
+.dcp-sidebar-toggle__burger::before,
+.dcp-sidebar-toggle__burger::after {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 0;
+  width: 14px;
+  height: 1.5px;
+  border-radius: 2px;
+  background: var(--color-dark);
+  transition: transform 0.3s ease;
+}
+
+.dcp-sidebar-toggle__burger::before {
+  top: 1px;
+}
+
+.dcp-sidebar-toggle__burger::after {
+  bottom: 1px;
+}
+
+[aria-expanded="true"] > .dcp-sidebar-toggle__burger::before {
+  transform: translateY(3.25px) rotate(45deg);
+}
+
+[aria-expanded="true"] > .dcp-sidebar-toggle__burger::after {
+  transform: translateY(-3.25px) rotate(-45deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dcp-sidebar-toggle__burger::before,
+  .dcp-sidebar-toggle__burger::after {
+    transition: none;
+  }
 }`,
   classic: `.dcp-sidebar {
   --dcp-sidebar-row-line-height: 1.6;
@@ -740,102 +860,6 @@ button:hover > .dcp-switcher__content svg {
 /* The ring is drawn on the row via :has(:focus-visible). */
 .dcp-sidebar__group-chevron:focus-visible {
   outline: none;
-}
-
-/* The mobile menu button: a filled circle at the bottom right. */
-.dcp-sidebar-toggle {
-  box-sizing: border-box;
-  appearance: none;
-  border: none;
-  cursor: pointer;
-  outline: none;
-  font-family: inherit;
-  white-space: nowrap;
-  hyphens: auto;
-  text-decoration: none;
-  transition: all 0.3s ease;
-  text-align: center;
-  gap: 10px;
-  text-overflow: ellipsis;
-  align-items: center;
-  position: fixed;
-  z-index: 999;
-  bottom: 0;
-  right: 20px;
-  font-size: 16px;
-  line-height: 16px;
-  box-shadow: var(--shadow-sm);
-  background: var(--color-primary);
-  color: var(--color-surface);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  padding: 10px;
-  border-radius: 100px;
-  margin: 0 0 20px 0;
-  font-weight: 600;
-  display: flex;
-  justify-content: flex-start;
-  width: auto;
-  height: auto;
-  min-height: 0;
-}
-
-.dcp-sidebar-toggle:hover {
-  background: var(--color-primaryDark);
-  border-color: var(--color-primaryDark);
-}
-
-.dcp-sidebar-toggle:focus {
-  box-shadow: 0 0 0 4px var(--color-primaryLight);
-}
-
-.dcp-sidebar-toggle:active {
-  box-shadow: 0 0 0 2px var(--color-primaryLight);
-}
-
-@media screen and (min-width: 992px) {
-  .dcp-sidebar-toggle {
-    display: none;
-  }
-}
-
-.dcp-sidebar-toggle__burger {
-  display: block;
-  margin: auto 0;
-  width: 18px;
-  height: 18px;
-  overflow: hidden;
-  background: transparent;
-  position: relative;
-  transform: scale(0.8);
-}
-
-.dcp-sidebar-toggle__burger::before,
-.dcp-sidebar-toggle__burger::after {
-  content: "";
-  display: block;
-  position: absolute;
-  width: 18px;
-  height: 3px;
-  border-radius: 3px;
-  background: var(--color-surface);
-  transition: all 0.3s ease;
-}
-
-.dcp-sidebar-toggle__burger::before {
-  top: 3px;
-}
-
-.dcp-sidebar-toggle__burger::after {
-  bottom: 3px;
-}
-
-[aria-expanded="true"] > .dcp-sidebar-toggle__burger::before {
-  transform: translateY(5px) rotate(45deg);
-}
-
-[aria-expanded="true"] > .dcp-sidebar-toggle__burger::after {
-  transform: translateY(-4px) rotate(-45deg);
 }
 
 /* The sidebar footer controls are the modern design's pills: the
@@ -1188,125 +1212,6 @@ ${themeSwitchRules}
   outline: none;
   background: none;
   box-shadow: none;
-}
-
-/* The menu button sits at the right end of the header's top row. It is not
-   part of the header (the sidebar owns the menu state), so it is placed over
-   it: absolute against the page while the header is in normal flow, fixed
-   only once the header pins. Nothing fixed touches the top edge at scroll
-   position zero, which iPad Safari needs to color its toolbar. */
-.dcp-sidebar-toggle {
-  box-sizing: border-box;
-  appearance: none;
-  margin: 0;
-  cursor: pointer;
-  outline: none;
-  font-family: inherit;
-  font-weight: 600;
-  white-space: nowrap;
-  hyphens: auto;
-  text-decoration: none;
-  text-align: center;
-  gap: 10px;
-  text-overflow: ellipsis;
-  box-shadow: 0 0 0 0px var(--color-primary);
-  font-size: 16px;
-  line-height: 1;
-  position: absolute;
-  z-index: 1001;
-  top: calc((var(--layout-header-height) - 32px) / 2);
-  right: var(--layout-gutter);
-  width: 32px;
-  height: 32px;
-  min-height: 0;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  border: solid 1px var(--color-grayLight);
-  background: var(--color-light);
-  color: var(--color-dark);
-  transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease;
-}
-
-/* Doubled to outrank the filled button's own fill and rings on hover, focus
-   and press: this control stays a quiet outlined circle. */
-.dcp-sidebar-toggle.dcp-sidebar-toggle:hover,
-.dcp-sidebar-toggle.dcp-sidebar-toggle:focus,
-.dcp-sidebar-toggle.dcp-sidebar-toggle:active {
-  background: var(--color-light);
-  box-shadow: none;
-}
-
-.dcp-sidebar-toggle.dcp-sidebar-toggle:hover {
-  border-color: var(--color-gray);
-}
-
-.dcp-sidebar-toggle.dcp-sidebar-toggle:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--color-primaryLight);
-}
-
-html:has(#header[data-pinned]) .dcp-sidebar-toggle {
-  position: fixed;
-}
-
-/* The chat panel opens fullscreen below "lg" and its own header holds the
-   close button where this one sits, so the menu button steps aside. */
-html:has([data-chat-panel][aria-hidden="false"]) .dcp-sidebar-toggle {
-  visibility: hidden;
-}
-
-@media screen and (min-width: 992px) {
-  .dcp-sidebar-toggle {
-    display: none;
-  }
-}
-
-.dcp-sidebar-toggle__burger {
-  display: block;
-  width: 14px;
-  height: 10px;
-  position: relative;
-}
-
-.dcp-sidebar-toggle__burger::before,
-.dcp-sidebar-toggle__burger::after {
-  content: "";
-  display: block;
-  position: absolute;
-  left: 0;
-  width: 14px;
-  height: 1.5px;
-  border-radius: 2px;
-  background: var(--color-dark);
-  transition: transform 0.3s ease;
-}
-
-.dcp-sidebar-toggle__burger::before {
-  top: 1px;
-}
-
-.dcp-sidebar-toggle__burger::after {
-  bottom: 1px;
-}
-
-[aria-expanded="true"] > .dcp-sidebar-toggle__burger::before {
-  transform: translateY(3.25px) rotate(45deg);
-}
-
-[aria-expanded="true"] > .dcp-sidebar-toggle__burger::after {
-  transform: translateY(-3.25px) rotate(-45deg);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .dcp-sidebar-toggle__burger::before,
-  .dcp-sidebar-toggle__burger::after {
-    transition: none;
-  }
 }
 
 ${focusToggleRules}

@@ -55,12 +55,73 @@ export const headerStyles: DesignStyles = {
   }
 }
 
+/* Logo, section tabs, actions. Below "lg" the tabs wrap onto a second row
+   and the top row leaves room for the sidebar's menu button, which sits over
+   its right end (--layout-header-menu-slot). */
+.dcp-header .logo {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  border-radius: 6px;
+}
+
+.dcp-header .logo svg,
+.dcp-header .logo img {
+  height: auto;
+  width: fit-content;
+  min-width: 0;
+  max-width: min(160px, 100%);
+  max-height: 26px;
+}
+
+.dcp-header__inner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0 16px;
+  min-height: var(--layout-header-height);
+  padding: 0 calc(var(--layout-header-menu-slot) + var(--layout-gutter)) 0
+    var(--layout-gutter);
+}
+
+/* The logo takes the room the controls leave and gives way last: it shrinks
+   rather than pushing the controls onto a second row. */
+.dcp-header__inner > .logo {
+  flex: 1 1 0;
+  height: var(--layout-header-height);
+}
+
+@media screen and (min-width: 992px) {
+  .dcp-header__inner {
+    flex-wrap: nowrap;
+    padding: 0 var(--layout-gutter);
+  }
+}
+
+.dcp-header__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: fit-content;
+}
+
+/* Below "lg" the bar is the header's second row, full width: it runs under
+   the menu button's slot too. Each design resets the size from "lg". */
 .dcp-section-bar {
   display: flex;
   order: 3;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   position: relative;
+  width: calc(
+    100% + var(--layout-header-menu-slot) + 2 * var(--layout-gutter)
+  );
+  height: calc(
+    var(--layout-header-height-with-sections) - var(--layout-header-height)
+  );
+  margin: 0 calc(-1 * (var(--layout-header-menu-slot) + var(--layout-gutter)))
+    0 calc(-1 * var(--layout-gutter));
 }
 
 .dcp-section-bar::-webkit-scrollbar {
@@ -79,14 +140,7 @@ export const headerStyles: DesignStyles = {
 .dcp-section-bar__link:focus-visible {
   outline: none;
 }`,
-  classic: `@media screen and (min-width: 992px) {
-  .dcp-header:where(:not([data-sections])) {
-    padding-bottom: 16px;
-    padding-top: 16px;
-  }
-}
-
-.dcp-header::before,
+  classic: `.dcp-header::before,
 .dcp-header::after {
   display: block;
   content: "";
@@ -105,93 +159,36 @@ export const headerStyles: DesignStyles = {
   z-index: -1;
 }
 
-/* Below "lg" the logo takes the room the controls leave and is the last
-   thing to give way: it shrinks rather than pushing the controls onto a
-   second row. From "lg" it keeps its natural width. */
-.dcp-header .logo {
-  display: flex;
-  flex: 1 1 0;
-  min-width: 0;
-}
-
-.dcp-header .logo svg,
-.dcp-header .logo img {
-  margin: auto 0;
-  height: auto;
-  width: fit-content;
-  min-width: 0;
-  max-width: min(182px, 100%);
-  max-height: 30px;
-}
-
 .dcp-header .logo svg [fill]:not(.ignore-fill),
 .dcp-header .logo img [fill]:not(.ignore-fill) {
   fill: var(--color-primary);
 }
 
+/* From "lg" the logo keeps its natural width and the tabs fill the row,
+   pushed against the actions. */
 @media screen and (min-width: 992px) {
-  .dcp-header .logo {
+  .dcp-header__inner > .logo {
     flex: 0 1 auto;
     min-width: max-content;
   }
-
-  .dcp-header .logo svg,
-  .dcp-header .logo img {
-    min-width: fit-content;
-    max-width: 182px;
-  }
-}
-
-.dcp-header__inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  padding: 16px 0 0 20px;
-}
-
-.dcp-header__inner:where(:not([data-sections])) {
-  padding-bottom: 16px;
-}
-
-@media screen and (min-width: 992px) {
-  .dcp-header__inner {
-    flex-wrap: nowrap;
-    padding: 0 20px;
-  }
-}
-
-.dcp-header__actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: fit-content;
-  padding-right: 20px;
 }
 
 /* The assistant launcher's accessible name is its aria-label, so its visible
-   label can drop out on the narrowest phones: from 344px it fits beside the
-   widest logo (182px) on one row. */
+   label drops out below 390px, like the modern design's Ask AI pill, to
+   leave the logo room beside the menu button. */
 .dcp-header__actions .dcp-chat-launcher__inner > span {
   display: none;
 }
 
-@media screen and (min-width: 344px) {
+@media screen and (min-width: 390px) {
   .dcp-header__actions .dcp-chat-launcher__inner > span {
     display: inline;
   }
 }
 
-@media screen and (min-width: 992px) {
-  .dcp-header__actions {
-    padding-right: 0;
-  }
-}
-
+/* The links' own 10px side padding puts the first label on the gutter. */
 .dcp-section-bar {
-  width: calc(100% + 20px);
-  margin: 0 0 0 -10px;
-  padding: 0;
+  padding: 0 0 0 calc(var(--layout-gutter) - 10px);
 }
 
 @media screen and (min-width: 992px) {
@@ -199,6 +196,7 @@ export const headerStyles: DesignStyles = {
     padding: 0 10px;
     order: unset;
     width: 100%;
+    height: auto;
     margin: 0;
     justify-content: flex-end;
   }
@@ -251,62 +249,13 @@ export const headerStyles: DesignStyles = {
   backdrop-filter: saturate(180%) blur(12px);
 }
 
-.dcp-header .logo {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  border-radius: 6px;
-}
-
-.dcp-header .logo svg,
-.dcp-header .logo img {
-  height: auto;
-  width: fit-content;
-  min-width: 0;
-  max-width: min(160px, 100%);
-  max-height: 26px;
-}
-
 .dcp-header .logo svg [fill]:not(.ignore-fill),
 .dcp-header .logo img [fill]:not(.ignore-fill) {
   fill: var(--color-dark);
 }
 
-/* Logo, section tabs, actions. Below "lg" the tabs wrap onto a second row
-   and the top row leaves room for the menu button. From "lg" the logo and
-   the actions take equal flexible halves, so the tabs sit centered. */
-.dcp-header__inner {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0 16px;
-  min-height: var(--layout-header-height);
-  padding: 0 calc(var(--layout-header-menu-slot) + var(--layout-gutter)) 0
-    var(--layout-gutter);
-}
-
-/* The logo takes the room the controls leave and gives way last: it shrinks
-   rather than pushing the controls onto a second row. */
-.dcp-header__inner > .logo {
-  flex: 1 1 0;
-  height: var(--layout-header-height);
-}
-
-@media screen and (min-width: 992px) {
-  .dcp-header__inner {
-    flex-wrap: nowrap;
-    padding: 0 var(--layout-gutter);
-  }
-}
-
-.dcp-header__actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  min-width: fit-content;
-}
-
+/* From "lg" the logo and the actions take equal flexible halves, so the
+   tabs sit centered. */
 @media screen and (min-width: 992px) {
   .dcp-header__actions {
     flex: 1 1 0;
@@ -352,14 +301,6 @@ export const headerStyles: DesignStyles = {
 .dcp-section-bar {
   align-items: center;
   gap: 4px;
-  width: calc(
-    100% + var(--layout-header-menu-slot) + 2 * var(--layout-gutter)
-  );
-  height: calc(
-    var(--layout-header-height-with-sections) - var(--layout-header-height)
-  );
-  margin: 0 calc(-1 * (var(--layout-header-menu-slot) + var(--layout-gutter)))
-    0 calc(-1 * var(--layout-gutter));
   /* The pills start on the page gutter, like the logo and the content. */
   padding: 0 0 6px var(--layout-gutter);
 }

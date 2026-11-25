@@ -246,8 +246,9 @@ describe("the modern design", () => {
     expect(modern["app/styles/components.css"]).toContain(
       "@property --dcp-gradient-angle",
     );
-    // The fullscreen chat's close button sits where the menu button does.
-    expect(css).toContain(
+    // The fullscreen chat's close button sits where the menu button does
+    // (both designs: the menu button's rules are shared).
+    expect(modern["app/styles/components.css"]).toContain(
       'html:has([data-chat-panel][aria-hidden="false"]) .dcp-sidebar-toggle {',
     );
   });
@@ -263,9 +264,14 @@ describe("the modern design", () => {
     const relative = css.indexOf("position: relative;");
     expect(relative).toBeGreaterThan(-1);
     expect(css).toMatch(/\.dcp-header\[data-pinned\] \{\s+position: fixed;/);
-    // The menu button over the header is only fixed once the header pins.
-    expect(modern["app/styles/design.css"]).toMatch(
+    // The menu button over the header is only fixed once the header pins,
+    // in both designs.
+    expect(css).toMatch(
       /html:has\(#header\[data-pinned\]\) \.dcp-sidebar-toggle \{\s+position: fixed;/,
+    );
+    expect(appStructure["app/styles/components.css"]).toBe(css);
+    expect(appStructure["app/styles/design.css"]).not.toContain(
+      ".dcp-sidebar-toggle {",
     );
   });
 

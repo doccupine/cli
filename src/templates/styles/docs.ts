@@ -18,7 +18,15 @@ import type { DesignStyles } from "./index.js";
 // paint). Focus mode (data-focus-mode on <html>) drops the rails' padding,
 // unless the chat is open.
 export const docsStyles: DesignStyles = {
-  shared: `.dcp-docs-sidebar {
+  shared: `/* Below "lg" the wrapper stays unpositioned, so the sidebar's menu button
+   (absolute) is placed against the page and lands in the header's top row. */
+@media screen and (min-width: 992px) {
+  .dcp-docs-wrapper {
+    position: relative;
+  }
+}
+
+.dcp-docs-sidebar {
   clear: both;
 }
 
@@ -38,11 +46,7 @@ export const docsStyles: DesignStyles = {
   max-width: var(--layout-content-width);
   margin: auto;
 }`,
-  classic: `.dcp-docs-wrapper {
-  position: relative;
-}
-
-.dcp-docs {
+  classic: `.dcp-docs {
   position: relative;
   padding: 0 20px 100px 20px;
   width: 100%;
@@ -275,15 +279,7 @@ export const docsStyles: DesignStyles = {
   aspect-ratio: 16 / 9;
   border-radius: 12px;
 }`,
-  modern: `/* Below "lg" the wrapper stays unpositioned, so the sidebar's menu button
-   (absolute) is placed against the page and lands in the header's top row. */
-@media screen and (min-width: 992px) {
-  .dcp-docs-wrapper {
-    position: relative;
-  }
-}
-
-.dcp-docs {
+  modern: `.dcp-docs {
   position: relative;
   padding: 24px var(--layout-gutter) 72px;
   width: 100%;

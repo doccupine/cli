@@ -15,9 +15,40 @@ import type { DesignStyles } from "./index.js";
 //   .dcp-footer-space     the bottom gap that replaces the footer on small
 //                         screens when branding is hidden
 export const footerStyles: DesignStyles = {
-  shared: `.dcp-links {
+  shared: `/* The links row and the footer are padded like the article column. */
+.dcp-links {
   display: flex;
+  padding: 0 var(--layout-gutter);
   transition: all 0.3s ease;
+}
+
+@media screen and (min-width: 992px) {
+  .dcp-links {
+    padding: 0 calc(var(--layout-toc-width) + var(--layout-gutter)) 0
+      calc(var(--layout-sidebar-width) + var(--layout-gutter));
+  }
+
+  .dcp-links[data-chat-open] {
+    padding: 0 calc(var(--layout-chat-width) + var(--layout-gutter)) 0
+      calc(var(--layout-sidebar-width) + var(--layout-gutter));
+  }
+}
+
+@media screen and (min-width: 1200px) {
+  body:has([data-side-panel]) .dcp-links {
+    padding-right: calc(var(--layout-chat-width) + var(--layout-gutter));
+  }
+}
+
+@media screen and (min-width: 992px) {
+  html[data-focus-mode] .dcp-links:not([data-chat-open]) {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+.dcp-links:has(a) {
+  padding-bottom: 8px;
 }
 
 .dcp-links__content {
@@ -37,18 +68,55 @@ export const footerStyles: DesignStyles = {
 }
 
 .dcp-footer {
+  padding: 0 var(--layout-gutter);
   transition: all 0.3s ease;
 }
 
+@media screen and (min-width: 992px) {
+  .dcp-footer {
+    padding: 0 calc(var(--layout-toc-width) + var(--layout-gutter)) 0
+      calc(var(--layout-sidebar-width) + var(--layout-gutter));
+  }
+
+  .dcp-footer[data-chat-open] {
+    padding: 0 calc(var(--layout-chat-width) + var(--layout-gutter)) 0
+      calc(var(--layout-sidebar-width) + var(--layout-gutter));
+  }
+}
+
+@media screen and (min-width: 1200px) {
+  body:has([data-side-panel]) .dcp-footer {
+    padding-right: calc(var(--layout-chat-width) + var(--layout-gutter));
+  }
+}
+
+@media screen and (min-width: 992px) {
+  html[data-focus-mode] .dcp-footer:not([data-chat-open]) {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+/* One quiet row: the credit on the left, the GitHub mark on the right. */
 .dcp-footer__inner {
   max-width: var(--layout-content-width);
   margin: 0 auto;
+  padding: 16px 0 40px;
+  font-size: 13px;
+  line-height: 20px;
   color: var(--color-grayDark);
 }
 
 .dcp-footer__inner a {
   text-decoration: none;
   display: inline-flex;
+  font-weight: 500;
+  color: var(--color-dark);
+  transition: color 0.2s ease;
+}
+
+.dcp-footer__inner a:hover {
+  color: var(--color-accent);
 }
 
 /* The GitHub logo is an icon-only link: round the global focus ring so it
@@ -57,9 +125,23 @@ export const footerStyles: DesignStyles = {
   border-radius: 100%;
 }
 
+.dcp-footer__inner a svg {
+  width: 16px;
+  height: 16px;
+}
+
+.dcp-footer__inner a svg [fill] {
+  fill: var(--color-grayDark);
+}
+
+.dcp-footer__inner a:hover svg [fill] {
+  fill: var(--color-dark);
+}
+
 .dcp-footer__row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 20px;
 }
 
@@ -76,39 +158,7 @@ export const footerStyles: DesignStyles = {
     display: none;
   }
 }`,
-  classic: `.dcp-links {
-  margin: 0 auto;
-  padding: 0 20px;
-  margin-bottom: 20px;
-}
-
-@media screen and (min-width: 992px) {
-  .dcp-links {
-    margin: 0;
-    padding: 0 calc(var(--layout-toc-width) + var(--layout-gutter)) 20px
-      calc(var(--layout-sidebar-width) + var(--layout-gutter));
-  }
-
-  .dcp-links[data-chat-open] {
-    padding: 0 calc(var(--layout-chat-width) + var(--layout-gutter)) 20px
-      calc(var(--layout-sidebar-width) + var(--layout-gutter));
-  }
-}
-
-@media screen and (min-width: 1200px) {
-  body:has([data-side-panel]) .dcp-links {
-    padding-right: calc(var(--layout-chat-width) + var(--layout-gutter));
-  }
-}
-
-@media screen and (min-width: 992px) {
-  html[data-focus-mode] .dcp-links:not([data-chat-open]) {
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-}
-
-.dcp-links__content {
+  classic: `.dcp-links__content {
   gap: 16px;
 }
 
@@ -153,116 +203,8 @@ export const footerStyles: DesignStyles = {
 
 .dcp-links__link:hover {
   color: var(--color-accent);
-}
-
-.dcp-footer {
-  padding: 0 20px;
-}
-
-.dcp-footer[data-has-links] {
-  margin-top: 20px;
-}
-
-@media screen and (min-width: 992px) {
-  .dcp-footer,
-  .dcp-footer[data-has-links] {
-    margin: 0;
-    padding: 0 calc(var(--layout-toc-width) + var(--layout-gutter)) 0
-      calc(var(--layout-sidebar-width) + var(--layout-gutter));
-  }
-
-  .dcp-footer[data-chat-open] {
-    padding: 0 calc(var(--layout-chat-width) + var(--layout-gutter)) 0
-      calc(var(--layout-sidebar-width) + var(--layout-gutter));
-  }
-}
-
-@media screen and (min-width: 1200px) {
-  body:has([data-side-panel]) .dcp-footer {
-    padding-right: calc(var(--layout-chat-width) + var(--layout-gutter));
-  }
-}
-
-@media screen and (min-width: 992px) {
-  html[data-focus-mode] .dcp-footer:not([data-chat-open]) {
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-}
-
-.dcp-footer__inner {
-  border-top: solid 1px var(--color-grayLight);
-  padding: 28px 0;
-  font-size: 12px;
-  line-height: 1.7;
-}
-
-@media screen and (min-width: 992px) {
-  .dcp-footer__inner {
-    font-size: 14px;
-    line-height: 1.7;
-    padding: 20px 0;
-  }
-}
-
-.dcp-footer__inner a {
-  font-weight: 700;
-  color: var(--color-accent);
-  transition: all 0.3s ease;
-}
-
-.dcp-footer__inner a:hover {
-  color: var(--color-primary);
-}
-
-.dcp-footer__inner a svg {
-  width: 18px;
-  height: 18px;
-}
-
-.dcp-footer__row {
-  justify-content: flex-start;
-}
-
-@media screen and (min-width: 992px) {
-  .dcp-footer__row {
-    justify-content: space-between;
-  }
 }`,
-  modern: `.dcp-links {
-  padding: 0 var(--layout-gutter);
-}
-
-@media screen and (min-width: 992px) {
-  .dcp-links {
-    padding: 0 calc(var(--layout-toc-width) + var(--layout-gutter)) 0
-      calc(var(--layout-sidebar-width) + var(--layout-gutter));
-  }
-
-  .dcp-links[data-chat-open] {
-    padding: 0 calc(var(--layout-chat-width) + var(--layout-gutter)) 0
-      calc(var(--layout-sidebar-width) + var(--layout-gutter));
-  }
-}
-
-@media screen and (min-width: 1200px) {
-  body:has([data-side-panel]) .dcp-links {
-    padding-right: calc(var(--layout-chat-width) + var(--layout-gutter));
-  }
-}
-
-@media screen and (min-width: 992px) {
-  html[data-focus-mode] .dcp-links:not([data-chat-open]) {
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-}
-
-.dcp-links:has(a) {
-  padding-bottom: 8px;
-}
-
-.dcp-links__content {
+  modern: `.dcp-links__content {
   gap: 4px 20px;
 }
 
@@ -287,68 +229,5 @@ export const footerStyles: DesignStyles = {
 
 .dcp-links__link:hover {
   color: var(--color-dark);
-}
-
-.dcp-footer {
-  padding: 0 var(--layout-gutter);
-}
-
-@media screen and (min-width: 992px) {
-  .dcp-footer {
-    padding: 0 calc(var(--layout-toc-width) + var(--layout-gutter)) 0
-      calc(var(--layout-sidebar-width) + var(--layout-gutter));
-  }
-
-  .dcp-footer[data-chat-open] {
-    padding: 0 calc(var(--layout-chat-width) + var(--layout-gutter)) 0
-      calc(var(--layout-sidebar-width) + var(--layout-gutter));
-  }
-}
-
-@media screen and (min-width: 1200px) {
-  body:has([data-side-panel]) .dcp-footer {
-    padding-right: calc(var(--layout-chat-width) + var(--layout-gutter));
-  }
-}
-
-@media screen and (min-width: 992px) {
-  html[data-focus-mode] .dcp-footer:not([data-chat-open]) {
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-}
-
-/* One quiet row: the credit on the left, the GitHub mark on the right. */
-.dcp-footer__inner {
-  padding: 16px 0 40px;
-  font-size: 13px;
-  line-height: 20px;
-}
-
-.dcp-footer__inner a {
-  font-weight: 500;
-  color: var(--color-dark);
-  transition: color 0.2s ease;
-}
-
-.dcp-footer__inner a:hover {
-  color: var(--color-accent);
-}
-
-.dcp-footer__inner a svg {
-  width: 16px;
-  height: 16px;
-}
-
-.dcp-footer__inner a svg [fill] {
-  fill: var(--color-grayDark);
-}
-
-.dcp-footer__inner a:hover svg [fill] {
-  fill: var(--color-dark);
-}
-
-.dcp-footer__row {
-  justify-content: space-between;
 }`,
 };

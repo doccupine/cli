@@ -11,8 +11,35 @@ import type { DesignStyles } from "./index.js";
 //   .dcp-pager__label    the "Previous" / "Next" label with its arrow
 //   .dcp-pager__spacer   holds the next link right when there is no previous
 export const pagerStyles: DesignStyles = {
-  shared: `.dcp-pager {
+  shared: `/* Padded like the article column. */
+.dcp-pager {
+  padding: 0 var(--layout-gutter) 40px;
   transition: all 0.3s ease;
+}
+
+@media screen and (min-width: 992px) {
+  .dcp-pager {
+    padding: 0 calc(var(--layout-toc-width) + var(--layout-gutter)) 40px
+      calc(var(--layout-sidebar-width) + var(--layout-gutter));
+  }
+
+  .dcp-pager[data-chat-open] {
+    padding: 0 calc(var(--layout-chat-width) + var(--layout-gutter)) 40px
+      calc(var(--layout-sidebar-width) + var(--layout-gutter));
+  }
+}
+
+@media screen and (min-width: 1200px) {
+  body:has([data-side-panel]) .dcp-pager {
+    padding-right: calc(var(--layout-chat-width) + var(--layout-gutter));
+  }
+}
+
+@media screen and (min-width: 992px) {
+  html[data-focus-mode] .dcp-pager:not([data-chat-open]) {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
 }
 
 .dcp-pager__inner {
@@ -56,36 +83,7 @@ export const pagerStyles: DesignStyles = {
 .dcp-pager__spacer {
   flex: 1;
 }`,
-  classic: `.dcp-pager {
-  padding: 0 20px 100px 20px;
-}
-
-@media screen and (min-width: 992px) {
-  .dcp-pager {
-    padding: 0 calc(var(--layout-toc-width) + var(--layout-gutter)) 80px
-      calc(var(--layout-sidebar-width) + var(--layout-gutter));
-  }
-
-  .dcp-pager[data-chat-open] {
-    padding: 0 calc(var(--layout-chat-width) + var(--layout-gutter)) 80px
-      calc(var(--layout-sidebar-width) + var(--layout-gutter));
-  }
-}
-
-@media screen and (min-width: 1200px) {
-  body:has([data-side-panel]) .dcp-pager {
-    padding-right: calc(var(--layout-chat-width) + var(--layout-gutter));
-  }
-}
-
-@media screen and (min-width: 992px) {
-  html[data-focus-mode] .dcp-pager:not([data-chat-open]) {
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-}
-
-.dcp-pager__inner {
+  classic: `.dcp-pager__inner {
   align-items: center;
 }
 
@@ -123,36 +121,7 @@ export const pagerStyles: DesignStyles = {
   font-weight: 600;
   margin: 0 0 4px 0;
 }`,
-  modern: `.dcp-pager {
-  padding: 0 var(--layout-gutter) 40px;
-}
-
-@media screen and (min-width: 992px) {
-  .dcp-pager {
-    padding: 0 calc(var(--layout-toc-width) + var(--layout-gutter)) 40px
-      calc(var(--layout-sidebar-width) + var(--layout-gutter));
-  }
-
-  .dcp-pager[data-chat-open] {
-    padding: 0 calc(var(--layout-chat-width) + var(--layout-gutter)) 40px
-      calc(var(--layout-sidebar-width) + var(--layout-gutter));
-  }
-}
-
-@media screen and (min-width: 1200px) {
-  body:has([data-side-panel]) .dcp-pager {
-    padding-right: calc(var(--layout-chat-width) + var(--layout-gutter));
-  }
-}
-
-@media screen and (min-width: 992px) {
-  html[data-focus-mode] .dcp-pager:not([data-chat-open]) {
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-}
-
-/* Previous and next as plain text links over a hairline: a small muted
+  modern: `/* Previous and next as plain text links over a hairline: a small muted
    direction label above each page title. */
 .dcp-pager__inner {
   align-items: flex-start;

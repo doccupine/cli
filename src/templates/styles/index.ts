@@ -124,7 +124,10 @@ const geometry: Record<StyleDesign, string> = {
   --layout-content-width: 640px;
   /* Height of the header below "lg", without and with the section bar. */
   --layout-header-height: 62px;
-  --layout-header-height-with-sections: 104px;
+  --layout-header-height-with-sections: 120px;
+  /* Width kept free at the right end of the header's top row below "lg",
+     where the sidebar's menu button sits over the header. */
+  --layout-header-menu-slot: 52px;
   /* Top padding of the fixed rails, clearing the header. */
   --layout-rail-top: 82px;
   /* scroll-padding-top of the page, so anchor targets land below the header. */
