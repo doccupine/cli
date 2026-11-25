@@ -21,6 +21,7 @@ import {
 } from "./lib/generated-artifacts.js";
 import {
   claimOutputDirectory,
+  readOutputFileIfPresent,
   resolveOutputPath,
 } from "./lib/output-safety.js";
 import { OpenApiRegistry, DEFAULT_API_BASE_SLUG } from "./lib/openapi.js";
@@ -35,6 +36,7 @@ import {
 } from "./lib/variants.js";
 import { nextConfigTemplate } from "./templates/next.config.js";
 import { proxyTemplate } from "./templates/proxy.js";
+import { tokensCssTemplate } from "./templates/styles/tokens.js";
 import type {
   MDXFile,
   PageMeta,
@@ -380,6 +382,7 @@ export class MDXToNextJSGenerator {
       this.mdxReconciliationCoordinator.resetForInitialPublication();
       await this.createNextJSStructure();
       await this.copyCustomConfigFiles();
+      await this.updateTokens();
       await this.copyFontConfig();
       await this.copyAnalyticsConfig();
       await this.copyPublicFiles();
@@ -650,6 +653,10 @@ export class MDXToNextJSGenerator {
         await this.projectConfigRepository.copyConfigFile(fileName);
         console.log(chalk.green(`📋 Updated ${fileName} in Next.js app`));
 
+        if (fileName === "theme.json") {
+          await this.updateTokens();
+        }
+
         if (fileName === "sections.json") {
           await this.reloadSections();
         }
@@ -683,6 +690,10 @@ export class MDXToNextJSGenerator {
         console.log(
           chalk.yellow(`🗑️ Reset ${fileName} to its generated default`),
         );
+
+        if (fileName === "theme.json") {
+          await this.updateTokens();
+        }
 
         if (fileName === "sections.json") {
           await this.reloadSections();
@@ -1069,6 +1080,19 @@ export default function SectionIndex() {
       sourcePath,
       options,
     );
+  }
+
+  /**
+   * Writes app/styles/tokens.css, the site's color and shadow variables, from
+   * the theme.json copied into the app (the defaults when there is none).
+   */
+  async updateTokens() {
+    const source = await readOutputFileIfPresent(this.outputDir, "theme.json");
+    const { css, warnings } = tokensCssTemplate(source);
+    for (const warning of warnings) console.warn(chalk.yellow(`⚠️ ${warning}`));
+    const tokensPath = this.outputPath("app", "styles", "tokens.css");
+    await fs.ensureDir(path.dirname(tokensPath));
+    await writeFileAtomic(tokensPath, css);
   }
 
   async updateRootLayout(pages?: PageMeta[]) {

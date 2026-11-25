@@ -1,10 +1,6 @@
-export const calloutTemplate = `"use client";
-import { Icon, IconProps } from "@/components/layout/Icon";
-import {
-  StyledCallout,
-  StyledChildren,
-} from "@/components/layout/Callout.styles";
-import type { CalloutType } from "@/components/layout/Callout.styles";
+export const calloutTemplate = `import { Icon, IconProps } from "@/components/layout/Icon";
+
+export type CalloutType = "note" | "info" | "warning" | "danger" | "success";
 
 interface CalloutProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
@@ -26,10 +22,10 @@ function Callout({ children, type, icon }: CalloutProps) {
               ? "Check"
               : (icon as IconProps);
   return (
-    <StyledCallout $type={type}>
+    <div className="dcp-callout" data-type={type}>
       {iconType ? <Icon name={iconType} size={16} /> : null}
-      <StyledChildren>{children}</StyledChildren>
-    </StyledCallout>
+      <span className="dcp-callout__body">{children}</span>
+    </div>
   );
 }
 

@@ -1,16 +1,9 @@
 export const docsNavigationTemplate = `"use client";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useStrings } from "@/components/useStrings";
-import { useChat } from "cherry-styled-components";
+import { useChat } from "@/components/chat/ChatProvider";
 import { Icon } from "@/components/layout/Icon";
-import {
-  StyledNavigationWrapper,
-  StyledNavigationInner,
-  StyledNavButton,
-  StyledNavLabel,
-  StyledNavTitle,
-  StyledSpacer,
-} from "@/components/layout/DocsNavigation.styles";
 
 interface Page {
   // Optional: nested group nodes may act as headers without their own page.
@@ -75,28 +68,40 @@ function DocsNavigation({ result }: DocsNavigationProps) {
     return null;
   }
   return (
-    <StyledNavigationWrapper $isChatOpen={isOpen}>
-      <StyledNavigationInner>
+    <nav
+      className="dcp-pager"
+      aria-label={t.pageNavigation}
+      data-chat-open={isOpen || undefined}
+    >
+      <div className="dcp-pager__inner">
         {prevPage ? (
-          <StyledNavButton href={\`/\${prevPage.slug}\`} data-direction="prev">
-            <StyledNavTitle>{prevPage.title}</StyledNavTitle>
-            <StyledNavLabel>
+          <Link
+            className="dcp-pager__link"
+            href={\`/\${prevPage.slug}\`}
+            data-direction="prev"
+          >
+            <span className="dcp-pager__title">{prevPage.title}</span>
+            <span className="dcp-pager__label">
               <Icon name="arrow-left" size={16} /> {t.previous}
-            </StyledNavLabel>
-          </StyledNavButton>
+            </span>
+          </Link>
         ) : (
-          <StyledSpacer />
+          <div className="dcp-pager__spacer" />
         )}
         {nextPage && (
-          <StyledNavButton href={\`/\${nextPage.slug}\`} data-direction="next">
-            <StyledNavTitle>{nextPage.title}</StyledNavTitle>
-            <StyledNavLabel>
+          <Link
+            className="dcp-pager__link"
+            href={\`/\${nextPage.slug}\`}
+            data-direction="next"
+          >
+            <span className="dcp-pager__title">{nextPage.title}</span>
+            <span className="dcp-pager__label">
               {t.next} <Icon name="arrow-right" size={16} />
-            </StyledNavLabel>
-          </StyledNavButton>
+            </span>
+          </Link>
         )}
-      </StyledNavigationInner>
-    </StyledNavigationWrapper>
+      </div>
+    </nav>
   );
 }
 

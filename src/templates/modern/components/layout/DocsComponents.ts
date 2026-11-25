@@ -9,21 +9,23 @@ export const modernDocsComponentsTemplate = deriveTemplate(
     [
       `"use client";
 import React, { createContext } from "react";
-import { useChat } from "cherry-styled-components";
+import { useChat } from "@/components/chat/ChatProvider";
 import {`,
       `"use client";
 import React, { createContext, useContext } from "react";
 import { usePathname } from "next/navigation";
-import { useChat } from "cherry-styled-components";
+import { useChat } from "@/components/chat/ChatProvider";
 import {`,
     ],
     [
       `import { useVariant } from "@/components/useVariant";
 import { joinVariantSlug } from "@/utils/variants";
+import { useStrings } from "@/components/useStrings";
 
 const SectionBarContext = createContext(false);`,
       `import { useVariant } from "@/components/useVariant";
 import { joinVariantSlug } from "@/utils/variants";
+import { useStrings } from "@/components/useStrings";
 import type { PagesProps } from "@/utils/orderNavItems";
 
 const SectionBarContext = createContext(false);`,
@@ -36,7 +38,7 @@ interface DocsWrapperProps {
 }
 
 function DocsWrapper({ children }: DocsWrapperProps) {
-  return <StyledDocsWrapper>{children}</StyledDocsWrapper>;
+  return <div className="dcp-docs-wrapper">{children}</div>;
 }
 `,
       `}
@@ -61,7 +63,7 @@ interface DocsWrapperProps {
 function DocsWrapper({ children, pages = [] }: DocsWrapperProps) {
   return (
     <PagesContext.Provider value={pages}>
-      <StyledDocsWrapper>{children}</StyledDocsWrapper>
+      <div className="dcp-docs-wrapper">{children}</div>
     </PagesContext.Provider>
   );
 }

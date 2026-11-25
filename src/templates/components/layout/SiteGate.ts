@@ -1,109 +1,43 @@
 export const siteGateComponentTemplate = `"use client";
-import { useState, type FormEvent } from "react";
-import styled from "styled-components";
-import { Input, ThemeToggle } from "cherry-styled-components";
-import { Lock } from "lucide-react";
-import { Theme } from "@/app/theme";
+import { useEffect, useState, type FormEvent } from "react";
+import { Lock, MoonStar, Sun } from "lucide-react";
+import { useColorMode } from "@/components/useColorMode";
 import { Button } from "@/components/layout/Button";
 import { Callout } from "@/components/layout/Callout";
 import { config } from "@/utils/config";
 
-const StyledWrapper = styled.div<{ theme: Theme }>\`
-  min-height: 100dvh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background: \${({ theme }) => theme.colors.light};
-\`;
+// The light/dark toggle under the card. Cmd/Ctrl+Shift+L flips the mode
+// too. Adapted from cherry-styled-components (MIT).
+function GateThemeToggle() {
+  const { toggleTheme } = useColorMode();
 
-const StyledInner = styled.div\`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  width: 100%;
-  max-width: 380px;
-\`;
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      // Cmd on macOS, Ctrl elsewhere. Shift steps out of Cmd/Ctrl+L, which
+      // focuses the address bar.
+      if (!(e.metaKey || e.ctrlKey) || !e.shiftKey || e.altKey) return;
+      if (e.key.toLowerCase() !== "l") return;
+      e.preventDefault();
+      toggleTheme();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [toggleTheme]);
 
-const StyledFooter = styled.div\`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-\`;
+  return (
+    <button
+      type="button"
+      className="dcp-gate__theme-toggle"
+      aria-label="Toggle Theme"
+      onClick={toggleTheme}
+    >
+      <Sun aria-hidden="true" />
+      <MoonStar aria-hidden="true" />
+    </button>
+  );
+}
 
-const StyledBranding = styled.p<{ theme: Theme }>\`
-  margin: 0;
-  font-size: 14px;
-  color: \${({ theme }) => theme.colors.grayDark};
-
-  & a {
-    color: \${({ theme }) => theme.colors.accent};
-    font-weight: 700;
-    text-decoration: none;
-    transition: all 0.3s ease;
-  }
-
-  & a:hover {
-    color: \${({ theme }) => theme.colors.primary};
-  }
-\`;
-
-const StyledCard = styled.div<{ theme: Theme }>\`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  width: 100%;
-  padding: 40px 32px;
-  background: \${({ theme }) => theme.colors.light};
-  border: solid 1px \${({ theme }) => theme.colors.grayLight};
-  border-radius: \${({ theme }) => theme.spacing.radius.lg};
-  box-shadow: \${({ theme }) => theme.shadows.sm};
-  text-align: center;
-\`;
-
-const StyledIcon = styled.div<{ theme: Theme }>\`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  color: \${({ theme }) => theme.colors.accent};
-  background: \${({ theme }) => theme.colors.grayLight};
-
-  & svg {
-    width: 22px;
-    height: 22px;
-  }
-\`;
-
-const StyledTitle = styled.h1<{ theme: Theme }>\`
-  margin: 0;
-  font-size: 22px;
-  color: \${({ theme }) => theme.colors.accent};
-\`;
-
-const StyledLede = styled.p<{ theme: Theme }>\`
-  margin: 0;
-  font-size: 15px;
-  color: \${({ theme }) => theme.colors.grayDark};
-\`;
-
-const StyledForm = styled.form\`
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  width: 100%;
-\`;
-
-const StyledAlert = styled.div\`
-  width: 100%;
-  text-align: left;
-\`;
-
+// The password screen. Styles: app/styles (.dcp-gate).
 export function SiteGate({ hideBranding }: { hideBranding?: boolean }) {
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
@@ -130,30 +64,34 @@ export function SiteGate({ hideBranding }: { hideBranding?: boolean }) {
   }
 
   return (
-    <StyledWrapper>
-      <StyledInner>
-        <StyledCard>
-          <StyledIcon>
+    <div className="dcp-gate">
+      <div className="dcp-gate__inner">
+        <div className="dcp-gate__card">
+          <div className="dcp-gate__icon">
             <Lock />
-          </StyledIcon>
-          <StyledTitle>{config.name || "Documentation"}</StyledTitle>
-          <StyledLede>This site is password protected.</StyledLede>
-          <StyledForm onSubmit={handleSubmit} noValidate>
-            <Input
-              type="password"
-              name="password"
-              autoComplete="current-password"
-              placeholder="Enter password"
-              aria-label="Password"
-              autoFocus
-              value={password}
-              $error={status === "error"}
-              $fullWidth
-              onChange={(e) => {
-                setPassword(e.target.value);
-                if (status === "error") setStatus("idle");
-              }}
-            />
+          </div>
+          <h1 className="dcp-gate__title">{config.name || "Documentation"}</h1>
+          <p className="dcp-gate__lede">This site is password protected.</p>
+          <form className="dcp-gate__form" onSubmit={handleSubmit} noValidate>
+            <span className="dcp-gate__field">
+              <input
+                className="dcp-gate__input"
+                type="password"
+                name="password"
+                autoComplete="current-password"
+                placeholder="Enter password"
+                aria-label="Password"
+                // The screen exists to take this one field.
+                // eslint-disable-next-line jsx-a11y/no-autofocus
+                autoFocus
+                value={password}
+                aria-invalid={status === "error" || undefined}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (status === "error") setStatus("idle");
+                }}
+              />
+            </span>
             <Button
               type="submit"
               fullWidth
@@ -161,19 +99,19 @@ export function SiteGate({ hideBranding }: { hideBranding?: boolean }) {
             >
               {status === "loading" ? "Unlocking..." : "Enter"}
             </Button>
-          </StyledForm>
+          </form>
           {status === "error" && (
-            <StyledAlert>
+            <div className="dcp-gate__alert">
               <Callout type="danger">
                 <p>Incorrect password. Try again.</p>
               </Callout>
-            </StyledAlert>
+            </div>
           )}
-        </StyledCard>
-        <StyledFooter>
-          <ThemeToggle $shortcut />
+        </div>
+        <div className="dcp-gate__footer">
+          <GateThemeToggle />
           {!hideBranding && (
-            <StyledBranding>
+            <p className="dcp-gate__branding">
               Powered by{" "}
               <a
                 href="https://doccupine.com"
@@ -182,11 +120,11 @@ export function SiteGate({ hideBranding }: { hideBranding?: boolean }) {
               >
                 Doccupine
               </a>
-            </StyledBranding>
+            </p>
           )}
-        </StyledFooter>
-      </StyledInner>
-    </StyledWrapper>
+        </div>
+      </div>
+    </div>
   );
 }
 `;

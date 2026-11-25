@@ -1,30 +1,22 @@
 export const sideBarTemplate = `"use client";
-import { useContext, useEffect, useId, useRef, useState } from "react";
+import {
+  useContext,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { MoonStar, Sun } from "lucide-react";
 import { useStrings } from "@/components/useStrings";
-import { Space, ThemeToggle } from "cherry-styled-components";
-import { httpMethodBadgeColor } from "@/components/layout/Badge";
+import { useColorMode } from "@/components/useColorMode";
+import { Badge, httpMethodBadgeColor } from "@/components/layout/Badge";
 import {
   DocsSidebar,
   SectionBarContext,
 } from "@/components/layout/DocsComponents";
-import {
-  StyledSidebar,
-  StyledSidebarList,
-  StyledSidebarListItem,
-  StyledStrong,
-  StyledSidebarListItemLink,
-  StyledSidebarMethodTag,
-  StyledSidebarGroupButton,
-  StyledSidebarGroupRow,
-  StyledSidebarGroupLink,
-  StyledSidebarGroupChevron,
-  StyledSidebarGroupContent,
-  StyledSidebarFooter,
-  StyledSidebarFooterToggle,
-  StyleMobileBar,
-  StyledMobileBurger,
-} from "@/components/SideBar.styles";
 import { FocusModeToggle } from "@/components/layout/FocusModeToggle";
 import { Icon } from "@/components/layout/Icon";
 import { VariantSwitchers } from "@/components/layout/VariantSwitchers";
@@ -79,7 +71,8 @@ function SidebarNavLink({
   const hasChildren = children.length > 0;
   const href = link.slug !== undefined ? \`/\${link.slug}\` : undefined;
   const isActive = href !== undefined && pathname === href;
-  const indent = { paddingLeft: \`\${20 + depth * 14}px\` };
+  // The row's inset grows 14px per nesting level (app/styles reads it).
+  const indent = { "--dcp-sidebar-depth": depth } as CSSProperties;
   const groupContentId = useId();
   const t = useStrings();
 
@@ -93,28 +86,29 @@ function SidebarNavLink({
 
   if (!hasChildren) {
     return (
-      <StyledSidebarListItem>
-        <StyledSidebarListItemLink
+      <li className="dcp-sidebar__item">
+        <Link
+          className="dcp-sidebar__link"
           href={href ?? "#"}
-          $isActive={isActive}
           aria-current={isActive ? "page" : undefined}
           onClick={onNavigate}
           style={indent}
         >
           {link.httpMethod && (
-            <StyledSidebarMethodTag
+            <Badge
+              className="dcp-sidebar__method"
               mono
               solid={isActive}
               size="xs"
               color={httpMethodBadgeColor(link.httpMethod)}
             >
               {link.httpMethod}
-            </StyledSidebarMethodTag>
+            </Badge>
           )}
           {link.icon && <Icon name={link.icon} size={16} />}
           {link.title}
-        </StyledSidebarListItemLink>
-      </StyledSidebarListItem>
+        </Link>
+      </li>
     );
   }
 
@@ -128,35 +122,39 @@ function SidebarNavLink({
   return (
     <li>
       {href !== undefined ? (
-        <StyledSidebarGroupRow
-          $isActive={groupActive}
-          $isOpen={isOpen}
+        <div
+          className="dcp-sidebar__group-row"
+          data-active={groupActive || undefined}
+          data-open={isOpen || undefined}
           style={indent}
         >
-          <StyledSidebarGroupLink
+          <Link
+            className="dcp-sidebar__group-link"
             href={href}
             aria-current={pathname === href ? "page" : undefined}
             onClick={onNavigate}
           >
             {link.icon && <Icon name={link.icon} size={16} />}
             {link.title}
-          </StyledSidebarGroupLink>
-          <StyledSidebarGroupChevron
+          </Link>
+          <button
             type="button"
+            className="dcp-sidebar__group-chevron"
             onClick={toggle}
             aria-expanded={isOpen}
             aria-controls={groupContentId}
             aria-label={toggleLabel}
           >
             <Icon name="chevron-right" size={16} />
-          </StyledSidebarGroupChevron>
-        </StyledSidebarGroupRow>
+          </button>
+        </div>
       ) : (
-        <StyledSidebarGroupButton
+        <button
           type="button"
+          className="dcp-sidebar__group-button"
           onClick={toggle}
-          $isActive={groupActive}
-          $isOpen={isOpen}
+          data-active={groupActive || undefined}
+          data-open={isOpen || undefined}
           style={indent}
           aria-expanded={isOpen}
           aria-controls={groupContentId}
@@ -165,13 +163,14 @@ function SidebarNavLink({
           {link.icon && <Icon name={link.icon} size={16} />}
           {link.title}
           <Icon name="chevron-right" size={16} />
-        </StyledSidebarGroupButton>
+        </button>
       )}
-      <StyledSidebarGroupContent
+      <ul
+        className="dcp-sidebar__group-content"
         id={groupContentId}
         aria-hidden={!isOpen}
         inert={!isOpen}
-        $isOpen={isOpen}
+        data-open={isOpen || undefined}
       >
         {children.map((child: NavItemLink, index: number) => (
           <SidebarNavLink
@@ -182,11 +181,48 @@ function SidebarNavLink({
             onNavigate={onNavigate}
           />
         ))}
-      </StyledSidebarGroupContent>
+      </ul>
     </li>
   );
 }
 
+// Light/dark switch, drawn as a pill (sun, then moon) in both designs. The
+// knob follows the "dark" class on <html> in CSS, so it is right from the
+// first paint; useColorMode only reports the state to assistive tech.
+// Cmd/Ctrl+Shift+L flips the mode too.
+function ThemeSwitch() {
+  const { mode, toggleTheme } = useColorMode();
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      // Cmd on macOS, Ctrl elsewhere. Shift steps out of Cmd/Ctrl+L, which
+      // focuses the address bar.
+      if (!(e.metaKey || e.ctrlKey) || !e.shiftKey || e.altKey) return;
+      if (e.key.toLowerCase() !== "l") return;
+      e.preventDefault();
+      toggleTheme();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [toggleTheme]);
+
+  return (
+    <button
+      type="button"
+      className="dcp-reset-button dcp-pill dcp-pill-switch dcp-theme-switch"
+      role="switch"
+      aria-checked={mode === "dark"}
+      aria-label="Dark mode"
+      title="Dark mode (⌘⇧L)"
+      onClick={toggleTheme}
+    >
+      <Sun aria-hidden="true" />
+      <MoonStar aria-hidden="true" />
+    </button>
+  );
+}
+
+// The navigation sidebar. Styles: app/styles (.dcp-sidebar).
 function SideBar({ result, pages = [] }: SideBarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const hasSectionBar = useContext(SectionBarContext);
@@ -243,34 +279,37 @@ function SideBar({ result, pages = [] }: SideBarProps) {
 
   return (
     <DocsSidebar>
-      <StyleMobileBar
+      <button
+        type="button"
+        className="dcp-sidebar-toggle"
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        $isActive={isMobileMenuOpen}
         aria-label={isMobileMenuOpen ? t.closeNavigation : t.openNavigation}
         aria-expanded={isMobileMenuOpen}
         aria-controls={sidebarId}
       >
-        <StyledMobileBurger $isActive={isMobileMenuOpen} />
-      </StyleMobileBar>
+        <span className="dcp-sidebar-toggle__burger" />
+      </button>
 
-      <StyledSidebar
+      <nav
+        aria-label={t.navigation}
+        className="dcp-sidebar"
         id={sidebarId}
         ref={navRef}
-        $isActive={isMobileMenuOpen}
-        $hasSectionBar={hasSectionBar}
+        data-open={isMobileMenuOpen || undefined}
+        data-sections={hasSectionBar || undefined}
       >
         {result &&
           result.map((item: NavItem, index: number) => {
             return (
-              <StyledSidebarList key={index}>
-                <StyledSidebarListItem>
-                  <StyledStrong>
+              <ul className="dcp-sidebar__list" key={index}>
+                <li className="dcp-sidebar__item">
+                  <strong className="dcp-sidebar__label">
                     {item.icon && <Icon name={item.icon} size={16} />}
                     {item.label}
-                  </StyledStrong>{" "}
-                </StyledSidebarListItem>
+                  </strong>{" "}
+                </li>
                 <li>
-                  <Space $size={20} />
+                  <span className="dcp-sidebar__space" />
                 </li>
                 {item.links &&
                   item.links.map((link: NavItemLink, indexChild: number) => (
@@ -283,23 +322,23 @@ function SideBar({ result, pages = [] }: SideBarProps) {
                     />
                   ))}
                 <li aria-hidden="true">
-                  <Space $size={20} />
+                  <span className="dcp-sidebar__space" />
                 </li>
-              </StyledSidebarList>
+              </ul>
             );
           })}
         {/* One row of 30px controls. The focus-mode toggle is fixed over its
             left end, the switchers follow, and the theme toggle holds the
             right end of the rail. */}
-        <StyledSidebarFooter ref={footerRef}>
+        <div className="dcp-sidebar__footer" ref={footerRef}>
           <VariantSwitchers pages={pages} />
-          <StyledSidebarFooterToggle>
-            <ThemeToggle $shortcut />
-          </StyledSidebarFooterToggle>
-        </StyledSidebarFooter>
-      </StyledSidebar>
+          <div className="dcp-sidebar__footer-toggle">
+            <ThemeSwitch />
+          </div>
+        </div>
+      </nav>
 
-      {/* Outside StyledSidebar on purpose: focus mode slides that whole
+      {/* Outside the nav on purpose: focus mode slides that whole
           column away, and the toggle has to survive it. */}
       <FocusModeToggle />
     </DocsSidebar>

@@ -1,8 +1,4 @@
-export const promptTemplate = `"use client";
-import React from "react";
-import styled from "styled-components";
-import { interactiveStyles, styledText } from "cherry-styled-components";
-import { Theme } from "@/app/theme";
+export const promptTemplate = `import React from "react";
 import { Icon } from "@/components/layout/Icon";
 import { CopyButton } from "@/components/layout/CopyButton";
 
@@ -32,74 +28,6 @@ function promptText(node: React.ReactNode): string {
   return "";
 }
 
-const StyledPrompt = styled.div<{ theme: Theme }>\`
-  background: \${({ theme }) => theme.colors.light};
-  border: solid 1px \${({ theme }) => theme.colors.grayLight};
-  border-radius: \${({ theme }) => theme.spacing.radius.lg};
-  padding: 20px;
-  width: 100%;
-\`;
-
-const StyledPromptHeader = styled.div<{ theme: Theme }>\`
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin: 0 0 15px;
-  \${({ theme }) => styledText(theme)};
-  font-weight: 700;
-  color: \${({ theme }) => theme.colors.dark};
-
-  & > svg.lucide {
-    flex-shrink: 0;
-    margin-top: 4px;
-    color: inherit;
-  }
-\`;
-
-const StyledPromptDescription = styled.span\`
-  flex: 1;
-  min-width: 0;
-\`;
-
-const StyledPromptActions = styled.span\`
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-\`;
-
-// Matches the CopyButton chrome so the two actions read as one control
-// group; a link rather than a button because it navigates to the Cursor
-// deeplink.
-const StyledCursorLink = styled.a<{ theme: Theme }>\`
-  \${interactiveStyles}
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  background: \${({ theme }) => theme.colors.light};
-  border-color: \${({ theme }) => theme.colors.grayLight};
-  border-radius: \${({ theme }) => theme.spacing.radius.xs};
-  padding: 4px 8px;
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 600;
-  color: \${({ theme }) => theme.colors.grayDark};
-  text-decoration: none;
-
-  & svg.lucide {
-    margin: 0;
-    color: inherit;
-  }
-\`;
-
-const StyledPromptBody = styled.div<{ theme: Theme }>\`
-  \${({ theme }) => styledText(theme)};
-  color: \${({ theme }) => theme.colors.grayDark};
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-\`;
-
 interface PromptProps {
   children: React.ReactNode;
   description: string;
@@ -118,27 +46,28 @@ function Prompt({
     .trim();
 
   return (
-    <StyledPrompt>
-      <StyledPromptHeader>
+    <div className="dcp-prompt">
+      <div className="dcp-prompt__header">
         {icon ? <Icon name={icon} size={16} /> : null}
-        <StyledPromptDescription>{description}</StyledPromptDescription>
-        <StyledPromptActions>
+        <span className="dcp-prompt__description">{description}</span>
+        <span className="dcp-prompt__actions">
           {actions.includes("copy") && (
             <CopyButton text={text} label="Copy prompt" size={16} />
           )}
           {actions.includes("cursor") && (
-            <StyledCursorLink
+            <a
+              className="dcp-prompt__cursor"
               href={CURSOR_DEEPLINK + encodeURIComponent(text)}
               aria-label="Open prompt in Cursor"
             >
               Cursor
               <Icon name="arrow-up-right" size={12} />
-            </StyledCursorLink>
+            </a>
           )}
-        </StyledPromptActions>
-      </StyledPromptHeader>
-      <StyledPromptBody>{children}</StyledPromptBody>
-    </StyledPrompt>
+        </span>
+      </div>
+      <div className="dcp-prompt__body">{children}</div>
+    </div>
   );
 }
 

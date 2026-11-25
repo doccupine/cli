@@ -1,13 +1,6 @@
 export const docsSideBarTemplate = `"use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Space } from "cherry-styled-components";
 import { useStrings } from "@/components/useStrings";
-import {
-  StyledIndexSidebar,
-  StyledIndexSidebarLink,
-  StyledIndexSidebarLabel,
-  StyledIndexSidebarLi,
-} from "@/components/DocsSideBar.styles";
 
 interface Heading {
   id: string;
@@ -145,33 +138,39 @@ export function DocsSideBar({ headings }: { headings: Heading[] }) {
   };
 
   return (
-    <StyledIndexSidebar data-sidebar data-markdown-ignore>
-      {headings?.length > 0 && (
-        <li aria-hidden="true">
-          <StyledIndexSidebarLabel>{t.onThisPage}</StyledIndexSidebarLabel>
-          <Space $size={15} />
-        </li>
-      )}
-      {headings.map((heading, index) => (
-        <StyledIndexSidebarLi
-          key={index}
-          ref={activeId === heading.id ? activeRef : null}
-          $isActive={activeId === heading.id}
-          style={{ paddingLeft: \`\${(heading.level - 1) * 16}px\` }}
-        >
-          <StyledIndexSidebarLink
-            href={\`#\${heading.id}\`}
-            onClick={(e) => {
-              e.preventDefault();
-              handleHeadingClick(heading.id);
-            }}
-            $isActive={activeId === heading.id}
+    // A labelled landmark around the list; display: contents keeps the
+    // layout exactly as the bare list had it.
+    <nav className="dcp-toc-nav" aria-label={t.onThisPage}>
+      <ul className="dcp-toc" data-sidebar data-markdown-ignore>
+        {headings?.length > 0 && (
+          <li aria-hidden="true">
+            <span className="dcp-toc__label">{t.onThisPage}</span>
+            <span className="dcp-toc__space" />
+          </li>
+        )}
+        {headings.map((heading, index) => (
+          <li
+            key={index}
+            ref={activeId === heading.id ? activeRef : null}
+            className="dcp-toc__item"
+            data-active={activeId === heading.id || undefined}
+            style={{ paddingLeft: \`\${(heading.level - 1) * 16}px\` }}
           >
-            {heading.text}
-          </StyledIndexSidebarLink>
-        </StyledIndexSidebarLi>
-      ))}
-    </StyledIndexSidebar>
+            <a
+              className="dcp-toc__link"
+              href={\`#\${heading.id}\`}
+              onClick={(e) => {
+                e.preventDefault();
+                handleHeadingClick(heading.id);
+              }}
+              data-active={activeId === heading.id || undefined}
+            >
+              {heading.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 }
 `;

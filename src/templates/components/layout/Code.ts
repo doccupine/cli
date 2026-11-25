@@ -1,32 +1,19 @@
 export const codeTemplate = `"use client";
 import { useState, useCallback, useMemo, useId } from "react";
-import { Theme } from "@/app/theme";
 import { unified } from "unified";
 import rehypeParse from "rehype-parse";
 import rehypeHighlight from "rehype-highlight";
 import rehypeStringify from "rehype-stringify";
 import { Icon } from "@/components/layout/Icon";
 import { useStrings } from "@/components/useStrings";
-import {
-  CodeWrapper,
-  TopBar,
-  DotsContainer,
-  Dot,
-  CopyButton,
-  TopBarTitle,
-  TabList,
-  CodeTabButton,
-  Body,
-} from "@/components/layout/Code.styles";
 
-interface CodeProps extends Omit<
-  React.HTMLAttributes<HTMLDivElement>,
-  "theme"
-> {
+// Styles: app/styles/design.css (.dcp-code, see src/templates/styles/code.ts
+// in the CLI).
+
+interface CodeProps extends React.HTMLAttributes<HTMLDivElement> {
   code: string;
   language?: string;
   title?: string;
-  theme?: Theme;
 }
 
 interface CodeTab {
@@ -35,12 +22,8 @@ interface CodeTab {
   language?: string;
 }
 
-interface CodeTabsProps extends Omit<
-  React.HTMLAttributes<HTMLDivElement>,
-  "theme"
-> {
+interface CodeTabsProps extends React.HTMLAttributes<HTMLDivElement> {
   tabs: CodeTab[];
-  theme?: Theme;
 }
 
 const escapeHtml = (unsafe: string): string => {
@@ -65,20 +48,16 @@ const highlightCode = (code: string, language: string): string => {
       ignoreMissing: true,
     })
     .use(rehypeStringify)
+    // tabindex: a long line scrolls the block sideways, and keyboard users
+    // need to reach it to scroll it.
     .processSync(
-      \`<pre><code class="language-\${safeLang}">\${escapedCode}</code></pre>\`,
+      \`<pre tabindex="0"><code class="language-\${safeLang}">\${escapedCode}</code></pre>\`,
     );
 
   return String(result);
 };
 
-function Code({
-  code,
-  language = "javascript",
-  title,
-  theme,
-  className,
-}: CodeProps) {
+function Code({ code, language = "javascript", title, className }: CodeProps) {
   const [copied, setCopied] = useState(false);
   const t = useStrings();
   const highlightedCode = useMemo(
@@ -97,39 +76,35 @@ function Code({
   }, [code]);
 
   return (
-    <CodeWrapper
-      className={\`\${className ?? ""} code-wrapper\`.trim()}
-      theme={theme}
-    >
-      <TopBar theme={theme}>
-        <DotsContainer>
-          <Dot theme={theme} />
-          <Dot theme={theme} />
-          <Dot theme={theme} />
-        </DotsContainer>
-        {title ? <TopBarTitle theme={theme}>{title}</TopBarTitle> : null}
-        <CopyButton
+    <span className={\`\${className ?? ""} dcp-code code-wrapper\`.trim()}>
+      <div className="dcp-code__bar">
+        <div className="dcp-code__dots">
+          <span className="dcp-code__dot" />
+          <span className="dcp-code__dot" />
+          <span className="dcp-code__dot" />
+        </div>
+        {title ? <span className="dcp-code__title">{title}</span> : null}
+        <button
+          className="dcp-code__copy"
           onClick={handleCopy}
-          $copied={copied}
-          theme={theme}
+          data-copied={copied || undefined}
           aria-label={copied ? t.copied : t.copyCode}
         >
           <Icon name={copied ? "check" : "copy"} size={12} />
-        </CopyButton>
-      </TopBar>
-      <Body
+        </button>
+      </div>
+      <div
         dangerouslySetInnerHTML={{ __html: highlightedCode }}
-        theme={theme}
-        className="code-wrapper-body"
+        className="dcp-code__body code-wrapper-body"
       />
-    </CodeWrapper>
+    </span>
   );
 }
 
 /* Multi-variant code block (npm / pnpm / yarn, etc). Tabs replace the macOS
    dots in the TopBar as a keyboard-accessible tablist; the copy button copies
    whichever tab is active and resets its copied state when the tab changes. */
-function CodeTabs({ tabs, theme, className }: CodeTabsProps) {
+function CodeTabs({ tabs, className }: CodeTabsProps) {
   const baseId = useId();
   const [active, setActive] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -187,14 +162,16 @@ function CodeTabs({ tabs, theme, className }: CodeTabsProps) {
   if (!tabs || tabs.length === 0) return null;
 
   return (
-    <CodeWrapper
-      className={\`\${className ?? ""} code-wrapper\`.trim()}
-      theme={theme}
-    >
-      <TopBar theme={theme}>
-        <TabList role="tablist" aria-label={t.codeVariants}>
+    <span className={\`\${className ?? ""} dcp-code code-wrapper\`.trim()}>
+      <div className="dcp-code__bar">
+        <div
+          className="dcp-code__tabs"
+          role="tablist"
+          aria-label={t.codeVariants}
+        >
           {tabs.map((tab, index) => (
-            <CodeTabButton
+            <button
+              className="dcp-code__tab"
               key={\`\${tab.label}-\${index}\`}
               type="button"
               role="tab"
@@ -204,31 +181,28 @@ function CodeTabs({ tabs, theme, className }: CodeTabsProps) {
               tabIndex={index === safeActive ? 0 : -1}
               onClick={() => handleSelect(index)}
               onKeyDown={handleKeyDown}
-              $active={index === safeActive}
-              theme={theme}
             >
               {tab.label}
-            </CodeTabButton>
+            </button>
           ))}
-        </TabList>
-        <CopyButton
+        </div>
+        <button
+          className="dcp-code__copy"
           onClick={handleCopy}
-          $copied={copied}
-          theme={theme}
+          data-copied={copied || undefined}
           aria-label={copied ? t.copied : t.copyCode}
         >
           <Icon name={copied ? "check" : "copy"} size={12} />
-        </CopyButton>
-      </TopBar>
-      <Body
+        </button>
+      </div>
+      <div
         id={\`\${baseId}-panel\`}
         role="tabpanel"
         aria-labelledby={\`\${baseId}-tab-\${safeActive}\`}
         dangerouslySetInnerHTML={{ __html: highlightedCode }}
-        theme={theme}
-        className="code-wrapper-body"
+        className="dcp-code__body code-wrapper-body"
       />
-    </CodeWrapper>
+    </span>
   );
 }
 

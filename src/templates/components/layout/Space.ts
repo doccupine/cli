@@ -1,7 +1,6 @@
-export const spaceTemplate = `"use client";
-import { Space as CherrySpace } from "cherry-styled-components";
+export const spaceTemplate = `type SpaceSize = number | "none";
 
-type SpaceSize = number | "none";
+const BREAKPOINTS = ["xs", "sm", "md", "lg", "xl", "xxl", "xxxl"] as const;
 
 interface SpaceProps {
   size?: SpaceSize;
@@ -13,13 +12,9 @@ interface SpaceProps {
   xxl?: SpaceSize;
   xxxl?: SpaceSize;
   horizontal?: boolean;
-  // Cherry marks its styling props transient with a $ prefix, which is an
-  // implementation detail of styled-components rather than something an MDX
-  // author should have to know - every other Doccupine component takes plain
-  // names. Space was previously re-exported straight from Cherry, so pages
-  // written against that API still pass the $ form: it stays accepted here,
-  // with the documented plain name winning when both are present, so an
-  // upgrade never silently drops a gap from an existing page.
+  // The $-prefixed names are the API Space had when it was Cherry's
+  // component; pages written against it still pass them, so they stay
+  // accepted, with the documented plain name winning when both are present.
   $size?: SpaceSize;
   $xs?: SpaceSize;
   $sm?: SpaceSize;
@@ -31,37 +26,38 @@ interface SpaceProps {
   $horizontal?: boolean;
 }
 
-function Space({
-  size,
-  xs,
-  sm,
-  md,
-  lg,
-  xl,
-  xxl,
-  xxxl,
-  horizontal,
-  $size,
-  $xs,
-  $sm,
-  $md,
-  $lg,
-  $xl,
-  $xxl,
-  $xxxl,
-  $horizontal,
-}: SpaceProps) {
+/**
+ * An empty span that holds a gap: \`size\` pixels tall (or wide with
+ * \`horizontal\`), with per-breakpoint overrides (\`md={80}\` from 768px
+ * up). "none" hides it. The sizes become inline custom properties that
+ * app/styles/components.css resolves per breakpoint.
+ */
+function Space(props: SpaceProps) {
+  const horizontal = props.horizontal ?? props.$horizontal ?? false;
+  const style: Record<string, string> = {};
+  const set = (name: string, value: SpaceSize | undefined) => {
+    if (value === undefined) return;
+    style[name] = value === "none" ? "0px" : \`\${value}px\`;
+    style[name + "-display"] =
+      value === "none" ? "none" : horizontal ? "inline-block" : "block";
+  };
+  const size = props.size ?? props.$size;
+  // A zero size draws nothing, as before.
+  if (size) set("--dcp-space", size);
+  for (const breakpoint of BREAKPOINTS) {
+    set(
+      \`--dcp-space-\${breakpoint}\`,
+      props[breakpoint] ?? props[\`$\${breakpoint}\`],
+    );
+  }
+  if (horizontal && Object.keys(style).length > 0) {
+    style["--dcp-space-cap"] = "0px";
+  }
   return (
-    <CherrySpace
-      $size={size ?? $size}
-      $xs={xs ?? $xs}
-      $sm={sm ?? $sm}
-      $md={md ?? $md}
-      $lg={lg ?? $lg}
-      $xl={xl ?? $xl}
-      $xxl={xxl ?? $xxl}
-      $xxxl={xxxl ?? $xxxl}
-      $horizontal={horizontal ?? $horizontal}
+    <span
+      className="dcp-space"
+      data-horizontal={horizontal || undefined}
+      style={style as React.CSSProperties}
     />
   );
 }

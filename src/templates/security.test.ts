@@ -22,6 +22,7 @@ import { playgroundAllowlistTemplate } from "./utils/playgroundAllowlist.js";
 import { apiPlaygroundUtilsTemplate } from "./utils/apiPlayground.js";
 import { requestBodyTemplate } from "./utils/requestBody.js";
 import { chatTemplate } from "./components/Chat.js";
+import { chatProviderTemplate } from "./components/chat/ChatProvider.js";
 import { apiPlaygroundTemplate } from "./components/layout/ApiPlayground.js";
 
 interface GeneratedRequestBodyModule {
@@ -459,15 +460,23 @@ describe("generated security boundaries", () => {
   });
 
   it("bounds submitted chat history to the RAG server contract", () => {
-    // The client bound now lives in Cherry's ChatProvider (historyLimit
+    // The client bound lives in the chat kit's ChatProvider (historyLimit
     // defaults to 20 entries capped at 4000 chars each, matching the RAG
-    // contract), so the template must pass the provider's history through
+    // contract), so Chat.tsx must pass the provider's history through
     // untouched rather than rebuilding its own.
     // The language/version scope is the only addition to that body.
     expect(chatTemplate).toMatch(
       /JSON\.stringify\(\{\s*question,\s*history,\s*\.\.\.\(scope\.locale/,
     );
     expect(chatTemplate).not.toContain("history.slice(");
+    expect(chatProviderTemplate).toContain("historyLimit = 20,");
+    expect(chatProviderTemplate).toContain(
+      "const HISTORY_ENTRY_MAX_CHARS = 4000;",
+    );
+    expect(chatProviderTemplate).toContain(".slice(-historyLimit)");
+    expect(chatProviderTemplate).toContain(
+      ".slice(0, HISTORY_ENTRY_MAX_CHARS)",
+    );
     expect(ragRoutesTemplate).toContain(
       "history: z.array(messageSchema).max(20).optional()",
     );

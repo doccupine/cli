@@ -6,18 +6,15 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import styled, { css } from "styled-components";
-import { interactiveStyles, resetButton } from "cherry-styled-components";
-import { Theme } from "@/app/theme";
 import { Icon } from "@/components/layout/Icon";
 
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 4;
 const SCALE_STEP = 0.25;
 const PAN_STEP = 48;
-const MIN_DIAGRAM_HEIGHT = 320;
-// Must exceed MIN_DIAGRAM_HEIGHT plus the viewport padding (2 x 16px), so
-// diagrams sitting on the min-height floor don't auto-show the controls.
+// Must exceed the diagram's 320px min-height (.dcp-mermaid__stage > svg) plus
+// the viewport padding (2 x 16px), so diagrams sitting on that floor don't
+// auto-show the controls.
 const AUTO_ACTIONS_MIN_HEIGHT = 420;
 
 // Whether the Fullscreen API is available. Read via useSyncExternalStore so it
@@ -37,125 +34,16 @@ interface MermaidViewProps {
   width?: number | null;
   placement?: MermaidPlacement;
   actions?: boolean;
-  theme?: Theme;
 }
 
-const Viewport = styled.div<{ $draggable: boolean; $dragging: boolean }>\`
-  overflow: hidden;
-  padding: 16px;
-  \${({ $draggable, $dragging }) =>
-    $draggable &&
-    css\`
-      cursor: \${$dragging ? "grabbing" : "grab"};
-      user-select: none;
-    \`}
-\`;
-
-const Stage = styled.div<{
-  $scale: number;
-  $x: number;
-  $y: number;
-  $dragging: boolean;
-}>\`
-  transform: translate(\${({ $x }) => $x}px, \${({ $y }) => $y}px)
-    scale(\${({ $scale }) => $scale});
-  transform-origin: center center;
-  transition: \${({ $dragging }) =>
-    $dragging ? "none" : "transform 0.15s ease-out"};
-  margin: 0 auto;
-
-  @media (prefers-reduced-motion: reduce) {
-    transition: none;
-  }
-
-  & > svg {
-    display: block;
-    width: 100%;
-    height: auto;
-    min-height: \${MIN_DIAGRAM_HEIGHT}px;
-    margin: 0 auto;
-  }
-\`;
-
-const Figure = styled.figure<{ theme: Theme }>\`
-  position: relative;
-  flex-shrink: 0;
-  margin: 0;
-  padding: 0;
-  border: solid 1px \${({ theme }) => theme.colors.grayLight};
-  border-radius: \${({ theme }) => theme.spacing.radius.lg};
-  background: \${({ theme }) => theme.colors.light};
-  overflow: hidden;
-
-  &:fullscreen {
-    border: none;
-    border-radius: 0;
-
-    \${Viewport} {
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    \${Stage} {
-      width: 100%;
-      height: 100%;
-    }
-
-    \${Stage} > svg {
-      height: 100%;
-    }
-  }
-\`;
-
-const Controls = styled.div<{ theme: Theme; $placement: MermaidPlacement }>\`
-  position: absolute;
-  \${({ $placement }) => {
-    const [vertical, horizontal] = $placement.split("-");
-    return css\`
-      \${vertical}: 8px;
-      \${horizontal}: 8px;
-    \`;
-  }}
-  display: grid;
-  grid-template-columns: repeat(3, 24px);
-  grid-template-rows: repeat(3, 24px);
-  gap: 2px;
-  padding: 4px;
-  border: solid 1px \${({ theme }) => theme.colors.grayLight};
-  border-radius: \${({ theme }) => theme.spacing.radius.xs};
-  background: \${({ theme }) => theme.colors.light};
-  box-shadow: \${({ theme }) => theme.shadows.sm};
-\`;
-
-const ControlButton = styled.button<{ theme: Theme }>\`
-  \${resetButton};
-  \${interactiveStyles};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  color: \${({ theme }) => theme.colors.grayDark};
-  cursor: pointer;
-
-  &:hover:not(:disabled) {
-    background: \${({ theme }) => theme.colors.grayLight};
-    color: \${({ theme }) => theme.colors.dark};
-  }
-
-  &:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-\`;
+// Styles: .dcp-mermaid in app/styles/design.css. The pan and zoom are inline
+// custom properties on the stage (--dcp-mermaid-x/-y/-scale).
 
 function MermaidView({
   svg,
   width,
   placement = "bottom-right",
   actions,
-  ...props
 }: MermaidViewProps) {
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -264,99 +152,111 @@ function MermaidView({
   const isReset = scale === 1 && offset.x === 0 && offset.y === 0;
 
   return (
-    <Figure ref={figureRef} {...props}>
-      <Viewport
+    <figure className="dcp-mermaid" ref={figureRef}>
+      <div
+        className="dcp-mermaid__viewport"
         ref={viewportRef}
-        $draggable={showControls}
-        $dragging={dragging}
+        data-draggable={showControls || undefined}
+        data-dragging={dragging || undefined}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
       >
-        <Stage
-          $scale={scale}
-          $x={offset.x}
-          $y={offset.y}
-          $dragging={dragging}
+        <div
+          className="dcp-mermaid__stage"
+          data-dragging={dragging || undefined}
           style={
-            width && !isFullscreen ? { maxWidth: \`\${width}px\` } : undefined
+            {
+              "--dcp-mermaid-x": \`\${offset.x}px\`,
+              "--dcp-mermaid-y": \`\${offset.y}px\`,
+              "--dcp-mermaid-scale": scale,
+              ...(width && !isFullscreen ? { maxWidth: \`\${width}px\` } : {}),
+            } as React.CSSProperties
           }
           dangerouslySetInnerHTML={{ __html: svg }}
         />
-      </Viewport>
+      </div>
 
       {showControls && (
-        <Controls $placement={placement}>
-          <ControlButton
+        <div className="dcp-mermaid__controls" data-placement={placement}>
+          <button
+            className="dcp-mermaid__control"
             type="button"
             aria-label="Zoom out"
             onClick={() => zoom(-SCALE_STEP)}
             disabled={scale <= MIN_SCALE}
           >
             <Icon name="zoom-out" size={14} />
-          </ControlButton>
-          <ControlButton
+          </button>
+          <button
+            className="dcp-mermaid__control"
             type="button"
             aria-label="Pan up"
             onClick={() => pan(0, -PAN_STEP)}
           >
             <Icon name="chevron-up" size={14} />
-          </ControlButton>
-          <ControlButton
+          </button>
+          <button
+            className="dcp-mermaid__control"
             type="button"
             aria-label="Zoom in"
             onClick={() => zoom(SCALE_STEP)}
             disabled={scale >= MAX_SCALE}
           >
             <Icon name="zoom-in" size={14} />
-          </ControlButton>
+          </button>
 
-          <ControlButton
+          <button
+            className="dcp-mermaid__control"
             type="button"
             aria-label="Pan left"
             onClick={() => pan(-PAN_STEP, 0)}
           >
             <Icon name="chevron-left" size={14} />
-          </ControlButton>
-          <ControlButton
+          </button>
+          <button
+            className="dcp-mermaid__control"
             type="button"
             aria-label="Reset view"
             onClick={reset}
             disabled={isReset}
           >
             <Icon name="rotate-ccw" size={14} />
-          </ControlButton>
-          <ControlButton
+          </button>
+          <button
+            className="dcp-mermaid__control"
             type="button"
             aria-label="Pan right"
             onClick={() => pan(PAN_STEP, 0)}
           >
             <Icon name="chevron-right" size={14} />
-          </ControlButton>
+          </button>
 
           {canFullscreen ? (
-            <ControlButton
+            <button
+              className="dcp-mermaid__control"
               type="button"
               aria-label={isFullscreen ? "Exit full screen" : "Full screen"}
               onClick={toggleFullscreen}
             >
               <Icon name={isFullscreen ? "minimize" : "maximize"} size={14} />
-            </ControlButton>
+            </button>
           ) : (
             <span />
           )}
-          <ControlButton
+          <button
+            className="dcp-mermaid__control"
             type="button"
             aria-label="Pan down"
             onClick={() => pan(0, PAN_STEP)}
           >
             <Icon name="chevron-down" size={14} />
-          </ControlButton>
+          </button>
           <span />
-        </Controls>
+        </div>
       )}
-    </Figure>
+    </figure>
   );
 }
 

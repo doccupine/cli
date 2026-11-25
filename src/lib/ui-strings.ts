@@ -4,6 +4,9 @@
 // site is not stuck with English labels around translated pages. The keys
 // are the contract: `validateLanguagesConfig` warns on one it does not know.
 export const DEFAULT_UI_STRINGS = {
+  skipToContent: "Skip to content",
+  navigation: "Navigation",
+  sections: "Sections",
   searchButton: "Search docs",
   searchDialog: "Search documentation",
   searchPlaceholder: "Search docs...",
@@ -16,6 +19,7 @@ export const DEFAULT_UI_STRINGS = {
   askAiAssistant: "Ask AI Assistant",
   closeSearch: "Close search",
   onThisPage: "On this page",
+  pageNavigation: "Previous and next pages",
   previous: "Previous",
   next: "Next",
   openNavigation: "Open navigation menu",

@@ -1,33 +1,12 @@
 export const copyButtonTemplate = `"use client";
 import { useCallback, useState } from "react";
-import styled from "styled-components";
-import { resetButton, interactiveStyles } from "cherry-styled-components";
-import { Theme } from "@/app/theme";
 import { Icon } from "@/components/layout/Icon";
 
-/* Icon-only copy-to-clipboard button. Same look/behaviour as the copy button in
-   the code block: interactiveStyles supplies the border highlight on hover plus
-   the focus/active rings, and the icon swaps to a check in success green for two
-   seconds after a successful copy. Theme tokens swap for dark mode on their own,
-   so no :root.dark override is needed. */
-const StyledCopyButton = styled.button<{ theme: Theme; $copied: boolean }>\`
-  \${resetButton}
-  \${interactiveStyles}
-  background: \${({ theme }) => theme.colors.light};
-  border-color: \${({ theme }) => theme.colors.grayLight};
-  border-radius: \${({ theme }) => theme.spacing.radius.xs};
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  & svg.lucide {
-    margin: 0;
-    color: \${({ theme, $copied }) =>
-      $copied ? theme.colors.success : theme.colors.grayDark};
-  }
-\`;
-
+/* Icon-only copy-to-clipboard button. Same look and behaviour as the copy
+   button in the code block: the border highlights on hover with the focus and
+   active rings, and the icon swaps to a check in success green for two
+   seconds after a successful copy. Styles: .dcp-copy-button in
+   app/styles/design.css. */
 interface CopyButtonProps {
   text: string;
   size?: number;
@@ -54,15 +33,15 @@ export function CopyButton({
   }, [text]);
 
   return (
-    <StyledCopyButton
+    <button
       type="button"
       onClick={handleCopy}
-      $copied={copied}
+      data-copied={copied || undefined}
       aria-label={copied ? "Copied" : label}
-      className={className}
+      className={\`dcp-copy-button \${className ?? ""}\`.trim()}
     >
       <Icon name={copied ? "check" : "copy"} size={size} />
-    </StyledCopyButton>
+    </button>
   );
 }
 `;

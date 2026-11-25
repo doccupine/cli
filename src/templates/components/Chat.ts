@@ -1,22 +1,26 @@
 export const chatTemplate = `"use client";
 import React, { createContext, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { ChatInput } from "@/components/chat/ChatInput";
 import {
-  ChatInput,
   ChatMessage,
   ChatMessageList,
-  ChatPanel,
-  ChatProvider,
+  ChatProse,
   ChatSource,
   ChatSources,
   ChatTyping,
+} from "@/components/chat/ChatMessages";
+import {
+  ChatPanel,
   IconButton,
-  Prose,
   useBelowBreakpoint,
+} from "@/components/chat/ChatPanel";
+import {
+  ChatProvider,
   useChat,
   type ChatSendContext,
   type ChatSourceData,
-} from "cherry-styled-components";
+} from "@/components/chat/ChatProvider";
 import { RotateCcw } from "lucide-react";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -58,7 +62,7 @@ function toSourceChip(src: RagSource): ChatSourceData {
   return { id: src.id, label, href };
 }
 
-// Cherry's ChatProvider owns the transcript, panel state, and streaming
+// ChatProvider owns the transcript, panel state, and streaming
 // bookkeeping; this handler owns the transport: POST the question to
 // /api/rag, stream the SSE frames, and patch the assistant bubble as tokens
 // arrive. The provider bounds \`history\` to the RAG contract (20 entries,
@@ -217,13 +221,13 @@ function ChatTranscript() {
   return (
     <ChatMessageList>
       {messages.map((message) => (
-        <ChatMessage key={message.id} $role={message.role}>
+        <ChatMessage key={message.id} role={message.role}>
           {message.role === "assistant" ? (
             // The docs' typographic context lives on the docs page wrapper,
-            // so a rendered MDX answer would arrive margin-less here. Prose
-            // $compact is Cherry's document styling for chat replies: a 10px
+            // so a rendered MDX answer would arrive margin-less here.
+            // ChatProse is the document styling for chat replies: a 10px
             // rhythm between elements, inline-code chips, lists, and tables.
-            <Prose $compact>{message.content}</Prose>
+            <ChatProse>{message.content}</ChatProse>
           ) : (
             message.content
           )}
@@ -267,10 +271,9 @@ function Chat() {
   const t = useStrings();
 
   return (
-    <ChatPanel $title={t.aiAssistant} $actions={<ChatActions />}>
+    <ChatPanel title={t.aiAssistant} actions={<ChatActions />}>
       <ChatTranscript />
       <ChatInput
-        $glow
         placeholder={t.chatPlaceholder}
         aria-label={t.chatInputLabel}
       />
@@ -280,8 +283,8 @@ function Chat() {
 
 // App-level chat context: only whether the AI assistant is enabled (an LLM
 // provider is configured). Panel state, the transcript, and streaming all
-// live in Cherry's ChatProvider - read those with useChat() from
-// "cherry-styled-components".
+// live in ChatProvider - read those with useChat() from
+// "@/components/chat/ChatProvider".
 const ChatContext = createContext<{ isChatActive: boolean }>({
   isChatActive: false,
 });

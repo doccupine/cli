@@ -8,25 +8,14 @@ export const modernActionBarTemplate = deriveTemplate(
   [
     [
       `import { Icon } from "@/components/layout/Icon";
-import { Textarea } from "cherry-styled-components";
 import { SectionBarContext } from "@/components/layout/DocsComponents";
-import {
-  StyledActionBar,
-  StyledActionBarContent,
-  StyledCopyButton,
-  StyledActionBarGroup,`,
+`,
       `import { Icon } from "@/components/layout/Icon";
-import { Textarea } from "cherry-styled-components";
 import {
   SectionBarContext,
   useCurrentPage,
 } from "@/components/layout/DocsComponents";
-import {
-  StyledActionBar,
-  StyledActionBarContent,
-  StyledActionBarEyebrow,
-  StyledCopyButton,
-  StyledActionBarGroup,`,
+`,
     ],
     [
       `  const hasSectionBar = useContext(SectionBarContext);
@@ -40,17 +29,13 @@ import {
 `,
     ],
     [
-      `    <>
-      <StyledActionBar data-markdown-ignore data-rss={rssHref ? "" : undefined}>
-        <StyledActionBarGroup>
-          <StyledCopyButton onClick={handleCopyContent} $copied={copied}>`,
-      `    <>
-      <StyledActionBar data-markdown-ignore data-rss={rssHref ? "" : undefined}>
-        {category && (
-          <StyledActionBarEyebrow>{category}</StyledActionBarEyebrow>
-        )}
-        <StyledActionBarGroup>
-          <StyledCopyButton onClick={handleCopyContent} $copied={copied}>`,
+      `        data-rss={rssHref ? "" : undefined}
+      >
+        <div className="dcp-action-bar__group">`,
+      `        data-rss={rssHref ? "" : undefined}
+      >
+        {category && <p className="dcp-action-bar__eyebrow">{category}</p>}
+        <div className="dcp-action-bar__group">`,
     ],
   ],
 );

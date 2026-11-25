@@ -2,7 +2,7 @@ export const themeMdxTemplate = `---
 title: "Theme"
 description: "Customize the documentation UI colors with a theme.json file."
 date: "2026-02-19"
-updated: "2026-11-23"
+updated: "2026-11-24"
 category: "Configuration"
 categoryOrder: 2
 order: 8
@@ -95,13 +95,13 @@ Place a \`theme.json\` at your project root (the same directory where you execut
 ## Behavior
 
 - **Placement**: Put \`theme.json\` in the project root alongside \`config.json\`.
-- **Partial palettes**: If a key is missing in a mode, consumers may fall back to the \`default\` value.
+- **Partial palettes**: A key missing from a mode uses the built-in color for that mode.
 - **Logo size**: Recommended dimensions are 164px width and 30px height.
 - **Light or dark**: Visitors see the mode their operating system is set to, and the site follows it live if they change it, until they pick a mode with the theme toggle. That choice is remembered on their device.
 - **Browser chrome**: The \`theme-color\` shown in browser UI (such as the iOS Safari status bar) is derived from each mode's \`primary\` token, so it carries your brand color in both modes.
 
 <Callout type="warning">
-  Use valid hex colors (e.g., \`#22c55e\`). Invalid color values may cause unexpected rendering.
+  Use plain CSS colors: hex (e.g., \`#22c55e\`), a color name, or a color function such as \`rgb()\` or \`oklch()\`. Any other value is ignored with a warning and the default color for that key is used.
 </Callout>
 
 ## Tips
@@ -109,6 +109,41 @@ Place a \`theme.json\` at your project root (the same directory where you execut
 - **Contrast**: Ensure sufficient contrast between text and backgrounds for readability.
 - **Branding**: Start with your brand’s \`primary\` color, then derive \`primaryLight\` and \`primaryDark\`.
 - **Iterate**: Adjust colors and refresh the site to preview changes quickly.
+
+## Custom CSS
+
+The site is styled with plain CSS, not a CSS-in-JS library, and its class names and variables stay the same from release to release, so CSS written against them keeps working when you update Doccupine.
+
+### Colors and shadows
+
+Every color and shadow is a CSS variable. Light values sit on \`:root\` and dark values on \`:root.dark\` (the \`dark\` class on \`<html>\` switches the mode):
+
+- \`--color-<key>\`: one per \`theme.json\` key, such as \`--color-primary\` and \`--color-grayDark\`.
+- \`--color-accent\`, \`--color-accentStrong\`, \`--color-accentMuted\`, \`--color-surface\`, \`--color-link\`: derived from the palette for each mode.
+- \`--shadow-xs\` through \`--shadow-xl\`.
+- \`--mermaid-bg\`, \`--mermaid-fg\`, \`--mermaid-line\`, \`--mermaid-accent\`, \`--mermaid-muted\`, \`--mermaid-surface\`, \`--mermaid-border\`: the diagram colors (see Mermaid).
+
+Add the \`light-only\` or \`dark-only\` class to an element to show it in one mode only.
+
+### Class names
+
+Components carry stable \`dcp-\` class names: \`dcp-<component>\` on the component (\`dcp-header\`, \`dcp-sidebar\`, \`dcp-docs\` for the article, \`dcp-callout\`, \`dcp-card\`, \`dcp-code\`, \`dcp-tabs\`, ...) and \`dcp-<component>__<part>\` on its parts (\`dcp-header__inner\`, \`dcp-code__title\`). Variants and states are attributes, not extra classes: \`data-type="warning"\` on a callout, \`aria-selected="true"\` on the active tab, \`aria-current="page"\` on the current sidebar link.
+
+### Cascade layers
+
+The built-in styles live in cascade layers, in this order: \`reset\`, \`tokens\`, \`base\`, \`components\`, \`design\`, \`utilities\`. Rules outside any layer win over every layer, whatever their specificity, so CSS of your own needs no \`!important\` as long as it is not inside an \`@layer\` block (or sits in a layer declared after these).
+
+\`\`\`css
+/* A deeper accent in dark mode only. */
+:root.dark {
+  --color-primary: #1d4ed8;
+}
+
+/* Squarer callouts. */
+.dcp-callout {
+  border-radius: 4px;
+}
+\`\`\`
 
 # Demo
 

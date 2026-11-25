@@ -1,29 +1,16 @@
-export const spinnerTemplate = `"use client";
-
-import styled, { keyframes } from "styled-components";
-import { LoaderCircle } from "lucide-react";
-
-const spin = keyframes\`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-\`;
-
-const SpinnerWrapper = styled.span<{ $size?: number }>\`
-  display: inline-flex;
-  animation: \${spin} 1s linear infinite;
-  color: inherit;
-\`;
+export const spinnerTemplate = `import { LoaderCircle } from "lucide-react";
 
 interface SpinnerProps {
   size?: number;
   className?: string;
 }
 
+/** A spinning loader icon; the rotation is .dcp-spinner in app/styles. */
 export function Spinner({ size = 20, className }: SpinnerProps) {
   return (
-    <SpinnerWrapper $size={size} className={className}>
+    <span className={className ? \`dcp-spinner \${className}\` : "dcp-spinner"}>
       <LoaderCircle size={size} />
-    </SpinnerWrapper>
+    </span>
   );
 }
 `;

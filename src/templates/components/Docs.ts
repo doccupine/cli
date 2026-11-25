@@ -1,7 +1,5 @@
 export const docsTemplate = `import React from "react";
-import { Flex } from "cherry-styled-components";
 import { DocsContainer } from "@/components/layout/DocsComponents";
-import { StyledMarkdownContainer } from "@/components/layout/DocsComponents.styles";
 import { Callout } from "@/components/layout/Callout";
 import { compileMDX } from "next-mdx-remote/rsc";
 import remarkGfm from "remark-gfm";
@@ -168,8 +166,8 @@ function Docs({ content, sourcePath, rssHref, lang, children }: DocsProps) {
     <>
       <DocsContainer lang={lang}>
         <ActionBar content={content} rssHref={rssHref}>
-          <Flex $gap={20}>
-            <StyledMarkdownContainer>
+          <div className="dcp-docs__body">
+            <div className="dcp-docs__content">
               {children}
               {content && (
                 <MdxBody
@@ -178,8 +176,8 @@ function Docs({ content, sourcePath, rssHref, lang, children }: DocsProps) {
                   sourcePath={sourcePath}
                 />
               )}
-            </StyledMarkdownContainer>
-          </Flex>
+            </div>
+          </div>
         </ActionBar>
       </DocsContainer>
       {!hasSidePanel && <DocsSideBar headings={headings} />}

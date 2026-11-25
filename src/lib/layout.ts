@@ -128,28 +128,26 @@ function fontDeclLine(fontConfig: FontConfig | null): string {
 
 // The inline blocking script that resolves dark mode before the first paint.
 // It only has to decide the mode and record it on <html>: every painted color
-// in the app resolves through the CSS custom properties Cherry's provider
+// in the app resolves through the CSS custom properties app/styles/tokens.css
 // declares under :root and :root.dark, so the "dark" class is enough to make a
 // statically rendered page arrive dark. Nothing is hidden and nothing waits for
 // hydration: the markup streams and paints in the right theme exactly like a
 // light visit does.
 //
-// The mode is decided the same way Cherry's provider decides it after
-// hydration, so mounting never flips it: an explicit "themePreference" in
+// The mode is decided the same way the color-mode store (utils/colorMode.ts)
+// decides it after hydration, so mounting never flips it: an explicit "themePreference" in
 // localStorage (light, dark or system); else a "theme" entry in localStorage,
 // which older releases wrote only when the visitor toggled; else the OS
 // preference. Where storage is blocked, the "theme" cookie is the only thing
 // that persists a choice, so it decides. The cookie is kept in step with the
-// resolved mode either way. Cherry's own createThemeInitScript makes the same
-// decision, but creates the theme-color meta through the DOM, which Safari
-// does not tint from reliably, so the app keeps this script.
+// resolved mode either way.
 //
 // The script also emits the theme-color meta for the resolved mode through
 // document.write, which hands the tag to the HTML parser itself: Safari only
 // tints its chrome reliably from a parser-inserted tag - one created through
 // the DOM APIs is honored inconsistently or not at all - though it does track
-// content updates to such a tag, which is how CherryThemeProvider keeps it
-// current on toggles. The meta cannot be rendered from the
+// content updates to such a tag, which is how ColorModeSync keeps it current
+// on toggles. The meta cannot be rendered from the
 // layout instead: pages are static, so the server would emit one mode's color
 // and this script would have to correct it before paint, and React 19
 // hydration treats a head meta whose attributes differ from its props as
@@ -164,13 +162,14 @@ function fontDeclLine(fontConfig: FontConfig | null): string {
 // tag out of React leaves exactly one meta that nothing ever re-inserts. The
 // \${...} palette interpolations below are escaped so they resolve in the
 // generated layout, at app build time, from the imported theme palettes. The
-// token must match the one CherryThemeProvider syncs (primary), so the
-// chrome color does not change at hydration.
+// token must match the one ColorModeSync syncs (primary), so the chrome color
+// does not change at hydration.
 const THEME_INIT_SCRIPT = `(function(){try{var r=document.documentElement,o=window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light",k=document.cookie.split(";").map(function(s){return s.trim();}).find(function(s){return s.indexOf("theme=")===0;}),c=k?k.split("=")[1]:null,m;try{var p=localStorage.getItem("themePreference"),t=localStorage.getItem("theme");m=p==="light"||p==="dark"?p:p!=="system"&&(t==="light"||t==="dark")?t:o;}catch(e){m=c==="light"||c==="dark"?c:o;}if(c!==m){document.cookie="theme="+m+";path=/;max-age=31536000;SameSite=Lax";}r.classList.toggle("dark",m==="dark");document.write('<meta name="theme-color" content="'+(m==="dark"?"\${colorsDark.primary}":"\${colorsLight.primary}")+'">');}catch(e){}})();`;
 
 /**
- * Root layout ("app/layout.tsx"). Minimal shell: html/body, fonts, the theme
- * provider stack, and (optionally) PostHog. It renders `children` directly so
+ * Root layout ("app/layout.tsx"). Minimal shell: html/body, fonts, the site
+ * stylesheets (app/styles, see src/templates/styles), the color-mode sync, and
+ * (optionally) PostHog. It renders `children` directly so
  * both the docs (via the "(site)" layout) and the password gate ("app/gate")
  * share the same providers and theme without the docs chrome. Deliberately has
  * NO request-time data (cookies/headers) so pages stay statically renderable —
@@ -202,9 +201,13 @@ export const rootLayoutTemplate = (
     : THEME_INIT_SCRIPT;
   return `import type { Metadata } from "next";
 ${fontImportLine(fontConfig)}
-import { StyledComponentsRegistry } from "cherry-styled-components/next";
+import "./styles/reset.css";
+import "./styles/tokens.css";
+import "./styles/base.css";
+import "./styles/components.css";
+import "./styles/design.css";
 import { colorsDark, colorsLight } from "@/app/theme";
-import { CherryThemeProvider } from "@/components/layout/CherryThemeProvider";
+import { ColorModeSync } from "@/components/ColorModeSync";
 import { config } from "@/utils/config";
 import { siteIcons } from "@/utils/icons";
 ${analyticsEnabled ? `import { PostHogProvider } from "@/components/PostHogProvider";\n` : ""}
@@ -258,15 +261,12 @@ export default function RootLayout({
         />
       </head>
       <body className={font.className}>
-        <StyledComponentsRegistry>
+        <ColorModeSync />
 ${
   analyticsEnabled
-    ? `          <PostHogProvider>
-            <CherryThemeProvider>{children}</CherryThemeProvider>
-          </PostHogProvider>`
-    : `          <CherryThemeProvider>{children}</CherryThemeProvider>`
+    ? `        <PostHogProvider>{children}</PostHogProvider>`
+    : `        {children}`
 }
-        </StyledComponentsRegistry>
       </body>
     </html>
   );
@@ -314,7 +314,11 @@ ${
     : `import { Footer } from "@/components/layout/Footer";
 `
 }import { Header } from "@/components/layout/Header";
-import { DocsWrapper, LlmsDirective } from "@/components/layout/DocsComponents";
+import {
+  DocsWrapper,
+  LlmsDirective,
+  SkipLink,
+} from "@/components/layout/DocsComponents";
 ${
   hasSections
     ? ""
@@ -364,6 +368,7 @@ ${
   return (
     ${chtOpen}
       <SearchProvider pages={pages} sections={doccupineSections}>
+        <SkipLink />
         <LlmsDirective />
         <Header>
           <SectionBar sections={doccupineSections} />
@@ -407,6 +412,7 @@ ${
   return (
     ${chtOpen}
       <SearchProvider pages={pages}>
+        <SkipLink />
         <LlmsDirective />
         <Header />
         {process.env.LLM_PROVIDER && <Chat />}
@@ -480,7 +486,11 @@ function variantSiteLayout(
 import { ChtProvider } from "@/components/Chat";
 import { SearchProvider } from "@/components/SearchDocs";
 import { Header } from "@/components/layout/Header";
-import { DocsWrapper, LlmsDirective } from "@/components/layout/DocsComponents";
+import {
+  DocsWrapper,
+  LlmsDirective,
+  SkipLink,
+} from "@/components/layout/DocsComponents";
 import { type PagesProps } from "@/utils/orderNavItems";
 import { verifyBrandingKey } from "@/utils/branding";
 ${hasSections ? `import { SectionBar } from "@/components/layout/SectionBar";\n` : ""}import { SectionNavProvider } from "@/components/SectionNavProvider";
@@ -506,6 +516,7 @@ export default function SiteLayout({
   return (
     ${chtOpen}
       <SearchProvider pages={pages}${hasSections ? " sections={doccupineSections}" : ""}>
+        <SkipLink />
         <LlmsDirective />
         <Header${hasSections ? `>${sectionBar}</Header>` : " />"}
         {process.env.LLM_PROVIDER && <Chat />}
