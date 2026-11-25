@@ -191,9 +191,11 @@ export const headerStyles: DesignStyles = {
   padding: 0 0 0 calc(var(--layout-gutter) - 10px);
 }
 
+/* From "lg" no end padding: the last link's own 10px and the header's gap
+   are enough room before the search button. */
 @media screen and (min-width: 992px) {
   .dcp-section-bar {
-    padding: 0 10px;
+    padding: 0 0 0 10px;
     order: unset;
     width: 100%;
     height: auto;

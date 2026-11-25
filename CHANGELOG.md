@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Drop the tag icon from the version switcher: the pill shows only the version label and its chevron
+- Tighten the space between the section tabs and the search button in the classic header
 - Show the search button's shortcut hint (⌘K) and the search window's Ask AI key hints as plain text, without a border around them
 - Update generated sites' dependencies: `@langchain/core` 1.5.1, `langchain` 1.6.8, `lucide-react` 1.80.0, `posthog-js` 1.454.8
 
