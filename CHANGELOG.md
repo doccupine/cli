@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+
+- Color the built-in logo with the theme's primary color in the modern design, as in classic: it took the text color, so in dark mode it turned white and its white mark disappeared
+
 ## 0.1.0
 
 - Add site designs ("templates"): `config.json` takes a `template` field, `"modern"` or `"classic"`. Sites that leave it out get the new modern design, a quieter look with outlined pill controls, a page header with the page's category, a header Ask AI pill, a light/dark switch in the sidebar footer, and slimmer rails; `"classic"` keeps the previous design. An unknown value falls back to the default with a warning. Watch mode switches designs when `config.json` changes, rewriting only the files that differ

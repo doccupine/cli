@@ -249,9 +249,11 @@ export const headerStyles: DesignStyles = {
   backdrop-filter: saturate(180%) blur(12px);
 }
 
+/* The built-in logo takes the brand color, as in classic. Its mark is a
+   white cut-out, so a near-white fill in dark mode would hide it. */
 .dcp-header .logo svg [fill]:not(.ignore-fill),
 .dcp-header .logo img [fill]:not(.ignore-fill) {
-  fill: var(--color-dark);
+  fill: var(--color-primary);
 }
 
 /* From "lg" the logo and the actions take equal flexible halves, so the
