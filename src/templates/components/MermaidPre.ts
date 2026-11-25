@@ -1,5 +1,9 @@
 export const mermaidPreTemplate = `import React from "react";
-import { Pre, extractAllTextFromChildren } from "@/components/MDXComponents";
+import {
+  InlineCode,
+  Pre,
+  extractAllTextFromChildren,
+} from "@/components/MDXComponents";
 import { Code as CodeBlock } from "@/components/layout/Code";
 import { MermaidView, MermaidPlacement } from "@/components/layout/Mermaid";
 import { parseCodeMeta } from "@/utils/parseCodeMeta";
@@ -30,9 +34,11 @@ function createMermaidPre(sourcePath?: string) {
       children?: React.ReactNode;
     }> | null;
 
+    // The fence's <code> element arrives as InlineCode (the components
+    // map's override for code), not as a plain "code" element.
     const isMermaid =
       child &&
-      child.type === "code" &&
+      (child.type === "code" || child.type === InlineCode) &&
       /language-mermaid\\b/.test(child.props.className || "");
 
     if (child && isMermaid) {
