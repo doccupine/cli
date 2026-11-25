@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.2
 
 - Drop the tag icon from the version switcher: the pill shows only the version label and its chevron
 - Tighten the space between the section tabs and the search button in the classic header
